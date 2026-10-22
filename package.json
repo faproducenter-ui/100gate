@@ -1,0 +1,12 @@
+{
+  "name": "100gate",
+  "version": "1.0.0",
+  "description": "100Gate Puzzle Adventure Game",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve -s ."
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  }
+}
