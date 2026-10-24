@@ -117,5 +117,26 @@
             }
         }
     </script>
+<!-- Кнопка оплаты и переключения языка -->
+<script>
+async function payWithRobokassa(amount, description) {
+    try {
+        const response = await fetch('https://100gate-backend-lc0cdijc4-faproducenter-2690.vercel.app/create-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: amount, description: description })
+        });
+        const data = await response.json();
+        if (data.paymentUrl) {
+            window.location.href = data.paymentUrl;
+        } else {
+            alert('Ошибка создания платежа');
+        }
+    } catch (e) {
+        alert('Не удалось связаться с сервером оплаты.');
+    }
+}
+</script>
+
 </body>
 </html>
