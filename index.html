@@ -10,7 +10,7 @@
 #game{position:fixed;inset:0}canvas{display:block;width:100%;height:100%}
 #vignette{pointer-events:none;position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.52) 100%)}
 
-/* Переключатель языка справа вверху */
+/* Переключатель языка */
 .lang-switch { position: fixed; top: 14px; right: 20px; display: flex; gap: 6px; z-index: 100; pointer-events: auto; }
 .lang-btn { background: rgba(17,24,36,0.9); color: #fff; border: 1px solid var(--line); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; }
 .lang-btn:hover { background: var(--gold); color: #000; }
@@ -78,10 +78,10 @@
         
         <div style="margin: 12px 0;">
             <select id="coinPackage" style="width:100%; padding:10px; border-radius:8px; background:#090d14; color:#fff; border:1px solid var(--line); font-size:14px; margin-bottom:10px;">
-                <option value="50">50 монет</option>
-                <option value="100" selected>100 монет</option>
-                <option value="200">200 монет</option>
-                <option value="500">500 монет</option>
+                <option value="50" id="opt-50">50 монет</option>
+                <option value="100" selected id="opt-100">100 монет</option>
+                <option value="200" id="opt-200">200 монет</option>
+                <option value="500" id="opt-500">500 монет</option>
             </select>
         </div>
 
@@ -315,7 +315,11 @@ const translations = {
         payDesc: "Выберите пакет монет и способ оплаты:",
         payCard: "💳 Оплата картой (Международная / СНГ)",
         payCrypto: "🪙 Криптовалюта / P2P (Доступно из РФ)",
-        payCancel: "Отмена"
+        payCancel: "Отмена",
+        opt50: "50 монет",
+        opt100: "100 монет",
+        opt200: "200 монет",
+        opt500: "500 монет"
     },
     en: {
         title: "SECRET OF 100 DOORS",
@@ -349,7 +353,11 @@ const translations = {
         payDesc: "Choose coin package and payment method:",
         payCard: "💳 Pay by Card (International / CIS)",
         payCrypto: "🪙 Crypto / P2P (Available in RU)",
-        payCancel: "Cancel"
+        payCancel: "Cancel",
+        opt50: "50 coins",
+        opt100: "100 coins",
+        opt200: "200 coins",
+        opt500: "500 coins"
     }
 };
 
@@ -389,6 +397,12 @@ window.changeLanguage = function(lang) {
     document.getElementById('btn-pay-crypto').innerText = t.payCrypto;
     document.getElementById('btn-pay-cancel').innerText = t.payCancel;
     
+    // Перевод выпадающего списка пакетов монет
+    document.getElementById('opt-50').innerText = t.opt50;
+    document.getElementById('opt-100').innerText = t.opt100;
+    document.getElementById('opt-200').innerText = t.opt200;
+    document.getElementById('opt-500').innerText = t.opt500;
+    
     if(window.updateHUD) window.updateHUD();
 };
 
@@ -405,11 +419,9 @@ function payWithGateway(type) {
     
     if (type === 'card') {
         alert(`Переход на оплату пакета: ${selectedCoins} монет (Карта / Interkassa)`);
-        // Сюда позже вставим вашу ссылку от Interkassa:
         // window.location.href = `ВАША_ССЫЛКА_INTERKASSA?amount=${selectedCoins}`;
     } else if (type === 'crypto') {
         alert(`Переход на оплату пакета: ${selectedCoins} монет (Крипта / РФ / Cryptomus)`);
-        // Сюда позже вставим вашу ссылку от Cryptomus:
         // window.location.href = `ВАША_ССЫЛКА_CRYPTOMUS?amount=${selectedCoins}`;
     }
 }
