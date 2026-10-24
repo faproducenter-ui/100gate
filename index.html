@@ -9,7 +9,13 @@
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090d14;color:#f4eee3;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
 #game{position:fixed;inset:0}canvas{display:block;width:100%;height:100%}
 #vignette{pointer-events:none;position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.52) 100%)}
-#top{position:fixed;left:16px;right:16px;top:14px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;pointer-events:none}
+
+/* Переключатель языка вынесен выше и правее, чтобы не перекрываться */
+.lang-switch { position: fixed; top: 14px; right: 20px; display: flex; gap: 6px; z-index: 100; pointer-events: auto; }
+.lang-btn { background: rgba(17,24,36,0.9); color: #fff; border: 1px solid var(--line); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; }
+.lang-btn:hover { background: var(--gold); color: #000; }
+
+#top{position:fixed;left:16px;right:110px;top:14px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;pointer-events:none}
 .panel{background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:11px 14px;backdrop-filter:blur(8px);box-shadow:0 8px 30px #0004; pointer-events: auto;}
 .brand{font-weight:800;letter-spacing:.08em;color:var(--gold);font-size:13px}.sub{font-size:12px;color:#c9c5bc;margin-top:3px}
 .stats{display:flex;gap:8px;font-size:12px;white-space:nowrap}.stat b{color:var(--gold);font-size:14px}
@@ -20,11 +26,6 @@
 .controls{display:flex;gap:8px;pointer-events:auto}.btn{border:1px solid var(--line);background:var(--glass);color:#f4eee3;border-radius:12px;padding:12px 15px;font-size:13px;font-weight:650;cursor:pointer;touch-action:manipulation}.btn.primary{background:linear-gradient(135deg,#d8ac60,#8e632e);color:#17120a;border:0}
 .buy-btn { background: var(--gold); color: #000; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
 .buy-btn:hover { transform: scale(1.05); }
-
-/* Переключатель языка */
-.lang-switch { position: absolute; top: 15px; left: 15px; display: flex; gap: 6px; z-index: 99; pointer-events: auto; }
-.lang-btn { background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
-.lang-btn:hover { background: var(--gold); color: #000; }
 
 #touchpad{position:fixed;left:0;bottom:0;width:48vw;height:42vh;display:none;touch-action:none}
 #touchlook{position:fixed;right:0;bottom:0;width:52vw;height:48vh;display:none;touch-action:none}
@@ -37,19 +38,19 @@
 .modal input{width:100%;padding:13px;border-radius:10px;border:1px solid #6d624f;background:#090d14;color:#fff;font-size:20px;letter-spacing:.25em;text-align:center;margin:7px 0 12px}
 .modal .row{display:flex;gap:9px}.modal .row .btn{flex:1}.tiny{font-size:11px;color:#a9a8a4;line-height:1.45;margin-top:13px}
 #start{z-index:20}#win{display:none;z-index:15}
-@media(max-width:700px){#top{left:9px;right:9px;top:9px}.panel{padding:9px 10px}.brand{font-size:11px}.sub{font-size:10px}.stats{gap:5px;font-size:10px}.stat b{font-size:12px}#hint{bottom:105px;font-size:12px;max-width:94vw}#bottom{left:9px;right:9px;bottom:9px}.desktopOnly{display:none}#touchpad,#touchlook,#joystick{display:block}#mobileInteract{display:block}.controls{display:none}}
+@media(max-width:700px){#top{left:9px;right:75px;top:9px}.panel{padding:9px 10px}.brand{font-size:11px}.sub{font-size:10px}.stats{gap:5px;font-size:10px}.stat b{font-size:12px}#hint{bottom:105px;font-size:12px;max-width:94vw}#bottom{left:9px;right:9px;bottom:9px}.desktopOnly{display:none}#touchpad,#touchlook,#joystick{display:block}#mobileInteract{display:block}.controls{display:none}}
 </style>
 </head>
 <body>
 <div id="game"></div><div id="vignette"></div>
 
-<!-- Переключатель языка -->
+<!-- Переключатель языка (теперь справа вверху, всегда кликабелен) -->
 <div class="lang-switch">
     <button class="lang-btn" onclick="changeLanguage('ru')">RU</button>
     <button class="lang-btn" onclick="changeLanguage('en')">EN</button>
 </div>
 
-<div id="top" style="margin-left: 80px;">
+<div id="top">
   <div class="panel">
       <div class="brand" id="txt-title">ТАЙНА 100 ДВЕРЕЙ</div>
       <div class="sub" id="txt-sub">МИР I · ЗАБРОШЕННЫЙ ОСОБНЯК</div>
@@ -372,7 +373,6 @@ window.changeLanguage = function(lang) {
     document.getElementById('win-reward').innerText = t.winReward;
     document.getElementById('again').innerText = t.againBtn;
     
-    // Перевод модального окна оплаты
     document.getElementById('pay-title').innerText = t.payTitle;
     document.getElementById('pay-desc').innerText = t.payDesc;
     document.getElementById('btn-pay-card').innerText = t.payCard;
@@ -392,13 +392,13 @@ function closePaymentMenu() {
 
 function payWithGateway(type) {
     if (type === 'card') {
-        // Ссылка на платежный шлюз для карт (например, Interkassa / Payriff)
-        alert('Переход на оплату картой...');
-        // window.location.href = 'ССЫЛКА_ДЛЯ_КАРТ';
+        // Сюда позже вставим вашу ссылку от Interkassa
+        alert('Здесь откроется страница оплаты картой (после настройки ссылки)');
+        // window.location.href = 'ВАША_ССЫЛКА_INTERKASSA';
     } else if (type === 'crypto') {
-        // Ссылка на Cryptomus / P2P для криптовалют и игроков из РФ
-        alert('Переход на оплату криптовалютой...');
-        // window.location.href = 'ССЫЛКА_ДЛЯ_КРИПТЫ';
+        // Сюда позже вставим вашу ссылку от Cryptomus
+        alert('Здесь откроется страница оплаты криптовалютой (после настройки ссылки)');
+        // window.location.href = 'ВАША_ССЫЛКА_CRYPTOMUS';
     }
 }
 </script>
