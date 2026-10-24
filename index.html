@@ -43,7 +43,7 @@
 <body>
 <div id="game"></div><div id="vignette"></div>
 
-<!-- Кнопки переключения языка вверху слева -->
+<!-- Переключатель языка -->
 <div class="lang-switch">
     <button class="lang-btn" onclick="changeLanguage('ru')">RU</button>
     <button class="lang-btn" onclick="changeLanguage('en')">EN</button>
@@ -58,7 +58,7 @@
       <div class="stat"><span id="txt-lvl-label">УРОВЕНЬ</span><br><b id="level">01 / 100</b></div>
       <div class="stat"><span id="txt-coins-label">МОНЕТЫ</span><br><b id="coins">100</b></div>
       <div class="stat"><span id="txt-inv-label">ИНВЕНТАРЬ</span><br><b id="inventory">0</b></div>
-      <button class="buy-btn interactive" onclick="payWithRobokassa(100, 'Покупка 100 монет')" id="txt-buy-btn">+ КУПИТЬ</button>
+      <button class="buy-btn interactive" onclick="openPaymentMenu()" id="txt-buy-btn">+ КУПИТЬ</button>
   </div>
 </div>
 <div id="center"></div><div id="message"></div>
@@ -66,10 +66,26 @@
 <div id="bottom"><div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="txt-controls-desk">WASD — движение · Мышь — осмотр · E — взаимодействие</div><div class="controls"><button class="btn" id="reset">↻ Начать заново</button><button class="btn primary" id="interact">Взаимодействовать · E</button></div></div>
 <div id="touchpad"></div><div id="touchlook"></div><div id="joystick"><div id="stick"></div></div><button class="btn primary" id="mobileInteract">Взаимодействовать</button>
 
+<!-- Старт -->
 <div class="modalShade" id="start"><div class="modal"><div class="brand" id="m-brand">ПРОТОТИП 0.1</div><h2 id="m-title">Дверь №001</h2><p id="m-desc">Ты очнулся в заброшенном особняке. На двери — кодовый замок. Найди старый ключ и записку, чтобы открыть проход.</p><button class="btn primary" id="begin" style="width:100%">Войти в особняк</button><div class="tiny" id="m-tiny">Демонстрационный прототип: прогресс пока хранится только в этой вкладке.</div></div></div>
 
+<!-- Окно выбора способа оплаты -->
+<div class="modalShade" id="payModal" style="display:none; z-index: 30;">
+    <div class="modal">
+        <h2 id="pay-title">Покупка монет</h2>
+        <p id="pay-desc">Выберите удобный способ оплаты (100 монет):</p>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+            <button class="btn primary" onclick="payWithGateway('card')" id="btn-pay-card">💳 Оплата картой (Международная / СНГ)</button>
+            <button class="btn" style="border-color: #e7bd70;" onclick="payWithGateway('crypto')" id="btn-pay-crypto">🪙 Криптовалюта / P2P (Доступно из РФ)</button>
+            <button class="btn" onclick="closePaymentMenu()" id="btn-pay-cancel" style="margin-top: 5px;">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<!-- Замок -->
 <div class="modalShade" id="codeModal" style="display:none"><div class="modal"><h2 id="lock-title">Кодовый замок</h2><p id="codePrompt">На записке написано: «Когда часы остановились, время осталось ключом».</p><input id="codeInput" inputmode="numeric" maxlength="4" placeholder="••••" aria-label="Код замка"><div class="row"><button class="btn" id="cancelCode">Назад</button><button class="btn primary" id="submitCode">Открыть дверь</button></div><div class="tiny" id="lock-hint">Подсказка: внимательно осмотри часы в комнате.</div></div></div>
 
+<!-- Победа -->
 <div class="modalShade" id="win"><div class="modal"><div class="brand" id="win-brand">ГЛАВА ЗАВЕРШЕНА</div><h2 id="win-title">Дверь открыта!</h2><p id="win-desc">Ты нашёл первый фрагмент дневника. На обороте написано: «Ты был здесь раньше».</p><p style="color:#e7bd70" id="win-reward">Награда: +100 монет · Артефакт: Карманные часы</p><button class="btn primary" id="again" style="width:100%">Исследовать комнату ещё раз</button></div></div>
 
 <script type="module">
@@ -152,7 +168,7 @@ let yaw=Math.PI,pitch=0,keysDown={},move={x:0,y:0},touchLook=null,lastTouch=null
 const hint=document.getElementById('hint'),message=document.getElementById('message');
 
 function say(t){message.textContent=t;message.style.display='block';clearTimeout(say.timer);say.timer=setTimeout(()=>message.style.display='none',2800)}
-function updateHUD(){document.getElementById('coins').textContent=coins;document.getElementById('inventory').textContent=hasKey?(currentLang==='en'?'1 item':'1 предмет'):(currentLang==='en'?'0 items':'0');}
+window.updateHUD = function(){document.getElementById('coins').textContent=coins;document.getElementById('inventory').textContent=hasKey?(window.currentLang==='en'?'1 item':'1 предмет'):(window.currentLang==='en'?'0 items':'0');}
 function setHint(t){hint.innerHTML=t}
 
 function interact(){
@@ -169,39 +185,39 @@ function interact(){
    for(const c of candidates){const d=c.position.distanceTo(camera.position);const dir=c.position.clone().sub(camera.position).normalize();if(d<3.2&&dir.dot(forward)>.82&&d<bd){best=c;bd=d;}}
    obj=best;
  }
- if(!obj){setHint(currentLang==='en'?'Get closer to an object and point at it.':'Подойди ближе к предмету и наведи на него прицел.');return;}
+ if(!obj){setHint(window.currentLang==='en'?'Get closer to an object and point at it.':'Подойди ближе к предмету и наведи на него прицел.');return;}
  const kind=obj.userData.kind || (obj.parent===keyGroup?'key':null);
  if(kind==='key'){
-   if(hasKey){say(currentLang==='en'?'Key is already yours.':'Ключ уже у тебя.');return;}
+   if(hasKey){say(window.currentLang==='en'?'Key is already yours.':'Ключ уже у тебя.');return;}
    hasKey=true;keyGroup.visible=false;coins+=30;updateHUD();
-   say(currentLang==='en'?'You found an old key. +30 coins':'Ты нашёл старый ключ. +30 монет');
-   setHint(currentLang==='en'?'Key found. Now check the clock and the note on the desk.':'Ключ найден. Теперь осмотри часы и записку на столе.');
+   say(window.currentLang==='en'?'You found an old key. +30 coins':'Ты нашёл старый ключ. +30 монет');
+   setHint(window.currentLang==='en'?'Key found. Now check the clock and the note on the desk.':'Ключ найден. Теперь осмотри часы и записку на столе.');
  }else if(kind==='note'){
    readNote=true;
-   say(currentLang==='en'?'Note: "When the clocks stopped, time remained the key"':'Записка: «Когда часы остановились, время осталось ключом».');
-   setHint(currentLang==='en'?'The note hints at the clock time. Check the clock.':'Записка намекает на время на старых часах. Подойди к часам и осмотри их.');
+   say(window.currentLang==='en'?'Note: "When the clocks stopped, time remained the key"':'Записка: «Когда часы остановились, время осталось ключом».');
+   setHint(window.currentLang==='en'?'The note hints at the clock time. Check the clock.':'Записка намекает на время на старых часах. Подойди к часам и осмотри их.');
  }else if(obj===clock || obj.parent===clock){
    clockSeen=true;rune.visible=true;
-   say(currentLang==='en'?'Clock stopped at 18:42. Remember this time.':'Часы остановились на 18:42. Запомни это время.');
-   setHint(currentLang==='en'?'You know the code: 1842. Approach the door and press E.':'Ты знаешь код: 1842. Подойди к двери и нажми E.');
+   say(window.currentLang==='en'?'Clock stopped at 18:42. Remember this time.':'Часы остановились на 18:42. Запомни это время.');
+   setHint(window.currentLang==='en'?'You know the code: 1842. Approach the door and press E.':'Ты знаешь код: 1842. Подойди к двери и нажми E.');
  }else if(kind==='door'||obj===door){
    if(doorOpen){finish();return;}
-   if(!hasKey){say(currentLang==='en'?'Locked. You need a key.':'Замок закрыт. Похоже, нужен ключ от особняка.');return;}
-   if(!readNote){say(currentLang==='en'?'Code lock. Find the note first.':'На двери кодовый замок. Сначала найди записку.');return;}
+   if(!hasKey){say(window.currentLang==='en'?'Locked. You need a key.':'Замок закрыт. Похоже, нужен ключ от особняка.');return;}
+   if(!readNote){say(window.currentLang==='en'?'Code lock. Find the note first.':'На двери кодовый замок. Сначала найди записку.');return;}
    document.getElementById('codeModal').style.display='flex';document.getElementById('codeInput').value='';document.getElementById('codeInput').focus();
- }else {say(currentLang==='en'?'An old item. Might be useful later.':'Старая вещь. Возможно, она пригодится позже.');}
+ }else {say(window.currentLang==='en'?'An old item. Might be useful later.':'Старая вещь. Возможно, она пригодится позже.');}
 }
 
 function finish(){
  if(won)return;won=true;coins+=100;updateHUD();
  document.getElementById('win').style.display='flex';
- setHint(currentLang==='en'?'Door is open. First mystery solved.':'Дверь открыта. Первая тайна раскрыта.');
+ setHint(window.currentLang==='en'?'Door is open. First mystery solved.':'Дверь открыта. Первая тайна раскрыта.');
 }
 
 function resetGame(){
  hasKey=false;readNote=false;clockSeen=false;doorOpen=false;won=false;coins=100;keyGroup.visible=true;door.material=mats.wood;door.position.z=5.68;doorOpen=false;
  document.getElementById('win').style.display='none';document.getElementById('codeModal').style.display='none';updateHUD();
- setHint(currentLang==='en'?'Look around. Find the key and code hint.':'Осмотрись. Найди ключ и подсказку с кодом.');
+ setHint(window.currentLang==='en'?'Look around. Find the key and code hint.':'Осмотрись. Найди ключ и подсказку с кодом.');
  camera.position.set(0,1.65,-4.5);yaw=Math.PI;pitch=0;
 }
 
@@ -214,10 +230,10 @@ document.getElementById('submitCode').onclick=()=>{
   document.getElementById('codeModal').style.display='none';doorOpen=true;
   door.material=new THREE.MeshStandardMaterial({color:0x243b3b,roughness:.55,metalness:.15,emissive:0x163b38,emissiveIntensity:.6});
   door.rotation.y=-.9;door.position.x=-1.15;
-  say(currentLang==='en'?'Lock clicked. Door opens...':'Замок щёлкнул. Дверь открывается…');
+  say(window.currentLang==='en'?'Lock clicked. Door opens...':'Замок щёлкнул. Дверь открывается…');
   setTimeout(finish,900);
  }else{
-  say(currentLang==='en'?'Wrong code. Check the clock carefully.':'Неверный код. Осмотри часы внимательнее.');
+  say(window.currentLang==='en'?'Wrong code. Check the clock carefully.':'Неверный код. Осмотри часы внимательнее.');
   document.getElementById('codeInput').select();
  }
 };
@@ -250,9 +266,11 @@ let prev=performance.now();function animate(now){requestAnimationFrame(animate);
 function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));}
 addEventListener('resize',resize);
 updateHUD();
+</script>
 
-// --- СИСТЕМА ПЕРЕКЛЮЧЕНИЯ ЯЗЫКОВ ---
-let currentLang = 'ru';
+<!-- СИСТЕМА ПЕРЕКЛЮЧЕНИЯ ЯЗЫКОВ И ЛОГИКА ОПЛАТЫ -->
+<script>
+window.currentLang = 'ru';
 const translations = {
     ru: {
         title: "ТАЙНА 100 ДВЕРЕЙ",
@@ -281,7 +299,12 @@ const translations = {
         winTitle: "Дверь открыта!",
         winDesc: "Ты нашёл первый фрагмент дневника. На обороте написано: «Ты был здесь раньше».",
         winReward: "Награда: +100 монет · Артефакт: Карманные часы",
-        againBtn: "Исследовать комнату ещё раз"
+        againBtn: "Исследовать комнату ещё раз",
+        payTitle: "Покупка монет",
+        payDesc: "Выберите удобный способ оплаты (100 монет):",
+        payCard: "💳 Оплата картой (Международная / СНГ)",
+        payCrypto: "🪙 Криптовалюта / P2P (Доступно из РФ)",
+        payCancel: "Отмена"
     },
     en: {
         title: "SECRET OF 100 DOORS",
@@ -310,12 +333,17 @@ const translations = {
         winTitle: "Door is Open!",
         winDesc: "You found the first diary fragment. The back reads: 'You were here before'.",
         winReward: "Reward: +100 coins · Artifact: Pocket watch",
-        againBtn: "Explore room again"
+        againBtn: "Explore room again",
+        payTitle: "Buy Coins",
+        payDesc: "Choose payment method (100 coins):",
+        payCard: "💳 Pay by Card (International / CIS)",
+        payCrypto: "🪙 Crypto / P2P (Available in RU)",
+        payCancel: "Cancel"
     }
 };
 
-function changeLanguage(lang) {
-    currentLang = lang;
+window.changeLanguage = function(lang) {
+    window.currentLang = lang;
     const t = translations[lang];
     document.getElementById('txt-title').innerText = t.title;
     document.getElementById('txt-sub').innerText = t.sub;
@@ -343,24 +371,34 @@ function changeLanguage(lang) {
     document.getElementById('win-desc').innerText = t.winDesc;
     document.getElementById('win-reward').innerText = t.winReward;
     document.getElementById('again').innerText = t.againBtn;
-    updateHUD();
+    
+    // Перевод модального окна оплаты
+    document.getElementById('pay-title').innerText = t.payTitle;
+    document.getElementById('pay-desc').innerText = t.payDesc;
+    document.getElementById('btn-pay-card').innerText = t.payCard;
+    document.getElementById('btn-pay-crypto').innerText = t.payCrypto;
+    document.getElementById('btn-pay-cancel').innerText = t.payCancel;
+    
+    if(window.updateHUD) window.updateHUD();
+};
+
+function openPaymentMenu() {
+    document.getElementById('payModal').style.display = 'flex';
 }
-</script>
 
-<!-- Надежная прямая оплата через Robokassa без серверов -->
-<script>
-function payWithRobokassa(amount, description) {
-    try {
-        const MerchantLogin = '100gate';
-        const OutSum = amount || 100;
-        const InvId = Date.now();
-        const IsTest = 1; // Тестовый режим (потом можно изменить на 0)
+function closePaymentMenu() {
+    document.getElementById('payModal').style.display = 'none';
+}
 
-        const paymentUrl = `https://auth.robokassa.ru/Merchant/Index.aspx?MerchantLogin=${MerchantLogin}&OutSum=${OutSum}&InvId=${InvId}&Description=${encodeURIComponent(description || 'Покупка монет')}&IsTest=${IsTest}`;
-
-        window.location.href = paymentUrl;
-    } catch (e) {
-        alert('Не удалось сформировать ссылку на оплату.');
+function payWithGateway(type) {
+    if (type === 'card') {
+        // Ссылка на платежный шлюз для карт (например, Interkassa / Payriff)
+        alert('Переход на оплату картой...');
+        // window.location.href = 'ССЫЛКА_ДЛЯ_КАРТ';
+    } else if (type === 'crypto') {
+        // Ссылка на Cryptomus / P2P для криптовалют и игроков из РФ
+        alert('Переход на оплату криптовалютой...');
+        // window.location.href = 'ССЫЛКА_ДЛЯ_КРИПТЫ';
     }
 }
 </script>
