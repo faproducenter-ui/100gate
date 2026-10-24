@@ -9,31 +9,33 @@
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090d14;color:#f4eee3;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
 #game{position:fixed;inset:0}canvas{display:block;width:100%;height:100%}
 #vignette{pointer-events:none;position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.52) 100%)}
-#top{position:fixed;left:16px;right:16px;top:14px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;pointer-events:none}
-.panel{background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:11px 14px;backdrop-filter:blur(8px);box-shadow:0 8px 30px #0004;pointer-events:auto}
-.brand{font-weight:800;letter-spacing:.08em;color:var(--gold);font-size:13px}.sub{font-size:12px;color:#c9c5bc;margin-top:3px}
-.stats{display:flex;gap:10px;font-size:12px;white-space:nowrap;align-items:center}.stat b{color:var(--gold);font-size:14px}
-.langBtn,.shopBtn{border:1px solid var(--line);background:#1a2332;color:var(--gold);border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;font-size:12px}
+#top{position:fixed;left:12px;right:12px;top:10px;display:flex;justify-content:space-between;gap:8px;align-items:flex-start;pointer-events:none;z-index:5}
+.panel{background:var(--glass);border:1px solid var(--line);border-radius:12px;padding:9px 12px;backdrop-filter:blur(8px);box-shadow:0 8px 30px #0004;pointer-events:auto}
+.brand{font-weight:800;letter-spacing:.08em;color:var(--gold);font-size:12px}.sub{font-size:11px;color:#c9c5bc;margin-top:2px}
+.stats{display:flex;gap:8px;font-size:11px;white-space:nowrap;align-items:center}.stat b{color:var(--gold);font-size:13px}
+.langBtn,.shopBtn{border:1px solid var(--line);background:#1a2332;color:var(--gold);border-radius:8px;padding:6px 10px;font-weight:700;cursor:pointer;font-size:11px}
 .shopBtn{background:linear-gradient(135deg,#d8ac60,#8e632e);color:#17120a;border:0}
 #center{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border:1px solid #f6e6c7;border-radius:50%;box-shadow:0 0 8px #000;pointer-events:none}
-#hint{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);max-width:90vw;text-align:center;padding:10px 15px;background:var(--glass);border:1px solid var(--line);border-radius:12px;font-size:13px;line-height:1.45}
-#message{position:fixed;top:90px;left:50%;transform:translateX(-50%);max-width:90vw;background:#111a28;border:1px solid var(--line);border-radius:12px;padding:10px 15px;text-align:center;font-size:13px;display:none;z-index:5}
-#bottom{position:fixed;left:16px;right:16px;bottom:14px;display:flex;justify-content:space-between;align-items:end;gap:10px;pointer-events:none}
-.controls{display:flex;gap:8px;pointer-events:auto}.btn{border:1px solid var(--line);background:var(--glass);color:#f4eee3;border-radius:12px;padding:12px 15px;font-size:13px;font-weight:650;cursor:pointer;touch-action:manipulation}.btn.primary{background:linear-gradient(135deg,#d8ac60,#8e632e);color:#17120a;border:0}
-#touchpad,#touchlook{position:fixed;bottom:0;display:none;touch-action:none}#touchpad{left:0;width:48vw;height:42vh}#touchlook{right:0;width:52vw;height:48vh}
-#joystick{position:fixed;left:25px;bottom:30px;width:104px;height:104px;border:1px solid #ffffff45;background:#111a2877;border-radius:50%;pointer-events:none;display:none}
-#stick{position:absolute;width:42px;height:42px;left:30px;top:30px;border-radius:50%;background:#e7bd70aa;border:1px solid #ffe3ad}
-#mobileInteract{display:none;position:fixed;right:20px;bottom:32px;z-index:5}
-.modalShade{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center;padding:18px;z-index:20}
-.modal{width:min(460px,100%);background:#111824;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 25px 80px #0009;max-height:90vh;overflow-y:auto}
-.modal h2{margin:0 0 8px;color:var(--gold);font-size:22px}.modal p{color:#d1d0cb;line-height:1.5;font-size:14px}
-.modal input{width:100%;padding:13px;border-radius:10px;border:1px solid #6d624f;background:#090d14;color:#fff;font-size:20px;letter-spacing:.25em;text-align:center;margin:7px 0 12px}
-.modal .row{display:flex;gap:9px}.modal .row .btn{flex:1}.tiny{font-size:11px;color:#a9a8a4;line-height:1.45;margin-top:13px}
-.shopGrid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
-.shopItem{background:#182233;border:1px solid #334460;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center}
-.shopItem h4{margin:0 0 4px;color:var(--gold);font-size:14px}.shopItem p{margin:0;font-size:11px;color:#b0aeb8}
-.buyBtn{background:linear-gradient(135deg,#d8ac60,#8e632e);border:0;color:#111;font-weight:800;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
-@media(max-width:700px){#top{left:9px;right:9px;top:9px}.panel{padding:8px 10px}.brand{font-size:11px}.sub{font-size:10px}.stats{gap:5px;font-size:10px}.stat b{font-size:12px}#hint{bottom:105px;font-size:12px;max-width:94vw}#bottom{left:9px;right:9px;bottom:9px}.desktopOnly{display:none}#touchpad,#touchlook,#joystick,#mobileInteract{display:block}.controls{display:none}}
+#hint{position:fixed;bottom:85px;left:50%;transform:translateX(-50%);max-width:92vw;text-align:center;padding:8px 12px;background:var(--glass);border:1px solid var(--line);border-radius:10px;font-size:12px;line-height:1.4;z-index:5}
+#message{position:fixed;top:80px;left:50%;transform:translateX(-50%);max-width:92vw;background:#111a28;border:1px solid var(--line);border-radius:10px;padding:9px 14px;text-align:center;font-size:12px;display:none;z-index:10}
+#bottom{position:fixed;left:12px;right:12px;bottom:10px;display:flex;justify-content:space-between;align-items:end;gap:10px;pointer-events:none;z-index:5}
+.controls{display:flex;gap:8px;pointer-events:auto}.btn{border:1px solid var(--line);background:var(--glass);color:#f4eee3;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:650;cursor:pointer;touch-action:manipulation}.btn.primary{background:linear-gradient(135deg,#d8ac60,#8e632e);color:#17120a;border:0}
+/* Mobile controls */
+#touchpad{position:fixed;left:0;bottom:0;width:50vw;height:45vh;display:none;touch-action:none;z-index:4}
+#touchlook{position:fixed;right:0;bottom:0;width:50vw;height:55vh;display:none;touch-action:none;z-index:4}
+#joystick{position:fixed;left:20px;bottom:25px;width:90px;height:90px;border:1px solid #ffffff45;background:#111a2877;border-radius:50%;pointer-events:none;display:none;z-index:5}
+#stick{position:absolute;width:36px;height:36px;left:27px;top:27px;border-radius:50%;background:#e7bd70aa;border:1px solid #ffe3ad}
+#mobileInteract{display:none;position:fixed;right:20px;bottom:25px;width:75px;height:75px;border-radius:50%;font-size:20px;font-weight:bold;z-index:15;align-items:center;justify-content:center}
+.modalShade{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center;padding:15px;z-index:30}
+.modal{width:min(440px,100%);background:#111824;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 25px 80px #0009;max-height:90vh;overflow-y:auto}
+.modal h2{margin:0 0 8px;color:var(--gold);font-size:20px}.modal p{color:#d1d0cb;line-height:1.45;font-size:13px}
+.modal input{width:100%;padding:12px;border-radius:10px;border:1px solid #6d624f;background:#090d14;color:#fff;font-size:18px;letter-spacing:.25em;text-align:center;margin:6px 0 10px}
+.modal .row{display:flex;gap:8px}.modal .row .btn{flex:1}.tiny{font-size:11px;color:#a9a8a4;line-height:1.4;margin-top:10px}
+.shopGrid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+.shopItem{background:#182233;border:1px solid #334460;border-radius:10px;padding:10px;display:flex;justify-content:space-between;align-items:center}
+.shopItem h4{margin:0 0 2px;color:var(--gold);font-size:13px}.shopItem p{margin:0;font-size:10px;color:#b0aeb8}
+.buyBtn{background:linear-gradient(135deg,#d8ac60,#8e632e);border:0;color:#111;font-weight:800;padding:7px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;font-size:11px}
+@media(max-width:700px){.desktopOnly{display:none}#touchpad,#touchlook,#joystick,#mobileInteract{display:block}}
 </style>
 </head>
 <body>
@@ -54,11 +56,15 @@
 <div id="bottom">
   <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="t_desktop_controls">WASD — движение · Мышь — осмотр · E — взаимодействие</div>
   <div class="controls">
-    <button class="btn" id="reset"><span id="t_reset">Начать заново</span></button>
+    <button class="btn desktopOnly" id="reset"><span id="t_reset">Начать заново</span></button>
     <button class="btn primary" id="interact"><span id="t_interact">Взаимодействовать (E)</span></button>
   </div>
 </div>
-<div id="touchpad"></div><div id="touchlook"></div><div id="joystick"><div id="stick"></div></div>
+
+<!-- Mobile controls -->
+<div id="touchpad"></div>
+<div id="touchlook"></div>
+<div id="joystick"><div id="stick"></div></div>
 <button class="btn primary" id="mobileInteract">E</button>
 
 <!-- START MODAL -->
@@ -92,31 +98,19 @@
     
     <div class="shopGrid">
       <div class="shopItem">
-        <div>
-          <h4 id="t_pack1_title">50 монет</h4>
-          <p id="t_pack1_desc">Микро-набор</p>
-        </div>
+        <div><h4 id="t_pack1_title">50 монет</h4><p id="t_pack1_desc">Микро-набор</p></div>
         <button class="buyBtn" onclick="buyCoinsReal(50, '$0.49')">$0.49 / 49 ₽</button>
       </div>
       <div class="shopItem">
-        <div>
-          <h4 id="t_pack2_title">100 монет</h4>
-          <p id="t_pack2_desc">Лёгкий старт</p>
-        </div>
+        <div><h4 id="t_pack2_title">100 монет</h4><p id="t_pack2_desc">Лёгкий старт</p></div>
         <button class="buyBtn" onclick="buyCoinsReal(100, '$0.99')">$0.99 / 99 ₽</button>
       </div>
       <div class="shopItem">
-        <div>
-          <h4 id="t_pack3_title">200 монет</h4>
-          <p id="t_pack3_desc">Стандартный набор</p>
-        </div>
+        <div><h4 id="t_pack3_title">200 монет</h4><p id="t_pack3_desc">Стандартный набор</p></div>
         <button class="buyBtn" onclick="buyCoinsReal(200, '$1.99')">$1.99 / 199 ₽</button>
       </div>
       <div class="shopItem">
-        <div>
-          <h4 id="t_pack4_title">500 монет</h4>
-          <p id="t_pack4_desc">Большой набор</p>
-        </div>
+        <div><h4 id="t_pack4_title">500 монет</h4><p id="t_pack4_desc">Большой набор</p></div>
         <button class="buyBtn" onclick="buyCoinsReal(500, '$3.99')">$3.99 / 399 ₽</button>
       </div>
     </div>
@@ -147,7 +141,7 @@ const i18n = {
     desktop_controls: "WASD — движение · Мышь — осмотр · E — взаимодействие",
     reset: "Начать заново", interact: "Взаимодействовать (E)",
     hint_pc: "Осмотрись. Найди ключ и подсказку с кодом.<br>Компьютер: WASD · мышь · E",
-    hint_mobile: "Осмотрись. Найди ключ и подсказку с кодом.",
+    hint_mobile: "Осмотрись. Проведите пальцем для обзора, джойстик слева для ходьбы.",
     msg_key_found: "Ты нашёл старый ключ. +30 монет", msg_key_has: "Ключ уже у тебя.",
     msg_note_read: "Записка: «Когда часы остановились, время осталось ключом».",
     msg_clock_read: "Часы остановились на 18:42. Запомни это время.",
@@ -172,7 +166,7 @@ const i18n = {
     desktop_controls: "WASD — Move · Mouse — Look · E — Interact",
     reset: "Restart", interact: "Interact (E)",
     hint_pc: "Look around. Find the key and code hint.<br>Controls: WASD · Mouse · E",
-    hint_mobile: "Look around. Find the key and code hint.",
+    hint_mobile: "Look around. Drag right to look, use joystick left to move.",
     msg_key_found: "You found an old key. +30 coins", msg_key_has: "You already have the key.",
     msg_note_read: "Note: 'When the clock stopped, time remained the key.'",
     msg_clock_read: "The clock stopped at 18:42. Remember this time.",
@@ -266,7 +260,7 @@ const ring=new THREE.Mesh(new THREE.TorusGeometry(.095,.025,8,20),mats.gold);key
 keyGroup.userData={kind:'key'};
 
 let hasKey=false,readNote=false,clockSeen=false,doorOpen=false,started=false,coins=100,won=false;
-let yaw=Math.PI,pitch=0,keysDown={};
+let yaw=Math.PI,pitch=0,keysDown={},move={x:0,y:0},touchLook=null,lastTouch=null;
 
 function say(t){const m=document.getElementById('message');m.textContent=t;m.style.display='block';clearTimeout(say.timer);say.timer=setTimeout(()=>m.style.display='none',2800)}
 function updateHUD(){document.getElementById('coins').textContent=coins;}
@@ -283,7 +277,7 @@ function interact(){
  if(!obj){
    const forward=new THREE.Vector3();camera.getWorldDirection(forward);
    for(const c of [keyGroup,note,clock,door]){
-     if(c.position.distanceTo(camera.position)<3.2){obj=c;break;}
+     if(c.position.distanceTo(camera.position)<3.5){obj=c;break;}
    }
  }
 
@@ -330,7 +324,11 @@ window.buyCoinsReal = function(amount, price) {
   say(isRu ? `Успешно куплено +${amount} монет!` : `Successfully bought +${amount} coins!`);
 };
 
-document.getElementById('begin').onclick=()=>{started=true;document.getElementById('start').style.display='none';};
+document.getElementById('begin').onclick=()=>{
+  started=true;
+  document.getElementById('start').style.display='none';
+  if(innerWidth>700) renderer.domElement.requestPointerLock?.();
+};
 document.getElementById('interact').onclick=interact;
 document.getElementById('mobileInteract').onclick=interact;
 document.getElementById('cancelCode').onclick=()=>document.getElementById('codeModal').style.display='none';
@@ -347,12 +345,24 @@ document.getElementById('submitCode').onclick=()=>{
 document.addEventListener('keydown',e=>{keysDown[e.code]=true;if(e.code==='KeyE')interact();});
 document.addEventListener('keyup',e=>keysDown[e.code]=false);
 document.addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement&&started){yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;}});
-renderer.domElement.addEventListener('click',()=>{if(started&&innerWidth>700)renderer.domElement.requestPointerLock?.()});
+renderer.domElement.addEventListener('click',()=>{if(started&&innerWidth>700&&document.pointerLockElement!==renderer.domElement)renderer.domElement.requestPointerLock?.()});
+
+// Mobile touch controls
+const touchpad=document.getElementById('touchpad'),touchlookEl=document.getElementById('touchlook'),joystick=document.getElementById('joystick'),stick=document.getElementById('stick');
+touchpad.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];touchLook={id:t.identifier,x:t.clientX,y:t.clientY};move={x:0,y:0};},{passive:false});
+touchpad.addEventListener('touchmove',e=>{e.preventDefault();if(!touchLook)return;for(const t of e.changedTouches){if(t.identifier===touchLook.id){const dx=t.clientX-touchLook.x,dy=t.clientY-touchLook.y;move={x:Math.max(-1,Math.min(1,dx/35)),y:Math.max(-1,Math.min(1,dy/35))};stick.style.transform=`translate(${move.x*24}px,${move.y*24}px)`;}}},{passive:false});
+function endMove(e){for(const t of e.changedTouches){if(t.identifier===touchLook?.id){touchLook=null;move={x:0,y:0};stick.style.transform='translate(0,0)';}}}
+touchpad.addEventListener('touchend',endMove);touchpad.addEventListener('touchcancel',endMove);
+
+touchlookEl.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];lastTouch={id:t.identifier,x:t.clientX,y:t.clientY};},{passive:false});
+touchlookEl.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches){if(t.identifier===lastTouch?.id){yaw-=(t.clientX-lastTouch.x)*.005;pitch-=(t.clientY-lastTouch.y)*.004;pitch=Math.max(-1.1,Math.min(1.1,pitch));lastTouch={id:t.identifier,x:t.clientX,y:t.clientY};}}},{passive:false});
+touchlookEl.addEventListener('touchend',()=>lastTouch=null);touchlookEl.addEventListener('touchcancel',()=>lastTouch=null);
 
 function update(dt){
  const dir=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
  const right=new THREE.Vector3(-dir.z,0,dir.x);
  let f=0,s=0;if(keysDown.KeyW)f+=1;if(keysDown.KeyS)f-=1;if(keysDown.KeyD)s+=1;if(keysDown.KeyA)s-=1;
+ f+=-move.y; s+=move.x;
  const v=new THREE.Vector3().addScaledVector(dir,f).addScaledVector(right,s);if(v.length()>1)v.normalize();
  camera.position.addScaledVector(v,2.5*dt);
  camera.position.x=Math.max(-4.3,Math.min(4.3,camera.position.x));camera.position.z=Math.max(-5.3,Math.min(5.1,camera.position.z));
