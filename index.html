@@ -10,7 +10,7 @@
 #game{position:fixed;inset:0}canvas{display:block;width:100%;height:100%}
 #vignette{pointer-events:none;position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.52) 100%)}
 
-/* Переключатель языка вынесен выше и правее, чтобы не перекрываться */
+/* Переключатель языка справа вверху */
 .lang-switch { position: fixed; top: 14px; right: 20px; display: flex; gap: 6px; z-index: 100; pointer-events: auto; }
 .lang-btn { background: rgba(17,24,36,0.9); color: #fff; border: 1px solid var(--line); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; }
 .lang-btn:hover { background: var(--gold); color: #000; }
@@ -44,7 +44,7 @@
 <body>
 <div id="game"></div><div id="vignette"></div>
 
-<!-- Переключатель языка (теперь справа вверху, всегда кликабелен) -->
+<!-- Переключатель языка -->
 <div class="lang-switch">
     <button class="lang-btn" onclick="changeLanguage('ru')">RU</button>
     <button class="lang-btn" onclick="changeLanguage('en')">EN</button>
@@ -70,12 +70,22 @@
 <!-- Старт -->
 <div class="modalShade" id="start"><div class="modal"><div class="brand" id="m-brand">ПРОТОТИП 0.1</div><h2 id="m-title">Дверь №001</h2><p id="m-desc">Ты очнулся в заброшенном особняке. На двери — кодовый замок. Найди старый ключ и записку, чтобы открыть проход.</p><button class="btn primary" id="begin" style="width:100%">Войти в особняк</button><div class="tiny" id="m-tiny">Демонстрационный прототип: прогресс пока хранится только в этой вкладке.</div></div></div>
 
-<!-- Окно выбора способа оплаты -->
+<!-- Окно выбора пакета монет и оплаты -->
 <div class="modalShade" id="payModal" style="display:none; z-index: 30;">
     <div class="modal">
         <h2 id="pay-title">Покупка монет</h2>
-        <p id="pay-desc">Выберите удобный способ оплаты (100 монет):</p>
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+        <p id="pay-desc">Выберите пакет монет и способ оплаты:</p>
+        
+        <div style="margin: 12px 0;">
+            <select id="coinPackage" style="width:100%; padding:10px; border-radius:8px; background:#090d14; color:#fff; border:1px solid var(--line); font-size:14px; margin-bottom:10px;">
+                <option value="50">50 монет</option>
+                <option value="100" selected>100 монет</option>
+                <option value="200">200 монет</option>
+                <option value="500">500 монет</option>
+            </select>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 5px;">
             <button class="btn primary" onclick="payWithGateway('card')" id="btn-pay-card">💳 Оплата картой (Международная / СНГ)</button>
             <button class="btn" style="border-color: #e7bd70;" onclick="payWithGateway('crypto')" id="btn-pay-crypto">🪙 Криптовалюта / P2P (Доступно из РФ)</button>
             <button class="btn" onclick="closePaymentMenu()" id="btn-pay-cancel" style="margin-top: 5px;">Отмена</button>
@@ -302,7 +312,7 @@ const translations = {
         winReward: "Награда: +100 монет · Артефакт: Карманные часы",
         againBtn: "Исследовать комнату ещё раз",
         payTitle: "Покупка монет",
-        payDesc: "Выберите удобный способ оплаты (100 монет):",
+        payDesc: "Выберите пакет монет и способ оплаты:",
         payCard: "💳 Оплата картой (Международная / СНГ)",
         payCrypto: "🪙 Криптовалюта / P2P (Доступно из РФ)",
         payCancel: "Отмена"
@@ -336,7 +346,7 @@ const translations = {
         winReward: "Reward: +100 coins · Artifact: Pocket watch",
         againBtn: "Explore room again",
         payTitle: "Buy Coins",
-        payDesc: "Choose payment method (100 coins):",
+        payDesc: "Choose coin package and payment method:",
         payCard: "💳 Pay by Card (International / CIS)",
         payCrypto: "🪙 Crypto / P2P (Available in RU)",
         payCancel: "Cancel"
@@ -391,14 +401,16 @@ function closePaymentMenu() {
 }
 
 function payWithGateway(type) {
+    const selectedCoins = document.getElementById('coinPackage').value;
+    
     if (type === 'card') {
-        // Сюда позже вставим вашу ссылку от Interkassa
-        alert('Здесь откроется страница оплаты картой (после настройки ссылки)');
-        // window.location.href = 'ВАША_ССЫЛКА_INTERKASSA';
+        alert(`Переход на оплату пакета: ${selectedCoins} монет (Карта / Interkassa)`);
+        // Сюда позже вставим вашу ссылку от Interkassa:
+        // window.location.href = `ВАША_ССЫЛКА_INTERKASSA?amount=${selectedCoins}`;
     } else if (type === 'crypto') {
-        // Сюда позже вставим вашу ссылку от Cryptomus
-        alert('Здесь откроется страница оплаты криптовалютой (после настройки ссылки)');
-        // window.location.href = 'ВАША_ССЫЛКА_CRYPTOMUS';
+        alert(`Переход на оплату пакета: ${selectedCoins} монет (Крипта / РФ / Cryptomus)`);
+        // Сюда позже вставим вашу ссылку от Cryptomus:
+        // window.location.href = `ВАША_ССЫЛКА_CRYPTOMUS?amount=${selectedCoins}`;
     }
 }
 </script>
