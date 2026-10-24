@@ -2,42 +2,48 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>100 Gate Secrets — Тайна 100 Дверей</title>
 <style>
-:root{--gold:#e7bd70;--glass:rgba(10,15,24,.88);--line:rgba(231,189,112,.4);--blue:#4b7cbf}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090d14;color:#f4eee3;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
+:root{--gold:#e7bd70;--glass:rgba(10,15,24,.88);--line:rgba(231,189,112,.4)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090d14;color:#f4eee3;font-family:Inter,system-ui,sans-serif;user-select:none}
 #game{position:fixed;inset:0}canvas{display:block;width:100%;height:100%}
 #vignette{pointer-events:none;position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.52) 100%)}
-#top{position:fixed;left:16px;right:16px;top:14px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;pointer-events:none}
-.panel{background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:11px 14px;backdrop-filter:blur(8px);box-shadow:0 8px 30px #0004;pointer-events:auto}
-.brand{font-weight:800;letter-spacing:.08em;color:var(--gold);font-size:13px}.sub{font-size:12px;color:#c9c5bc;margin-top:3px}
-.stats{display:flex;gap:10px;font-size:12px;white-space:nowrap;align-items:center}.stat b{color:var(--gold);font-size:14px}
-.langBtn,.shopBtn{border:1px solid var(--line);background:#1a2332;color:var(--gold);border-radius:8px;padding:5px 10px;font-weight:700;cursor:pointer;font-size:12px}
-.shopBtn{background:linear-gradient(135deg,#d8ac60,#8e632e);color:#17120a;border:0;display:flex;align-items:center;gap:4px}
-#center{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border:1px solid #f6e6c7;border-radius:50%;box-shadow:0 0 8px #000;pointer-events:none}
-#hint{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);max-width:90vw;text-align:center;padding:10px 15px;background:var(--glass);border:1px solid var(--line);border-radius:12px;font-size:13px;line-height:1.45}
-#message{position:fixed;top:90px;left:50%;transform:translateX(-50%);max-width:90vw;background:#111a28;border:1px solid var(--line);border-radius:12px;padding:10px 15px;text-align:center;font-size:13px;display:none;z-index:5}
-#bottom{position:fixed;left:16px;right:16px;bottom:14px;display:flex;justify-content:space-between;align-items:end;gap:10px;pointer-events:none}
-.controls{display:flex;gap:8px;pointer-events:auto}.btn{border:1px solid var(--line);background:var(--glass);color:#f4eee3;border-radius:12px;padding:12px 15px;font-size:13px;font-weight:650;cursor:pointer;touch-action:manipulation}.btn.primary{background:linear-gradient(135deg,#d8ac60,#8e632e);color:#17120a;border:0}
-#touchpad,#touchlook{position:fixed;bottom:0;display:none;touch-action:none}#touchpad{left:0;width:48vw;height:42vh}#touchlook{right:0;width:52vw;height:48vh}
-#joystick{position:fixed;left:25px;bottom:30px;width:104px;height:104px;border:1px solid #ffffff45;background:#111a2877;border-radius:50%;pointer-events:none;display:none}
-#stick{position:absolute;width:42px;height:42px;left:30px;top:30px;border-radius:50%;background:#e7bd70aa;border:1px solid #ffe3ad}
-#mobileInteract{display:none;position:fixed;right:20px;bottom:32px;z-index:5}
-.modalShade{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center;padding:18px;z-index:20}
-.modal{width:min(460px,100%);background:#111824;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 25px 80px #0009;max-height:90vh;overflow-y:auto}
-.modal h2{margin:0 0 8px;color:var(--gold);font-size:22px}.modal p{color:#d1d0cb;line-height:1.5;font-size:14px}
-.modal input{width:100%;padding:13px;border-radius:10px;border:1px solid #6d624f;background:#090d14;color:#fff;font-size:20px;letter-spacing:.25em;text-align:center;margin:7px 0 12px}
-.modal .row{display:flex;gap:9px}.modal .row .btn{flex:1}.tiny{font-size:11px;color:#a9a8a4;line-height:1.45;margin-top:13px}
-/* Shop styles */
-.shopTabs{display:flex;gap:8px;margin-bottom:15px;border-bottom:1px solid var(--line);padding-bottom:10px}
-.tabBtn{background:transparent;border:0;color:#c9c5bc;font-weight:700;cursor:pointer;padding:6px 12px;border-radius:8px}
-.tabBtn.active{background:var(--gold);color:#111}
-.shopGrid{display:grid;grid-template-columns:1fr;gap:10px}
-.shopItem{background:#182233;border:1px solid #334460;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center}
-.shopItem h4{margin:0 0 4px;color:var(--gold);font-size:14px}.shopItem p{margin:0;font-size:11px;color:#b0aeb8}
-.buyBtn{background:linear-gradient(135deg,#d8ac60,#8e632e);border:0;color:#111;font-weight:800;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
-@media(max-width:700px){#top{left:9px;right:9px;top:9px}.panel{padding:8px 10px}.brand{font-size:11px}.sub{font-size:10px}.stats{gap:5px;font-size:10px}.stat b{font-size:12px}#hint{bottom:105px;font-size:12px;max-width:94vw}#bottom{left:9px;right:9px;bottom:9px}.desktopOnly{display:none}#touchpad,#touchlook,#joystick,#mobileInteract{display:block}.controls{display:none}}
+#top{position:fixed;left:12px;right:12px;top:12px;display:flex;justify-content:space-between;gap:8px;align-items:flex-start;pointer-events:none;z-index:5}
+.panel{background:var(--glass);border:1px solid var(--line);border-radius:12px;padding:8px 12px;backdrop-filter:blur(8px);pointer-events:auto}
+.brand{font-weight:800;letter-spacing:.05em;color:var(--gold);font-size:12px}.sub{font-size:10px;color:#c9c5bc;margin-top:2px}
+.stats{display:flex;gap:10px;font-size:11px;align-items:center}.stat b{color:var(--gold);font-size:13px}
+.langBtn,.shopBtn{border:1px solid var(--line);background:#1a2332;color:var(--gold);border-radius:8px;padding:6px 10px;font-weight:700;cursor:pointer;font-size:11px}
+.shopBtn{background:linear-gradient(135deg,#d8ac60,#8e632e);color:#17120a;border:0}
+
+/* Прицел по центру экрана */
+#center{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border:2px solid #e7bd70;border-radius:50%;pointer-events:none;box-shadow:0 0 6px #000;z-index:4}
+
+#hint{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);max-width:90vw;text-align:center;padding:8px 12px;background:var(--glass);border:1px solid var(--line);border-radius:10px;font-size:12px;z-index:4}
+#message{position:fixed;top:80px;left:50%;transform:translateX(-50%);max-width:90vw;background:#111a28;border:1px solid var(--line);border-radius:10px;padding:8px 14px;text-align:center;font-size:12px;display:none;z-index:10}
+#bottom{position:fixed;left:12px;right:12px;bottom:12px;display:flex;justify-content:space-between;align-items:end;pointer-events:none;z-index:5}
+.controls{display:flex;gap:8px;pointer-events:auto}.btn{border:1px solid var(--line);background:var(--glass);color:#f4eee3;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:650;cursor:pointer;touch-action:manipulation}.btn.primary{background:linear-gradient(135deg,#d8ac60,#8e632e);color:#17120a;border:0}
+
+/* Mobile Touch Controls */
+#touchpad{position:fixed;left:0;bottom:0;width:50vw;height:50vh;touch-action:none;z-index:2}
+#touchlook{position:fixed;right:0;bottom:0;width:50vw;height:50vh;touch-action:none;z-index:2}
+#joystick{position:fixed;left:20px;bottom:20px;width:90px;height:90px;border:1px solid #ffffff45;background:#111a2877;border-radius:50%;pointer-events:none;display:none;z-index:3}
+#stick{position:absolute;width:36px;height:36px;left:27px;top:27px;border-radius:50%;background:#e7bd70aa;border:1px solid #ffe3ad}
+#mobileInteract{display:none;position:fixed;right:20px;bottom:25px;z-index:6;padding:14px 20px;font-size:14px;font-weight:800}
+
+/* Modals */
+.modalShade{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center;padding:16px;z-index:30}
+.modal{width:min(420px,100%);background:#111824;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 25px 80px #0009;max-height:85vh;overflow-y:auto}
+.modal h2{margin:0 0 8px;color:var(--gold);font-size:20px}.modal p{color:#d1d0cb;line-height:1.4;font-size:13px}
+.modal input{width:100%;padding:12px;border-radius:10px;border:1px solid #6d624f;background:#090d14;color:#fff;font-size:18px;text-align:center;margin:8px 0 12px}
+.shopGrid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+.shopItem{background:#182233;border:1px solid #334460;border-radius:10px;padding:10px;display:flex;justify-content:space-between;align-items:center}
+.shopItem h4{margin:0 0 2px;color:var(--gold);font-size:13px;display:flex;align-items:center;gap:6px}
+.shopItem p{margin:0;font-size:10px;color:#b0aeb8}
+.buyBtn{background:linear-gradient(135deg,#d8ac60,#8e632e);border:0;color:#111;font-weight:800;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px}
+
+@media(max-width:700px){.desktopOnly{display:none!important}#joystick,#mobileInteract{display:block!important}}
 </style>
 </head>
 <body>
@@ -45,33 +51,34 @@
 <div id="top">
   <div class="panel">
     <div class="brand" id="t_title">ТАЙНА 100 ДВЕРЕЙ</div>
-    <div class="sub" id="t_world">МИР I · ЗАБРОШЕННЫЙ ОСОБНЯК</div>
+    <div class="sub" id="t_world">МИР I · ОСОБНЯК</div>
   </div>
   <div class="panel stats">
     <button class="langBtn" id="langToggle">RU | EN</button>
     <button class="shopBtn" id="openShop">🛒 <span id="t_shop_btn">Магазин</span></button>
-    <div class="stat"><span id="t_coins_label">МОНЕТЫ</span><br><b id="coins">100</b></div>
+    <div class="stat"><span id="t_coins_label">МОНЕТЫ</span><br><b id="coins">🪙 100</b></div>
   </div>
 </div>
 <div id="center"></div><div id="message"></div>
 <div id="hint"></div>
 <div id="bottom">
   <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="t_desktop_controls">WASD — движение · Мышь — осмотр · E — взаимодействие</div>
-  <div class="controls">
+  <div class="controls desktopOnly">
     <button class="btn" id="reset">↻ <span id="t_reset">Начать заново</span></button>
     <button class="btn primary" id="interact"><span id="t_interact">Взаимодействовать · E</span></button>
   </div>
 </div>
+
 <div id="touchpad"></div><div id="touchlook"></div><div id="joystick"><div id="stick"></div></div>
-<button class="btn primary" id="mobileInteract">E</button>
+<button class="btn primary" id="mobileInteract">🖐 Взаимодействовать</button>
 
 <!-- START MODAL -->
 <div class="modalShade" id="start">
   <div class="modal">
-    <div class="brand">PROTOTYPE 0.2</div>
+    <div class="brand">PROTOTYPE 0.4</div>
     <h2 id="t_start_title">Дверь №001</h2>
     <p id="t_start_desc">Ты очнулся в заброшенном особняке. На двери — кодовый замок. Найди старый ключ и записку, чтобы открыть проход.</p>
-    <button class="btn primary" id="begin" style="width:100%" id="t_start_btn">Войти в особняк</button>
+    <button class="btn primary" id="begin" style="width:100%">Войти в особняк</button>
   </div>
 </div>
 
@@ -80,10 +87,10 @@
   <div class="modal">
     <h2 id="t_code_title">Кодовый замок</h2>
     <p id="t_code_desc">На записке написано: «Когда часы остановились, время осталось ключом».</p>
-    <input id="codeInput" inputmode="numeric" maxlength="4" placeholder="••••" aria-label="Code">
-    <div class="row">
-      <button class="btn" id="cancelCode">Назад</button>
-      <button class="btn primary" id="submitCode">Открыть дверь</button>
+    <input id="codeInput" inputmode="numeric" maxlength="4" placeholder="••••">
+    <div style="display:flex;gap:8px">
+      <button class="btn" id="cancelCode" style="flex:1">Назад</button>
+      <button class="btn primary" id="submitCode" style="flex:1">Открыть</button>
     </div>
   </div>
 </div>
@@ -91,58 +98,17 @@
 <!-- SHOP MODAL -->
 <div class="modalShade" id="shopModal" style="display:none">
   <div class="modal">
-    <h2 id="t_shop_title">Лавка Торговца Времени</h2>
-    <p id="t_shop_desc">Здесь можно приобрести монеты и полезные инструменты.</p>
-    
-    <div class="shopTabs">
-      <button class="tabBtn active" id="tabReal">💳 <span id="t_tab_real">Монеты (Банк)</span></button>
-      <button class="tabBtn" id="tabItems">🛡️ <span id="t_tab_items">Предметы</span></button>
-    </div>
-
-    <!-- Real money section -->
-    <div class="shopGrid" id="realGrid">
+    <h2 id="t_shop_title">Магазин</h2>
+    <div class="shopGrid">
       <div class="shopItem">
-        <div>
-          <h4>🪙 100 Chrono Coins</h4>
-          <p id="t_pack1_desc">Горсть монет для легкого старта</p>
-        </div>
+        <div><h4>🪙 100 монет</h4><p>Лёгкий старт</p></div>
         <button class="buyBtn" onclick="buyCoinsReal(100, '$0.99')">$0.99 / 99 ₽</button>
       </div>
       <div class="shopItem">
-        <div>
-          <h4>🪙 500 Chrono Coins</h4>
-          <p id="t_pack2_desc">Популярный набор (+50 бонусом)</p>
-        </div>
+        <div><h4>🪙 500 монет</h4><p>Популярный набор</p></div>
         <button class="buyBtn" onclick="buyCoinsReal(500, '$3.99')">$3.99 / 399 ₽</button>
       </div>
-      <div class="shopItem">
-        <div>
-          <h4>🪙 1500 Chrono Coins</h4>
-          <p id="t_pack3_desc">Сундук монет для опытного искателя</p>
-        </div>
-        <button class="buyBtn" onclick="buyCoinsReal(1500, '$9.99')">$9.99 / 999 ₽</button>
-      </div>
-      <div class="tiny" style="text-align:center">Поддерживает: Visa, MasterCard, МИР, СБП</div>
     </div>
-
-    <!-- Items section -->
-    <div class="shopGrid" id="itemsGrid" style="display:none">
-      <div class="shopItem">
-        <div>
-          <h4>🔍 Сканер Улик</h4>
-          <p id="t_item1_desc">Подсвечивает скрытый код в комнате</p>
-        </div>
-        <button class="buyBtn" onclick="buyItem('scanner', 50)">50 🪙</button>
-      </div>
-      <div class="shopItem">
-        <div>
-          <h4>🛡️ Защитный Щит</h4>
-          <p id="t_item2_desc">Защищает от 1 ошибки в ловушках</p>
-        </div>
-        <button class="buyBtn" onclick="buyItem('shield', 80)">80 🪙</button>
-      </div>
-    </div>
-
     <br>
     <button class="btn" id="closeShop" style="width:100%">Закрыть</button>
   </div>
@@ -151,9 +117,8 @@
 <!-- WIN MODAL -->
 <div class="modalShade" id="win" style="display:none">
   <div class="modal">
-    <div class="brand">CHAPTER COMPLETE</div>
-    <h2 id="t_win_title">Дверь открыта!</h2>
-    <p id="t_win_desc">Ты нашёл первый фрагмент дневника. На обороте написано: «Ты был здесь раньше».</p>
+    <h2>Дверь открыта!</h2>
+    <p>Ты нашёл первый фрагмент дневника.</p>
     <button class="btn primary" id="again" style="width:100%">Исследовать заново</button>
   </div>
 </div>
@@ -161,149 +126,58 @@
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
 
-// LOCALIZATION SYSTEM
 let currentLang = 'ru';
 const i18n = {
-  ru: {
-    title: "ТАЙНА 100 ДВЕРЕЙ", world: "МИР I · ЗАБРОШЕННЫЙ ОСОБНЯК",
-    coins_label: "МОНЕТЫ", shop_btn: "Магазин", desktop_controls: "WASD — движение · Мышь — осмотр · E — взаимодействие",
-    reset: "Начать заново", interact: "Взаимодействовать · E",
-    hint_start: "Осмотрись. Найди ключ и подсказку с кодом.",
-    msg_key_found: "Ты нашёл старый ключ. +30 монет", msg_key_has: "Ключ уже у тебя.",
-    msg_note_read: "Записка: «Когда часы остановились, время осталось ключом».",
-    msg_clock_read: "Часы остановились на 18:42. Запомни это время.",
-    msg_door_locked: "Замок закрыт. Похоже, нужен ключ.",
-    msg_door_need_note: "На двери кодовый замок. Сначала найди записку.",
-    start_title: "Дверь №001", start_desc: "Ты очнулся в заброшенном особняке. На двери — кодовый замок. Найди старый ключ и записку, чтобы открыть проход.",
-    start_btn: "Войти в особняк", code_title: "Кодовый замок",
-    code_desc: "На записке написано: «Когда часы остановились, время осталось ключом».",
-    shop_title: "Лавка Торговца Времени", shop_desc: "Здесь можно приобрести монеты и полезные инструменты.",
-    tab_real: "Монеты (Банк)", tab_items: "Предметы",
-    pack1_desc: "Горсть монет для легкого старта", pack2_desc: "Популярный набор (+50 бонусом)", pack3_desc: "Сундук монет для опытного искателя",
-    item1_desc: "Подсвечивает скрытый код в комнате", item2_desc: "Защищает от 1 ошибки в ловушках",
-    win_title: "Дверь открыта!", win_desc: "Ты нашёл первый фрагмент дневника. На обороте написано: «Ты был здесь раньше»."
-  },
-  en: {
-    title: "100 GATES SECRET", world: "WORLD I · ABANDONED MANOR",
-    coins_label: "COINS", shop_btn: "Shop", desktop_controls: "WASD — Move · Mouse — Look · E — Interact",
-    reset: "Restart", interact: "Interact · E",
-    hint_start: "Look around. Find the key and code hint.",
-    msg_key_found: "You found an old key. +30 coins", msg_key_has: "You already have the key.",
-    msg_note_read: "Note: 'When the clock stopped, time remained the key.'",
-    msg_clock_read: "The clock stopped at 18:42. Remember this time.",
-    msg_door_locked: "Door is locked. You need a key.",
-    msg_door_need_note: "Combination lock detected. Find the note first.",
-    start_title: "Door #001", start_desc: "You woke up in an abandoned manor. Find the old key and note to open the escape door.",
-    start_btn: "Enter Manor", code_title: "Combination Lock",
-    code_desc: "Note says: 'When the clock stopped, time remained the key.'",
-    shop_title: "Merchant of Time Shop", shop_desc: "Purchase Chrono Coins and survival tools here.",
-    tab_real: "Coins (Bank)", tab_items: "Tools",
-    pack1_desc: "Handful of coins for a quick start", pack2_desc: "Popular pack (+50 bonus)", pack3_desc: "Chest of coins for experienced seekers",
-    item1_desc: "Highlights secret codes in rooms", item2_desc: "Protects against 1 trap damage",
-    win_title: "Door Unlocked!", win_desc: "You found the first diary page: 'You have been here before.'"
-  }
+  ru: { title: "ТАЙНА 100 ДВЕРЕЙ", world: "МИР I · ОСОБНЯК", coins_label: "МОНЕТЫ", shop_btn: "Магазин", desktop_controls: "WASD — движение · Мышь — осмотр · E — взаимодействие", reset: "Начать заново", interact: "Взаимодействовать · E", hint_start: "Джойстик слева — ходьба. Проводка справа — осмотр. Подойди к предметам.", msg_key_found: "Ты нашёл старый ключ. +30 монет", msg_key_has: "Ключ уже у тебя.", msg_note_read: "Записка: «Когда часы остановились, время осталось ключом».", msg_clock_read: "Часы остановились на 18:42.", msg_door_locked: "Нужен ключ.", msg_door_need_note: "Найди сначала записку." },
+  en: { title: "100 GATES SECRET", world: "WORLD I · MANOR", coins_label: "COINS", shop_btn: "Shop", desktop_controls: "WASD — Move · Mouse — Look · E — Interact", reset: "Restart", interact: "Interact · E", hint_start: "Left joystick to move. Right drag to look around.", msg_key_found: "Found old key. +30 coins", msg_key_has: "Already have key.", msg_note_read: "Note: 'When clock stopped, time remained key.'", msg_clock_read: "Clock stopped at 18:42.", msg_door_locked: "Key required.", msg_door_need_note: "Find note first." }
 };
 
 function updateLanguage(lang) {
-  currentLang = lang;
-  const t = i18n[lang];
+  currentLang = lang; const t = i18n[lang];
   document.getElementById('t_title').textContent = t.title;
   document.getElementById('t_world').textContent = t.world;
   document.getElementById('t_coins_label').textContent = t.coins_label;
   document.getElementById('t_shop_btn').textContent = t.shop_btn;
-  document.getElementById('t_desktop_controls').textContent = t.desktop_controls;
-  document.getElementById('t_reset').textContent = t.reset;
-  document.getElementById('t_interact').textContent = t.interact;
-  document.getElementById('t_start_title').textContent = t.start_title;
-  document.getElementById('t_start_desc').textContent = t.start_desc;
-  document.getElementById('begin').textContent = t.start_btn;
-  document.getElementById('t_code_title').textContent = t.code_title;
-  document.getElementById('t_code_desc').textContent = t.code_desc;
-  document.getElementById('t_shop_title').textContent = t.shop_title;
-  document.getElementById('t_shop_desc').textContent = t.shop_desc;
-  document.getElementById('t_tab_real').textContent = t.tab_real;
-  document.getElementById('t_tab_items').textContent = t.tab_items;
-  document.getElementById('t_pack1_desc').textContent = t.pack1_desc;
-  document.getElementById('t_pack2_desc').textContent = t.pack2_desc;
-  document.getElementById('t_pack3_desc').textContent = t.pack3_desc;
-  document.getElementById('t_item1_desc').textContent = t.item1_desc;
-  document.getElementById('t_item2_desc').textContent = t.item2_desc;
-  document.getElementById('t_win_title').textContent = t.win_title;
-  document.getElementById('t_win_desc').textContent = t.win_desc;
   document.getElementById('hint').innerHTML = t.hint_start;
 }
+document.getElementById('langToggle').onclick = () => updateLanguage(currentLang === 'ru' ? 'en' : 'ru');
 
-document.getElementById('langToggle').onclick = () => {
-  updateLanguage(currentLang === 'ru' ? 'en' : 'ru');
-};
-
-// GAME ENGINE & LOGIC
-const root=document.getElementById('game');
-const scene=new THREE.Scene(); scene.background=new THREE.Color(0x111824); scene.fog=new THREE.Fog(0x111824,7,24);
-const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,100); camera.position.set(0,1.65,-4.5);
-const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,1.7)); renderer.setSize(innerWidth,innerHeight); renderer.shadowMap.enabled=true; renderer.toneMapping=THREE.ACESFilmicToneMapping; root.appendChild(renderer.domElement);
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x111824);
+const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,100); camera.position.set(0,1.65,-4.5);
+const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); document.getElementById('game').appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0x9eb8dc,0x302016,1.35));
-const lamp=new THREE.PointLight(0xffc77c,32,16,2);lamp.position.set(0,3.3,1.3);lamp.castShadow=true;scene.add(lamp);
+const lamp=new THREE.PointLight(0xffc77c,25,15);lamp.position.set(0,3,1);scene.add(lamp);
 
-const mats={
- wall:new THREE.MeshStandardMaterial({color:0x37332f,roughness:.92}),
- floor:new THREE.MeshStandardMaterial({color:0x3d3028,roughness:.9}),
- wood:new THREE.MeshStandardMaterial({color:0x4b2d1c,roughness:.7}),
- gold:new THREE.MeshStandardMaterial({color:0xc79b4e,metalness:.72,roughness:.28}),
- metal:new THREE.MeshStandardMaterial({color:0x545b61,metalness:.65,roughness:.4}),
- glow:new THREE.MeshStandardMaterial({color:0x8ed8ff,emissive:0x2474a8,emissiveIntensity:1.4}),
- paper:new THREE.MeshStandardMaterial({color:0xd7c49c,roughness:1}),
- dark:new THREE.MeshStandardMaterial({color:0x17191d,roughness:.7})
-};
+const mats={ wall:new THREE.MeshBasicMaterial({color:0x37332f}), floor:new THREE.MeshBasicMaterial({color:0x2a221c}), wood:new THREE.MeshBasicMaterial({color:0x4b2d1c}), gold:new THREE.MeshBasicMaterial({color:0xc79b4e}), paper:new THREE.MeshBasicMaterial({color:0xd7c49c}) };
 
-function box(name,x,y,z,sx,sy,sz,mat,opts={}){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);m.name=name;m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);if(opts.userData)m.userData=opts.userData;return m}
-function cylinder(name,x,y,z,r1,r2,h,mat,rotX=0){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,20),mat);m.name=name;m.position.set(x,y,z);m.rotation.x=rotX;m.castShadow=true;scene.add(m);return m}
+function box(x,y,z,sx,sy,sz,mat,opts={}){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);m.position.set(x,y,z);scene.add(m);if(opts.userData)m.userData=opts.userData;return m}
 
-box('floor',0,-.12,0,10,.24,12,mats.floor); box('ceiling',0,4.2,0,10,.25,12,mats.wall);
-box('left wall',-5,2,0,.25,4.2,12,mats.wall); box('right wall',5,2,0,.25,4.2,12,mats.wall);
-box('back wall',0,2,-6,10,4.2,.25,mats.wall);
-box('front left',-3.35,2,6,3.3,4.2,.25,mats.wall); box('front right',3.35,2,6,3.3,4.2,.25,mats.wall); box('front top',0,3.75,6,3.4,.7,.25,mats.wall);
-
-const door=box('sealed door',0,1.62,5.68,2.78,3.1,.28,mats.wood,{userData:{kind:'door'}});
-box('desk top',-2.65,.95,-1.3,2.15,.16,1.05,mats.wood);
-const clock=cylinder('antique clock',-2.45,1.55,-1.35,.34,.34,.13,mats.gold,Math.PI/2);
-const note=box('folded note',-2.95,1.055,-1.25,.38,.025,.28,mats.paper,{userData:{kind:'note'}});
-const keyGroup=new THREE.Group();keyGroup.name='old key';keyGroup.position.set(-2.12,1.08,-1.45);scene.add(keyGroup);
-const ring=new THREE.Mesh(new THREE.TorusGeometry(.095,.025,8,20),mats.gold);keyGroup.add(ring);
-keyGroup.userData={kind:'key'};
+box(0,-.1,0,10,.2,12,mats.floor); box(0,4,0,10,.2,12,mats.wall);
+box(-5,2,0,.2,4,12,mats.wall); box(5,2,0,.2,4,12,mats.wall); box(0,2,-6,10,4,.2,mats.wall);
+const door=box(0,1.6,5.6,2.6,3,.2,mats.wood,{userData:{kind:'door'}});
+box(-2.6,.9,-1.3,2,.1,1,mats.wood);
+const clock=box(-2.4,1.5,-1.3,.6,.6,.1,mats.gold,{userData:{kind:'clock'}});
+const note=box(-2.9,1,-1.25,.3,.02,.2,mats.paper,{userData:{kind:'note'}});
+const keyObj=box(-2.1,1,-1.4,.2,.05,.1,mats.gold,{userData:{kind:'key'}});
 
 let hasKey=false,readNote=false,clockSeen=false,doorOpen=false,started=false,coins=100,won=false;
-let yaw=Math.PI,pitch=0,keysDown={},move={x:0,y:0};
+let yaw=Math.PI,pitch=0,move={x:0,y:0},touchLook=null,touchMove=null,lastTouch=null;
 
-function say(t){const m=document.getElementById('message');m.textContent=t;m.style.display='block';clearTimeout(say.timer);say.timer=setTimeout(()=>m.style.display='none',2800)}
-function updateHUD(){document.getElementById('coins').textContent=coins;}
+function say(t){const m=document.getElementById('message');m.textContent=t;m.style.display='block';clearTimeout(say.timer);say.timer=setTimeout(()=>m.style.display='none',2500)}
+function updateHUD(){ document.getElementById('coins').textContent = '🪙 ' + coins; }
 
 function interact(){
  if(!started||won)return;
  const t = i18n[currentLang];
- const raycaster=new THREE.Raycaster();
- raycaster.setFromCamera(new THREE.Vector2(0,0),camera);
- const hits=raycaster.intersectObjects([keyGroup,note,clock,door],true);
- let obj = hits.length && hits[0].distance < 3.5 ? hits[0].object : null;
- if(obj){ while(obj.parent && !obj.userData.kind && obj.parent!==scene) obj=obj.parent; }
- 
- if(!obj){
-   const forward=new THREE.Vector3();camera.getWorldDirection(forward);
-   for(const c of [keyGroup,note,clock,door]){
-     if(c.position.distanceTo(camera.position)<3.2){obj=c;break;}
-   }
+ let target=null;
+ for(const c of [keyObj,note,clock,door]){
+   if(c.position.distanceTo(camera.position)<3.5){target=c;break;}
  }
-
- const kind = obj ? (obj.userData.kind || (obj.parent===keyGroup?'key':null)) : null;
-
- if(kind==='key'){
-   if(hasKey){say(t.msg_key_has);return;}
-   hasKey=true;keyGroup.visible=false;coins+=30;updateHUD();say(t.msg_key_found);
- }else if(kind==='note'){
-   readNote=true;say(t.msg_note_read);
- }else if(obj===clock || (obj && obj.parent===clock)){
-   clockSeen=true;say(t.msg_clock_read);
- }else if(kind==='door'||obj===door){
+ const kind = target ? target.userData.kind : null;
+ if(kind==='key'){ if(hasKey){say(t.msg_key_has);}else{hasKey=true;keyObj.visible=false;coins+=30;updateHUD();say(t.msg_key_found);} }
+ else if(kind==='note'){ readNote=true;say(t.msg_note_read); }
+ else if(kind==='clock'){ clockSeen=true;say(t.msg_clock_read); }
+ else if(kind==='door'){
    if(doorOpen){finish();return;}
    if(!hasKey){say(t.msg_door_locked);return;}
    if(!readNote){say(t.msg_door_need_note);return;}
@@ -311,90 +185,62 @@ function interact(){
  }
 }
 
-function finish(){
- won=true;coins+=100;updateHUD();document.getElementById('win').style.display='flex';
-}
+function finish(){ won=true;coins+=100;updateHUD();document.getElementById('win').style.display='flex'; }
 
-// SHOP SYSTEM & BANK SIMULATION
+// TOUCH CONTROLS
+const pad=document.getElementById('touchpad'), look=document.getElementById('touchlook'), stick=document.getElementById('stick');
+pad.addEventListener('touchstart',e=>{ const touch=e.touches[0]; touchMove={id:touch.identifier, x:touch.clientX, y:touch.clientY}; },{passive:true});
+pad.addEventListener('touchmove',e=>{
+  if(!touchMove)return;
+  for(const t of e.touches){
+    if(t.identifier===touchMove.id){
+      const dx=t.clientX-touchMove.x, dy=t.clientY-touchMove.y;
+      move={x:Math.max(-1,Math.min(1,dx/30)), y:Math.max(-1,Math.min(1,dy/30))};
+      stick.style.transform=`translate(${move.x*20}px,${move.y*20}px)`;
+    }
+  }
+},{passive:true});
+function endMove(){ touchMove=null; move={x:0,y:0}; stick.style.transform='translate(0,0)'; }
+pad.addEventListener('touchend',endMove); pad.addEventListener('touchcancel',endMove);
+
+look.addEventListener('touchstart',e=>{ const t=e.touches[0]; lastTouch={id:t.identifier, x:t.clientX, y:t.clientY}; },{passive:true});
+look.addEventListener('touchmove',e=>{
+  if(!lastTouch)return;
+  for(const t of e.touches){
+    if(t.identifier===lastTouch.id){
+      yaw-=(t.clientX-lastTouch.x)*0.008;
+      pitch-=(t.clientY-lastTouch.y)*0.006;
+      pitch=Math.max(-1,Math.min(1,pitch));
+      lastTouch={id:t.identifier, x:t.clientX, y:t.clientY};
+    }
+  }
+},{passive:true});
+
 document.getElementById('openShop').onclick=()=>document.getElementById('shopModal').style.display='flex';
 document.getElementById('closeShop').onclick=()=>document.getElementById('shopModal').style.display='none';
-document.getElementById('tabReal').onclick=()=>{
-  document.getElementById('realGrid').style.display='grid';
-  document.getElementById('itemsGrid').style.display='none';
-  document.getElementById('tabReal').classList.add('active');
-  document.getElementById('tabItems').classList.remove('active');
-};
-document.getElementById('tabItems').onclick=()=>{
-  document.getElementById('realGrid').style.display='none';
-  document.getElementById('itemsGrid').style.display='grid';
-  document.getElementById('tabItems').classList.add('active');
-  document.getElementById('tabReal').classList.remove('active');
-};
-
-window.buyCoinsReal = function(amount, price) {
-  // Здесь будет вызов вашего бэкенда на Railway для создания платежа Банком (Visa/Mastercard/МИР)
-  const isRu = currentLang === 'ru';
-  const msg = isRu 
-    ? `Переход к оплате ${price} через Банк (Visa/MasterCard/МИР)...\n\nПосле подсоединения Railway платежи будут списываться с карты настоящими деньгами.`
-    : `Redirecting to ${price} payment gateway (Visa/MasterCard/MIR)...\n\nReal card charging will trigger once Railway backend is connected.`;
-  
-  alert(msg);
-  // Демо-начисление для тестирования
-  coins += amount;
-  updateHUD();
-  say(isRu ? `Успешно куплено +${amount} монет!` : `Successfully bought +${amount} coins!`);
-};
-
-window.buyItem = function(item, cost) {
-  if(coins < cost){
-    say(currentLang==='ru'?'Недостаточно монет!':'Not enough coins!');
-    return;
-  }
-  coins -= cost;
-  updateHUD();
-  say(currentLang==='ru'?'Предмет куплен и добавлен!':'Item purchased!');
-};
-
-// UI BUTTONS
 document.getElementById('begin').onclick=()=>{started=true;document.getElementById('start').style.display='none';};
-document.getElementById('interact').onclick=interact;
 document.getElementById('mobileInteract').onclick=interact;
+document.getElementById('interact').onclick=interact;
 document.getElementById('cancelCode').onclick=()=>document.getElementById('codeModal').style.display='none';
 document.getElementById('submitCode').onclick=()=>{
   if(document.getElementById('codeInput').value.trim()==='1842'){
-    document.getElementById('codeModal').style.display='none';
-    doorOpen=true;door.rotation.y=-.9;
-    setTimeout(finish,600);
-  }else{
-    say(currentLang==='ru'?'Неверный код!':'Wrong code!');
-  }
+    document.getElementById('codeModal').style.display='none'; doorOpen=true; door.position.x=-1.2; setTimeout(finish,500);
+  }else{ say('Неверно'); }
 };
 
-// CONTROLS & ANIMATION
-document.addEventListener('keydown',e=>{keysDown[e.code]=true;if(e.code==='KeyE')interact();});
-document.addEventListener('keyup',e=>keysDown[e.code]=false);
-document.addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement&&started){yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;}});
-renderer.domElement.addEventListener('click',()=>{if(started&&innerWidth>700)renderer.domElement.requestPointerLock?.()});
-
-function update(dt){
- const dir=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
- const right=new THREE.Vector3(-dir.z,0,dir.x);
- let f=0,s=0;if(keysDown.KeyW)f+=1;if(keysDown.KeyS)f-=1;if(keysDown.KeyD)s+=1;if(keysDown.KeyA)s-=1;
- const v=new THREE.Vector3().addScaledVector(dir,f).addScaledVector(right,s);if(v.length()>1)v.normalize();
- camera.position.addScaledVector(v,2.5*dt);
- camera.position.x=Math.max(-4.3,Math.min(4.3,camera.position.x));camera.position.z=Math.max(-5.3,Math.min(5.1,camera.position.z));
- camera.rotation.order='YXZ';camera.rotation.y=yaw;camera.rotation.x=pitch;
-}
-
-let prev=performance.now();
-function animate(now){
+function animate(){
   requestAnimationFrame(animate);
-  const dt=Math.min(.04,(now-prev)/1000);prev=now;
-  if(started)update(dt);
+  if(started){
+    const dir=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
+    const right=new THREE.Vector3(-dir.z,0,dir.x);
+    camera.position.addScaledVector(dir,-move.y*0.08);
+    camera.position.addScaledVector(right,move.x*0.08);
+    camera.position.x=Math.max(-4.2,Math.min(4.2,camera.position.x)); camera.position.z=Math.max(-5.2,Math.min(5,camera.position.z));
+    camera.rotation.order='YXZ'; camera.rotation.y=yaw; camera.rotation.x=pitch;
+  }
   renderer.render(scene,camera);
 }
-requestAnimationFrame(animate);
-
+animate();
 updateLanguage('ru');
 updateHUD();
 </script>
