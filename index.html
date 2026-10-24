@@ -75,7 +75,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090d14;col
 <!-- START MODAL -->
 <div class="modalShade" id="start">
   <div class="modal">
-    <div class="brand">PROTOTYPE 0.4</div>
+    <div class="brand">PROTOTYPE 0.5</div>
     <h2 id="t_start_title">Дверь №001</h2>
     <p id="t_start_desc">Ты очнулся в заброшенном особняке. На двери — кодовый замок. Найди старый ключ и записку, чтобы открыть проход.</p>
     <button class="btn primary" id="begin" style="width:100%">Войти в особняк</button>
@@ -101,11 +101,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090d14;col
     <h2 id="t_shop_title">Магазин</h2>
     <div class="shopGrid">
       <div class="shopItem">
+        <div><h4>🪙 50 монет</h4><p>Микро-набор</p></div>
+        <button class="buyBtn" onclick="buyCoinsReal(50, '$0.49')">$0.49 / 49 ₽</button>
+      </div>
+      <div class="shopItem">
         <div><h4>🪙 100 монет</h4><p>Лёгкий старт</p></div>
         <button class="buyBtn" onclick="buyCoinsReal(100, '$0.99')">$0.99 / 99 ₽</button>
       </div>
       <div class="shopItem">
-        <div><h4>🪙 500 монет</h4><p>Популярный набор</p></div>
+        <div><h4>🪙 200 монет</h4><p>Стандартный набор</p></div>
+        <button class="buyBtn" onclick="buyCoinsReal(200, '$1.99')">$1.99 / 199 ₽</button>
+      </div>
+      <div class="shopItem">
+        <div><h4>🪙 500 монет</h4><p>Большой набор</p></div>
         <button class="buyBtn" onclick="buyCoinsReal(500, '$3.99')">$3.99 / 399 ₽</button>
       </div>
     </div>
@@ -165,6 +173,13 @@ let yaw=Math.PI,pitch=0,move={x:0,y:0},touchLook=null,touchMove=null,lastTouch=n
 
 function say(t){const m=document.getElementById('message');m.textContent=t;m.style.display='block';clearTimeout(say.timer);say.timer=setTimeout(()=>m.style.display='none',2500)}
 function updateHUD(){ document.getElementById('coins').textContent = '🪙 ' + coins; }
+
+window.buyCoinsReal = function(amount, price) {
+  coins += amount;
+  updateHUD();
+  say(currentLang==='ru' ? `Успешно куплено +${amount} монет!` : `Successfully bought +${amount} coins!`);
+  document.getElementById('shopModal').style.display='none';
+};
 
 function interact(){
  if(!started||won)return;
