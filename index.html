@@ -1,430 +1,940 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title id="page-title">Тайна 100 дверей — прототип 0.1</title>
-<style>
-:root{--gold:#e7bd70;--glass:rgba(10,15,24,.82);--line:rgba(231,189,112,.4)}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090d14;color:#f4eee3;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
-#game{position:fixed;inset:0}canvas{display:block;width:100%;height:100%}
-#vignette{pointer-events:none;position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.52) 100%)}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100gate.online - 3D Escape Quest</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for UI Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;600;700&display=swap');
 
-/* Переключатель языка */
-.lang-switch { position: fixed; top: 14px; right: 20px; display: flex; gap: 6px; z-index: 100; pointer-events: auto; }
-.lang-btn { background: rgba(17,24,36,0.9); color: #fff; border: 1px solid var(--line); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; }
-.lang-btn:hover { background: var(--gold); color: #000; }
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            overflow: hidden;
+            background-color: #050508;
+            color: #e2e8f0;
+        }
 
-#top{position:fixed;left:16px;right:110px;top:14px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;pointer-events:none}
-.panel{background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:11px 14px;backdrop-filter:blur(8px);box-shadow:0 8px 30px #0004; pointer-events: auto;}
-.brand{font-weight:800;letter-spacing:.08em;color:var(--gold);font-size:13px}.sub{font-size:12px;color:#c9c5bc;margin-top:3px}
-.stats{display:flex;gap:8px;font-size:12px;white-space:nowrap}.stat b{color:var(--gold);font-size:14px}
-#center{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border:1px solid #f6e6c7;border-radius:50%;box-shadow:0 0 8px #000;pointer-events:none}
-#hint{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);max-width:90vw;text-align:center;padding:10px 15px;background:var(--glass);border:1px solid var(--line);border-radius:12px;font-size:13px;line-height:1.45}
-#message{position:fixed;top:90px;left:50%;transform:translateX(-50%);max-width:90vw;background:#111a28;border:1px solid var(--line);border-radius:12px;padding:10px 15px;text-align:center;font-size:13px;display:none}
-#bottom{position:fixed;left:16px;right:16px;bottom:14px;display:flex;justify-content:space-between;align-items:end;gap:10px;pointer-events:none}
-.controls{display:flex;gap:8px;pointer-events:auto}.btn{border:1px solid var(--line);background:var(--glass);color:#f4eee3;border-radius:12px;padding:12px 15px;font-size:13px;font-weight:650;cursor:pointer;touch-action:manipulation}.btn.primary{background:linear-gradient(135deg,#d8ac60,#8e632e);color:#17120a;border:0}
-.buy-btn { background: var(--gold); color: #000; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-.buy-btn:hover { transform: scale(1.05); }
+        .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
 
-#touchpad{position:fixed;left:0;bottom:0;width:48vw;height:42vh;display:none;touch-action:none}
-#touchlook{position:fixed;right:0;bottom:0;width:52vw;height:48vh;display:none;touch-action:none}
-#joystick{position:fixed;left:25px;bottom:30px;width:104px;height:104px;border:1px solid #ffffff45;background:#111a2877;border-radius:50%;pointer-events:none;display:none}
-#stick{position:absolute;width:42px;height:42px;left:30px;top:30px;border-radius:50%;background:#e7bd70aa;border:1px solid #ffe3ad}
-#mobileInteract{display:none;position:fixed;right:20px;bottom:32px}
-.modalShade{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;padding:18px;z-index:10}
-.modal{width:min(420px,100%);background:#111824;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 25px 80px #0009}
-.modal h2{margin:0 0 8px;color:var(--gold);font-size:22px}.modal p{color:#d1d0cb;line-height:1.5;font-size:14px}
-.modal input{width:100%;padding:13px;border-radius:10px;border:1px solid #6d624f;background:#090d14;color:#fff;font-size:20px;letter-spacing:.25em;text-align:center;margin:7px 0 12px}
-.modal .row{display:flex;gap:9px}.modal .row .btn{flex:1}.tiny{font-size:11px;color:#a9a8a4;line-height:1.45;margin-top:13px}
-#start{z-index:20}#win{display:none;z-index:15}
-@media(max-width:700px){#top{left:9px;right:75px;top:9px}.panel{padding:9px 10px}.brand{font-size:11px}.sub{font-size:10px}.stats{gap:5px;font-size:10px}.stat b{font-size:12px}#hint{bottom:105px;font-size:12px;max-width:94vw}#bottom{left:9px;right:9px;bottom:9px}.desktopOnly{display:none}#touchpad,#touchlook,#joystick{display:block}#mobileInteract{display:block}.controls{display:none}}
-</style>
+        /* Glassmorphism styles */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-button {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .glass-button:hover:not(:disabled) {
+            background: rgba(51, 65, 85, 0.9);
+            border-color: rgba(234, 179, 8, 0.5);
+            transform: translateY(-1px);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(234, 179, 8, 0.4);
+            border-radius: 3px;
+        }
+
+        /* Pulsing Glow Effect */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.5); }
+        }
+        .glow-active {
+            animation: pulseGlow 2s infinite;
+        }
+
+        /* Canvas viewport */
+        #game-canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+    </style>
 </head>
-<body>
-<div id="game"></div><div id="vignette"></div>
+<body class="w-full h-full relative">
 
-<!-- Переключатель языка -->
-<div class="lang-switch">
-    <button class="lang-btn" onclick="changeLanguage('ru')">RU</button>
-    <button class="lang-btn" onclick="changeLanguage('en')">EN</button>
-</div>
+    <!-- 3D Canvas Viewport -->
+    <canvas id="game-canvas"></canvas>
 
-<div id="top">
-  <div class="panel">
-      <div class="brand" id="txt-title">ТАЙНА 100 ДВЕРЕЙ</div>
-      <div class="sub" id="txt-sub">МИР I · ЗАБРОШЕННЫЙ ОСОБНЯК</div>
-  </div>
-  <div class="panel stats">
-      <div class="stat"><span id="txt-lvl-label">УРОВЕНЬ</span><br><b id="level">01 / 100</b></div>
-      <div class="stat"><span id="txt-coins-label">МОНЕТЫ</span><br><b id="coins">100</b></div>
-      <div class="stat"><span id="txt-inv-label">ИНВЕНТАРЬ</span><br><b id="inventory">0</b></div>
-      <button class="buy-btn interactive" onclick="openPaymentMenu()" id="txt-buy-btn">+ КУПИТЬ</button>
-  </div>
-</div>
-<div id="center"></div><div id="message"></div>
-<div id="hint"><span id="txt-hint">Осмотрись. Найди ключ и подсказку с кодом.</span><br><span style="color:#e7bd70" id="txt-controls-hint">Компьютер: WASD · мышь · E</span></div>
-<div id="bottom"><div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="txt-controls-desk">WASD — движение · Мышь — осмотр · E — взаимодействие</div><div class="controls"><button class="btn" id="reset">↻ Начать заново</button><button class="btn primary" id="interact">Взаимодействовать · E</button></div></div>
-<div id="touchpad"></div><div id="touchlook"></div><div id="joystick"><div id="stick"></div></div><button class="btn primary" id="mobileInteract">Взаимодействовать</button>
-
-<!-- Старт -->
-<div class="modalShade" id="start"><div class="modal"><div class="brand" id="m-brand">ПРОТОТИП 0.1</div><h2 id="m-title">Дверь №001</h2><p id="m-desc">Ты очнулся в заброшенном особняке. На двери — кодовый замок. Найди старый ключ и записку, чтобы открыть проход.</p><button class="btn primary" id="begin" style="width:100%">Войти в особняк</button><div class="tiny" id="m-tiny">Демонстрационный прототип: прогресс пока хранится только в этой вкладке.</div></div></div>
-
-<!-- Окно выбора пакета монет и оплаты -->
-<div class="modalShade" id="payModal" style="display:none; z-index: 30;">
-    <div class="modal">
-        <h2 id="pay-title">Покупка монет</h2>
-        <p id="pay-desc">Выберите пакет монет и способ оплаты:</p>
-        
-        <div style="margin: 12px 0;">
-            <select id="coinPackage" style="width:100%; padding:10px; border-radius:8px; background:#090d14; color:#fff; border:1px solid var(--line); font-size:14px; margin-bottom:10px;">
-                <option value="50" id="opt-50">50 монет</option>
-                <option value="100" selected id="opt-100">100 монет</option>
-                <option value="200" id="opt-200">200 монет</option>
-                <option value="500" id="opt-500">500 монет</option>
-            </select>
+    <!-- TOP HUD OVERLAY -->
+    <div class="absolute top-0 left-0 right-0 p-4 flex justify-between items-center pointer-events-none z-10">
+        <!-- Door Status & Info -->
+        <div class="flex items-center gap-3 pointer-events-auto">
+            <div class="glass-panel px-4 py-2 rounded-xl flex items-center gap-3 border-amber-500/30">
+                <i class="fa-solid fa-door-closed text-amber-400 text-xl"></i>
+                <div>
+                    <div class="text-xs text-amber-300 font-semibold tracking-wider uppercase">Current Gate</div>
+                    <div id="door-title" class="text-lg font-cinzel font-bold text-white">Door 1: The Bronze Key</div>
+                </div>
+            </div>
+            <button id="btn-sound" class="glass-button p-3 rounded-xl text-slate-300 hover:text-white pointer-events-auto">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+            </button>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 5px;">
-            <button class="btn primary" onclick="payWithGateway('card')" id="btn-pay-card">💳 Оплата картой (Международная / СНГ)</button>
-            <button class="btn" style="border-color: #e7bd70;" onclick="payWithGateway('crypto')" id="btn-pay-crypto">🪙 Криптовалюта / P2P (Доступно из РФ)</button>
-            <button class="btn" onclick="closePaymentMenu()" id="btn-pay-cancel" style="margin-top: 5px;">Отмена</button>
+        <!-- Coins Balance & Shop Trigger -->
+        <div class="flex items-center gap-3 pointer-events-auto">
+            <div class="glass-panel px-4 py-2 rounded-xl flex items-center gap-2 border-amber-500/30">
+                <i class="fa-solid fa-coins text-amber-400 text-lg animate-bounce"></i>
+                <span id="coin-count" class="font-bold text-white text-lg">100</span>
+                <span class="text-xs text-amber-300 font-medium">COINS</span>
+            </div>
+            <button id="btn-open-shop" class="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-bold px-4 py-2 rounded-xl shadow-lg transition transform hover:scale-105 flex items-center gap-2 pointer-events-auto">
+                <i class="fa-solid fa-store"></i>
+                <span>Shop</span>
+            </button>
         </div>
     </div>
-</div>
 
-<!-- Замок -->
-<div class="modalShade" id="codeModal" style="display:none"><div class="modal"><h2 id="lock-title">Кодовый замок</h2><p id="codePrompt">На записке написано: «Когда часы остановились, время осталось ключом».</p><input id="codeInput" inputmode="numeric" maxlength="4" placeholder="••••" aria-label="Код замка"><div class="row"><button class="btn" id="cancelCode">Назад</button><button class="btn primary" id="submitCode">Открыть дверь</button></div><div class="tiny" id="lock-hint">Подсказка: внимательно осмотри часы в комнате.</div></div></div>
+    <!-- INVENTORY BAR (BOTTOM) -->
+    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 pointer-events-auto z-10">
+        <div class="glass-panel p-2 rounded-2xl flex items-center gap-3 shadow-2xl border-slate-700/50">
+            <div class="text-xs text-slate-400 uppercase tracking-widest px-2 font-semibold">Bag</div>
+            <div id="inventory-slots" class="flex gap-2">
+                <!-- 5 Inventory Slots generated dynamically -->
+            </div>
+            <div class="h-8 w-px bg-slate-700 mx-1"></div>
+            <button id="btn-hint" class="glass-button px-4 py-3 rounded-xl flex items-center gap-2 text-amber-400 hover:text-amber-300">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span class="text-xs font-bold uppercase hidden sm:inline">Hint (10 <i class="fa-solid fa-coins"></i>)</span>
+            </button>
+        </div>
+    </div>
 
-<!-- Победа -->
-<div class="modalShade" id="win"><div class="modal"><div class="brand" id="win-brand">ГЛАВА ЗАВЕРШЕНА</div><h2 id="win-title">Дверь открыта!</h2><p id="win-desc">Ты нашёл первый фрагмент дневника. На обороте написано: «Ты был здесь раньше».</p><p style="color:#e7bd70" id="win-reward">Награда: +100 монет · Артефакт: Карманные часы</p><button class="btn primary" id="again" style="width:100%">Исследовать комнату ещё раз</button></div></div>
-
-<script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
-
-const root=document.getElementById('game');
-const scene=new THREE.Scene(); scene.background=new THREE.Color(0x111824); scene.fog=new THREE.Fog(0x111824,7,24);
-const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,100); camera.position.set(0,1.65,-4.5);
-const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,1.7)); renderer.setSize(innerWidth,innerHeight); renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.15; root.appendChild(renderer.domElement);
-scene.add(new THREE.HemisphereLight(0x9eb8dc,0x302016,1.35));
-const lamp=new THREE.PointLight(0xffc77c,32,16,2);lamp.position.set(0,3.3,1.3);lamp.castShadow=true;scene.add(lamp);
-const cool=new THREE.PointLight(0x4b7cbf,13,10,2);cool.position.set(-3,2.6,-3);scene.add(cool);
-const mats={
- wall:new THREE.MeshStandardMaterial({color:0x37332f,roughness:.92}),
- floor:new THREE.MeshStandardMaterial({color:0x3d3028,roughness:.9}),
- wood:new THREE.MeshStandardMaterial({color:0x4b2d1c,roughness:.7}),
- gold:new THREE.MeshStandardMaterial({color:0xc79b4e,metalness:.72,roughness:.28}),
- metal:new THREE.MeshStandardMaterial({color:0x545b61,metalness:.65,roughness:.4}),
- glow:new THREE.MeshStandardMaterial({color:0x8ed8ff,emissive:0x2474a8,emissiveIntensity:1.4}),
- paper:new THREE.MeshStandardMaterial({color:0xd7c49c,roughness:1}),
- dark:new THREE.MeshStandardMaterial({color:0x17191d,roughness:.7})
-};
-function box(name,x,y,z,sx,sy,sz,mat,opts={}){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);m.name=name;m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);if(opts.userData)m.userData=opts.userData;return m}
-function cylinder(name,x,y,z,r1,r2,h,mat,rotX=0){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,20),mat);m.name=name;m.position.set(x,y,z);m.rotation.x=rotX;m.castShadow=true;scene.add(m);return m}
-
-box('floor',0,-.12,0,10,.24,12,mats.floor);
-box('ceiling',0,4.2,0,10,.25,12,mats.wall);
-box('left wall',-5,2,0,.25,4.2,12,mats.wall);
-box('right wall',5,2,0,.25,4.2,12,mats.wall);
-box('back wall',0,2,-6,10,4.2,.25,mats.wall);
-box('front left',-3.35,2,6,3.3,4.2,.25,mats.wall);
-box('front right',3.35,2,6,3.3,4.2,.25,mats.wall);
-box('front top',0,3.75,6,3.4,.7,.25,mats.wall);
-for(let z=-5.4;z<5.5;z+=.72) box('floor seam',0,-.001,z,9.8,.012,.018,mats.dark);
-
-box('doorframeL',-1.48,1.65,5.78,.18,3.35,.35,mats.gold);
-box('doorframeR',1.48,1.65,5.78,.18,3.35,.35,mats.gold);
-box('doorframeTop',0,3.28,5.78,3.1,.18,.35,mats.gold);
-const door=box('sealed door',0,1.62,5.68,2.78,3.1,.28,mats.wood,{userData:{kind:'door'}});
-for(let x=-1.1;x<=1.1;x+=.44)box('door plank',x,1.6,5.51,.025,2.8,.03,mats.gold);
-box('door plaque',0,2.55,5.48,.8,.55,.06,mats.metal);
-const plaqueText=cylinder('door dial',0,1.9,5.47,.18,.18,.06,mats.gold,Math.PI/2);
-box('handle',.9,1.4,5.43,.12,.08,.12,mats.gold);
-
-const rug=new THREE.Mesh(new THREE.BoxGeometry(3.8,.035,4.8),new THREE.MeshStandardMaterial({color:0x3c1820,roughness:1}));rug.position.set(0,-.01,.2);scene.add(rug);
-box('desk top',-2.65,.95,-1.3,2.15,.16,1.05,mats.wood);
-for(const x of [-3.48,-1.82])for(const z of [-1.65,-.95])box('desk leg',x,.45,z,.13,.9,.13,mats.wood);
-box('drawer',-2.65,.76,-.75,1.0,.25,.08,mats.wood);
-cylinder('drawer knob',-2.65,.76,-.68,.06,.06,.08,mats.gold,Math.PI/2);
-
-const clock=cylinder('antique clock',-2.45,1.55,-1.35,.34,.34,.13,mats.gold,Math.PI/2);
-cylinder('clock face',-2.45,1.55,-1.265,.28,.28,.015,mats.paper,Math.PI/2);
-box('clock hand hour',-2.51,1.59,-1.245,.025,.14,.018,mats.dark);
-box('clock hand minute',-2.41,1.64,-1.24,.02,.21,.018,mats.dark);
-
-const note=box('folded note',-2.95,1.055,-1.25,.38,.025,.28,mats.paper,{userData:{kind:'note'}});
-note.rotation.y=-.22;
-
-const keyGroup=new THREE.Group();keyGroup.name='old key';keyGroup.position.set(-2.12,1.08,-1.45);scene.add(keyGroup);
-const ring=new THREE.Mesh(new THREE.TorusGeometry(.095,.025,8,20),mats.gold);ring.position.x=-.1;ring.castShadow=true;keyGroup.add(ring);
-const shaft=new THREE.Mesh(new THREE.BoxGeometry(.35,.045,.045),mats.gold);shaft.position.x=.12;keyGroup.add(shaft);
-const tooth=new THREE.Mesh(new THREE.BoxGeometry(.055,.1,.045),mats.gold);tooth.position.set(.22,-.045,0);keyGroup.add(tooth);
-keyGroup.userData={kind:'key'};keyGroup.traverse(o=>{if(o.isMesh)o.castShadow=true});
-
-box('bookcase',3.55,1.55,-2.6,1.45,3.05,.55,mats.wood);
-for(let y=.55;y<3.0;y+=.72)box('shelf',3.55,y,-2.28,1.4,.09,.55,mats.gold);
-const bookColors=[0x31515a,0x7d3b2e,0x9a7741,0x26364c,0x694c6e,0x6c6b49,0x7a302b];
-for(let row=0;row<4;row++){let x=2.98;for(let i=0;i<5;i++){let w=.12+(i%3)*.025;const b=box('book',x+w/2,.82+row*.72,-2.28,w,.42+(i%2)*.08,.28,new THREE.MeshStandardMaterial({color:bookColors[(i+row)%bookColors.length],roughness:.85}));x+=w+.045;}}
-
-box('wall picture frame',2.5,2.7,-5.82,1.1,1.3,.08,mats.gold);
-box('wall picture',2.5,2.7,-5.76,.92,1.12,.04,new THREE.MeshStandardMaterial({color:0x283849,roughness:1}));
-box('painting silhouette',2.5,2.67,-5.72,.28,.62,.03,mats.dark);
-const rune= new THREE.Mesh(new THREE.TorusGeometry(.19,.025,8,32),mats.glow);rune.position.set(-2.45,2.05,-1.33);scene.add(rune);rune.visible=false;
-for(let i=0;i<3;i++)box('plaque stripe',-.18+i*.18,2.55,5.435,.06,.23,.02,mats.gold);
-for(let x=-4.4;x<=4.4;x+=2.2)box('ceiling beam',x,3.94,0,.13,.16,11.5,mats.wood);
-
-const raycaster=new THREE.Raycaster();const center=new THREE.Vector2(0,0);
-let hasKey=false,readNote=false,clockSeen=false,doorOpen=false,started=false,coins=100,won=false;
-let yaw=Math.PI,pitch=0,keysDown={},move={x:0,y:0},touchLook=null,lastTouch=null;
-const hint=document.getElementById('hint'),message=document.getElementById('message');
-
-function say(t){message.textContent=t;message.style.display='block';clearTimeout(say.timer);say.timer=setTimeout(()=>message.style.display='none',2800)}
-window.updateHUD = function(){document.getElementById('coins').textContent=coins;document.getElementById('inventory').textContent=hasKey?(window.currentLang==='en'?'1 item':'1 предмет'):(window.currentLang==='en'?'0 items':'0');}
-function setHint(t){hint.innerHTML=t}
-
-function interact(){
- if(!started||won)return;
- raycaster.setFromCamera(center,camera);
- const targets=[keyGroup,note,clock,door,...scene.children.filter(o=>o.name==='drawer')];
- const hits=raycaster.intersectObjects(targets,true);
- let obj=null;
- if(hits.length && hits[0].distance<3.3){obj=hits[0].object;while(obj.parent && !obj.userData.kind && obj.parent!==scene)obj=obj.parent;}
- if(!obj){
-   const forward=new THREE.Vector3();camera.getWorldDirection(forward);
-   const candidates=[keyGroup,note,clock,door];
-   let best=null,bd=99;
-   for(const c of candidates){const d=c.position.distanceTo(camera.position);const dir=c.position.clone().sub(camera.position).normalize();if(d<3.2&&dir.dot(forward)>.82&&d<bd){best=c;bd=d;}}
-   obj=best;
- }
- if(!obj){setHint(window.currentLang==='en'?'Get closer to an object and point at it.':'Подойди ближе к предмету и наведи на него прицел.');return;}
- const kind=obj.userData.kind || (obj.parent===keyGroup?'key':null);
- if(kind==='key'){
-   if(hasKey){say(window.currentLang==='en'?'Key is already yours.':'Ключ уже у тебя.');return;}
-   hasKey=true;keyGroup.visible=false;coins+=30;updateHUD();
-   say(window.currentLang==='en'?'You found an old key. +30 coins':'Ты нашёл старый ключ. +30 монет');
-   setHint(window.currentLang==='en'?'Key found. Now check the clock and the note on the desk.':'Ключ найден. Теперь осмотри часы и записку на столе.');
- }else if(kind==='note'){
-   readNote=true;
-   say(window.currentLang==='en'?'Note: "When the clocks stopped, time remained the key"':'Записка: «Когда часы остановились, время осталось ключом».');
-   setHint(window.currentLang==='en'?'The note hints at the clock time. Check the clock.':'Записка намекает на время на старых часах. Подойди к часам и осмотри их.');
- }else if(obj===clock || obj.parent===clock){
-   clockSeen=true;rune.visible=true;
-   say(window.currentLang==='en'?'Clock stopped at 18:42. Remember this time.':'Часы остановились на 18:42. Запомни это время.');
-   setHint(window.currentLang==='en'?'You know the code: 1842. Approach the door and press E.':'Ты знаешь код: 1842. Подойди к двери и нажми E.');
- }else if(kind==='door'||obj===door){
-   if(doorOpen){finish();return;}
-   if(!hasKey){say(window.currentLang==='en'?'Locked. You need a key.':'Замок закрыт. Похоже, нужен ключ от особняка.');return;}
-   if(!readNote){say(window.currentLang==='en'?'Code lock. Find the note first.':'На двери кодовый замок. Сначала найди записку.');return;}
-   document.getElementById('codeModal').style.display='flex';document.getElementById('codeInput').value='';document.getElementById('codeInput').focus();
- }else {say(window.currentLang==='en'?'An old item. Might be useful later.':'Старая вещь. Возможно, она пригодится позже.');}
-}
-
-function finish(){
- if(won)return;won=true;coins+=100;updateHUD();
- document.getElementById('win').style.display='flex';
- setHint(window.currentLang==='en'?'Door is open. First mystery solved.':'Дверь открыта. Первая тайна раскрыта.');
-}
-
-function resetGame(){
- hasKey=false;readNote=false;clockSeen=false;doorOpen=false;won=false;coins=100;keyGroup.visible=true;door.material=mats.wood;door.position.z=5.68;doorOpen=false;
- document.getElementById('win').style.display='none';document.getElementById('codeModal').style.display='none';updateHUD();
- setHint(window.currentLang==='en'?'Look around. Find the key and code hint.':'Осмотрись. Найди ключ и подсказку с кодом.');
- camera.position.set(0,1.65,-4.5);yaw=Math.PI;pitch=0;
-}
-
-document.getElementById('begin').onclick=()=>{started=true;document.getElementById('start').style.display='none';if(innerWidth>700)renderer.domElement.requestPointerLock?.();};
-document.getElementById('interact').onclick=interact;document.getElementById('mobileInteract').onclick=interact;document.getElementById('reset').onclick=resetGame;document.getElementById('again').onclick=()=>{resetGame();started=true};
-document.getElementById('cancelCode').onclick=()=>document.getElementById('codeModal').style.display='none';
-document.getElementById('submitCode').onclick=()=>{
- const v=document.getElementById('codeInput').value.trim();
- if(v==='1842'){
-  document.getElementById('codeModal').style.display='none';doorOpen=true;
-  door.material=new THREE.MeshStandardMaterial({color:0x243b3b,roughness:.55,metalness:.15,emissive:0x163b38,emissiveIntensity:.6});
-  door.rotation.y=-.9;door.position.x=-1.15;
-  say(window.currentLang==='en'?'Lock clicked. Door opens...':'Замок щёлкнул. Дверь открывается…');
-  setTimeout(finish,900);
- }else{
-  say(window.currentLang==='en'?'Wrong code. Check the clock carefully.':'Неверный код. Осмотри часы внимательнее.');
-  document.getElementById('codeInput').select();
- }
-};
-document.getElementById('codeInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('submitCode').click()});
-document.addEventListener('keydown',e=>{keysDown[e.code]=true;if(e.code==='KeyE'||e.code==='Enter'){if(document.getElementById('codeModal').style.display!=='flex')interact();}if(e.code==='Escape')document.exitPointerLock?.()});
-document.addEventListener('keyup',e=>keysDown[e.code]=false);
-document.addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement&&started){yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;pitch=Math.max(-1.15,Math.min(1.15,pitch));}});
-renderer.domElement.addEventListener('click',()=>{if(started&&innerWidth>700&&document.pointerLockElement!==renderer.domElement)renderer.domElement.requestPointerLock?.()});
-
-const touchpad=document.getElementById('touchpad'),touchlookEl=document.getElementById('touchlook'),joystick=document.getElementById('joystick'),stick=document.getElementById('stick');
-touchpad.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];touchLook={id:t.identifier,x:t.clientX,y:t.clientY};move={x:0,y:0};},{passive:false});
-touchpad.addEventListener('touchmove',e=>{e.preventDefault();if(!touchLook)return;for(const t of e.changedTouches){if(t.identifier===touchLook.id){const dx=t.clientX-touchLook.x,dy=t.clientY-touchLook.y;move={x:Math.max(-1,Math.min(1,dx/42)),y:Math.max(-1,Math.min(1,dy/42))};stick.style.transform=`translate(${move.x*27}px,${move.y*27}px)`;}}},{passive:false});
-function endMove(e){for(const t of e.changedTouches){if(t.identifier===touchLook?.id){touchLook=null;move={x:0,y:0};stick.style.transform='translate(0,0)';}}}
-touchpad.addEventListener('touchend',endMove);touchpad.addEventListener('touchcancel',endMove);
-touchlookEl.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];lastTouch={id:t.identifier,x:t.clientX,y:t.clientY};},{passive:false});
-touchlookEl.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches){if(t.identifier===lastTouch?.id){yaw-=(t.clientX-lastTouch.x)*.006;pitch-=(t.clientY-lastTouch.y)*.005;pitch=Math.max(-1.15,Math.min(1.15,pitch));lastTouch={id:t.identifier,x:t.clientX,y:t.clientY};}}},{passive:false});
-touchlookEl.addEventListener('touchend',()=>lastTouch=null);touchlookEl.addEventListener('touchcancel',()=>lastTouch=null);
-
-function update(dt){
- const dir=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
- const right=new THREE.Vector3(-dir.z,0,dir.x);
- let f=0,s=0;if(keysDown.KeyW||keysDown.ArrowUp)f+=1;if(keysDown.KeyS||keysDown.ArrowDown)f-=1;if(keysDown.KeyD||keysDown.ArrowRight)s+=1;if(keysDown.KeyA||keysDown.ArrowLeft)s-=1;
- f+=-move.y;s+=move.x;const v=new THREE.Vector3().addScaledVector(dir,f).addScaledVector(right,s);if(v.length()>1)v.normalize();
- const speed=2.5*dt;camera.position.addScaledVector(v,speed);
- camera.position.x=Math.max(-4.35,Math.min(4.35,camera.position.x));camera.position.z=Math.max(-5.3,Math.min(5.15,camera.position.z));camera.position.y=1.65;
- camera.rotation.order='YXZ';camera.rotation.y=yaw;camera.rotation.x=pitch;
- rune.rotation.z+=dt*.35;
-}
-let prev=performance.now();function animate(now){requestAnimationFrame(animate);const dt=Math.min(.04,(now-prev)/1000);prev=now;if(started)update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
-function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));}
-addEventListener('resize',resize);
-updateHUD();
-</script>
-
-<!-- СИСТЕМА ПЕРЕКЛЮЧЕНИЯ ЯЗЫКОВ И ЛОГИКА ОПЛАТЫ -->
-<script>
-window.currentLang = 'ru';
-const translations = {
-    ru: {
-        title: "ТАЙНА 100 ДВЕРЕЙ",
-        sub: "МИР I · ЗАБРОШЕННЫЙ ОСОБНЯК",
-        lvl: "УРОВЕНЬ",
-        coins: "МОНЕТЫ",
-        inv: "ИНВЕНТАРЬ",
-        buy: "+ КУПИТЬ",
-        hint: "Осмотрись. Найди ключ и подсказку с кодом.",
-        controlsHint: "Компьютер: WASD · мышь · E",
-        controlsDesk: "WASD — движение · Мышь — осмотр · E — взаимодействие",
-        reset: "↻ Начать заново",
-        interactBtn: "Взаимодействовать · E",
-        mobileInteract: "Взаимодействовать",
-        startBrand: "ПРОТОТИП 0.1",
-        startTitle: "Дверь №001",
-        startDesc: "Ты очнулся в заброшенном особняке. На двери — кодовый замок. Найди старый ключ и записку, чтобы открыть проход.",
-        beginBtn: "Войти в особняк",
-        tinyText: "Демонстрационный прототип: прогресс пока хранится только в этой вкладке.",
-        lockTitle: "Кодовый замок",
-        lockPrompt: "На записке написано: «Когда часы остановились, время осталось ключом».",
-        cancelBtn: "Назад",
-        openBtn: "Открыть дверь",
-        lockHint: "Подсказка: внимательно осмотри часы в комнате.",
-        winBrand: "ГЛАВА ЗАВЕРШЕНА",
-        winTitle: "Дверь открыта!",
-        winDesc: "Ты нашёл первый фрагмент дневника. На обороте написано: «Ты был здесь раньше».",
-        winReward: "Награда: +100 монет · Артефакт: Карманные часы",
-        againBtn: "Исследовать комнату ещё раз",
-        payTitle: "Покупка монет",
-        payDesc: "Выберите пакет монет и способ оплаты:",
-        payCard: "💳 Оплата картой (Международная / СНГ)",
-        payCrypto: "🪙 Криптовалюта / P2P (Доступно из РФ)",
-        payCancel: "Отмена",
-        opt50: "50 монет",
-        opt100: "100 монет",
-        opt200: "200 монет",
-        opt500: "500 монет"
-    },
-    en: {
-        title: "SECRET OF 100 DOORS",
-        sub: "WORLD I · ABANDONED MANSION",
-        lvl: "LEVEL",
-        coins: "COINS",
-        inv: "INVENTORY",
-        buy: "+ BUY",
-        hint: "Look around. Find the key and code hint.",
-        controlsHint: "PC: WASD · mouse · E",
-        controlsDesk: "WASD — move · Mouse — look · E — interact",
-        reset: "↻ Restart",
-        interactBtn: "Interact · E",
-        mobileInteract: "Interact",
-        startBrand: "PROTOTYPE 0.1",
-        startTitle: "Door №001",
-        startDesc: "You woke up in an abandoned mansion. The door has a code lock. Find the old key and note to open the way.",
-        beginBtn: "Enter Mansion",
-        tinyText: "Demo prototype: progress is saved only in this tab.",
-        lockTitle: "Code Lock",
-        lockPrompt: "The note says: 'When the clocks stopped, time remained the key'.",
-        cancelBtn: "Back",
-        openBtn: "Open Door",
-        lockHint: "Hint: inspect the clock in the room carefully.",
-        winBrand: "CHAPTER COMPLETED",
-        winTitle: "Door is Open!",
-        winDesc: "You found the first diary fragment. The back reads: 'You were here before'.",
-        winReward: "Reward: +100 coins · Artifact: Pocket watch",
-        againBtn: "Explore room again",
-        payTitle: "Buy Coins",
-        payDesc: "Choose coin package and payment method:",
-        payCard: "💳 Pay by Card (International / CIS)",
-        payCrypto: "🪙 Crypto / P2P (Available in RU)",
-        payCancel: "Cancel",
-        opt50: "50 coins",
-        opt100: "100 coins",
-        opt200: "200 coins",
-        opt500: "500 coins"
-    }
-};
-
-window.changeLanguage = function(lang) {
-    window.currentLang = lang;
-    const t = translations[lang];
-    document.getElementById('txt-title').innerText = t.title;
-    document.getElementById('txt-sub').innerText = t.sub;
-    document.getElementById('txt-lvl-label').innerText = t.lvl;
-    document.getElementById('txt-coins-label').innerText = t.coins;
-    document.getElementById('txt-inv-label').innerText = t.inv;
-    document.getElementById('txt-buy-btn').innerText = t.buy;
-    document.getElementById('txt-hint').innerHTML = `${t.hint}<br><span style="color:#e7bd70">${t.controlsHint}</span>`;
-    document.getElementById('txt-controls-desk').innerText = t.controlsDesk;
-    document.getElementById('reset').innerText = t.reset;
-    document.getElementById('interact').innerText = t.interactBtn;
-    document.getElementById('mobileInteract').innerText = t.mobileInteract;
-    document.getElementById('m-brand').innerText = t.startBrand;
-    document.getElementById('m-title').innerText = t.startTitle;
-    document.getElementById('m-desc').innerText = t.startDesc;
-    document.getElementById('begin').innerText = t.beginBtn;
-    document.getElementById('m-tiny').innerText = t.tinyText;
-    document.getElementById('lock-title').innerText = t.lockTitle;
-    document.getElementById('codePrompt').innerText = t.lockPrompt;
-    document.getElementById('cancelCode').innerText = t.cancelBtn;
-    document.getElementById('submitCode').innerText = t.openBtn;
-    document.getElementById('lock-hint').innerText = t.lockHint;
-    document.getElementById('win-brand').innerText = t.winBrand;
-    document.getElementById('win-title').innerText = t.winTitle;
-    document.getElementById('win-desc').innerText = t.winDesc;
-    document.getElementById('win-reward').innerText = t.winReward;
-    document.getElementById('again').innerText = t.againBtn;
+    <!-- PUZZLE OVERLAYS & MODALS -->
     
-    document.getElementById('pay-title').innerText = t.payTitle;
-    document.getElementById('pay-desc').innerText = t.payDesc;
-    document.getElementById('btn-pay-card').innerText = t.payCard;
-    document.getElementById('btn-pay-crypto').innerText = t.payCrypto;
-    document.getElementById('btn-pay-cancel').innerText = t.payCancel;
-    
-    // Перевод выпадающего списка пакетов монет
-    document.getElementById('opt-50').innerText = t.opt50;
-    document.getElementById('opt-100').innerText = t.opt100;
-    document.getElementById('opt-200').innerText = t.opt200;
-    document.getElementById('opt-500').innerText = t.opt500;
-    
-    if(window.updateHUD) window.updateHUD();
-};
+    <!-- 1. Book / Note Inspector Modal (Door 2 Puzzle) -->
+    <div id="modal-book" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center z-30 pointer-events-auto p-4">
+        <div class="glass-panel max-w-md w-full p-6 rounded-2xl relative border-amber-500/40 shadow-2xl">
+            <button class="close-modal absolute top-4 right-4 text-slate-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center">
+                <i class="fa-solid fa-book-open text-amber-400 text-4xl mb-3"></i>
+                <h3 class="text-xl font-cinzel font-bold text-amber-200 mb-2">Ancient Journal Page</h3>
+                <p class="text-sm text-slate-300 italic mb-4">"The vault code is hidden in plain sight. Keep it secret from trespassers."</p>
+                
+                <div class="bg-amber-950/40 border border-amber-500/30 p-4 rounded-xl my-4 text-center">
+                    <span class="text-xs text-amber-400 uppercase tracking-widest block mb-1">Secret Access Code</span>
+                    <span id="book-secret-code" class="text-3xl font-mono font-bold text-amber-300 tracking-widest">7 4 2 9</span>
+                </div>
 
-function openPaymentMenu() {
-    document.getElementById('payModal').style.display = 'flex';
-}
+                <p class="text-xs text-slate-400">Remember this code to unlock the electronic keypad on the right wall.</p>
+            </div>
+        </div>
+    </div>
 
-function closePaymentMenu() {
-    document.getElementById('payModal').style.display = 'none';
-}
+    <!-- 2. Keypad Lock Modal (Door 2 Code Input) -->
+    <div id="modal-keypad" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center z-30 pointer-events-auto p-4">
+        <div class="glass-panel max-w-xs w-full p-6 rounded-2xl relative border-slate-700 shadow-2xl">
+            <button class="close-modal absolute top-3 right-4 text-slate-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center mb-4">
+                <h3 class="text-lg font-cinzel font-bold text-slate-200">Security Keypad</h3>
+                <div id="keypad-display" class="bg-slate-950 border border-slate-700 text-green-400 text-2xl font-mono tracking-widest py-2 rounded-lg mt-2 min-h-[44px] flex items-center justify-center">
+                    ----
+                </div>
+            </div>
+            
+            <!-- Keypad Grid -->
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="1">1</button>
+                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="2">2</button>
+                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="3">3</button>
+                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="4">4</button>
+                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="5">5</button>
+                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="6">6</button>
+                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="7">7</button>
+                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="8">8</button>
+                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="9">9</button>
+                <button id="kp-clear" class="glass-button py-3 text-sm font-bold rounded-lg text-red-400">CLR</button>
+                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="0">0</button>
+                <button id="kp-enter" class="bg-emerald-600 hover:bg-emerald-500 py-3 text-sm font-bold rounded-lg text-white">OK</button>
+            </div>
+        </div>
+    </div>
 
-function payWithGateway(type) {
-    const selectedCoins = document.getElementById('coinPackage').value;
-    
-    if (type === 'card') {
-        alert(`Переход на оплату пакета: ${selectedCoins} монет (Карта / Interkassa)`);
-        // window.location.href = `ВАША_ССЫЛКА_INTERKASSA?amount=${selectedCoins}`;
-    } else if (type === 'crypto') {
-        alert(`Переход на оплату пакета: ${selectedCoins} монет (Крипта / РФ / Cryptomus)`);
-        // window.location.href = `ВАША_ССЫЛКА_CRYPTOMUS?amount=${selectedCoins}`;
-    }
-}
-</script>
+    <!-- 3. SHOP MODAL (Coins & Items) -->
+    <div id="modal-shop" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center z-40 pointer-events-auto p-4">
+        <div class="glass-panel max-w-2xl w-full p-6 rounded-3xl relative border-amber-500/30 max-h-[90vh] overflow-y-auto">
+            <button class="close-modal absolute top-5 right-5 text-slate-400 hover:text-white text-2xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Header -->
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-3 bg-amber-500/20 rounded-2xl text-amber-400 text-2xl">
+                    <i class="fa-solid fa-store"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-cinzel font-bold text-white">100gate Vault Store</h2>
+                    <p class="text-xs text-slate-400">Get coin packages via Cryptomus & unlock in-game advantages</p>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-slate-700 mb-6">
+                <button id="tab-coins" class="py-2 px-4 text-amber-400 border-b-2 border-amber-400 font-bold text-sm">Coin Packages</button>
+                <button id="tab-tools" class="py-2 px-4 text-slate-400 font-bold text-sm hover:text-white">Useful Items</button>
+            </div>
+
+            <!-- Coin Packages Grid -->
+            <div id="shop-coins-view" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- 50 Coins -->
+                <div class="glass-button p-4 rounded-2xl flex flex-col justify-between border-slate-700 hover:border-amber-500/50">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs text-amber-400 font-semibold uppercase">Starter Pack</span>
+                            <h4 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-coins text-amber-400"></i> 50 Coins
+                            </h4>
+                        </div>
+                        <span class="bg-slate-800 text-slate-200 text-xs px-2.5 py-1 rounded-full font-bold">$1.99 USD</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4">Perfect for quick hints and basic puzzle keys.</p>
+                    <button class="btn-buy-coins bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-bold py-2 rounded-xl text-sm transition" data-pack="50" data-url="#">
+                        Buy 50 Coins
+                    </button>
+                </div>
+
+                <!-- 100 Coins -->
+                <div class="glass-button p-4 rounded-2xl flex flex-col justify-between border-amber-500/30 glow-active">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs text-amber-300 font-semibold uppercase">Popular Pack</span>
+                            <h4 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-coins text-amber-400"></i> 100 Coins
+                            </h4>
+                        </div>
+                        <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs px-2.5 py-1 rounded-full font-bold">$3.49 USD</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4">Includes bonus coins for unlocking tricky gates.</p>
+                    <button class="btn-buy-coins bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-bold py-2 rounded-xl text-sm transition" data-pack="100" data-url="#">
+                        Buy 100 Coins
+                    </button>
+                </div>
+
+                <!-- 200 Coins -->
+                <div class="glass-button p-4 rounded-2xl flex flex-col justify-between border-slate-700 hover:border-amber-500/50">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs text-amber-400 font-semibold uppercase">Pro Explorer</span>
+                            <h4 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-coins text-amber-400"></i> 200 Coins
+                            </h4>
+                        </div>
+                        <span class="bg-slate-800 text-slate-200 text-xs px-2.5 py-1 rounded-full font-bold">$5.99 USD</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4">Great value for mastering multiple rooms.</p>
+                    <button class="btn-buy-coins bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-bold py-2 rounded-xl text-sm transition" data-pack="200" data-url="#">
+                        Buy 200 Coins
+                    </button>
+                </div>
+
+                <!-- 500 Coins -->
+                <div class="glass-button p-4 rounded-2xl flex flex-col justify-between border-slate-700 hover:border-amber-500/50">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs text-amber-400 font-semibold uppercase">Master Key Vault</span>
+                            <h4 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-coins text-amber-400"></i> 500 Coins
+                            </h4>
+                        </div>
+                        <span class="bg-slate-800 text-slate-200 text-xs px-2.5 py-1 rounded-full font-bold">$12.99 USD</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4">Maximum coins for all 100 doors!</p>
+                    <button class="btn-buy-coins bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-bold py-2 rounded-xl text-sm transition" data-pack="500" data-url="#">
+                        Buy 500 Coins
+                    </button>
+                </div>
+            </div>
+
+            <!-- In-game Items View (Hidden by default) -->
+            <div id="shop-tools-view" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="glass-button p-4 rounded-2xl flex justify-between items-center border-slate-700">
+                    <div>
+                        <h4 class="font-bold text-white">Golden Pass Key</h4>
+                        <p class="text-xs text-slate-400">Auto-unlock any single door</p>
+                    </div>
+                    <button id="btn-buy-passkey" class="glass-button px-3 py-2 rounded-xl text-xs font-bold text-amber-400 flex items-center gap-1">
+                        50 <i class="fa-solid fa-coins"></i>
+                    </button>
+                </div>
+
+                <div class="glass-button p-4 rounded-2xl flex justify-between items-center border-slate-700">
+                    <div>
+                        <h4 class="font-bold text-white">Ultra Flashlight</h4>
+                        <p class="text-xs text-slate-400">Highlights hidden objects</p>
+                    </div>
+                    <button id="btn-buy-flashlight" class="glass-button px-3 py-2 rounded-xl text-xs font-bold text-amber-400 flex items-center gap-1">
+                        30 <i class="fa-solid fa-coins"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION MESSAGES -->
+    <div id="toast-msg" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-slate-900/90 border border-amber-500/40 text-amber-200 px-6 py-3 rounded-full shadow-2xl text-sm font-semibold pointer-events-none opacity-0 transition-opacity duration-300 z-50 flex items-center gap-2">
+        <i class="fa-solid fa-circle-info text-amber-400"></i>
+        <span id="toast-text">Message goes here</span>
+    </div>
+
+    <!-- MAIN GAME LOGIC SCRIPT -->
+    <script>
+        // --- 1. GAME STATE ---
+        const gameState = {
+            currentDoor: 1,
+            coins: 100,
+            soundMuted: false,
+            inventory: [],
+            selectedItemIndex: -1,
+            puzzleStates: {
+                door1: { keyCollected: false, doorUnlocked: false },
+                door2: { bookInspected: false, keypadSolved: false, secretCode: "7429" },
+                door3: { paintingShifted: false, crowbarCollected: false, grateOpened: false, keyCollected: false },
+                door4: { gemCollected: false, handleCollected: false, itemCombined: false, dialSolved: false }
+            }
+        };
+
+        // --- 2. WEB AUDIO API SOUND SYNTHESIZER ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playClick() {
+                if (gameState.soundMuted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.05);
+            }
+            playPickup() {
+                if (gameState.soundMuted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+            playDoorCreak() {
+                if (gameState.soundMuted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.linearRampToValueAtTime(180, now + 0.4);
+                osc.frequency.linearRampToValueAtTime(90, now + 0.8);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.8);
+            }
+            playSuccess() {
+                if (gameState.soundMuted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                [440, 554.37, 659.25, 880].forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.15, now + i * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.4);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + i * 0.1);
+                    osc.stop(now + i * 0.1 + 0.4);
+                });
+            }
+        }
+        const sounds = new SoundEngine();
+
+        // --- 3. THREE.JS 3D SCENE SETUP ---
+        let scene, camera, renderer;
+        let doorGroup, activeRoomObjects = [];
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+
+        function init3D() {
+            const container = document.getElementById('game-canvas');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0c14);
+            scene.fog = new THREE.FogExp2(0x0a0c14, 0.08);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 1.6, 4.5);
+
+            renderer = new THREE.WebGLRenderer({ canvas: container, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+            scene.add(ambientLight);
+
+            const torchLight = new THREE.PointLight(0xffaa44, 1.5, 12);
+            torchLight.position.set(2, 2.5, 2);
+            torchLight.castShadow = true;
+            scene.add(torchLight);
+
+            const doorLight = new THREE.SpotLight(0xffe6a3, 2);
+            doorLight.position.set(0, 4, 3);
+            doorLight.target.position.set(0, 1.5, 0);
+            scene.add(doorLight);
+            scene.add(doorLight.target);
+
+            // Window Resize
+            window.addEventListener('resize', onWindowResize);
+            container.addEventListener('click', onCanvasClick);
+
+            // Render loop
+            animate();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- 4. ROOM & DOOR BUILDER ---
+        function loadDoorRoom(doorNum) {
+            // Clear existing room objects
+            activeRoomObjects.forEach(obj => scene.remove(obj));
+            activeRoomObjects = [];
+
+            // Base Room Walls
+            const roomGroup = new THREE.Group();
+            
+            // Wall Material
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a202c, roughness: 0.8 });
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.6 });
+
+            // Back Wall with doorway cut-out visual
+            const backWall = new THREE.Mesh(new THREE.BoxGeometry(8, 5, 0.2), wallMat);
+            backWall.position.set(0, 2.5, -0.1);
+            roomGroup.add(backWall);
+
+            // Floor
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.set(0, 0, 2);
+            roomGroup.add(floor);
+
+            // Create Door Frame & Door
+            doorGroup = new THREE.Group();
+            doorGroup.position.set(0, 0, 0);
+
+            const frameMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.5 });
+            const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.2, 0.2), frameMat);
+            doorFrame.position.set(0, 1.6, 0);
+            doorGroup.add(doorFrame);
+
+            // Door Mesh (Pivot at left edge)
+            const doorPivot = new THREE.Group();
+            doorPivot.position.set(-0.95, 1.6, 0.05);
+
+            const doorMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.4 });
+            const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.9, 3.0, 0.1), doorMat);
+            doorMesh.position.set(0.95, 0, 0);
+            doorMesh.name = "interactive_door";
+            doorPivot.add(doorMesh);
+
+            // Door Handle
+            const handleMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.8 });
+            const handle = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 16), handleMat);
+            handle.position.set(1.7, -0.1, 0.1);
+            handle.name = "interactive_door_handle";
+            doorPivot.add(handle);
+
+            doorGroup.add(doorPivot);
+            roomGroup.add(doorGroup);
+            doorGroup.pivot = doorPivot;
+
+            // --- DOOR SPECIFIC PUZZLE OBJECTS ---
+
+            if (doorNum === 1) {
+                // DOOR 1: Key on small table
+                document.getElementById('door-title').innerText = "Door 1: The Bronze Key";
+                
+                const tableMat = new THREE.MeshStandardMaterial({ color: 0x475569 });
+                const table = new THREE.Mesh(new THREE.BoxGeometry(1, 0.8, 0.8), tableMat);
+                table.position.set(-1.8, 0.4, 1);
+                roomGroup.add(table);
+
+                if (!gameState.puzzleStates.door1.keyCollected) {
+                    const keyMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.9 });
+                    const key = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.03, 8, 16), keyMat);
+                    key.position.set(-1.8, 0.85, 1);
+                    key.rotation.x = Math.PI / 2;
+                    key.name = "puzzle_key1";
+                    roomGroup.add(key);
+                }
+
+            } else if (doorNum === 2) {
+                // DOOR 2: Bookshelf with Note + Keypad on Wall
+                document.getElementById('door-title').innerText = "Door 2: Secret Code";
+
+                // Bookshelf on left
+                const shelfMat = new THREE.MeshStandardMaterial({ color: 0x451a03 });
+                const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.5), shelfMat);
+                shelf.position.set(-2.2, 1.1, 0.5);
+                roomGroup.add(shelf);
+
+                // Book object
+                const bookMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c });
+                const book = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.35, 0.3), bookMat);
+                book.position.set(-2.2, 1.3, 0.5);
+                book.name = "puzzle_book";
+                roomGroup.add(book);
+
+                // Keypad on right wall
+                const kpMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8 });
+                const keypadBox = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.1), kpMat);
+                keypadBox.position.set(1.8, 1.6, 0.1);
+                keypadBox.name = "puzzle_keypad";
+                roomGroup.add(keypadBox);
+
+            } else if (doorNum === 3) {
+                // DOOR 3: Painting covering Crowbar, Grate on floor
+                document.getElementById('door-title').innerText = "Door 3: Hidden Compartment";
+
+                // Painting on left wall
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0xd97706 });
+                const painting = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.0, 0.08), frameMat);
+                painting.position.set(-2.0, 1.8, 0.1);
+                painting.name = "puzzle_painting";
+                roomGroup.add(painting);
+
+                // Crowbar hidden behind/near painting
+                if (!gameState.puzzleStates.door3.crowbarCollected) {
+                    const barMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.9 });
+                    const crowbar = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.6), barMat);
+                    crowbar.position.set(-2.0, 1.2, 0.1);
+                    crowbar.name = "puzzle_crowbar";
+                    roomGroup.add(crowbar);
+                }
+
+                // Grate on right floor
+                const grateMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.7 });
+                const grate = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.8), grateMat);
+                grate.position.set(1.8, 0.03, 1);
+                grate.name = "puzzle_grate";
+                roomGroup.add(grate);
+
+            } else if (doorNum === 4) {
+                // DOOR 4: Gem + Handle Combination Lock
+                document.getElementById('door-title').innerText = "Door 4: Ancient Artifact";
+
+                // Gem on pedestal
+                if (!gameState.puzzleStates.door4.gemCollected) {
+                    const gemMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4, roughness: 0.1 });
+                    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.15), gemMat);
+                    gem.position.set(-1.8, 0.9, 1);
+                    gem.name = "puzzle_gem";
+                    roomGroup.add(gem);
+                }
+
+                // Key base on pedestal
+                if (!gameState.puzzleStates.door4.handleCollected) {
+                    const hMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.8 });
+                    const keyBase = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4), hMat);
+                    keyBase.position.set(1.8, 0.9, 1);
+                    keyBase.name = "puzzle_handle";
+                    roomGroup.add(keyBase);
+                }
+            }
+
+            scene.add(roomGroup);
+            activeRoomObjects.push(roomGroup);
+        }
+
+        // --- 5. INTERACTION & RAYCASTING ---
+        function onCanvasClick(event) {
+            sounds.init();
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+
+            if (intersects.length > 0) {
+                const clicked = intersects[0].object;
+                handleObjectClick(clicked.name);
+            }
+        }
+
+        function handleObjectClick(name) {
+            // Door click
+            if (name === "interactive_door" || name === "interactive_door_handle") {
+                sounds.playClick();
+                attemptOpenDoor();
+                return;
+            }
+
+            // Door 1 Key Pickup
+            if (name === "puzzle_key1") {
+                sounds.playPickup();
+                gameState.puzzleStates.door1.keyCollected = true;
+                addItemToInventory("Bronze Key", "fa-key", "door1_key");
+                showToast("Picked up Bronze Key!");
+                loadDoorRoom(1);
+            }
+
+            // Door 2 Book Click
+            if (name === "puzzle_book") {
+                sounds.playClick();
+                document.getElementById('modal-book').classList.remove('hidden');
+                document.getElementById('modal-book').classList.add('flex');
+            }
+
+            // Door 2 Keypad Click
+            if (name === "puzzle_keypad") {
+                sounds.playClick();
+                document.getElementById('modal-keypad').classList.remove('hidden');
+                document.getElementById('modal-keypad').classList.add('flex');
+            }
+
+            // Door 3 Painting & Crowbar
+            if (name === "puzzle_painting") {
+                sounds.playClick();
+                gameState.puzzleStates.door3.paintingShifted = true;
+                showToast("Shifted painting! Revealed a crowbar.");
+            }
+            if (name === "puzzle_crowbar") {
+                sounds.playPickup();
+                gameState.puzzleStates.door3.crowbarCollected = true;
+                addItemToInventory("Crowbar", "fa-wrench", "crowbar");
+                showToast("Picked up Crowbar!");
+                loadDoorRoom(3);
+            }
+            if (name === "puzzle_grate") {
+                const sel = getSelectedItem();
+                if (sel && sel.id === "crowbar") {
+                    sounds.playSuccess();
+                    gameState.puzzleStates.door3.grateOpened = true;
+                    addItemToInventory("Golden Key", "fa-key", "door3_key");
+                    showToast("Used Crowbar to open floor grate! Found Golden Key.");
+                } else {
+                    showToast("Grate is stuck tight. Need a heavy tool!");
+                }
+            }
+
+            // Door 4 Gem & Handle
+            if (name === "puzzle_gem") {
+                sounds.playPickup();
+                gameState.puzzleStates.door4.gemCollected = true;
+                addItemToInventory("Cyan Gem", "fa-gem", "cyan_gem");
+                showToast("Picked up Cyan Gem!");
+                checkCombineDoor4();
+                loadDoorRoom(4);
+            }
+            if (name === "puzzle_handle") {
+                sounds.playPickup();
+                gameState.puzzleStates.door4.handleCollected = true;
+                addItemToInventory("Key Shaft", "fa-ruler", "key_shaft");
+                showToast("Picked up Key Shaft!");
+                checkCombineDoor4();
+                loadDoorRoom(4);
+            }
+        }
+
+        // --- 6. PUZZLE SOLVING & DOOR OPENING ---
+        function attemptOpenDoor() {
+            const num = gameState.currentDoor;
+            const selItem = getSelectedItem();
+
+            if (num === 1) {
+                if (selItem && selItem.id === "door1_key") {
+                    openDoorSuccess();
+                } else {
+                    showToast("Door is locked! Find the key on the table.");
+                }
+            } else if (num === 2) {
+                if (gameState.puzzleStates.door2.keypadSolved) {
+                    openDoorSuccess();
+                } else {
+                    showToast("Electronic lock active! Check the book for code.");
+                }
+            } else if (num === 3) {
+                if (selItem && selItem.id === "door3_key") {
+                    openDoorSuccess();
+                } else {
+                    showToast("Door is locked! Find the key in the room.");
+                }
+            } else if (num === 4) {
+                if (selItem && selItem.id === "crystal_key") {
+                    openDoorSuccess();
+                } else {
+                    showToast("Requires Crystal Key (Combine Gem + Key Shaft)!");
+                }
+            }
+        }
+
+        function openDoorSuccess() {
+            sounds.playDoorCreak();
+            sounds.playSuccess();
+
+            // Animate Door Opening
+            if (doorGroup && doorGroup.pivot) {
+                let angle = 0;
+                const interval = setInterval(() => {
+                    angle += 0.05;
+                    doorGroup.pivot.rotation.y = angle;
+                    if (angle >= Math.PI / 2.2) {
+                        clearInterval(interval);
+                        showToast("GATE UNLOCKED! Moving to next level...");
+                        setTimeout(() => {
+                            nextLevel();
+                        }, 1200);
+                    }
+                }, 20);
+            }
+        }
+
+        function nextLevel() {
+            if (gameState.currentDoor < 4) {
+                gameState.currentDoor++;
+                loadDoorRoom(gameState.currentDoor);
+            } else {
+                showToast("CONGRATULATIONS! You cleared all available gates!");
+            }
+        }
+
+        // --- 7. INVENTORY SYSTEM ---
+        function addItemToInventory(name, iconClass, id) {
+            if (gameState.inventory.length < 5) {
+                gameState.inventory.push({ name, iconClass, id });
+                renderInventory();
+            }
+        }
+
+        function renderInventory() {
+            const container = document.getElementById('inventory-slots');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 5; i++) {
+                const item = gameState.inventory[i];
+                const slot = document.createElement('button');
+                slot.className = `w-12 h-12 rounded-xl flex items-center justify-center border transition ${
+                    gameState.selectedItemIndex === i
+                        ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-lg'
+                        : 'border-slate-700 bg-slate-900/60 text-slate-400 hover:border-slate-500'
+                }`;
+                
+                if (item) {
+                    slot.innerHTML = `<i class="fa-solid ${item.iconClass} text-lg"></i>`;
+                    slot.title = item.name;
+                    slot.onclick = () => {
+                        sounds.playClick();
+                        gameState.selectedItemIndex = (gameState.selectedItemIndex === i) ? -1 : i;
+                        renderInventory();
+                    };
+                } else {
+                    slot.innerHTML = `<span class="text-xs text-slate-700">${i+1}</span>`;
+                }
+                container.appendChild(slot);
+            }
+        }
+
+        function getSelectedItem() {
+            if (gameState.selectedItemIndex >= 0 && gameState.selectedItemIndex < gameState.inventory.length) {
+                return gameState.inventory[gameState.selectedItemIndex];
+            }
+            return null;
+        }
+
+        function checkCombineDoor4() {
+            const hasGem = gameState.inventory.some(i => i.id === "cyan_gem");
+            const hasShaft = gameState.inventory.some(i => i.id === "key_shaft");
+            if (hasGem && hasShaft) {
+                // Remove both & combine into Crystal Key
+                gameState.inventory = gameState.inventory.filter(i => i.id !== "cyan_gem" && i.id !== "key_shaft");
+                addItemToInventory("Crystal Key", "fa-key text-cyan-400", "crystal_key");
+                showToast("Combined Cyan Gem + Key Shaft into Crystal Key!");
+            }
+        }
+
+        // --- 8. KEYPAD LOGIC (DOOR 2) ---
+        let keypadInput = "";
+        document.querySelectorAll('.kp-btn').forEach(btn => {
+            btn.onclick = () => {
+                sounds.playClick();
+                if (keypadInput.length < 4) {
+                    keypadInput += btn.dataset.num;
+                    document.getElementById('keypad-display').innerText = keypadInput;
+                }
+            };
+        });
+        document.getElementById('kp-clear').onclick = () => {
+            sounds.playClick();
+            keypadInput = "";
+            document.getElementById('keypad-display').innerText = "----";
+        };
+        document.getElementById('kp-enter').onclick = () => {
+            sounds.playClick();
+            if (keypadInput === gameState.puzzleStates.door2.secretCode) {
+                sounds.playSuccess();
+                gameState.puzzleStates.door2.keypadSolved = true;
+                showToast("Keypad Code Correct! Door Unlocked.");
+                document.getElementById('modal-keypad').classList.add('hidden');
+                document.getElementById('modal-keypad').classList.remove('flex');
+            } else {
+                document.getElementById('keypad-display').innerText = "ERROR";
+                setTimeout(() => {
+                    keypadInput = "";
+                    document.getElementById('keypad-display').innerText = "----";
+                }, 800);
+            }
+        };
+
+        // --- 9. UI TOAST & MODAL CONTROLS ---
+        function showToast(text) {
+            const toast = document.getElementById('toast-msg');
+            document.getElementById('toast-text').innerText = text;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        // Close Modals
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.onclick = () => {
+                sounds.playClick();
+                btn.closest('.fixed').classList.add('hidden');
+                btn.closest('.fixed').classList.remove('flex');
+            };
+        });
+
+        // Shop Buttons
+        document.getElementById('btn-open-shop').onclick = () => {
+            sounds.playClick();
+            document.getElementById('modal-shop').classList.remove('hidden');
+            document.getElementById('modal-shop').classList.add('flex');
+        };
+
+        document.getElementById('tab-coins').onclick = () => {
+            sounds.playClick();
+            document.getElementById('shop-coins-view').classList.remove('hidden');
+            document.getElementById('shop-tools-view').classList.add('hidden');
+            document.getElementById('tab-coins').className = "py-2 px-4 text-amber-400 border-b-2 border-amber-400 font-bold text-sm";
+            document.getElementById('tab-tools').className = "py-2 px-4 text-slate-400 font-bold text-sm hover:text-white";
+        };
+
+        document.getElementById('tab-tools').onclick = () => {
+            sounds.playClick();
+            document.getElementById('shop-coins-view').classList.add('hidden');
+            document.getElementById('shop-tools-view').classList.remove('hidden');
+            document.getElementById('tab-tools').className = "py-2 px-4 text-amber-400 border-b-2 border-amber-400 font-bold text-sm";
+            document.getElementById('tab-coins').className = "py-2 px-4 text-slate-400 font-bold text-sm hover:text-white";
+        };
+
+        // Hint Button
+        document.getElementById('btn-hint').onclick = () => {
+            sounds.playClick();
+            if (gameState.coins >= 10) {
+                gameState.coins -= 10;
+                document.getElementById('coin-count').innerText = gameState.coins;
+                if (gameState.currentDoor === 1) showToast("Hint: Pick up the bronze key from the left table.");
+                if (gameState.currentDoor === 2) showToast("Hint: Tap the red book on the bookshelf for the code.");
+                if (gameState.currentDoor === 3) showToast("Hint: Move the painting on the left wall to find a tool.");
+                if (gameState.currentDoor === 4) showToast("Hint: Grab both gem & shaft to auto-combine into Crystal Key.");
+            } else {
+                showToast("Not enough coins! Buy more in the Shop.");
+            }
+        };
+
+        // Mute Sound Toggle
+        document.getElementById('btn-sound').onclick = () => {
+            gameState.soundMuted = !gameState.soundMuted;
+            document.getElementById('sound-icon').className = gameState.soundMuted ? "fa-solid fa-volume-xmark text-red-400" : "fa-solid fa-volume-high";
+        };
+
+        // Buy Coin Links Placeholder Handler
+        document.querySelectorAll('.btn-buy-coins').forEach(btn => {
+            btn.onclick = (e) => {
+                sounds.playClick();
+                const pack = btn.dataset.pack;
+                const payUrl = btn.dataset.url;
+                if (payUrl && payUrl !== "#") {
+                    window.open(payUrl, '_blank');
+                } else {
+                    showToast(`Cryptomus Payment link for ${pack} coins will activate once moderation completes!`);
+                }
+            };
+        });
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        // Init on Window Load
+        window.onload = function() {
+            init3D();
+            loadDoorRoom(1);
+            renderInventory();
+        };
+    </script>
 </body>
 </html>
