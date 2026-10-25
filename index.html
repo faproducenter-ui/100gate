@@ -16,9 +16,9 @@
 .stat{display:flex;flex-direction:column}
 .stat b{color:var(--gold);font-size:14px;display:flex;align-items:center;gap:4px}
 .coin-icon{width:14px;height:14px;background:linear-gradient(135deg,#ffd700,#b8860b);border-radius:50%;display:inline-block;border:1px solid #fffae6;box-shadow:0 0 5px rgba(255,215,0,0.6)}
-#center{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border:1px solid #f6e6c7;border-radius:50%;box-shadow:0 0 8px #000;pointer-events:none}
+#center{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border:2px solid #f6e6c7;border-radius:50%;box-shadow:0 0 8px #000;pointer-events:none;z-index:10}
 #hint{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);max-width:90vw;text-align:center;padding:10px 15px;background:var(--glass);border:1px solid var(--line);border-radius:12px;font-size:13px;line-height:1.45;pointer-events:none}
-#message{position:fixed;top:90px;left:50%;transform:translateX(-50%);max-width:90vw;background:#111a28;border:1px solid var(--line);border-radius:12px;padding:10px 15px;text-align:center;font-size:13px;display:none;z-index:25}
+#message{position:fixed;top:90px;left:50%;transform:translateX(-50%);max-width:90vw;background:#111a28;border:1px solid var(--line);border-radius:12px;padding:12px 18px;text-align:center;font-size:14px;color:#e7bd70;font-weight:bold;display:none;z-index:25}
 #bottom{position:fixed;left:16px;right:16px;bottom:14px;display:flex;justify-content:space-between;align-items:end;gap:10px;pointer-events:none}
 .controls{display:flex;gap:8px;pointer-events:auto}
 .btn{border:1px solid var(--line);background:var(--glass);color:#f4eee3;border-radius:12px;padding:12px 15px;font-size:13px;font-weight:650;cursor:pointer;touch-action:manipulation;pointer-events:auto}
@@ -56,13 +56,13 @@
   </div>
 </div>
 <div id="center"></div><div id="message"></div>
-<div id="hint">Наведи прицел на ключ или записку и нажми E.</div>
+<div id="hint">Подойди к предмету и нажми E (или кнопку снизу).</div>
 <div id="bottom">
-  <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="ui-controls-hint">WASD — движение · Мышь — обзор 360° · E — взаимодействие с предметами</div>
+  <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="ui-controls-hint">WASD — движение · Мышь — обзор 360° · E — взять / поднять / открыть</div>
   <div class="controls">
     <button class="btn shop-btn" id="openShop">🛒 Магазин</button>
     <button class="btn" id="reset">↻ Сброс</button>
-    <button class="btn primary" id="interact">Взаимодействовать · E</button>
+    <button class="btn primary" id="interact">Взаимодействовать [ E ]</button>
   </div>
 </div>
 
@@ -70,7 +70,7 @@
   <div class="modal">
     <div class="brand">100GATE.ONLINE</div>
     <h2 id="m-start-title">Пять Комнат Тайн</h2>
-    <p id="m-start-desc">Кликните «Войти», наведите прицел на ключ или записку и нажмите клавишу E для взаимодействия.</p>
+    <p id="m-start-desc">Подойдите к столу, наведите прицел и нажмите клавишу E, чтобы взять ключ и прочитать записку.</p>
     <button class="btn primary" id="begin" style="width:100%;margin-top:10px">Войти в особняк</button>
     <div class="tiny" id="m-start-foot">Прототип 100gate.online с поддержкой Cryptomus.</div>
   </div>
@@ -124,14 +124,14 @@ const translations = {
   ru: {
     langBtn: "RU / EN", brand: "ТАЙНА 100 ДВЕРЕЙ", world: "МИР I · ЗАБРОШЕННЫЙ ОСОБНЯК",
     lvl: "УРОВЕНЬ", coin: "МОНЕТЫ", inv: "ИНВЕНТАРЬ",
-    controls: "WASD — движение · Мышь — обзор 360° · E — взаимодействие с предметами",
-    startTitle: "Пять Комнат Тайн", startDesc: "Кликните «Войти», наведите прицел на ключ или записку и нажмите клавишу E для взаимодействия.", startBtn: "Войти в особняк", startFoot: "Прототип 100gate.online с поддержкой Cryptomus.",
+    controls: "WASD — движение · Мышь — обзор 360° · E — взять / поднять / открыть",
+    startTitle: "Пять Комнат Тайн", startDesc: "Подойдите к столу, наведите прицел и нажмите клавишу E, чтобы взять ключ и прочитать записку.", startBtn: "Войти в особняк", startFoot: "Прототип 100gate.online с поддержкой Cryptomus.",
     codeTitle: "Кодовый замок", codePrompt: "Введите код для открытия двери.", codeBtn: "Открыть дверь", codeBack: "Назад",
     shopTitle: "Магазин Cryptomus", shopDesc: "Пополняйте баланс монет или покупайте предметы.",
     secCoins: "🪙 Покупка монет (Cryptomus)", secItems: "🎒 Предметы в инвентарь",
     c50t: "50 монет", c50d: "Стартовый набор", c100t: "100 монет", c100d: "Пакет", buyBtn: "Купить",
     i1t: "🗝️ Запасной ключ", i1d: "50 монет", i2t: "📜 Подсказка к коду", i2d: "40 монет",
-    shopClose: "Закрыть", shopBtnText: "🛒 Магазин", resetBtn: "↻ Сброс", interactBtn: "Взаимодействовать · E",
+    shopClose: "Закрыть", shopBtnText: "🛒 Магазин", resetBtn: "↻ Сброс", interactBtn: "Взаимодействовать [ E ]",
     msgKeyFound: "Ключ найден! +30 монет", msgNote: "Записка: «Когда часы остановились, время осталось ключом».", msgClock1: "Часы остановились на 18:42.", msgClock2: "Настенные часы сломались на цифре 5920.",
     msgLocked: "Замок закрыт. Нужен ключ.", msgNoNote: "Найдите записку / подсказку с кодом.", msgWrongCode: "Неверный код!", msgOpening: "Дверь открывается...",
     winHead: "УРОВЕНЬ ПРОЙДЕН", winTitle: "Дверь открыта!", winDesc: "Вы успешно справились с испытанием комнаты.", winReward: "Награда: +50 монет",
@@ -140,14 +140,14 @@ const translations = {
   en: {
     langBtn: "EN / RU", brand: "100 GATES MYSTERY", world: "WORLD I · ABANDONED MANSION",
     lvl: "LEVEL", coin: "COINS", inv: "INVENTORY",
-    controls: "WASD — Move · Mouse — 360° Look · E — Interact with objects",
-    startTitle: "Five Mystery Rooms", startDesc: "Click 'Enter', aim at the key or note, and press E to interact.", startBtn: "Enter Mansion", startFoot: "100gate.online prototype with Cryptomus support.",
+    controls: "WASD — Move · Mouse — 360° Look · E — Take / Inspect / Open",
+    startTitle: "Five Mystery Rooms", startDesc: "Walk to the desk, aim and press E to grab key and read note.", startBtn: "Enter Mansion", startFoot: "100gate.online prototype with Cryptomus support.",
     codeTitle: "Combination Lock", codePrompt: "Enter door passcode.", codeBtn: "Open Door", codeBack: "Back",
     shopTitle: "Cryptomus Shop", shopDesc: "Top up coins or buy items.",
     secCoins: "🪙 Buy Coins (Cryptomus)", secItems: "🎒 Inventory Items",
     c50t: "50 Coins", c50d: "Starter Pack", c100t: "100 Coins", c100d: "Pack", buyBtn: "Buy",
     i1t: "🗝️ Spare Key", i1d: "50 Coins", i2t: "📜 Code Hint", i2d: "40 Coins",
-    shopClose: "Close", shopBtnText: "🛒 Shop", resetBtn: "↻ Reset", interactBtn: "Interact · E",
+    shopClose: "Close", shopBtnText: "🛒 Shop", resetBtn: "↻ Reset", interactBtn: "Interact [ E ]",
     msgKeyFound: "Key found! +30 coins", msgNote: "Note: 'When the clock stopped, time remained the key.'", msgClock1: "Clock shows 18:42.", msgClock2: "The clock is stuck at 5920.",
     msgLocked: "Locked. Key needed.", msgNoNote: "Find passcode first.", msgWrongCode: "Wrong code!", msgOpening: "Door opening...",
     winHead: "LEVEL COMPLETED", winTitle: "Door Opened!", winDesc: "You successfully passed the room trial.", winReward: "Reward: +50 coins",
@@ -161,7 +161,7 @@ let hasKey = false, readNote = false, doorOpen = false, started = false, coins =
 let inventoryCount = 0;
 
 const roomData = {
-  1: { code: "1842", hintText: {ru: "Уровень 1: Наведите прицел на ключ или записку и нажмите E.", en: "Level 1: Aim at key or note and press E."} },
+  1: { code: "1842", hintText: {ru: "Уровень 1: Подойдите к столу, наведите прицел на ключ и нажмите E.", en: "Level 1: Approach desk, aim at key and press E."} },
   2: { code: "5920", hintText: {ru: "Уровень 2: Посмотрите на книжный шкаф. Ключ спрятан в книгах!", en: "Level 2: Check bookshelf. Key is hidden in books!"} },
   3: { code: "3107", hintText: {ru: "Уровень 3: Трудный поиск. Осмотрите стены комнаты.", en: "Level 3: Hard search. Check room walls."} },
   4: { code: "8415", hintText: {ru: "Уровень 4: Очень сложно. Осмотрите все углы комнаты.", en: "Level 4: Very hard. Check all corners."} },
@@ -265,7 +265,7 @@ box('front right',3.35,2,6,3.3,4.2,.25,mats.wall);
 box('front top',0,3.75,6,3.4,.7,.25,mats.wall);
 
 const door=box('sealed door',0,1.62,5.68,2.78,3.1,.28,mats.wood,{userData:{kind:'door'}});
-box('desk top',-2.65,.95,-1.3,2.15,.16,1.05,mats.wood);
+box('desk top',-2.65,.95,-1.3,2.15,.16,1.05,mats.wood,{userData:{kind:'desk'}});
 const clock=cylinder('antique clock',-2.45,1.55,-1.35,.34,.34,.13,mats.gold,Math.PI/2);
 clock.userData = {kind: 'clock'};
 const note=box('folded note',-2.95,1.055,-1.25,.38,.025,.28,mats.paper,{userData:{kind:'note'}});
@@ -339,45 +339,55 @@ function applyLevelSettings(){
 
 function interact(){
   if(!started||won)return;
+  const t = translations[currentLang];
+
+  // Точная и прощающая система взаимодействия
   raycaster.setFromCamera(center,camera);
   const targets = [keyGroup, note, clock, door, bookshelfGroup];
   const hits = raycaster.intersectObjects(targets, true);
   
-  let targetObj = null;
-  if(hits.length > 0) {
+  let targetKind = null;
+  if(hits.length > 0 && hits[0].distance < 4.5) {
     let curr = hits[0].object;
     while(curr && curr !== scene) {
       if(curr.userData && curr.userData.kind) {
-        targetObj = curr;
+        targetKind = curr.userData.kind;
         break;
       }
       curr = curr.parent;
     }
   }
 
-  const t = translations[currentLang];
-  if(!targetObj){
-    say(currentLang==='ru'?'Подойди ближе и наведи прицел на предмет.':'Get closer and aim at an object.');
+  // Запасной поиск по близости (если игрок смотрит в сторону стола)
+  if(!targetKind) {
+    const p = camera.position;
+    if(p.distanceTo(keyGroup.position) < 3.0 && keyGroup.visible) targetKind = 'key';
+    else if(p.distanceTo(note.position) < 3.0) targetKind = 'note';
+    else if(p.distanceTo(clock.position) < 3.0) targetKind = 'clock';
+    else if(p.distanceTo(door.position) < 3.5) targetKind = 'door';
+    else if(p.distanceTo(bookshelfGroup.position) < 3.5) targetKind = 'bookshelf';
+  }
+
+  if(!targetKind){
+    say(currentLang==='ru'?'Подойдите ближе к предмету!':'Get closer to the object!');
     return;
   }
 
-  const kind = targetObj.userData.kind;
-
-  if(kind === 'key'){
-    if(hasKey){ say(currentLang==='ru'?'Ключ уже у тебя.':'You already have the key.'); return; }
+  if(targetKind === 'key'){
+    if(hasKey){ say(currentLang==='ru'?'Ключ уже у вас!':'You already have the key!'); return; }
     hasKey = true; keyGroup.visible = false; coins += 20; updateHUD(); say(t.msgKeyFound);
-  } else if(kind === 'note'){
+  } else if(targetKind === 'note'){
     readNote = true; say(t.msgNote);
-  } else if(kind === 'bookshelf'){
+  } else if(targetKind === 'bookshelf'){
     if(currentLevel === 2 && !hasKey) {
-      hasKey = true; keyGroup.visible = false; updateHUD(); say(currentLang==='ru'?'Вы нашли ключ внутри книги на полке!':'Found key inside a book!');
+      hasKey = true; keyGroup.visible = false; updateHUD(); say(currentLang==='ru'?'Вы нашли ключ в книгах!':'Found key inside a book!');
     } else {
       say(currentLang==='ru'?'Много интересных книг на полках.':'Many interesting books on the shelves.');
     }
-  } else if(kind === 'clock'){
+  } else if(targetKind === 'clock'){
     if(currentLevel === 1) say(t.msgClock1);
     else say(t.msgClock2);
-  } else if(kind === 'door'){
+  } else if(targetKind === 'door'){
     if(doorOpen){ finishLevel(); return; }
     if(!hasKey){ say(t.msgLocked); return; }
     if(!readNote && currentLevel === 1){ say(t.msgNoNote); return; }
@@ -449,15 +459,21 @@ document.getElementById('nextRoomBtn').onclick = () => {
 
 document.getElementById('reset').onclick=()=>{ currentLevel=1; applyLevelSettings(); };
 
-document.addEventListener('keydown',e=>{
-  keysDown[e.code]=true;
-  if(e.code==='KeyE' && document.getElementById('codeModal').style.display==='none' && document.getElementById('shopModal').style.display==='none') {
-    interact();
+// ЖЕСТКАЯ БЛОКИРОВКА КЛАВИШИ E ИСКЛЮЧИТЕЛЬНО ПОД ДЕЙСТВИЕ
+document.addEventListener('keydown', e => {
+  if(e.code === 'KeyE') {
+    if(document.getElementById('codeModal').style.display==='none' && document.getElementById('shopModal').style.display==='none') {
+      interact();
+    }
+  } else {
+    keysDown[e.code] = true;
   }
 });
-document.addEventListener('keyup',e=>keysDown[e.code]=false);
+document.addEventListener('keyup', e => {
+  if(e.code !== 'KeyE') keysDown[e.code] = false;
+});
 
-document.addEventListener('mousemove',e=>{
+document.addEventListener('mousemove', e => {
   if(document.pointerLockElement===renderer.domElement && started){
     yaw -= e.movementX * 0.003;
     pitch -= e.movementY * 0.003;
@@ -465,7 +481,7 @@ document.addEventListener('mousemove',e=>{
   }
 });
 
-renderer.domElement.addEventListener('click',()=>{
+renderer.domElement.addEventListener('click', () => {
   if(started && document.pointerLockElement!==renderer.domElement && document.getElementById('codeModal').style.display==='none' && document.getElementById('shopModal').style.display==='none'){
     renderer.domElement.requestPointerLock?.();
   }
@@ -478,8 +494,8 @@ function update(dt){
   let f=0, s=0;
   if(keysDown.KeyW || keysDown.ArrowUp) f += 1;
   if(keysDown.KeyS || keysDown.ArrowDown) f -= 1;
-  if(keysDown.KeyD) s += 1;
-  if(keysDown.KeyA) s -= 1;
+  if(keysDown.KeyD || keysDown.ArrowRight) s += 1;
+  if(keysDown.KeyA || keysDown.ArrowLeft) s -= 1;
 
   const moveVector = new THREE.Vector3();
   moveVector.addScaledVector(dir, f);
