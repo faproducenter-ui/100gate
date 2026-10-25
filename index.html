@@ -56,9 +56,9 @@
   </div>
 </div>
 <div id="center"></div><div id="message"></div>
-<div id="hint">Подойдите к предмету и нажмите клавишу E для взятия.</div>
+<div id="hint">Используйте Стрелки ←/→ для поворота. Подойдите к столу и нажмите E для взятия ключа.</div>
 <div id="bottom">
-  <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="ui-controls-hint">W/S — вперед/назад · A/D — влево/вправо · Q/E — поворот · E — взять предмет</div>
+  <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="ui-controls-hint">W/S — вперед/назад · Стрелки ←/→ — поворот на 360° · E — взять предмет</div>
   <div class="controls">
     <button class="btn shop-btn" id="openShop">🛒 Магазин</button>
     <button class="btn" id="reset">↻ Сброс</button>
@@ -70,7 +70,7 @@
   <div class="modal">
     <div class="brand">100GATE.ONLINE</div>
     <h2 id="m-start-title">Пять Комнат Тайн</h2>
-    <p id="m-start-desc">Подойдите к столу, наведите прицел на ключ и нажмите клавишу E, чтобы взять его.</p>
+    <p id="m-start-desc">Повернитесь назад стрелками, подойдите к столу и нажмите клавишу E, чтобы взять ключ и прочитать записку.</p>
     <button class="btn primary" id="begin" style="width:100%;margin-top:10px">Войти в особняк</button>
     <div class="tiny" id="m-start-foot">Прототип 100gate.online с поддержкой Cryptomus.</div>
   </div>
@@ -124,8 +124,8 @@ const translations = {
   ru: {
     langBtn: "RU / EN", brand: "ТАЙНА 100 ДВЕРЕЙ", world: "МИР I · ЗАБРОШЕННЫЙ ОСОБНЯК",
     lvl: "УРОВЕНЬ", coin: "МОНЕТЫ", inv: "ИНВЕНТАРЬ",
-    controls: "W/S — вперед/назад · A/D — влево/вправо · Q/E — поворот · E — взять предмет",
-    startTitle: "Пять Комнат Тайн", startDesc: "Подойдите к столу, наведите прицел на ключ и нажмите клавишу E, чтобы взять его.", startBtn: "Войти в особняк", startFoot: "Прототип 100gate.online с поддержкой Cryptomus.",
+    controls: "W/S — вперед/назад · Стрелки ←/→ — поворот на 360° · E — взять предмет",
+    startTitle: "Пять Комнат Тайн", startDesc: "Повернитесь назад стрелками, подойдите к столу и нажмите клавишу E, чтобы взять ключ и прочитать записку.", startBtn: "Войти в особняк", startFoot: "Прототип 100gate.online с поддержкой Cryptomus.",
     codeTitle: "Кодовый замок", codePrompt: "Введите код для открытия двери.", codeBtn: "Открыть дверь", codeBack: "Назад",
     shopTitle: "Магазин Cryptomus", shopDesc: "Пополняйте баланс монет или покупайте предметы.",
     secCoins: "🪙 Покупка монет (Cryptomus)", secItems: "🎒 Предметы в инвентарь",
@@ -140,8 +140,8 @@ const translations = {
   en: {
     langBtn: "EN / RU", brand: "100 GATES MYSTERY", world: "WORLD I · ABANDONED MANSION",
     lvl: "LEVEL", coin: "COINS", inv: "INVENTORY",
-    controls: "W/S — Forward/Back · A/D — Strafe · Q/E — Turn · E — Take item",
-    startTitle: "Five Mystery Rooms", startDesc: "Approach desk, aim at key and press E to grab it.", startBtn: "Enter Mansion", startFoot: "100gate.online prototype with Cryptomus support.",
+    controls: "W/S — Forward/Back · Arrows ←/→ — Turn 360° · E — Take item",
+    startTitle: "Five Mystery Rooms", startDesc: "Turn around with arrows, approach desk and press E to take key and read note.", startBtn: "Enter Mansion", startFoot: "100gate.online prototype with Cryptomus support.",
     codeTitle: "Combination Lock", codePrompt: "Enter door passcode.", codeBtn: "Open Door", codeBack: "Back",
     shopTitle: "Cryptomus Shop", shopDesc: "Top up coins or buy items.",
     secCoins: "🪙 Buy Coins (Cryptomus)", secItems: "🎒 Inventory Items",
@@ -161,7 +161,7 @@ let hasKey = false, readNote = false, doorOpen = false, started = false, coins =
 let inventoryCount = 0;
 
 const roomData = {
-  1: { code: "1842", hintText: {ru: "Уровень 1: Подойдите к столу, наведите прицел на ключ и нажмите E.", en: "Level 1: Approach desk, aim at key and press E."} },
+  1: { code: "1842", hintText: {ru: "Уровень 1: Повернитесь назад к столу, нажмите E.", en: "Level 1: Turn back to desk, press E."} },
   2: { code: "5920", hintText: {ru: "Уровень 2: Посмотрите на книжный шкаф. Ключ спрятан в книгах!", en: "Level 2: Check bookshelf. Key is hidden in books!"} },
   3: { code: "3107", hintText: {ru: "Уровень 3: Трудный поиск. Осмотрите стены комнаты.", en: "Level 3: Hard search. Check room walls."} },
   4: { code: "8415", hintText: {ru: "Уровень 4: Очень сложно. Осмотрите все углы комнаты.", en: "Level 4: Very hard. Check all corners."} },
@@ -300,9 +300,7 @@ for(let row=0; row<4; row++) {
 keyGroup.traverse(child => { child.userData = {kind: 'key'}; });
 bookshelfGroup.traverse(child => { child.userData = {kind: 'bookshelf'}; });
 
-const raycaster=new THREE.Raycaster(); const center=new THREE.Vector2(0,0);
 let yaw=Math.PI, pitch=0, keysDown={};
-let isMouseDown = false, mouseX = 0;
 const message=document.getElementById('message');
 
 function say(t){message.textContent=t;message.style.display='block';clearTimeout(say.timer);say.timer=setTimeout(()=>message.style.display='none',2800)}
@@ -341,30 +339,14 @@ function interact(){
   if(!started||won)return;
   const t = translations[currentLang];
 
-  raycaster.setFromCamera(center,camera);
-  const targets = [keyGroup, note, clock, door, bookshelfGroup];
-  const hits = raycaster.intersectObjects(targets, true);
-  
   let targetKind = null;
-  if(hits.length > 0 && hits[0].distance < 4.5) {
-    let curr = hits[0].object;
-    while(curr && curr !== scene) {
-      if(curr.userData && curr.userData.kind) {
-        targetKind = curr.userData.kind;
-        break;
-      }
-      curr = curr.parent;
-    }
-  }
-
-  if(!targetKind) {
-    const p = camera.position;
-    if(p.distanceTo(keyGroup.position) < 3.0 && keyGroup.visible) targetKind = 'key';
-    else if(p.distanceTo(note.position) < 3.0) targetKind = 'note';
-    else if(p.distanceTo(clock.position) < 3.0) targetKind = 'clock';
-    else if(p.distanceTo(door.position) < 3.5) targetKind = 'door';
-    else if(p.distanceTo(bookshelfGroup.position) < 3.5) targetKind = 'bookshelf';
-  }
+  const p = camera.position;
+  
+  if(p.distanceTo(keyGroup.position) < 3.5 && keyGroup.visible) targetKind = 'key';
+  else if(p.distanceTo(note.position) < 3.5) targetKind = 'note';
+  else if(p.distanceTo(clock.position) < 3.5) targetKind = 'clock';
+  else if(p.distanceTo(door.position) < 3.5) targetKind = 'door';
+  else if(p.distanceTo(bookshelfGroup.position) < 4.0) targetKind = 'bookshelf';
 
   if(!targetKind){
     say(currentLang==='ru'?'Подойдите ближе к предмету!':'Get closer to the object!');
@@ -465,40 +447,18 @@ document.addEventListener('keyup', e => {
   if(e.code !== 'KeyE') keysDown[e.code] = false;
 });
 
-renderer.domElement.addEventListener('mousedown', e => {
-  isMouseDown = true;
-  mouseX = e.clientX;
-});
-window.addEventListener('mouseup', () => { isMouseDown = false; });
-renderer.domElement.addEventListener('mousemove', e => {
-  if(isMouseDown && started && document.getElementById('codeModal').style.display==='none'){
-    const deltaX = e.clientX - mouseX;
-    yaw -= deltaX * 0.005;
-    mouseX = e.clientX;
-  }
-});
-
 function update(dt){
-  if(keysDown.KeyQ || keysDown.ArrowLeft) yaw += 2.2 * dt;
-  if(keysDown.KeyD && !keysDown.KeyS && !keysDown.KeyW && !keysDown.KeyA) {
-    // Если нажата только D без W/S, делаем поворот вправо
-    yaw -= 2.2 * dt;
-  }
+  // Повороты на 360 градусов строго по стрелкам влево/вправо
+  if(keysDown.ArrowLeft) yaw += 2.5 * dt;
+  if(keysDown.ArrowRight) yaw -= 2.5 * dt;
 
   const dir = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
-  const right = new THREE.Vector3(-dir.z, 0, dir.x);
   
-  let f=0, s=0;
+  let f=0;
   if(keysDown.KeyW || keysDown.ArrowUp) f += 1;
   if(keysDown.KeyS || keysDown.ArrowDown) f -= 1;
-  if(keysDown.KeyD && (keysDown.KeyW || keysDown.KeyS || keysDown.KeyA)) s += 1; // стрейф вправо при движении
-  if(keysDown.KeyA || keysDown.ArrowRight) s -= 1;
 
-  const moveVector = new THREE.Vector3();
-  moveVector.addScaledVector(dir, f);
-  moveVector.addScaledVector(right, s);
-  if(moveVector.length() > 1) moveVector.normalize();
-
+  const moveVector = new THREE.Vector3().addScaledVector(dir, f);
   camera.position.addScaledVector(moveVector, 2.8 * dt);
   
   camera.position.x = Math.max(-4.5, Math.min(4.5, camera.position.x));
