@@ -24,8 +24,6 @@
 .btn{border:1px solid var(--line);background:var(--glass);color:#f4eee3;border-radius:12px;padding:12px 15px;font-size:13px;font-weight:650;cursor:pointer;touch-action:manipulation;pointer-events:auto}
 .btn.primary{background:linear-gradient(135deg,#d8ac60,#8e632e);color:#17120a;border:0}
 .btn.shop-btn{background:linear-gradient(135deg,#2980b9,#2c3e50);color:#fff;border:1px solid #3498db}
-#touchpad,#touchlook,#joystick{display:none}
-#mobileInteract{display:none;position:fixed;right:20px;bottom:32px;z-index:5}
 .modalShade{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;padding:18px;z-index:30}
 .modal{width:min(480px,100%);max-height:90vh;overflow-y:auto;background:#111824;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 25px 80px #0009}
 .modal h2{margin:0 0 8px;color:var(--gold);font-size:22px}.modal p{color:#d1d0cb;line-height:1.5;font-size:14px}
@@ -39,7 +37,6 @@
 .shop-item h4{margin:0 0 4px;color:var(--gold);font-size:13px}
 .shop-item p{font-size:11px;margin-bottom:8px;color:#bbb}
 #start{z-index:40}#win{display:none;z-index:35}#shopModal{display:none}
-@media(max-width:700px){#top{left:9px;right:9px;top:9px}.panel{padding:9px 10px}.brand{font-size:11px}.sub{font-size:10px}.stats{gap:6px;font-size:10px}.stat b{font-size:12px}#hint{bottom:105px;font-size:12px;max-width:94vw}#bottom{left:9px;right:9px;bottom:9px}.desktopOnly{display:none}#touchpad,#touchlook,#joystick,#mobileInteract{display:block}.controls{display:none}}
 </style>
 </head>
 <body>
@@ -48,75 +45,76 @@
   <div class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:15px">
       <div class="brand" id="ui-brand">ТАЙНА 100 ДВЕРЕЙ</div>
-      <button class="lang-switch" id="langToggle">Язык: RU</button>
+      <button class="lang-switch" id="langToggle">RU / EN</button>
     </div>
     <div class="sub" id="ui-world">МИР I · ЗАБРОШЕННЫЙ ОСОБНЯК</div>
   </div>
   <div class="panel stats">
-    <div class="stat"><span id="ui-lvl-lbl">УРОВЕНЬ</span><b id="level">01 / 100</b></div>
+    <div class="stat"><span id="ui-lvl-lbl">УРОВЕНЬ</span><b id="level">01 / 05</b></div>
     <div class="stat"><span id="ui-coin-lbl">МОНЕТЫ</span><b id="coins"><span class="coin-icon"></span>100</b></div>
     <div class="stat"><span id="ui-inv-lbl">ИНВЕНТАРЬ</span><b id="inventory">0</b></div>
   </div>
 </div>
 <div id="center"></div><div id="message"></div>
-<div id="hint">Осмотрись. Найди ключ и подсказку с кодом.<br><span style="color:#e7bd70">Компьютер: WASD · мышь · E</span></div>
+<div id="hint">Осмотрись во все стороны (Мышь или Q/E). Найди ключ и код.</div>
 <div id="bottom">
-  <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="ui-controls-hint">WASD — движение · Мышь — осмотр · E — взаимодействие</div>
+  <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="ui-controls-hint">WASD — движение · Q/E или Стрелки — поворот · Мышь — обзор 360° · E/F — действие</div>
   <div class="controls">
     <button class="btn shop-btn" id="openShop">🛒 Магазин</button>
     <button class="btn" id="reset">↻ Сброс</button>
-    <button class="btn primary" id="interact">Взаимодействовать · E</button>
+    <button class="btn primary" id="interact">Взаимодействовать</button>
   </div>
 </div>
 
-<div class="modalShade" id="start"><div class="modal"><div class="brand">100GATE.ONLINE</div><h2 id="m-start-title">Дверь №001</h2><p id="m-start-desc">Ты очнулся в заброшенном особняке. На двери — кодовый замок. Найди старый ключ и записку, чтобы открыть проход.</p><button class="btn primary" id="begin" style="width:100%;margin-top:10px">Войти в особняк</button><div class="tiny" id="m-start-foot">Официальный прототип 100gate.online с поддержкой платежей Cryptomus.</div></div></div>
+<div class="modalShade" id="start">
+  <div class="modal">
+    <div class="brand">100GATE.ONLINE</div>
+    <h2 id="m-start-title">Пять Комнат Тайн</h2>
+    <p id="m-start-desc">Кликните «Войти», чтобы исследовать особняк. Вращайте камеру мышкой или клавишами Q/E во все стороны.</p>
+    <button class="btn primary" id="begin" style="width:100%;margin-top:10px">Войти в особняк</button>
+    <div class="tiny" id="m-start-foot">Прототип 100gate.online с поддержкой Cryptomus.</div>
+  </div>
+</div>
 
-<div class="modalShade" id="codeModal" style="display:none"><div class="modal"><h2 id="m-code-title">Кодовый замок</h2><p id="codePrompt">На записке написано: «Когда часы остановились, время осталось ключом».</p><input id="codeInput" inputmode="numeric" maxlength="4" placeholder="••••" aria-label="Код замка"><div class="row"><button class="btn" id="cancelCode">Назад</button><button class="btn primary" id="submitCode">Открыть дверь</button></div><div class="tiny" id="m-code-hint">Подсказка: внимательно осмотри часы в комнате.</div></div></div>
+<div class="modalShade" id="codeModal" style="display:none">
+  <div class="modal">
+    <h2 id="m-code-title">Кодовый замок</h2>
+    <p id="codePrompt">Введите код для открытия двери.</p>
+    <input id="codeInput" inputmode="numeric" maxlength="4" placeholder="••••">
+    <div class="row">
+      <button class="btn" id="cancelCode">Назад</button>
+      <button class="btn primary" id="submitCode">Открыть дверь</button>
+    </div>
+  </div>
+</div>
 
-<!-- ОБНОВЛЕННЫЙ МАГАЗИН (МОНЕТЫ + ИНВЕНТАРЬ) -->
 <div class="modalShade" id="shopModal">
   <div class="modal">
     <h2 id="shopTitle">Магазин Cryptomus</h2>
-    <p id="shopDesc">Пополняйте баланс монет или покупайте предметы в инвентарь.</p>
-    
+    <p id="shopDesc">Пополняйте баланс монет или покупайте предметы.</p>
     <div class="shop-section-title" id="secCoinsTitle">🪙 Покупка монет (Cryptomus)</div>
     <div class="shop-grid">
-      <div class="shop-item">
-        <div><h4 id="c50-t">50 монет</h4><p id="c50-d">Стартовый набор</p></div>
-        <button class="btn primary" onclick="buyCoins(50)" id="c50-b">Купить</button>
-      </div>
-      <div class="shop-item">
-        <div><h4 id="c100-t">100 монет</h4><p id="c100-d">Популярный пакет</p></div>
-        <button class="btn primary" onclick="buyCoins(100)" id="c100-b">Купить</button>
-      </div>
-      <div class="shop-item">
-        <div><h4 id="c200-t">200 монет</h4><p id="c200-d">Продвинутый набор</p></div>
-        <button class="btn primary" onclick="buyCoins(200)" id="c200-b">Купить</button>
-      </div>
-      <div class="shop-item">
-        <div><h4 id="c500-t">500 монет</h4><p id="c500-d">Максимальный запас</p></div>
-        <button class="btn primary" onclick="buyCoins(500)" id="c500-b">Купить</button>
-      </div>
+      <div class="shop-item"><div><h4 id="c50-t">50 монет</h4><p id="c50-d">Стартовый набор</p></div><button class="btn primary" onclick="buyCoins(50)" id="c50-b">Купить</button></div>
+      <div class="shop-item"><div><h4 id="c100-t">100 монет</h4><p id="c100-d">Пакет</p></div><button class="btn primary" onclick="buyCoins(100)" id="c100-b">Купить</button></div>
     </div>
-
     <div class="shop-section-title" id="secItemsTitle">🎒 Предметы в инвентарь</div>
     <div class="shop-grid">
-      <div class="shop-item">
-        <div><h4 id="i1-t">🗝️ Запасной ключ</h4><p id="i1-d">50 монет</p></div>
-        <button class="btn primary" onclick="buyItem('key', 50)" id="i1-b">Купить</button>
-      </div>
-      <div class="shop-item">
-        <div><h4 id="i2-t">🔦 Ультра-фонарик</h4><p id="i2-d">80 монет</p></div>
-        <button class="btn primary" onclick="buyItem('flashlight', 80)" id="i2-b">Купить</button>
-      </div>
+      <div class="shop-item"><div><h4 id="i1-t">🗝️ Запасной ключ</h4><p id="i1-d">50 монет</p></div><button class="btn primary" onclick="buyItem('key', 50)" id="i1-b">Купить</button></div>
+      <div class="shop-item"><div><h4 id="i2-t">📜 Подсказка к коду</h4><p id="i2-d">40 монет</p></div><button class="btn primary" onclick="buyItem('hint', 40)" id="i2-b">Купить</button></div>
     </div>
-
-    <button class="btn" style="width:100%;margin-top:10px" id="closeShop">Закрыть магазин</button>
-    <div class="tiny" style="text-align:center" id="shopFoot">Мерчант: <b>100gate</b> · Безопасная оплата Cryptomus</div>
+    <button class="btn" style="width:100%;margin-top:10px" id="closeShop">Закрыть</button>
   </div>
 </div>
 
-<div class="modalShade" id="win"><div class="modal"><div class="brand" id="m-win-head">ГЛАВА ЗАВЕРШЕНА</div><h2 id="m-win-title">Дверь открыта!</h2><p id="m-win-desc">Ты нашёл первый фрагмент дневника.</p><p style="color:#e7bd70" id="m-win-reward">Награда: +100 монет</p><button class="btn primary" id="again" style="width:100%">Играть ещё раз</button></div></div>
+<div class="modalShade" id="win" style="display:none">
+  <div class="modal">
+    <div class="brand" id="m-win-head">УРОВЕНЬ ПРОЙДЕН</div>
+    <h2 id="m-win-title">Дверь открыта!</h2>
+    <p id="m-win-desc">Вы успешно справились с испытанием комнаты.</p>
+    <p style="color:#e7bd70" id="m-win-reward">Награда: +50 монет</p>
+    <button class="btn primary" id="nextRoomBtn" style="width:100%">Перейти в следующую комнату</button>
+  </div>
+</div>
 
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
@@ -124,52 +122,51 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.m
 let currentLang = 'ru';
 const translations = {
   ru: {
-    langBtn: "Язык: RU",
-    brand: "ТАЙНА 100 ДВЕРЕЙ",
-    world: "МИР I · ЗАБРОШЕННЫЙ ОСОБНЯК",
+    langBtn: "RU / EN", brand: "ТАЙНА 100 ДВЕРЕЙ", world: "МИР I · ЗАБРОШЕННЫЙ ОСОБНЯК",
     lvl: "УРОВЕНЬ", coin: "МОНЕТЫ", inv: "ИНВЕНТАРЬ",
-    controls: "WASD — движение · Мышь — осмотр · E — взаимодействие",
-    hintStart: "Осмотрись. Найди ключ и подсказку с кодом.<br><span style='color:#e7bd70'>Компьютер: WASD · мышь · E</span>",
-    startTitle: "Дверь №001", startDesc: "Ты очнулся в заброшенном особняке. Найди старый ключ и записку.", startBtn: "Войти в особняк", startFoot: "Официальный прототип 100gate.online с поддержкой платежей Cryptomus.",
-    codeTitle: "Кодовый замок", codePrompt: "На записке написано: «Когда часы остановились, время осталось ключом».", codeHint: "Подсказка: внимательно осмотри часы в комнате.", codeBtn: "Открыть дверь", codeBack: "Назад",
-    shopTitle: "Магазин Cryptomus", shopDesc: "Пополняйте баланс монет или покупайте предметы в инвентарь.",
+    controls: "WASD — движение · Q/E или Стрелки — поворот · Мышь — обзор 360° · E/F — действие",
+    startTitle: "Пять Комнат Тайн", startDesc: "Кликните «Войти», чтобы исследовать особняк. Вращайте камеру мышкой или клавишами Q/E во все стороны.", startBtn: "Войти в особняк", startFoot: "Прототип 100gate.online с поддержкой Cryptomus.",
+    codeTitle: "Кодовый замок", codePrompt: "Введите код для открытия двери.", codeBtn: "Открыть дверь", codeBack: "Назад",
+    shopTitle: "Магазин Cryptomus", shopDesc: "Пополняйте баланс монет или покупайте предметы.",
     secCoins: "🪙 Покупка монет (Cryptomus)", secItems: "🎒 Предметы в инвентарь",
-    c50t: "50 монет", c50d: "Стартовый набор",
-    c100t: "100 монет", c100d: "Популярный пакет",
-    c200t: "200 монет", c200d: "Продвинутый набор",
-    c500t: "500 монет", c500d: "Максимальный запас",
-    buyBtn: "Купить",
-    i1t: "🗝️ Запасной ключ", i1d: "50 монет",
-    i2t: "🔦 Ультра-фонарик", i2d: "80 монет",
-    shopClose: "Закрыть магазин", shopFoot: "Мерчант: 100gate · Безопасная оплата Cryptomus",
-    shopBtnText: "🛒 Магазин", resetBtn: "↻ Сброс", interactBtn: "Взаимодействовать · E",
-    msgKeyFound: "Ты нашёл старый ключ. +30 монет", msgNote: "Записка: «Когда часы остановились, время осталось ключом».", msgClock: "Часы остановились на 18:42. Запомни это время.", msgLocked: "Замок закрыт. Похоже, нужен ключ от особняка.", msgNoNote: "На двери кодовый замок. Сначала найди записку.", msgWrongCode: "Неверный код. Осмотри часы внимательнее.", msgOpening: "Замок щёлкнул. Дверь открывается…", msgOldItem: "Старая вещь.", invItem: "предм."
+    c50t: "50 монет", c50d: "Стартовый набор", c100t: "100 монет", c100d: "Пакет", buyBtn: "Купить",
+    i1t: "🗝️ Запасной ключ", i1d: "50 монет", i2t: "📜 Подсказка к коду", i2d: "40 монет",
+    shopClose: "Закрыть", shopBtnText: "🛒 Магазин", resetBtn: "↻ Сброс", interactBtn: "Взаимодействовать",
+    msgKeyFound: "Ключ найден! +30 монет", msgNote: "Записка: «Когда часы остановились, время осталось ключом».", msgClock1: "Часы остановились на 18:42.", msgClock2: "Настенные часы сломались на цифре 5920.",
+    msgLocked: "Замок закрыт. Нужен ключ.", msgNoNote: "Найдите записку / подсказку с кодом.", msgWrongCode: "Неверный код!", msgOpening: "Дверь открывается...",
+    winHead: "УРОВЕНЬ ПРОЙДЕН", winTitle: "Дверь открыта!", winDesc: "Вы успешно справились с испытанием комнаты.", winReward: "Награда: +50 монет",
+    winBtn: "Перейти в следующую комнату", finWinBtn: "Победа! Начать заново", invLabel: "предм."
   },
   en: {
-    langBtn: "Lang: EN",
-    brand: "100 GATES MYSTERY",
-    world: "WORLD I · ABANDONED MANSION",
+    langBtn: "EN / RU", brand: "100 GATES MYSTERY", world: "WORLD I · ABANDONED MANSION",
     lvl: "LEVEL", coin: "COINS", inv: "INVENTORY",
-    controls: "WASD — Move · Mouse — Look · E — Interact",
-    hintStart: "Look around. Find the key and the passcode clue.<br><span style='color:#e7bd70'>PC: WASD · Mouse · E</span>",
-    startTitle: "Door №001", startDesc: "You woke up in an abandoned mansion. Find the key and note.", startBtn: "Enter Mansion", startFoot: "Official 100gate.online prototype with Cryptomus payments.",
-    codeTitle: "Combination Lock", codePrompt: "The note reads: 'When the clock stopped, time remained the key.'", codeHint: "Hint: examine the clock in the room carefully.", codeBtn: "Open Door", codeBack: "Back",
-    shopTitle: "Cryptomus Shop", shopDesc: "Top up coins or buy inventory items.",
+    controls: "WASD — Move · Q/E or Arrows — Turn · Mouse — 360° Look · E/F — Action",
+    startTitle: "Five Mystery Rooms", startDesc: "Click 'Enter' to explore the mansion. Rotate camera with mouse or Q/E keys.", startBtn: "Enter Mansion", startFoot: "100gate.online prototype with Cryptomus support.",
+    codeTitle: "Combination Lock", codePrompt: "Enter door passcode.", codeBtn: "Open Door", codeBack: "Back",
+    shopTitle: "Cryptomus Shop", shopDesc: "Top up coins or buy items.",
     secCoins: "🪙 Buy Coins (Cryptomus)", secItems: "🎒 Inventory Items",
-    c50t: "50 Coins", c50d: "Starter Pack",
-    c100t: "100 Coins", c100d: "Popular Pack",
-    c200t: "200 Coins", c200d: "Advanced Pack",
-    c500t: "500 Coins", c500d: "Max Pack",
-    buyBtn: "Buy",
-    i1t: "🗝️ Spare Key", i1d: "50 Coins",
-    i2t: "🔦 Ultra Flashlight", i2d: "80 Coins",
-    shopClose: "Close Shop", shopFoot: "Merchant: 100gate · Secure Cryptomus Payment",
-    shopBtnText: "🛒 Shop", resetBtn: "↻ Reset", interactBtn: "Interact · E",
-    msgKeyFound: "You found the old key. +30 coins", msgNote: "Note: 'When the clock stopped, time remained the key.'", msgClock: "The clock stopped at 18:42.", msgLocked: "The lock is closed. Key needed.", msgNoNote: "Combination lock. Find note first.", msgWrongCode: "Wrong code.", msgOpening: "Door opening...", msgOldItem: "Old item.", invItem: "items"
+    c50t: "50 Coins", c50d: "Starter Pack", c100t: "100 Coins", c100d: "Pack", buyBtn: "Buy",
+    i1t: "🗝️ Spare Key", i1d: "50 Coins", i2t: "📜 Code Hint", i2d: "40 Coins",
+    shopClose: "Close", shopBtnText: "🛒 Shop", resetBtn: "↻ Reset", interactBtn: "Interact",
+    msgKeyFound: "Key found! +30 coins", msgNote: "Note: 'When the clock stopped, time remained the key.'", msgClock1: "Clock shows 18:42.", msgClock2: "The clock is stuck at 5920.",
+    msgLocked: "Locked. Key needed.", msgNoNote: "Find passcode first.", msgWrongCode: "Wrong code!", msgOpening: "Door opening...",
+    winHead: "LEVEL COMPLETED", winTitle: "Door Opened!", winDesc: "You successfully passed the room trial.", winReward: "Reward: +50 coins",
+    winBtn: "Next Room", finWinBtn: "Victory! Restart", invLabel: "items"
   }
 };
 
+let currentLevel = 1;
+const maxLevel = 5;
+let hasKey = false, readNote = false, doorOpen = false, started = false, coins = 100, won = false;
 let inventoryCount = 0;
+
+const roomData = {
+  1: { code: "1842", hintText: {ru: "Уровень 1: Осмотритесь вокруг. Ключ на столе.", en: "Level 1: Look around. Key is on the desk."} },
+  2: { code: "5920", hintText: {ru: "Уровень 2: Посмотрите на книжный шкаф. Ключ спрятан в книгах!", en: "Level 2: Check the bookshelf. Key is hidden in books!"} },
+  3: { code: "3107", hintText: {ru: "Уровень 3: Трудный поиск. Осмотрите стены комнаты.", en: "Level 3: Hard search. Check room walls."} },
+  4: { code: "8415", hintText: {ru: "Уровень 4: Очень сложно. Осмотрите все углы комнаты.", en: "Level 4: Very hard. Check all corners."} },
+  5: { code: "9912", hintText: {ru: "Уровень 5: Финал. Полная свобода обзора на 360°.", en: "Level 5: Finale. Full 360° freedom."} }
+};
 
 function updateLanguageText(){
   const t = translations[currentLang];
@@ -180,82 +177,83 @@ function updateLanguageText(){
   document.getElementById('ui-coin-lbl').textContent = t.coin;
   document.getElementById('ui-inv-lbl').textContent = t.inv;
   document.getElementById('ui-controls-hint').textContent = t.controls;
-  document.getElementById('hint').innerHTML = t.hintStart;
+  document.getElementById('hint').innerHTML = roomData[currentLevel].hintText[currentLang];
+
   document.getElementById('m-start-title').textContent = t.startTitle;
   document.getElementById('m-start-desc').textContent = t.startDesc;
   document.getElementById('begin').textContent = t.startBtn;
   document.getElementById('m-start-foot').textContent = t.startFoot;
+
   document.getElementById('m-code-title').textContent = t.codeTitle;
   document.getElementById('codePrompt').textContent = t.codePrompt;
-  document.getElementById('m-code-hint').textContent = t.codeHint;
   document.getElementById('submitCode').textContent = t.codeBtn;
   document.getElementById('cancelCode').textContent = t.codeBack;
-  
-  // Shop translations
+
   document.getElementById('shopTitle').textContent = t.shopTitle;
   document.getElementById('shopDesc').textContent = t.shopDesc;
   document.getElementById('secCoinsTitle').textContent = t.secCoins;
   document.getElementById('secItemsTitle').textContent = t.secItems;
   document.getElementById('c50-t').textContent = t.c50t; document.getElementById('c50-d').textContent = t.c50d; document.getElementById('c50-b').textContent = t.buyBtn;
   document.getElementById('c100-t').textContent = t.c100t; document.getElementById('c100-d').textContent = t.c100d; document.getElementById('c100-b').textContent = t.buyBtn;
-  document.getElementById('c200-t').textContent = t.c200t; document.getElementById('c200-d').textContent = t.c200d; document.getElementById('c200-b').textContent = t.buyBtn;
-  document.getElementById('c500-t').textContent = t.c500t; document.getElementById('c500-d').textContent = t.c500d; document.getElementById('c500-b').textContent = t.buyBtn;
   document.getElementById('i1-t').textContent = t.i1t; document.getElementById('i1-d').textContent = t.i1d; document.getElementById('i1-b').textContent = t.buyBtn;
   document.getElementById('i2-t').textContent = t.i2t; document.getElementById('i2-d').textContent = t.i2d; document.getElementById('i2-b').textContent = t.buyBtn;
   document.getElementById('closeShop').textContent = t.shopClose;
-  document.getElementById('shopFoot').textContent = t.shopFoot;
 
   document.getElementById('openShop').textContent = t.shopBtnText;
   document.getElementById('reset').textContent = t.resetBtn;
   document.getElementById('interact').textContent = t.interactBtn;
+
+  document.getElementById('m-win-head').textContent = t.winHead;
+  document.getElementById('m-win-title').textContent = t.winTitle;
+  document.getElementById('m-win-desc').textContent = t.winDesc;
+  document.getElementById('m-win-reward').textContent = t.winReward;
+  document.getElementById('nextRoomBtn').textContent = won && currentLevel >= maxLevel ? t.finWinBtn : t.winBtn;
+  updateHUD();
 }
 
 document.getElementById('langToggle').onclick = () => {
   currentLang = currentLang === 'ru' ? 'en' : 'ru';
   updateLanguageText();
-  updateHUD();
 };
 
 window.buyCoins = function(amount) {
-  const paymentUrl = `https://pay.cryptomus.com/pay/100gate?amount=${amount}&currency=USD&order_id=gate_${Date.now()}`;
-  window.open(paymentUrl, '_blank');
+  window.open(`https://pay.cryptomus.com/pay/100gate?amount=${amount}&currency=USD&order_id=gate_${Date.now()}`, '_blank');
 };
 
 window.buyItem = function(itemType, cost) {
   if (coins >= cost) {
-    coins -= cost;
-    inventoryCount++;
+    coins -= cost; inventoryCount++;
     if(itemType==='key') hasKey = true;
     updateHUD();
-    alert(currentLang==='ru'?'Предмет куплен и добавлен в инвентарь!':'Item purchased and added to inventory!');
+    alert(currentLang==='ru'?'Предмет куплен!':'Item purchased!');
   } else {
-    alert(currentLang==='ru'?'Недостаточно монет! Пополните баланс.':'Not enough coins! Please top up.');
+    alert(currentLang==='ru'?'Недостаточно монет!':'Not enough coins!');
   }
 };
 
-document.getElementById('openShop').onclick = () => document.getElementById('shopModal').style.display = 'flex';
+document.getElementById('openShop').onclick = () => {
+  document.exitPointerLock?.();
+  document.getElementById('shopModal').style.display = 'flex';
+};
 document.getElementById('closeShop').onclick = () => document.getElementById('shopModal').style.display = 'none';
 
 const root=document.getElementById('game');
 const scene=new THREE.Scene(); scene.background=new THREE.Color(0x111824); scene.fog=new THREE.Fog(0x111824,7,24);
 const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,100); camera.position.set(0,1.65,-4.5);
-const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,1.7)); renderer.setSize(innerWidth,innerHeight); renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.15; root.appendChild(renderer.domElement);
+const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setSize(innerWidth,innerHeight); root.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0x9eb8dc,0x302016,1.35));
-const lamp=new THREE.PointLight(0xffc77c,32,16,2);lamp.position.set(0,3.3,1.3);lamp.castShadow=true;scene.add(lamp);
-const cool=new THREE.PointLight(0x4b7cbf,13,10,2);cool.position.set(-3,2.6,-3);scene.add(cool);
+const lamp=new THREE.PointLight(0xffc77c,32,16,2); lamp.position.set(0,3.3,1.3); scene.add(lamp);
 
 const mats={
  wall:new THREE.MeshStandardMaterial({color:0x37332f,roughness:.92}),
  floor:new THREE.MeshStandardMaterial({color:0x3d3028,roughness:.9}),
  wood:new THREE.MeshStandardMaterial({color:0x4b2d1c,roughness:.7}),
  gold:new THREE.MeshStandardMaterial({color:0xc79b4e,metalness:.72,roughness:.28}),
- metal:new THREE.MeshStandardMaterial({color:0x545b61,metalness:.65,roughness:.4}),
- glow:new THREE.MeshStandardMaterial({color:0x8ed8ff,emissive:0x2474a8,emissiveIntensity:1.4}),
- paper:new THREE.MeshStandardMaterial({color:0xd7c49c,roughness:1}),
- dark:new THREE.MeshStandardMaterial({color:0x17191d,roughness:.7})
+ paper:new THREE.MeshStandardMaterial({color:0xd7c49c,roughness:1})
 };
-function box(name,x,y,z,sx,sy,sz,mat,opts={}){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);m.name=name;m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);if(opts.userData)m.userData=opts.userData;return m}
-function cylinder(name,x,y,z,r1,r2,h,mat,rotX=0){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,20),mat);m.name=name;m.position.set(x,y,z);m.rotation.x=rotX;m.castShadow=true;scene.add(m);return m}
+
+function box(name,x,y,z,sx,sy,sz,mat,opts={}){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);m.name=name;m.position.set(x,y,z);scene.add(m);if(opts.userData)m.userData=opts.userData;return m}
+function cylinder(name,x,y,z,r1,r2,h,mat,rotX=0){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,20),mat);m.name=name;m.position.set(x,y,z);m.rotation.x=rotX;scene.add(m);return m}
 
 box('floor',0,-.12,0,10,.24,12,mats.floor);
 box('ceiling',0,4.2,0,10,.25,12,mats.wall);
@@ -266,85 +264,251 @@ box('front left',-3.35,2,6,3.3,4.2,.25,mats.wall);
 box('front right',3.35,2,6,3.3,4.2,.25,mats.wall);
 box('front top',0,3.75,6,3.4,.7,.25,mats.wall);
 
-box('doorframeL',-1.48,1.65,5.78,.18,3.35,.35,mats.gold);
-box('doorframeR',1.48,1.65,5.78,.18,3.35,.35,mats.gold);
-box('doorframeTop',0,3.28,5.78,3.1,.18,.35,mats.gold);
 const door=box('sealed door',0,1.62,5.68,2.78,3.1,.28,mats.wood,{userData:{kind:'door'}});
-box('handle',.9,1.4,5.43,.12,.08,.12,mats.gold);
-
-const desk=box('desk top',-2.65,.95,-1.3,2.15,.16,1.05,mats.wood);
+box('desk top',-2.65,.95,-1.3,2.15,.16,1.05,mats.wood);
 const clock=cylinder('antique clock',-2.45,1.55,-1.35,.34,.34,.13,mats.gold,Math.PI/2);
+clock.userData = {kind: 'clock'};
 const note=box('folded note',-2.95,1.055,-1.25,.38,.025,.28,mats.paper,{userData:{kind:'note'}});
-const keyGroup=new THREE.Group();keyGroup.name='old key';keyGroup.position.set(-2.12,1.08,-1.45);scene.add(keyGroup);
-const ring=new THREE.Mesh(new THREE.TorusGeometry(.095,.025,8,20),mats.gold);keyGroup.add(ring);
-const shaft=new THREE.Mesh(new THREE.BoxGeometry(.35,.045,.045),mats.gold);shaft.position.x=.12;keyGroup.add(shaft);
+
+const keyGroup=new THREE.Group(); keyGroup.name='old key'; keyGroup.position.set(-2.12,1.08,-1.45); scene.add(keyGroup);
+const ring=new THREE.Mesh(new THREE.TorusGeometry(.095,.025,8,20),mats.gold); keyGroup.add(ring);
+const shaft=new THREE.Mesh(new THREE.BoxGeometry(.35,.045,.045),mats.gold); shaft.position.x=.12; keyGroup.add(shaft);
 keyGroup.userData={kind:'key'};
 
-const raycaster=new THREE.Raycaster();const center=new THREE.Vector2(0,0);
-let hasKey=false,readNote=false,clockSeen=false,doorOpen=false,started=false,coins=100,won=false;
-let yaw=Math.PI,pitch=0,keysDown={};
+const bookshelfGroup = new THREE.Group();
+bookshelfGroup.position.set(3.55, 0, -2.6);
+bookshelfGroup.userData = {kind: 'bookshelf'};
+scene.add(bookshelfGroup);
+
+const bFrame = new THREE.Mesh(new THREE.BoxGeometry(1.45, 3.05, .55), mats.wood);
+bFrame.position.y = 1.55; bookshelfGroup.add(bFrame);
+for(let y=0.55; y<3.0; y+=0.72) {
+  const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.09, 0.55), mats.gold);
+  shelf.position.set(0, y, 0.02); bookshelfGroup.add(shelf);
+}
+const bookColors=[0x31515a, 0x7d3b2e, 0x9a7741, 0x26364c, 0x694c6e];
+for(let row=0; row<4; row++) {
+  let bx = -0.55;
+  for(let i=0; i<5; i++) {
+    const bW = 0.14;
+    const book = new THREE.Mesh(new THREE.BoxGeometry(bW, 0.42, 0.45), new THREE.MeshStandardMaterial({color: bookColors[(i+row)%bookColors.length], roughness: .85}));
+    book.position.set(bx + bW/2, 0.82 + row*0.72, 0.05);
+    bookshelfGroup.add(book);
+    bx += bW + 0.04;
+  }
+}
+
+keyGroup.traverse(child => { child.userData = {kind: 'key'}; });
+bookshelfGroup.traverse(child => { child.userData = {kind: 'bookshelf'}; });
+
+const raycaster=new THREE.Raycaster(); const center=new THREE.Vector2(0,0);
+let yaw=Math.PI, pitch=0, keysDown={};
 const message=document.getElementById('message');
 
 function say(t){message.textContent=t;message.style.display='block';clearTimeout(say.timer);say.timer=setTimeout(()=>message.style.display='none',2800)}
 function updateHUD(){
   const t = translations[currentLang];
+  document.getElementById('level').textContent = `0${currentLevel} / 05`;
   document.getElementById('coins').innerHTML = `<span class="coin-icon"></span>${coins}`;
-  document.getElementById('inventory').textContent = (hasKey ? 1 : 0) + inventoryCount + " " + t.invItem;
+  document.getElementById('inventory').textContent = (hasKey ? 1 : 0) + inventoryCount + " " + t.invLabel;
 }
-function interact(){
- if(!started||won)return;
- raycaster.setFromCamera(center,camera);
- const hits=raycaster.intersectObjects([keyGroup,note,clock,door],true);
- let obj=hits.length?hits[0].object:null;
- while(obj && !obj.userData.kind && obj.parent!==scene)obj=obj.parent;
- const t = translations[currentLang];
- if(!obj){say(currentLang==='ru'?'Подойди ближе к предмету.':'Get closer.');return;}
- const kind=obj.userData.kind || (obj.parent===keyGroup?'key':null);
- if(kind==='key'){
-  if(hasKey){say(currentLang==='ru'?'Ключ уже у тебя.':'You have the key.');return;}
-  hasKey=true;keyGroup.visible=false;coins+=30;updateHUD();say(t.msgKeyFound);
- }else if(kind==='note'){
-  readNote=true;say(t.msgNote);
- }else if(obj===clock || obj.parent===clock){
-  clockSeen=true;say(t.msgClock);
- }else if(kind==='door'||obj===door){
-  if(doorOpen){finish();return;}
-  if(!hasKey){say(t.msgLocked);return;}
-  if(!readNote){say(t.msgNoNote);return;}
-  document.getElementById('codeModal').style.display='flex';
- }
-}
-function finish(){if(won)return;won=true;coins+=100;updateHUD();document.getElementById('win').style.display='flex';}
-function resetGame(){hasKey=false;readNote=false;clockSeen=false;doorOpen=false;won=false;coins=100;inventoryCount=0;keyGroup.visible=true;door.position.z=5.68;document.getElementById('win').style.display='none';document.getElementById('codeModal').style.display='none';updateHUD();camera.position.set(0,1.65,-4.5);yaw=Math.PI;pitch=0;}
 
-document.getElementById('begin').onclick=()=>{started=true;document.getElementById('start').style.display='none';};
-document.getElementById('interact').onclick=interact;document.getElementById('reset').onclick=resetGame;document.getElementById('again').onclick=()=>{resetGame();started=true};
-document.getElementById('cancelCode').onclick=()=>document.getElementById('codeModal').style.display='none';
-document.getElementById('submitCode').onclick=()=>{
-  const v=document.getElementById('codeInput').value.trim();
+function applyLevelSettings(){
+  hasKey = false; readNote = false; doorOpen = false; won = false;
+  door.position.set(0,1.62,5.68); door.rotation.y = 0;
+  
+  if(currentLevel === 1) {
+    keyGroup.position.set(-2.12,1.08,-1.45);
+    keyGroup.visible = true;
+  } else if(currentLevel === 2) {
+    keyGroup.position.set(3.5, 1.5, -2.5);
+    keyGroup.visible = true;
+  } else if(currentLevel === 3) {
+    keyGroup.position.set(0, 0.2, -5.5);
+    keyGroup.visible = true;
+  } else if(currentLevel === 4) {
+    keyGroup.position.set(-4.5, 2.2, 0);
+    keyGroup.visible = true;
+  } else {
+    keyGroup.position.set(4.5, 0.1, 4.5);
+    keyGroup.visible = true;
+  }
+  document.getElementById('hint').innerHTML = roomData[currentLevel].hintText[currentLang];
+  updateHUD();
+}
+
+function interact(){
+  if(!started||won)return;
+  raycaster.setFromCamera(center,camera);
+  const targets = [keyGroup, note, clock, door, bookshelfGroup];
+  const hits = raycaster.intersectObjects(targets, true);
+  
+  let targetObj = null;
+  if(hits.length > 0) {
+    let curr = hits[0].object;
+    while(curr && curr !== scene) {
+      if(curr.userData && curr.userData.kind) {
+        targetObj = curr;
+        break;
+      }
+      curr = curr.parent;
+    }
+  }
+
   const t = translations[currentLang];
-  if(v==='1842'){
-    document.getElementById('codeModal').style.display='none';doorOpen=true;
-    door.position.x=-1.15;say(t.msgOpening);setTimeout(finish,900);
+  if(!targetObj){
+    say(currentLang==='ru'?'Подойди ближе и наведи прицел на предмет.':'Get closer and aim at an object.');
+    return;
+  }
+
+  const kind = targetObj.userData.kind;
+
+  if(kind === 'key'){
+    if(hasKey){ say(currentLang==='ru'?'Ключ уже у тебя.':'You already have the key.'); return; }
+    hasKey = true; keyGroup.visible = false; coins += 20; updateHUD(); say(t.msgKeyFound);
+  } else if(kind === 'note'){
+    readNote = true; say(t.msgNote);
+  } else if(kind === 'bookshelf'){
+    if(currentLevel === 2 && !hasKey) {
+      hasKey = true; keyGroup.visible = false; updateHUD(); say(currentLang==='ru'?'Вы нашли ключ внутри книги на полке!':'Found key inside a book!');
+    } else {
+      say(currentLang==='ru'?'Много интересных книг на полках.':'Many interesting books on the shelves.');
+    }
+  } else if(kind === 'clock'){
+    if(currentLevel === 1) say(t.msgClock1);
+    else say(t.msgClock2);
+  } else if(kind === 'door'){
+    if(doorOpen){ finishLevel(); return; }
+    if(!hasKey){ say(t.msgLocked); return; }
+    if(!readNote && currentLevel === 1){ say(t.msgNoNote); return; }
+    document.exitPointerLock?.();
+    document.getElementById('codeModal').style.display = 'flex';
+    document.getElementById('codeInput').value = '';
+    document.getElementById('codeInput').focus();
+  }
+}
+
+function finishLevel(){
+  if(won) return;
+  won=true; coins+=50; updateHUD();
+  const t = translations[currentLang];
+  document.exitPointerLock?.();
+  if(currentLevel >= maxLevel) {
+    document.getElementById('m-win-title').textContent = currentLang==='ru' ? "ПОБЕДА В ИГРЕ!" : "GAME VICTORY!";
+    document.getElementById('nextRoomBtn').textContent = t.finWinBtn;
+  } else {
+    document.getElementById('nextRoomBtn').textContent = t.winBtn;
+  }
+  document.getElementById('win').style.display='flex';
+}
+
+document.getElementById('begin').onclick=()=>{
+  started=true;
+  document.getElementById('start').style.display='none';
+  applyLevelSettings();
+  renderer.domElement.requestPointerLock?.();
+};
+document.getElementById('interact').onclick=interact;
+document.getElementById('cancelCode').onclick=()=>{
+  document.getElementById('codeModal').style.display='none';
+  renderer.domElement.requestPointerLock?.();
+};
+
+function submitCodeFunc(){
+  const v=document.getElementById('codeInput').value.trim();
+  const correctCode = roomData[currentLevel].code;
+  const t = translations[currentLang];
+  if(v===correctCode){
+    document.getElementById('codeModal').style.display='none';
+    doorOpen=true; door.position.x=-1.15; door.rotation.y=-0.9;
+    say(t.msgOpening); setTimeout(finishLevel, 900);
   }else{
     say(t.msgWrongCode);
   }
+}
+
+document.getElementById('submitCode').onclick = submitCodeFunc;
+document.getElementById('codeInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter') {
+    submitCodeFunc();
+  }
+});
+
+document.getElementById('nextRoomBtn').onclick = () => {
+  document.getElementById('win').style.display='none';
+  if(currentLevel < maxLevel) {
+    currentLevel++;
+    applyLevelSettings();
+  } else {
+    currentLevel = 1;
+    coins += 100;
+    applyLevelSettings();
+  }
+  renderer.domElement.requestPointerLock?.();
 };
-document.addEventListener('keydown',e=>{keysDown[e.code]=true;if(e.code==='KeyE')interact();});
+
+document.getElementById('reset').onclick=()=>{ currentLevel=1; applyLevelSettings(); };
+
+document.addEventListener('keydown',e=>{
+  keysDown[e.code]=true;
+  if((e.code==='KeyE'||e.code==='KeyF') && document.getElementById('codeModal').style.display==='none' && document.getElementById('shopModal').style.display==='none') interact();
+});
 document.addEventListener('keyup',e=>keysDown[e.code]=false);
-document.addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement&&started){yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;pitch=Math.max(-1.15,Math.min(1.15,pitch));}});
-renderer.domElement.addEventListener('click',()=>{if(started&&innerWidth>700&&document.pointerLockElement!==renderer.domElement)renderer.domElement.requestPointerLock?.()});
+
+document.addEventListener('mousemove',e=>{
+  if(document.pointerLockElement===renderer.domElement && started){
+    yaw -= e.movementX * 0.003;
+    pitch -= e.movementY * 0.003;
+    pitch = Math.max(-1.4, Math.min(1.4, pitch));
+  }
+});
+
+renderer.domElement.addEventListener('click',()=>{
+  if(started && document.pointerLockElement!==renderer.domElement && document.getElementById('codeModal').style.display==='none' && document.getElementById('shopModal').style.display==='none'){
+    renderer.domElement.requestPointerLock?.();
+  }
+});
 
 function update(dt){
- const dir=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
- const right=new THREE.Vector3(-dir.z,0,dir.x);
- let f=0,s=0;if(keysDown.KeyW)f+=1;if(keysDown.KeyS)f-=1;if(keysDown.KeyD)s+=1;if(keysDown.KeyA)s-=1;
- const v=new THREE.Vector3().addScaledVector(dir,f).addScaledVector(right,s);if(v.length()>1)v.normalize();
- camera.position.addScaledVector(v,2.5*dt);
- camera.rotation.order='YXZ';camera.rotation.y=yaw;camera.rotation.x=pitch;
+  if(keysDown.KeyQ || keysDown.ArrowLeft) yaw += 2.0 * dt;
+  if(keysDown.KeyE || keysDown.ArrowRight) yaw -= 2.0 * dt;
+
+  const dir = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+  const right = new THREE.Vector3(-dir.z, 0, dir.x);
+  
+  let f=0, s=0;
+  if(keysDown.KeyW || keysDown.ArrowUp) f += 1;
+  if(keysDown.KeyS || keysDown.ArrowDown) f -= 1;
+  if(keysDown.KeyD) s += 1;
+  if(keysDown.KeyA) s -= 1;
+
+  const moveVector = new THREE.Vector3();
+  moveVector.addScaledVector(dir, f);
+  moveVector.addScaledVector(right, s);
+  if(moveVector.length() > 1) moveVector.normalize();
+
+  camera.position.addScaledVector(moveVector, 2.8 * dt);
+  
+  camera.position.x = Math.max(-4.5, Math.min(4.5, camera.position.x));
+  camera.position.z = Math.max(-5.5, Math.min(5.2, camera.position.z));
+  camera.position.y = 1.65;
+
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = yaw;
+  camera.rotation.x = pitch;
 }
-let prev=performance.now();function animate(now){requestAnimationFrame(animate);const dt=Math.min(.04,(now-prev)/1000);prev=now;if(started)update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
+
+let prev=performance.now();
+function animate(now){
+  requestAnimationFrame(animate);
+  const dt=Math.min(.04,(now-prev)/1000);
+  prev=now;
+  if(started) update(dt);
+  renderer.render(scene,camera);
+}
+requestAnimationFrame(animate);
 updateHUD();
+updateLanguageText();
 </script>
 </body>
 </html>
