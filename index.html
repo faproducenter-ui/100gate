@@ -56,9 +56,9 @@
   </div>
 </div>
 <div id="center"></div><div id="message"></div>
-<div id="hint">Используйте Стрелки ←/→ для поворота. Подойдите к столу и нажмите E для взятия ключа.</div>
+<div id="hint">Используйте A/D для поворота, W/S для движения, E для взятия предметов.</div>
 <div id="bottom">
-  <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="ui-controls-hint">W/S — вперед/назад · Стрелки ←/→ — поворот на 360° · E — взять предмет</div>
+  <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="ui-controls-hint">W/S — вперед/назад · A/D — поворот налево/направо · E — взять предмет</div>
   <div class="controls">
     <button class="btn shop-btn" id="openShop">🛒 Магазин</button>
     <button class="btn" id="reset">↻ Сброс</button>
@@ -70,7 +70,7 @@
   <div class="modal">
     <div class="brand">100GATE.ONLINE</div>
     <h2 id="m-start-title">Пять Комнат Тайн</h2>
-    <p id="m-start-desc">Повернитесь назад стрелками, подойдите к столу и нажмите клавишу E, чтобы взять ключ и прочитать записку.</p>
+    <p id="m-start-desc">Поворачивайтесь клавишами A и D, подходите к предметам и нажимайте E.</p>
     <button class="btn primary" id="begin" style="width:100%;margin-top:10px">Войти в особняк</button>
     <div class="tiny" id="m-start-foot">Прототип 100gate.online с поддержкой Cryptomus.</div>
   </div>
@@ -124,8 +124,8 @@ const translations = {
   ru: {
     langBtn: "RU / EN", brand: "ТАЙНА 100 ДВЕРЕЙ", world: "МИР I · ЗАБРОШЕННЫЙ ОСОБНЯК",
     lvl: "УРОВЕНЬ", coin: "МОНЕТЫ", inv: "ИНВЕНТАРЬ",
-    controls: "W/S — вперед/назад · Стрелки ←/→ — поворот на 360° · E — взять предмет",
-    startTitle: "Пять Комнат Тайн", startDesc: "Повернитесь назад стрелками, подойдите к столу и нажмите клавишу E, чтобы взять ключ и прочитать записку.", startBtn: "Войти в особняк", startFoot: "Прототип 100gate.online с поддержкой Cryptomus.",
+    controls: "W/S — вперед/назад · A/D — поворот налево/направо · E — взять предмет",
+    startTitle: "Пять Комнат Тайн", startDesc: "Поворачивайтесь клавишами A и D, подходите к предметам и нажимайте E.", startBtn: "Войти в особняк", startFoot: "Прототип 100gate.online с поддержкой Cryptomus.",
     codeTitle: "Кодовый замок", codePrompt: "Введите код для открытия двери.", codeBtn: "Открыть дверь", codeBack: "Назад",
     shopTitle: "Магазин Cryptomus", shopDesc: "Пополняйте баланс монет или покупайте предметы.",
     secCoins: "🪙 Покупка монет (Cryptomus)", secItems: "🎒 Предметы в инвентарь",
@@ -140,8 +140,8 @@ const translations = {
   en: {
     langBtn: "EN / RU", brand: "100 GATES MYSTERY", world: "WORLD I · ABANDONED MANSION",
     lvl: "LEVEL", coin: "COINS", inv: "INVENTORY",
-    controls: "W/S — Forward/Back · Arrows ←/→ — Turn 360° · E — Take item",
-    startTitle: "Five Mystery Rooms", startDesc: "Turn around with arrows, approach desk and press E to take key and read note.", startBtn: "Enter Mansion", startFoot: "100gate.online prototype with Cryptomus support.",
+    controls: "W/S — Forward/Back · A/D — Turn Left/Right · E — Take item",
+    startTitle: "Five Mystery Rooms", startDesc: "Turn using A and D keys, approach objects and press E.", startBtn: "Enter Mansion", startFoot: "100gate.online prototype with Cryptomus support.",
     codeTitle: "Combination Lock", codePrompt: "Enter door passcode.", codeBtn: "Open Door", codeBack: "Back",
     shopTitle: "Cryptomus Shop", shopDesc: "Top up coins or buy items.",
     secCoins: "🪙 Buy Coins (Cryptomus)", secItems: "🎒 Inventory Items",
@@ -161,7 +161,7 @@ let hasKey = false, readNote = false, doorOpen = false, started = false, coins =
 let inventoryCount = 0;
 
 const roomData = {
-  1: { code: "1842", hintText: {ru: "Уровень 1: Повернитесь назад к столу, нажмите E.", en: "Level 1: Turn back to desk, press E."} },
+  1: { code: "1842", hintText: {ru: "Уровень 1: Повернитесь назад с помощью A или D к столу, нажмите E.", en: "Level 1: Turn around using A or D to desk, press E."} },
   2: { code: "5920", hintText: {ru: "Уровень 2: Посмотрите на книжный шкаф. Ключ спрятан в книгах!", en: "Level 2: Check bookshelf. Key is hidden in books!"} },
   3: { code: "3107", hintText: {ru: "Уровень 3: Трудный поиск. Осмотрите стены комнаты.", en: "Level 3: Hard search. Check room walls."} },
   4: { code: "8415", hintText: {ru: "Уровень 4: Очень сложно. Осмотрите все углы комнаты.", en: "Level 4: Very hard. Check all corners."} },
@@ -448,9 +448,9 @@ document.addEventListener('keyup', e => {
 });
 
 function update(dt){
-  // Повороты на 360 градусов строго по стрелкам влево/вправо
-  if(keysDown.ArrowLeft) yaw += 2.5 * dt;
-  if(keysDown.ArrowRight) yaw -= 2.5 * dt;
+  // Поворот налево (A) и направо (D)
+  if(keysDown.KeyA || keysDown.ArrowLeft) yaw += 2.5 * dt;
+  if(keysDown.KeyD || keysDown.ArrowRight) yaw -= 2.5 * dt;
 
   const dir = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
   
