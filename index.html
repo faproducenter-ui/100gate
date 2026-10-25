@@ -57,9 +57,9 @@
   </div>
 </div>
 <div id="center"></div><div id="message"></div>
-<div id="hint">Осмотрись. Найди ключ и подсказку с кодом.<br><span style="color:#e7bd70">Компьютер: WASD · мышь · E</span></div>
+<div id="hint">Осмотрись на 360 градусов. Кликните мышкой по экрану для захвата мыши.<br><span style="color:#e7bd70">WASD — движение · Движение мыши — осмотр на 360° · E — взаимодействие</span></div>
 <div id="bottom">
-  <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="ui-controls-hint">WASD — движение · Мышь — осмотр · E — взаимодействие</div>
+  <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="ui-controls-hint">Кликните по игре для захвата мыши (Esc — освободить)</div>
   <div class="controls">
     <button class="btn shop-btn" id="openShop">🛒 Магазин</button>
     <button class="btn" id="reset">↻ Сброс</button>
@@ -67,7 +67,7 @@
   </div>
 </div>
 
-<div class="modalShade" id="start"><div class="modal"><div class="brand">100GATE.ONLINE</div><h2 id="m-start-title">Пять Комнат Тайн</h2><p id="m-start-desc">Пройдите от 1 до 5 уровня. С каждым уровнем загадки сложнее, а ключи спрятаны надежнее (ищите в книгах и тайниках).</p><button class="btn primary" id="begin" style="width:100%;margin-top:10px">Войти в особняк</button><div class="tiny" id="m-start-foot">Прототип 100gate.online с поддержкой Cryptomus.</div></div></div>
+<div class="modalShade" id="start"><div class="modal"><div class="brand">100GATE.ONLINE</div><h2 id="m-start-title">Пять Комнат Тайн</h2><p id="m-start-desc">Кликните «Войти», затем кликните по экрану игры, чтобы свободно вращать камеру мышкой во все стороны и искать спрятанные ключи.</p><button class="btn primary" id="begin" style="width:100%;margin-top:10px">Войти в особняк</button><div class="tiny" id="m-start-foot">Прототип 100gate.online с поддержкой Cryptomus.</div></div></div>
 
 <div class="modalShade" id="codeModal" style="display:none"><div class="modal"><h2 id="m-code-title">Кодовый замок</h2><p id="codePrompt">Введите код для открытия двери.</p><input id="codeInput" inputmode="numeric" maxlength="4" placeholder="••••"><div class="row"><button class="btn" id="cancelCode">Назад</button><button class="btn primary" id="submitCode">Открыть дверь</button></div></div></div>
 
@@ -99,8 +99,8 @@ const translations = {
   ru: {
     langBtn: "Язык: RU", brand: "ТАЙНА 100 ДВЕРЕЙ", world: "МИР I · ЗАБРОШЕННЫЙ ОСОБНЯК",
     lvl: "УРОВЕНЬ", coin: "МОНЕТЫ", inv: "ИНВЕНТАРЬ",
-    controls: "WASD — движение · Мышь — осмотр · E — взаимодействие",
-    hintStart: "Осмотрись. На уровне 1 ключ на столе, код на часах.",
+    controls: "Кликните по игре для захвата мыши (Esc — освободить)",
+    hintStart: "Осмотрись во все стороны. Найди ключ и код.",
     msgKeyFound: "Ключ найден! +30 монет", msgNote: "Записка прочитана.", msgClock: "Часы показывают 18:42.",
     msgLocked: "Замок закрыт. Нужен ключ.", msgNoNote: "Найдите записку / подсказку с кодом.", msgWrongCode: "Неверный код!", msgOpening: "Дверь открывается...",
     winBtn: "Перейти в следующую комнату", finWinBtn: "Победа! Начать заново"
@@ -108,8 +108,8 @@ const translations = {
   en: {
     langBtn: "Lang: EN", brand: "100 GATES MYSTERY", world: "WORLD I · ABANDONED MANSION",
     lvl: "LEVEL", coin: "COINS", inv: "INVENTORY",
-    controls: "WASD — Move · Mouse — Look · E — Interact",
-    hintStart: "Look around. Find key and code.",
+    controls: "Click game for mouse look (Esc to release)",
+    hintStart: "Look around 360 degrees. Find key and code.",
     msgKeyFound: "Key found! +30 coins", msgNote: "Note read.", msgClock: "Clock shows 18:42.",
     msgLocked: "Locked. Key needed.", msgNoNote: "Find passcode first.", msgWrongCode: "Wrong code!", msgOpening: "Door opening...",
     winBtn: "Next Room", finWinBtn: "Victory! Restart"
@@ -122,11 +122,11 @@ let hasKey = false, readNote = false, doorOpen = false, started = false, coins =
 let inventoryCount = 0;
 
 const roomData = {
-  1: { code: "1842", hintText: "Уровень 1: Часы подскажут код. Ключ на столе.", keyLoc: "desk" },
-  2: { code: "5920", hintText: "Уровень 2 (Сложнее): Ключ спрятан в книге на шкафу!", keyLoc: "bookshelf" },
-  3: { code: "3107", hintText: "Уровень 3 (Трудный): Осмотрите картину и задвинутый стол.", keyLoc: "painting" },
-  4: { code: "8415", hintText: "Уровень 4 (Очень сложно): Потайной сейф за часами.", keyLoc: "clock" },
-  5: { code: "9912", hintText: "Уровень 5 (Финал): Финальное испытание особняка.", keyLoc: "hidden" }
+  1: { code: "1842", hintText: "Уровень 1: Осмотритесь вокруг. Ключ на столе.", keyLoc: "desk" },
+  2: { code: "5920", hintText: "Уровень 2: Повернитесь назад и осмотрите книжный шкаф!", keyLoc: "bookshelf" },
+  3: { code: "3107", hintText: "Уровень 3: Трудный поиск. Ключ спрятан у стены.", keyLoc: "wall" },
+  4: { code: "8415", hintText: "Уровень 4: Очень сложно. Осмотрите все углы комнаты.", keyLoc: "corner" },
+  5: { code: "9912", hintText: "Уровень 5: Финал. Полная свобода обзора на 360°.", keyLoc: "hidden" }
 };
 
 function updateLanguageText(){
@@ -196,17 +196,15 @@ box('desk top',-2.65,.95,-1.3,2.15,.16,1.05,mats.wood);
 const clock=cylinder('antique clock',-2.45,1.55,-1.35,.34,.34,.13,mats.gold,Math.PI/2);
 const note=box('folded note',-2.95,1.055,-1.25,.38,.025,.28,mats.paper,{userData:{kind:'note'}});
 
-// Ключ, который меняет позицию в зависимости от уровня для сложности
 const keyGroup=new THREE.Group(); keyGroup.name='old key'; keyGroup.position.set(-2.12,1.08,-1.45); scene.add(keyGroup);
 const ring=new THREE.Mesh(new THREE.TorusGeometry(.095,.025,8,20),mats.gold); keyGroup.add(ring);
 const shaft=new THREE.Mesh(new THREE.BoxGeometry(.35,.045,.045),mats.gold); shaft.position.x=.12; keyGroup.add(shaft);
 keyGroup.userData={kind:'key'};
 
-// Книжный шкаф (для поиска ключа на Уровне 2)
 const bookshelf=box('bookshelf', 3.55, 1.55, -2.6, 1.45, 3.05, .55, mats.wood, {userData:{kind:'bookshelf'}});
 
 const raycaster=new THREE.Raycaster(); const center=new THREE.Vector2(0,0);
-let yaw=Math.PI, pitch=0, keysDown={};
+let yaw=0, pitch=0, keysDown={};
 const message=document.getElementById('message');
 
 function say(t){message.textContent=t;message.style.display='block';clearTimeout(say.timer);say.timer=setTimeout(()=>message.style.display='none',2800)}
@@ -221,17 +219,16 @@ function applyLevelSettings(){
   hasKey = false; readNote = false; doorOpen = false; won = false;
   door.position.set(0,1.62,5.68); door.rotation.y = 0;
   
-  // Усложняем прятки ключа в зависимости от уровня
   if(currentLevel === 1) {
-    keyGroup.position.set(-2.12,1.08,-1.45); // На столе
+    keyGroup.position.set(-2.12,1.08,-1.45);
   } else if(currentLevel === 2) {
-    keyGroup.position.set(3.5, 1.5, -2.5); // Спрятан в шкафу
+    keyGroup.position.set(3.5, 1.5, -2.5);
   } else if(currentLevel === 3) {
-    keyGroup.position.set(0, 0.2, -5.5); // Задвинут у задней стены
+    keyGroup.position.set(0, 0.2, -5.5);
   } else if(currentLevel === 4) {
-    keyGroup.position.set(-4.5, 2.2, 0); // На выступе стены
+    keyGroup.position.set(-4.5, 2.2, 0);
   } else {
-    keyGroup.position.set(4.5, 0.1, 4.5); // В углу комнаты
+    keyGroup.position.set(4.5, 0.1, 4.5);
   }
   document.getElementById('hint').innerHTML = roomData[currentLevel].hintText;
   updateHUD();
@@ -284,7 +281,12 @@ function finishLevel(){
   document.getElementById('win').style.display='flex';
 }
 
-document.getElementById('begin').onclick=()=>{started=true;document.getElementById('start').style.display='none';applyLevelSettings();};
+document.getElementById('begin').onclick=()=>{
+  started=true;
+  document.getElementById('start').style.display='none';
+  applyLevelSettings();
+  renderer.domElement.requestPointerLock?.();
+};
 document.getElementById('interact').onclick=interact;
 document.getElementById('cancelCode').onclick=()=>document.getElementById('codeModal').style.display='none';
 
@@ -317,20 +319,67 @@ document.getElementById('nextRoomBtn').onclick = () => {
 
 document.getElementById('reset').onclick=()=>{ currentLevel=1; keyGroup.visible=true; applyLevelSettings(); };
 
-document.addEventListener('keydown',e=>{keysDown[e.code]=true;if(e.code==='KeyE')interact();});
+document.addEventListener('keydown',e=>{
+  keysDown[e.code]=true;
+  if(e.code==='KeyE') interact();
+  // Поворот клавишами влево/вправо для удобства
+  if(e.code==='ArrowLeft'||e.code==='KeyQ') yaw += 0.2;
+  if(e.code==='ArrowRight'||e.code==='KeyE') yaw -= 0.2;
+});
 document.addEventListener('keyup',e=>keysDown[e.code]=false);
-document.addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement&&started){yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;pitch=Math.max(-1.15,Math.min(1.15,pitch));}});
-renderer.domElement.addEventListener('click',()=>{if(started&&innerWidth>700&&document.pointerLockElement!==renderer.domElement)renderer.domElement.requestPointerLock?.()});
+
+// СВОБОДНОЕ ВРАЩЕНИЕ КАМЕРЫ МЫШЬЮ НА 360 ГРАДУСОВ
+document.addEventListener('mousemove',e=>{
+  if(document.pointerLockElement===renderer.domElement && started){
+    yaw -= e.movementX * 0.003;
+    pitch -= e.movementY * 0.003;
+    pitch = Math.max(-1.4, Math.min(1.4, pitch)); // Ограничение по вертикали, чтобы не перевернуть камеру
+  }
+});
+
+renderer.domElement.addEventListener('click',()=>{
+  if(started && document.pointerLockElement!==renderer.domElement){
+    renderer.domElement.requestPointerLock?.();
+  }
+});
 
 function update(dt){
- const dir=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
- const right=new THREE.Vector3(-dir.z,0,dir.x);
- let f=0,s=0;if(keysDown.KeyW)f+=1;if(keysDown.KeyS)f-=1;if(keysDown.KeyD)s+=1;if(keysDown.KeyA)s-=1;
- const v=new THREE.Vector3().addScaledVector(dir,f).addScaledVector(right,s);if(v.length()>1)v.normalize();
- camera.position.addScaledVector(v,2.5*dt);
- camera.rotation.order='YXZ';camera.rotation.y=yaw;camera.rotation.x=pitch;
+  // Направление движения относительно взгляда игрока (во все стороны)
+  const dir = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+  const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+  
+  let f=0, s=0;
+  if(keysDown.KeyW || keysDown.ArrowUp) f += 1;
+  if(keysDown.KeyS || keysDown.ArrowDown) f -= 1;
+  if(keysDown.KeyD) s += 1;
+  if(keysDown.KeyA) s -= 1;
+
+  const moveVector = new THREE.Vector3();
+  moveVector.addScaledVector(dir, f);
+  moveVector.addScaledVector(right, s);
+  if(moveVector.length() > 1) moveVector.normalize();
+
+  camera.position.addScaledVector(moveVector, 2.8 * dt);
+  
+  // Ограничение передвижения в пределах комнаты
+  camera.position.x = Math.max(-4.5, Math.min(4.5, camera.position.x));
+  camera.position.z = Math.max(-5.5, Math.min(5.2, camera.position.z));
+  camera.position.y = 1.65;
+
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = yaw;
+  camera.rotation.x = pitch;
 }
-let prev=performance.now();function animate(now){requestAnimationFrame(animate);const dt=Math.min(.04,(now-prev)/1000);prev=now;if(started)update(dt);renderer.render(scene,camera)}requestAnimationFrame(animate);
+
+let prev=performance.now();
+function animate(now){
+  requestAnimationFrame(animate);
+  const dt=Math.min(.04,(now-prev)/1000);
+  prev=now;
+  if(started) update(dt);
+  renderer.render(scene,camera);
+}
+requestAnimationFrame(animate);
 updateHUD();
 </script>
 </body>
