@@ -1,940 +1,159 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>100gate.online - 3D Escape Quest</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for UI Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Three.js Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <title>100 Gates</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;600;700&display=swap');
-
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
-            font-family: 'Inter', sans-serif;
-            user-select: none;
-            overflow: hidden;
-            background-color: #050508;
-            color: #e2e8f0;
-        }
-
-        .font-cinzel {
-            font-family: 'Cinzel', serif;
-        }
-
-        /* Glassmorphism styles */
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .glass-button {
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            transition: all 0.2s ease;
-        }
-
-        .glass-button:hover:not(:disabled) {
-            background: rgba(51, 65, 85, 0.9);
-            border-color: rgba(234, 179, 8, 0.5);
-            transform: translateY(-1px);
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.6);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(234, 179, 8, 0.4);
-            border-radius: 3px;
-        }
-
-        /* Pulsing Glow Effect */
-        @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.5); }
-        }
-        .glow-active {
-            animation: pulseGlow 2s infinite;
-        }
-
-        /* Canvas viewport */
-        #game-canvas {
-            width: 100vw;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             height: 100vh;
-            display: block;
+            overflow: hidden;
+        }
+        .game-container {
+            width: 100%;
+            max-width: 600px;
+            height: 450px;
+            background: linear-gradient(135deg, #2c3e50, #111);
+            border: 4px solid #d4af37;
+            border-radius: 12px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        header {
+            position: absolute;
+            top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #d4af37;
+            letter-spacing: 2px;
+        }
+        .door {
+            width: 160px;
+            height: 260px;
+            background: #8B4513;
+            border: 6px solid #5c2c16;
+            border-radius: 6px;
+            position: relative;
+            cursor: pointer;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.7), 0 5px 15px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease;
+        }
+        .door:hover {
+            transform: scale(1.02);
+        }
+        .handle {
+            width: 16px;
+            height: 16px;
+            background: #ffd700;
+            border-radius: 50%;
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+        .message {
+            position: absolute;
+            bottom: 20px;
+            font-size: 16px;
+            color: #f1c40f;
+            text-align: center;
+            padding: 0 20px;
+        }
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 15px;
+        }
+        button {
+            background-color: #d4af37;
+            color: #111;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #f39c12;
         }
     </style>
 </head>
-<body class="w-full h-full relative">
+<body>
 
-    <!-- 3D Canvas Viewport -->
-    <canvas id="game-canvas"></canvas>
-
-    <!-- TOP HUD OVERLAY -->
-    <div class="absolute top-0 left-0 right-0 p-4 flex justify-between items-center pointer-events-none z-10">
-        <!-- Door Status & Info -->
-        <div class="flex items-center gap-3 pointer-events-auto">
-            <div class="glass-panel px-4 py-2 rounded-xl flex items-center gap-3 border-amber-500/30">
-                <i class="fa-solid fa-door-closed text-amber-400 text-xl"></i>
-                <div>
-                    <div class="text-xs text-amber-300 font-semibold tracking-wider uppercase">Current Gate</div>
-                    <div id="door-title" class="text-lg font-cinzel font-bold text-white">Door 1: The Bronze Key</div>
-                </div>
-            </div>
-            <button id="btn-sound" class="glass-button p-3 rounded-xl text-slate-300 hover:text-white pointer-events-auto">
-                <i id="sound-icon" class="fa-solid fa-volume-high"></i>
-            </button>
+    <div class="game-container">
+        <header id="level-title">ДВЕРЬ 1</header>
+        
+        <div class="door" id="main-door" onclick="tryOpenDoor()">
+            <div class="handle"></div>
         </div>
 
-        <!-- Coins Balance & Shop Trigger -->
-        <div class="flex items-center gap-3 pointer-events-auto">
-            <div class="glass-panel px-4 py-2 rounded-xl flex items-center gap-2 border-amber-500/30">
-                <i class="fa-solid fa-coins text-amber-400 text-lg animate-bounce"></i>
-                <span id="coin-count" class="font-bold text-white text-lg">100</span>
-                <span class="text-xs text-amber-300 font-medium">COINS</span>
-            </div>
-            <button id="btn-open-shop" class="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-bold px-4 py-2 rounded-xl shadow-lg transition transform hover:scale-105 flex items-center gap-2 pointer-events-auto">
-                <i class="fa-solid fa-store"></i>
-                <span>Shop</span>
-            </button>
-        </div>
+        <div class="message" id="game-message">Нажмите на дверь, чтобы открыть её!</div>
     </div>
 
-    <!-- INVENTORY BAR (BOTTOM) -->
-    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 pointer-events-auto z-10">
-        <div class="glass-panel p-2 rounded-2xl flex items-center gap-3 shadow-2xl border-slate-700/50">
-            <div class="text-xs text-slate-400 uppercase tracking-widest px-2 font-semibold">Bag</div>
-            <div id="inventory-slots" class="flex gap-2">
-                <!-- 5 Inventory Slots generated dynamically -->
-            </div>
-            <div class="h-8 w-px bg-slate-700 mx-1"></div>
-            <button id="btn-hint" class="glass-button px-4 py-3 rounded-xl flex items-center gap-2 text-amber-400 hover:text-amber-300">
-                <i class="fa-solid fa-lightbulb"></i>
-                <span class="text-xs font-bold uppercase hidden sm:inline">Hint (10 <i class="fa-solid fa-coins"></i>)</span>
-            </button>
-        </div>
+    <div class="controls">
+        <button onclick="resetGame()">Начать заново</button>
     </div>
 
-    <!-- PUZZLE OVERLAYS & MODALS -->
-    
-    <!-- 1. Book / Note Inspector Modal (Door 2 Puzzle) -->
-    <div id="modal-book" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center z-30 pointer-events-auto p-4">
-        <div class="glass-panel max-w-md w-full p-6 rounded-2xl relative border-amber-500/40 shadow-2xl">
-            <button class="close-modal absolute top-4 right-4 text-slate-400 hover:text-white text-xl">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <div class="text-center">
-                <i class="fa-solid fa-book-open text-amber-400 text-4xl mb-3"></i>
-                <h3 class="text-xl font-cinzel font-bold text-amber-200 mb-2">Ancient Journal Page</h3>
-                <p class="text-sm text-slate-300 italic mb-4">"The vault code is hidden in plain sight. Keep it secret from trespassers."</p>
-                
-                <div class="bg-amber-950/40 border border-amber-500/30 p-4 rounded-xl my-4 text-center">
-                    <span class="text-xs text-amber-400 uppercase tracking-widest block mb-1">Secret Access Code</span>
-                    <span id="book-secret-code" class="text-3xl font-mono font-bold text-amber-300 tracking-widest">7 4 2 9</span>
-                </div>
-
-                <p class="text-xs text-slate-400">Remember this code to unlock the electronic keypad on the right wall.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. Keypad Lock Modal (Door 2 Code Input) -->
-    <div id="modal-keypad" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center z-30 pointer-events-auto p-4">
-        <div class="glass-panel max-w-xs w-full p-6 rounded-2xl relative border-slate-700 shadow-2xl">
-            <button class="close-modal absolute top-3 right-4 text-slate-400 hover:text-white text-xl">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <div class="text-center mb-4">
-                <h3 class="text-lg font-cinzel font-bold text-slate-200">Security Keypad</h3>
-                <div id="keypad-display" class="bg-slate-950 border border-slate-700 text-green-400 text-2xl font-mono tracking-widest py-2 rounded-lg mt-2 min-h-[44px] flex items-center justify-center">
-                    ----
-                </div>
-            </div>
-            
-            <!-- Keypad Grid -->
-            <div class="grid grid-cols-3 gap-2 mb-3">
-                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="1">1</button>
-                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="2">2</button>
-                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="3">3</button>
-                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="4">4</button>
-                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="5">5</button>
-                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="6">6</button>
-                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="7">7</button>
-                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="8">8</button>
-                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="9">9</button>
-                <button id="kp-clear" class="glass-button py-3 text-sm font-bold rounded-lg text-red-400">CLR</button>
-                <button class="kp-btn glass-button py-3 text-lg font-bold rounded-lg text-white" data-num="0">0</button>
-                <button id="kp-enter" class="bg-emerald-600 hover:bg-emerald-500 py-3 text-sm font-bold rounded-lg text-white">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. SHOP MODAL (Coins & Items) -->
-    <div id="modal-shop" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center z-40 pointer-events-auto p-4">
-        <div class="glass-panel max-w-2xl w-full p-6 rounded-3xl relative border-amber-500/30 max-h-[90vh] overflow-y-auto">
-            <button class="close-modal absolute top-5 right-5 text-slate-400 hover:text-white text-2xl">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <!-- Header -->
-            <div class="flex items-center gap-3 mb-6">
-                <div class="p-3 bg-amber-500/20 rounded-2xl text-amber-400 text-2xl">
-                    <i class="fa-solid fa-store"></i>
-                </div>
-                <div>
-                    <h2 class="text-2xl font-cinzel font-bold text-white">100gate Vault Store</h2>
-                    <p class="text-xs text-slate-400">Get coin packages via Cryptomus & unlock in-game advantages</p>
-                </div>
-            </div>
-
-            <!-- Tabs -->
-            <div class="flex border-b border-slate-700 mb-6">
-                <button id="tab-coins" class="py-2 px-4 text-amber-400 border-b-2 border-amber-400 font-bold text-sm">Coin Packages</button>
-                <button id="tab-tools" class="py-2 px-4 text-slate-400 font-bold text-sm hover:text-white">Useful Items</button>
-            </div>
-
-            <!-- Coin Packages Grid -->
-            <div id="shop-coins-view" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <!-- 50 Coins -->
-                <div class="glass-button p-4 rounded-2xl flex flex-col justify-between border-slate-700 hover:border-amber-500/50">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <span class="text-xs text-amber-400 font-semibold uppercase">Starter Pack</span>
-                            <h4 class="text-xl font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-coins text-amber-400"></i> 50 Coins
-                            </h4>
-                        </div>
-                        <span class="bg-slate-800 text-slate-200 text-xs px-2.5 py-1 rounded-full font-bold">$1.99 USD</span>
-                    </div>
-                    <p class="text-xs text-slate-400 mb-4">Perfect for quick hints and basic puzzle keys.</p>
-                    <button class="btn-buy-coins bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-bold py-2 rounded-xl text-sm transition" data-pack="50" data-url="#">
-                        Buy 50 Coins
-                    </button>
-                </div>
-
-                <!-- 100 Coins -->
-                <div class="glass-button p-4 rounded-2xl flex flex-col justify-between border-amber-500/30 glow-active">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <span class="text-xs text-amber-300 font-semibold uppercase">Popular Pack</span>
-                            <h4 class="text-xl font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-coins text-amber-400"></i> 100 Coins
-                            </h4>
-                        </div>
-                        <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs px-2.5 py-1 rounded-full font-bold">$3.49 USD</span>
-                    </div>
-                    <p class="text-xs text-slate-400 mb-4">Includes bonus coins for unlocking tricky gates.</p>
-                    <button class="btn-buy-coins bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-bold py-2 rounded-xl text-sm transition" data-pack="100" data-url="#">
-                        Buy 100 Coins
-                    </button>
-                </div>
-
-                <!-- 200 Coins -->
-                <div class="glass-button p-4 rounded-2xl flex flex-col justify-between border-slate-700 hover:border-amber-500/50">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <span class="text-xs text-amber-400 font-semibold uppercase">Pro Explorer</span>
-                            <h4 class="text-xl font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-coins text-amber-400"></i> 200 Coins
-                            </h4>
-                        </div>
-                        <span class="bg-slate-800 text-slate-200 text-xs px-2.5 py-1 rounded-full font-bold">$5.99 USD</span>
-                    </div>
-                    <p class="text-xs text-slate-400 mb-4">Great value for mastering multiple rooms.</p>
-                    <button class="btn-buy-coins bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-bold py-2 rounded-xl text-sm transition" data-pack="200" data-url="#">
-                        Buy 200 Coins
-                    </button>
-                </div>
-
-                <!-- 500 Coins -->
-                <div class="glass-button p-4 rounded-2xl flex flex-col justify-between border-slate-700 hover:border-amber-500/50">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <span class="text-xs text-amber-400 font-semibold uppercase">Master Key Vault</span>
-                            <h4 class="text-xl font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-coins text-amber-400"></i> 500 Coins
-                            </h4>
-                        </div>
-                        <span class="bg-slate-800 text-slate-200 text-xs px-2.5 py-1 rounded-full font-bold">$12.99 USD</span>
-                    </div>
-                    <p class="text-xs text-slate-400 mb-4">Maximum coins for all 100 doors!</p>
-                    <button class="btn-buy-coins bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-bold py-2 rounded-xl text-sm transition" data-pack="500" data-url="#">
-                        Buy 500 Coins
-                    </button>
-                </div>
-            </div>
-
-            <!-- In-game Items View (Hidden by default) -->
-            <div id="shop-tools-view" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="glass-button p-4 rounded-2xl flex justify-between items-center border-slate-700">
-                    <div>
-                        <h4 class="font-bold text-white">Golden Pass Key</h4>
-                        <p class="text-xs text-slate-400">Auto-unlock any single door</p>
-                    </div>
-                    <button id="btn-buy-passkey" class="glass-button px-3 py-2 rounded-xl text-xs font-bold text-amber-400 flex items-center gap-1">
-                        50 <i class="fa-solid fa-coins"></i>
-                    </button>
-                </div>
-
-                <div class="glass-button p-4 rounded-2xl flex justify-between items-center border-slate-700">
-                    <div>
-                        <h4 class="font-bold text-white">Ultra Flashlight</h4>
-                        <p class="text-xs text-slate-400">Highlights hidden objects</p>
-                    </div>
-                    <button id="btn-buy-flashlight" class="glass-button px-3 py-2 rounded-xl text-xs font-bold text-amber-400 flex items-center gap-1">
-                        30 <i class="fa-solid fa-coins"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- NOTIFICATION MESSAGES -->
-    <div id="toast-msg" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-slate-900/90 border border-amber-500/40 text-amber-200 px-6 py-3 rounded-full shadow-2xl text-sm font-semibold pointer-events-none opacity-0 transition-opacity duration-300 z-50 flex items-center gap-2">
-        <i class="fa-solid fa-circle-info text-amber-400"></i>
-        <span id="toast-text">Message goes here</span>
-    </div>
-
-    <!-- MAIN GAME LOGIC SCRIPT -->
     <script>
-        // --- 1. GAME STATE ---
-        const gameState = {
-            currentDoor: 1,
-            coins: 100,
-            soundMuted: false,
-            inventory: [],
-            selectedItemIndex: -1,
-            puzzleStates: {
-                door1: { keyCollected: false, doorUnlocked: false },
-                door2: { bookInspected: false, keypadSolved: false, secretCode: "7429" },
-                door3: { paintingShifted: false, crowbarCollected: false, grateOpened: false, keyCollected: false },
-                door4: { gemCollected: false, handleCollected: false, itemCombined: false, dialSolved: false }
-            }
-        };
+        let currentLevel = 1;
+        const maxLevel = 4;
 
-        // --- 2. WEB AUDIO API SOUND SYNTHESIZER ---
-        class SoundEngine {
-            constructor() {
-                this.ctx = null;
-            }
-            init() {
-                if (!this.ctx) {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    this.ctx = new AudioContext();
-                }
-                if (this.ctx.state === 'suspended') {
-                    this.ctx.resume();
-                }
-            }
-            playClick() {
-                if (gameState.soundMuted) return;
-                this.init();
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.05);
-                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.05);
-            }
-            playPickup() {
-                if (gameState.soundMuted) return;
-                this.init();
-                const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(523.25, now); // C5
-                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
-                osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(now);
-                osc.stop(now + 0.3);
-            }
-            playDoorCreak() {
-                if (gameState.soundMuted) return;
-                this.init();
-                const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(120, now);
-                osc.frequency.linearRampToValueAtTime(180, now + 0.4);
-                osc.frequency.linearRampToValueAtTime(90, now + 0.8);
-                gain.gain.setValueAtTime(0.15, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(now);
-                osc.stop(now + 0.8);
-            }
-            playSuccess() {
-                if (gameState.soundMuted) return;
-                this.init();
-                const now = this.ctx.currentTime;
-                [440, 554.37, 659.25, 880].forEach((freq, i) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.frequency.value = freq;
-                    gain.gain.setValueAtTime(0.15, now + i * 0.1);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.4);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(now + i * 0.1);
-                    osc.stop(now + i * 0.1 + 0.4);
-                });
-            }
-        }
-        const sounds = new SoundEngine();
+        function tryOpenDoor() {
+            const message = document.getElementById('game-message');
+            const title = document.getElementById('level-title');
 
-        // --- 3. THREE.JS 3D SCENE SETUP ---
-        let scene, camera, renderer;
-        let doorGroup, activeRoomObjects = [];
-        let raycaster = new THREE.Raycaster();
-        let mouse = new THREE.Vector2();
-
-        function init3D() {
-            const container = document.getElementById('game-canvas');
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0c14);
-            scene.fog = new THREE.FogExp2(0x0a0c14, 0.08);
-
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 1.6, 4.5);
-
-            renderer = new THREE.WebGLRenderer({ canvas: container, antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-            scene.add(ambientLight);
-
-            const torchLight = new THREE.PointLight(0xffaa44, 1.5, 12);
-            torchLight.position.set(2, 2.5, 2);
-            torchLight.castShadow = true;
-            scene.add(torchLight);
-
-            const doorLight = new THREE.SpotLight(0xffe6a3, 2);
-            doorLight.position.set(0, 4, 3);
-            doorLight.target.position.set(0, 1.5, 0);
-            scene.add(doorLight);
-            scene.add(doorLight.target);
-
-            // Window Resize
-            window.addEventListener('resize', onWindowResize);
-            container.addEventListener('click', onCanvasClick);
-
-            // Render loop
-            animate();
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        // --- 4. ROOM & DOOR BUILDER ---
-        function loadDoorRoom(doorNum) {
-            // Clear existing room objects
-            activeRoomObjects.forEach(obj => scene.remove(obj));
-            activeRoomObjects = [];
-
-            // Base Room Walls
-            const roomGroup = new THREE.Group();
-            
-            // Wall Material
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a202c, roughness: 0.8 });
-            const floorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.6 });
-
-            // Back Wall with doorway cut-out visual
-            const backWall = new THREE.Mesh(new THREE.BoxGeometry(8, 5, 0.2), wallMat);
-            backWall.position.set(0, 2.5, -0.1);
-            roomGroup.add(backWall);
-
-            // Floor
-            const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), floorMat);
-            floor.rotation.x = -Math.PI / 2;
-            floor.position.set(0, 0, 2);
-            roomGroup.add(floor);
-
-            // Create Door Frame & Door
-            doorGroup = new THREE.Group();
-            doorGroup.position.set(0, 0, 0);
-
-            const frameMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.5 });
-            const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.2, 0.2), frameMat);
-            doorFrame.position.set(0, 1.6, 0);
-            doorGroup.add(doorFrame);
-
-            // Door Mesh (Pivot at left edge)
-            const doorPivot = new THREE.Group();
-            doorPivot.position.set(-0.95, 1.6, 0.05);
-
-            const doorMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.4 });
-            const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.9, 3.0, 0.1), doorMat);
-            doorMesh.position.set(0.95, 0, 0);
-            doorMesh.name = "interactive_door";
-            doorPivot.add(doorMesh);
-
-            // Door Handle
-            const handleMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.8 });
-            const handle = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 16), handleMat);
-            handle.position.set(1.7, -0.1, 0.1);
-            handle.name = "interactive_door_handle";
-            doorPivot.add(handle);
-
-            doorGroup.add(doorPivot);
-            roomGroup.add(doorGroup);
-            doorGroup.pivot = doorPivot;
-
-            // --- DOOR SPECIFIC PUZZLE OBJECTS ---
-
-            if (doorNum === 1) {
-                // DOOR 1: Key on small table
-                document.getElementById('door-title').innerText = "Door 1: The Bronze Key";
-                
-                const tableMat = new THREE.MeshStandardMaterial({ color: 0x475569 });
-                const table = new THREE.Mesh(new THREE.BoxGeometry(1, 0.8, 0.8), tableMat);
-                table.position.set(-1.8, 0.4, 1);
-                roomGroup.add(table);
-
-                if (!gameState.puzzleStates.door1.keyCollected) {
-                    const keyMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.9 });
-                    const key = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.03, 8, 16), keyMat);
-                    key.position.set(-1.8, 0.85, 1);
-                    key.rotation.x = Math.PI / 2;
-                    key.name = "puzzle_key1";
-                    roomGroup.add(key);
-                }
-
-            } else if (doorNum === 2) {
-                // DOOR 2: Bookshelf with Note + Keypad on Wall
-                document.getElementById('door-title').innerText = "Door 2: Secret Code";
-
-                // Bookshelf on left
-                const shelfMat = new THREE.MeshStandardMaterial({ color: 0x451a03 });
-                const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.5), shelfMat);
-                shelf.position.set(-2.2, 1.1, 0.5);
-                roomGroup.add(shelf);
-
-                // Book object
-                const bookMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c });
-                const book = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.35, 0.3), bookMat);
-                book.position.set(-2.2, 1.3, 0.5);
-                book.name = "puzzle_book";
-                roomGroup.add(book);
-
-                // Keypad on right wall
-                const kpMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8 });
-                const keypadBox = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.1), kpMat);
-                keypadBox.position.set(1.8, 1.6, 0.1);
-                keypadBox.name = "puzzle_keypad";
-                roomGroup.add(keypadBox);
-
-            } else if (doorNum === 3) {
-                // DOOR 3: Painting covering Crowbar, Grate on floor
-                document.getElementById('door-title').innerText = "Door 3: Hidden Compartment";
-
-                // Painting on left wall
-                const frameMat = new THREE.MeshStandardMaterial({ color: 0xd97706 });
-                const painting = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.0, 0.08), frameMat);
-                painting.position.set(-2.0, 1.8, 0.1);
-                painting.name = "puzzle_painting";
-                roomGroup.add(painting);
-
-                // Crowbar hidden behind/near painting
-                if (!gameState.puzzleStates.door3.crowbarCollected) {
-                    const barMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.9 });
-                    const crowbar = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.6), barMat);
-                    crowbar.position.set(-2.0, 1.2, 0.1);
-                    crowbar.name = "puzzle_crowbar";
-                    roomGroup.add(crowbar);
-                }
-
-                // Grate on right floor
-                const grateMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.7 });
-                const grate = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.8), grateMat);
-                grate.position.set(1.8, 0.03, 1);
-                grate.name = "puzzle_grate";
-                roomGroup.add(grate);
-
-            } else if (doorNum === 4) {
-                // DOOR 4: Gem + Handle Combination Lock
-                document.getElementById('door-title').innerText = "Door 4: Ancient Artifact";
-
-                // Gem on pedestal
-                if (!gameState.puzzleStates.door4.gemCollected) {
-                    const gemMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4, roughness: 0.1 });
-                    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.15), gemMat);
-                    gem.position.set(-1.8, 0.9, 1);
-                    gem.name = "puzzle_gem";
-                    roomGroup.add(gem);
-                }
-
-                // Key base on pedestal
-                if (!gameState.puzzleStates.door4.handleCollected) {
-                    const hMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.8 });
-                    const keyBase = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4), hMat);
-                    keyBase.position.set(1.8, 0.9, 1);
-                    keyBase.name = "puzzle_handle";
-                    roomGroup.add(keyBase);
-                }
-            }
-
-            scene.add(roomGroup);
-            activeRoomObjects.push(roomGroup);
-        }
-
-        // --- 5. INTERACTION & RAYCASTING ---
-        function onCanvasClick(event) {
-            sounds.init();
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(scene.children, true);
-
-            if (intersects.length > 0) {
-                const clicked = intersects[0].object;
-                handleObjectClick(clicked.name);
-            }
-        }
-
-        function handleObjectClick(name) {
-            // Door click
-            if (name === "interactive_door" || name === "interactive_door_handle") {
-                sounds.playClick();
-                attemptOpenDoor();
-                return;
-            }
-
-            // Door 1 Key Pickup
-            if (name === "puzzle_key1") {
-                sounds.playPickup();
-                gameState.puzzleStates.door1.keyCollected = true;
-                addItemToInventory("Bronze Key", "fa-key", "door1_key");
-                showToast("Picked up Bronze Key!");
-                loadDoorRoom(1);
-            }
-
-            // Door 2 Book Click
-            if (name === "puzzle_book") {
-                sounds.playClick();
-                document.getElementById('modal-book').classList.remove('hidden');
-                document.getElementById('modal-book').classList.add('flex');
-            }
-
-            // Door 2 Keypad Click
-            if (name === "puzzle_keypad") {
-                sounds.playClick();
-                document.getElementById('modal-keypad').classList.remove('hidden');
-                document.getElementById('modal-keypad').classList.add('flex');
-            }
-
-            // Door 3 Painting & Crowbar
-            if (name === "puzzle_painting") {
-                sounds.playClick();
-                gameState.puzzleStates.door3.paintingShifted = true;
-                showToast("Shifted painting! Revealed a crowbar.");
-            }
-            if (name === "puzzle_crowbar") {
-                sounds.playPickup();
-                gameState.puzzleStates.door3.crowbarCollected = true;
-                addItemToInventory("Crowbar", "fa-wrench", "crowbar");
-                showToast("Picked up Crowbar!");
-                loadDoorRoom(3);
-            }
-            if (name === "puzzle_grate") {
-                const sel = getSelectedItem();
-                if (sel && sel.id === "crowbar") {
-                    sounds.playSuccess();
-                    gameState.puzzleStates.door3.grateOpened = true;
-                    addItemToInventory("Golden Key", "fa-key", "door3_key");
-                    showToast("Used Crowbar to open floor grate! Found Golden Key.");
+            if (currentLevel === 1) {
+                message.innerText = "Дверь 1 открыта! Переходим дальше...";
+                setTimeout(nextLevel, 1200);
+            } else if (currentLevel === 2) {
+                let code = prompt("Введите код для Двери 2 (подсказка: 7429):");
+                if (code === "7429") {
+                    message.innerText = "Верный код! Дверь 2 открыта!";
+                    setTimeout(nextLevel, 1200);
                 } else {
-                    showToast("Grate is stuck tight. Need a heavy tool!");
+                    message.innerText = "Неверный код! Попробуйте еще раз.";
                 }
-            }
-
-            // Door 4 Gem & Handle
-            if (name === "puzzle_gem") {
-                sounds.playPickup();
-                gameState.puzzleStates.door4.gemCollected = true;
-                addItemToInventory("Cyan Gem", "fa-gem", "cyan_gem");
-                showToast("Picked up Cyan Gem!");
-                checkCombineDoor4();
-                loadDoorRoom(4);
-            }
-            if (name === "puzzle_handle") {
-                sounds.playPickup();
-                gameState.puzzleStates.door4.handleCollected = true;
-                addItemToInventory("Key Shaft", "fa-ruler", "key_shaft");
-                showToast("Picked up Key Shaft!");
-                checkCombineDoor4();
-                loadDoorRoom(4);
-            }
-        }
-
-        // --- 6. PUZZLE SOLVING & DOOR OPENING ---
-        function attemptOpenDoor() {
-            const num = gameState.currentDoor;
-            const selItem = getSelectedItem();
-
-            if (num === 1) {
-                if (selItem && selItem.id === "door1_key") {
-                    openDoorSuccess();
-                } else {
-                    showToast("Door is locked! Find the key on the table.");
-                }
-            } else if (num === 2) {
-                if (gameState.puzzleStates.door2.keypadSolved) {
-                    openDoorSuccess();
-                } else {
-                    showToast("Electronic lock active! Check the book for code.");
-                }
-            } else if (num === 3) {
-                if (selItem && selItem.id === "door3_key") {
-                    openDoorSuccess();
-                } else {
-                    showToast("Door is locked! Find the key in the room.");
-                }
-            } else if (num === 4) {
-                if (selItem && selItem.id === "crystal_key") {
-                    openDoorSuccess();
-                } else {
-                    showToast("Requires Crystal Key (Combine Gem + Key Shaft)!");
-                }
-            }
-        }
-
-        function openDoorSuccess() {
-            sounds.playDoorCreak();
-            sounds.playSuccess();
-
-            // Animate Door Opening
-            if (doorGroup && doorGroup.pivot) {
-                let angle = 0;
-                const interval = setInterval(() => {
-                    angle += 0.05;
-                    doorGroup.pivot.rotation.y = angle;
-                    if (angle >= Math.PI / 2.2) {
-                        clearInterval(interval);
-                        showToast("GATE UNLOCKED! Moving to next level...");
-                        setTimeout(() => {
-                            nextLevel();
-                        }, 1200);
-                    }
-                }, 20);
+            } else if (currentLevel === 3) {
+                message.innerText = "Вы нашли тайник и открыли Дверь 3!";
+                setTimeout(nextLevel, 1200);
+            } else if (currentLevel === 4) {
+                message.innerText = "Поздравляем! Вы прошли все тестовые двери!";
+                title.innerText = "ПОБЕДА!";
             }
         }
 
         function nextLevel() {
-            if (gameState.currentDoor < 4) {
-                gameState.currentDoor++;
-                loadDoorRoom(gameState.currentDoor);
-            } else {
-                showToast("CONGRATULATIONS! You cleared all available gates!");
+            currentLevel++;
+            if (currentLevel <= maxLevel) {
+                document.getElementById('level-title').innerText = "ДВЕРЬ " + currentLevel;
+                document.getElementById('game-message').innerText = "Уровень " + currentLevel + ". Кликните на дверь!";
             }
         }
 
-        // --- 7. INVENTORY SYSTEM ---
-        function addItemToInventory(name, iconClass, id) {
-            if (gameState.inventory.length < 5) {
-                gameState.inventory.push({ name, iconClass, id });
-                renderInventory();
-            }
+        function resetGame() {
+            currentLevel = 1;
+            document.getElementById('level-title').innerText = "ДВЕРЬ 1";
+            document.getElementById('game-message').innerText = "Нажмите на дверь, чтобы открыть её!";
         }
-
-        function renderInventory() {
-            const container = document.getElementById('inventory-slots');
-            container.innerHTML = '';
-            
-            for (let i = 0; i < 5; i++) {
-                const item = gameState.inventory[i];
-                const slot = document.createElement('button');
-                slot.className = `w-12 h-12 rounded-xl flex items-center justify-center border transition ${
-                    gameState.selectedItemIndex === i
-                        ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-lg'
-                        : 'border-slate-700 bg-slate-900/60 text-slate-400 hover:border-slate-500'
-                }`;
-                
-                if (item) {
-                    slot.innerHTML = `<i class="fa-solid ${item.iconClass} text-lg"></i>`;
-                    slot.title = item.name;
-                    slot.onclick = () => {
-                        sounds.playClick();
-                        gameState.selectedItemIndex = (gameState.selectedItemIndex === i) ? -1 : i;
-                        renderInventory();
-                    };
-                } else {
-                    slot.innerHTML = `<span class="text-xs text-slate-700">${i+1}</span>`;
-                }
-                container.appendChild(slot);
-            }
-        }
-
-        function getSelectedItem() {
-            if (gameState.selectedItemIndex >= 0 && gameState.selectedItemIndex < gameState.inventory.length) {
-                return gameState.inventory[gameState.selectedItemIndex];
-            }
-            return null;
-        }
-
-        function checkCombineDoor4() {
-            const hasGem = gameState.inventory.some(i => i.id === "cyan_gem");
-            const hasShaft = gameState.inventory.some(i => i.id === "key_shaft");
-            if (hasGem && hasShaft) {
-                // Remove both & combine into Crystal Key
-                gameState.inventory = gameState.inventory.filter(i => i.id !== "cyan_gem" && i.id !== "key_shaft");
-                addItemToInventory("Crystal Key", "fa-key text-cyan-400", "crystal_key");
-                showToast("Combined Cyan Gem + Key Shaft into Crystal Key!");
-            }
-        }
-
-        // --- 8. KEYPAD LOGIC (DOOR 2) ---
-        let keypadInput = "";
-        document.querySelectorAll('.kp-btn').forEach(btn => {
-            btn.onclick = () => {
-                sounds.playClick();
-                if (keypadInput.length < 4) {
-                    keypadInput += btn.dataset.num;
-                    document.getElementById('keypad-display').innerText = keypadInput;
-                }
-            };
-        });
-        document.getElementById('kp-clear').onclick = () => {
-            sounds.playClick();
-            keypadInput = "";
-            document.getElementById('keypad-display').innerText = "----";
-        };
-        document.getElementById('kp-enter').onclick = () => {
-            sounds.playClick();
-            if (keypadInput === gameState.puzzleStates.door2.secretCode) {
-                sounds.playSuccess();
-                gameState.puzzleStates.door2.keypadSolved = true;
-                showToast("Keypad Code Correct! Door Unlocked.");
-                document.getElementById('modal-keypad').classList.add('hidden');
-                document.getElementById('modal-keypad').classList.remove('flex');
-            } else {
-                document.getElementById('keypad-display').innerText = "ERROR";
-                setTimeout(() => {
-                    keypadInput = "";
-                    document.getElementById('keypad-display').innerText = "----";
-                }, 800);
-            }
-        };
-
-        // --- 9. UI TOAST & MODAL CONTROLS ---
-        function showToast(text) {
-            const toast = document.getElementById('toast-msg');
-            document.getElementById('toast-text').innerText = text;
-            toast.classList.remove('opacity-0');
-            toast.classList.add('opacity-100');
-            setTimeout(() => {
-                toast.classList.remove('opacity-100');
-                toast.classList.add('opacity-0');
-            }, 3000);
-        }
-
-        // Close Modals
-        document.querySelectorAll('.close-modal').forEach(btn => {
-            btn.onclick = () => {
-                sounds.playClick();
-                btn.closest('.fixed').classList.add('hidden');
-                btn.closest('.fixed').classList.remove('flex');
-            };
-        });
-
-        // Shop Buttons
-        document.getElementById('btn-open-shop').onclick = () => {
-            sounds.playClick();
-            document.getElementById('modal-shop').classList.remove('hidden');
-            document.getElementById('modal-shop').classList.add('flex');
-        };
-
-        document.getElementById('tab-coins').onclick = () => {
-            sounds.playClick();
-            document.getElementById('shop-coins-view').classList.remove('hidden');
-            document.getElementById('shop-tools-view').classList.add('hidden');
-            document.getElementById('tab-coins').className = "py-2 px-4 text-amber-400 border-b-2 border-amber-400 font-bold text-sm";
-            document.getElementById('tab-tools').className = "py-2 px-4 text-slate-400 font-bold text-sm hover:text-white";
-        };
-
-        document.getElementById('tab-tools').onclick = () => {
-            sounds.playClick();
-            document.getElementById('shop-coins-view').classList.add('hidden');
-            document.getElementById('shop-tools-view').classList.remove('hidden');
-            document.getElementById('tab-tools').className = "py-2 px-4 text-amber-400 border-b-2 border-amber-400 font-bold text-sm";
-            document.getElementById('tab-coins').className = "py-2 px-4 text-slate-400 font-bold text-sm hover:text-white";
-        };
-
-        // Hint Button
-        document.getElementById('btn-hint').onclick = () => {
-            sounds.playClick();
-            if (gameState.coins >= 10) {
-                gameState.coins -= 10;
-                document.getElementById('coin-count').innerText = gameState.coins;
-                if (gameState.currentDoor === 1) showToast("Hint: Pick up the bronze key from the left table.");
-                if (gameState.currentDoor === 2) showToast("Hint: Tap the red book on the bookshelf for the code.");
-                if (gameState.currentDoor === 3) showToast("Hint: Move the painting on the left wall to find a tool.");
-                if (gameState.currentDoor === 4) showToast("Hint: Grab both gem & shaft to auto-combine into Crystal Key.");
-            } else {
-                showToast("Not enough coins! Buy more in the Shop.");
-            }
-        };
-
-        // Mute Sound Toggle
-        document.getElementById('btn-sound').onclick = () => {
-            gameState.soundMuted = !gameState.soundMuted;
-            document.getElementById('sound-icon').className = gameState.soundMuted ? "fa-solid fa-volume-xmark text-red-400" : "fa-solid fa-volume-high";
-        };
-
-        // Buy Coin Links Placeholder Handler
-        document.querySelectorAll('.btn-buy-coins').forEach(btn => {
-            btn.onclick = (e) => {
-                sounds.playClick();
-                const pack = btn.dataset.pack;
-                const payUrl = btn.dataset.url;
-                if (payUrl && payUrl !== "#") {
-                    window.open(payUrl, '_blank');
-                } else {
-                    showToast(`Cryptomus Payment link for ${pack} coins will activate once moderation completes!`);
-                }
-            };
-        });
-
-        // Animation Loop
-        function animate() {
-            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
-        }
-
-        // Init on Window Load
-        window.onload = function() {
-            init3D();
-            loadDoorRoom(1);
-            renderInventory();
-        };
     </script>
+
 </body>
 </html>
