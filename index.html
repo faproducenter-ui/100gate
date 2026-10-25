@@ -56,9 +56,9 @@
   </div>
 </div>
 <div id="center"></div><div id="message"></div>
-<div id="hint">Подойди к предмету и нажми E (или кнопку снизу).</div>
+<div id="hint">Используйте WASD для движения, Q/E для поворота, мышь для обзора, E для действия.</div>
 <div id="bottom">
-  <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="ui-controls-hint">WASD — движение · Мышь — обзор 360° · E — взять / поднять / открыть</div>
+  <div class="panel desktopOnly" style="font-size:11px;color:#c9c5bc" id="ui-controls-hint">WASD — движение · Q и E — поворот в стороны · E — взять предмет</div>
   <div class="controls">
     <button class="btn shop-btn" id="openShop">🛒 Магазин</button>
     <button class="btn" id="reset">↻ Сброс</button>
@@ -70,7 +70,7 @@
   <div class="modal">
     <div class="brand">100GATE.ONLINE</div>
     <h2 id="m-start-title">Пять Комнат Тайн</h2>
-    <p id="m-start-desc">Подойдите к столу, наведите прицел и нажмите клавишу E, чтобы взять ключ и прочитать записку.</p>
+    <p id="m-start-desc">Используйте WASD для ходьбы, Q и E для поворота в разные стороны, мышь для обзора, и клавишу E для взаимодействия.</p>
     <button class="btn primary" id="begin" style="width:100%;margin-top:10px">Войти в особняк</button>
     <div class="tiny" id="m-start-foot">Прототип 100gate.online с поддержкой Cryptomus.</div>
   </div>
@@ -124,8 +124,8 @@ const translations = {
   ru: {
     langBtn: "RU / EN", brand: "ТАЙНА 100 ДВЕРЕЙ", world: "МИР I · ЗАБРОШЕННЫЙ ОСОБНЯК",
     lvl: "УРОВЕНЬ", coin: "МОНЕТЫ", inv: "ИНВЕНТАРЬ",
-    controls: "WASD — движение · Мышь — обзор 360° · E — взять / поднять / открыть",
-    startTitle: "Пять Комнат Тайн", startDesc: "Подойдите к столу, наведите прицел и нажмите клавишу E, чтобы взять ключ и прочитать записку.", startBtn: "Войти в особняк", startFoot: "Прототип 100gate.online с поддержкой Cryptomus.",
+    controls: "WASD — движение · Q и E — поворот в стороны · E — взять предмет",
+    startTitle: "Пять Комнат Тайн", startDesc: "Используйте WASD для ходьбы, Q и E для поворота в разные стороны, мышь для обзора, и клавишу E для взаимодействия.", startBtn: "Войти в особняк", startFoot: "Прототип 100gate.online с поддержкой Cryptomus.",
     codeTitle: "Кодовый замок", codePrompt: "Введите код для открытия двери.", codeBtn: "Открыть дверь", codeBack: "Назад",
     shopTitle: "Магазин Cryptomus", shopDesc: "Пополняйте баланс монет или покупайте предметы.",
     secCoins: "🪙 Покупка монет (Cryptomus)", secItems: "🎒 Предметы в инвентарь",
@@ -140,8 +140,8 @@ const translations = {
   en: {
     langBtn: "EN / RU", brand: "100 GATES MYSTERY", world: "WORLD I · ABANDONED MANSION",
     lvl: "LEVEL", coin: "COINS", inv: "INVENTORY",
-    controls: "WASD — Move · Mouse — 360° Look · E — Take / Inspect / Open",
-    startTitle: "Five Mystery Rooms", startDesc: "Walk to the desk, aim and press E to grab key and read note.", startBtn: "Enter Mansion", startFoot: "100gate.online prototype with Cryptomus support.",
+    controls: "WASD — Move · Q & E — Turn · E — Take item",
+    startTitle: "Five Mystery Rooms", startDesc: "Use WASD to move, Q and E to turn, mouse to look, and E to interact.", startBtn: "Enter Mansion", startFoot: "100gate.online prototype with Cryptomus support.",
     codeTitle: "Combination Lock", codePrompt: "Enter door passcode.", codeBtn: "Open Door", codeBack: "Back",
     shopTitle: "Cryptomus Shop", shopDesc: "Top up coins or buy items.",
     secCoins: "🪙 Buy Coins (Cryptomus)", secItems: "🎒 Inventory Items",
@@ -165,7 +165,7 @@ const roomData = {
   2: { code: "5920", hintText: {ru: "Уровень 2: Посмотрите на книжный шкаф. Ключ спрятан в книгах!", en: "Level 2: Check bookshelf. Key is hidden in books!"} },
   3: { code: "3107", hintText: {ru: "Уровень 3: Трудный поиск. Осмотрите стены комнаты.", en: "Level 3: Hard search. Check room walls."} },
   4: { code: "8415", hintText: {ru: "Уровень 4: Очень сложно. Осмотрите все углы комнаты.", en: "Level 4: Very hard. Check all corners."} },
-  5: { code: "9912", hintText: {ru: "Уровень 5: Финал. Полная свобода обзора на 360°.", en: "Level 5: Finale. Full 360° freedom."} }
+  5: { code: "9912", hintText: {ru: "Уровень 5: Финал. Используйте Q и E для поворота.", en: "Level 5: Finale. Use Q and E to turn."} }
 };
 
 function updateLanguageText(){
@@ -232,7 +232,6 @@ window.buyItem = function(itemType, cost) {
 };
 
 document.getElementById('openShop').onclick = () => {
-  document.exitPointerLock?.();
   document.getElementById('shopModal').style.display = 'flex';
 };
 document.getElementById('closeShop').onclick = () => document.getElementById('shopModal').style.display = 'none';
@@ -303,6 +302,7 @@ bookshelfGroup.traverse(child => { child.userData = {kind: 'bookshelf'}; });
 
 const raycaster=new THREE.Raycaster(); const center=new THREE.Vector2(0,0);
 let yaw=Math.PI, pitch=0, keysDown={};
+let isMouseDown = false, mouseX = 0;
 const message=document.getElementById('message');
 
 function say(t){message.textContent=t;message.style.display='block';clearTimeout(say.timer);say.timer=setTimeout(()=>message.style.display='none',2800)}
@@ -341,7 +341,6 @@ function interact(){
   if(!started||won)return;
   const t = translations[currentLang];
 
-  // Точная и прощающая система взаимодействия
   raycaster.setFromCamera(center,camera);
   const targets = [keyGroup, note, clock, door, bookshelfGroup];
   const hits = raycaster.intersectObjects(targets, true);
@@ -358,7 +357,6 @@ function interact(){
     }
   }
 
-  // Запасной поиск по близости (если игрок смотрит в сторону стола)
   if(!targetKind) {
     const p = camera.position;
     if(p.distanceTo(keyGroup.position) < 3.0 && keyGroup.visible) targetKind = 'key';
@@ -391,7 +389,6 @@ function interact(){
     if(doorOpen){ finishLevel(); return; }
     if(!hasKey){ say(t.msgLocked); return; }
     if(!readNote && currentLevel === 1){ say(t.msgNoNote); return; }
-    document.exitPointerLock?.();
     document.getElementById('codeModal').style.display = 'flex';
     document.getElementById('codeInput').value = '';
     document.getElementById('codeInput').focus();
@@ -402,7 +399,6 @@ function finishLevel(){
   if(won) return;
   won=true; coins+=50; updateHUD();
   const t = translations[currentLang];
-  document.exitPointerLock?.();
   if(currentLevel >= maxLevel) {
     document.getElementById('m-win-title').textContent = currentLang==='ru' ? "ПОБЕДА В ИГРЕ!" : "GAME VICTORY!";
     document.getElementById('nextRoomBtn').textContent = t.finWinBtn;
@@ -416,12 +412,10 @@ document.getElementById('begin').onclick=()=>{
   started=true;
   document.getElementById('start').style.display='none';
   applyLevelSettings();
-  renderer.domElement.requestPointerLock?.();
 };
 document.getElementById('interact').onclick=interact;
 document.getElementById('cancelCode').onclick=()=>{
   document.getElementById('codeModal').style.display='none';
-  renderer.domElement.requestPointerLock?.();
 };
 
 function submitCodeFunc(){
@@ -454,12 +448,10 @@ document.getElementById('nextRoomBtn').onclick = () => {
     coins += 100;
     applyLevelSettings();
   }
-  renderer.domElement.requestPointerLock?.();
 };
 
 document.getElementById('reset').onclick=()=>{ currentLevel=1; applyLevelSettings(); };
 
-// ЖЕСТКАЯ БЛОКИРОВКА КЛАВИШИ E ИСКЛЮЧИТЕЛЬНО ПОД ДЕЙСТВИЕ
 document.addEventListener('keydown', e => {
   if(e.code === 'KeyE') {
     if(document.getElementById('codeModal').style.display==='none' && document.getElementById('shopModal').style.display==='none') {
@@ -473,29 +465,33 @@ document.addEventListener('keyup', e => {
   if(e.code !== 'KeyE') keysDown[e.code] = false;
 });
 
-document.addEventListener('mousemove', e => {
-  if(document.pointerLockElement===renderer.domElement && started){
-    yaw -= e.movementX * 0.003;
-    pitch -= e.movementY * 0.003;
-    pitch = Math.max(-1.4, Math.min(1.4, pitch));
-  }
+// Плавный и надежный поворот мышью при зажатии или клавишами Q/E
+renderer.domElement.addEventListener('mousedown', e => {
+  isMouseDown = true;
+  mouseX = e.clientX;
 });
-
-renderer.domElement.addEventListener('click', () => {
-  if(started && document.pointerLockElement!==renderer.domElement && document.getElementById('codeModal').style.display==='none' && document.getElementById('shopModal').style.display==='none'){
-    renderer.domElement.requestPointerLock?.();
+window.addEventListener('mouseup', () => { isMouseDown = false; });
+renderer.domElement.addEventListener('mousemove', e => {
+  if(isMouseDown && started && document.getElementById('codeModal').style.display==='none'){
+    const deltaX = e.clientX - mouseX;
+    yaw -= deltaX * 0.005;
+    mouseX = e.clientX;
   }
 });
 
 function update(dt){
+  // Поворот клавишами Q и E или стрелками
+  if(keysDown.KeyQ || keysDown.ArrowLeft) yaw += 2.2 * dt;
+  if(keysDown.KeyE || keysDown.ArrowRight) yaw -= 2.2 * dt;
+
   const dir = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
   const right = new THREE.Vector3(-dir.z, 0, dir.x);
   
   let f=0, s=0;
   if(keysDown.KeyW || keysDown.ArrowUp) f += 1;
   if(keysDown.KeyS || keysDown.ArrowDown) f -= 1;
-  if(keysDown.KeyD || keysDown.ArrowRight) s += 1;
-  if(keysDown.KeyA || keysDown.ArrowLeft) s -= 1;
+  if(keysDown.KeyD) s += 1;
+  if(keysDown.KeyA) s -= 1;
 
   const moveVector = new THREE.Vector3();
   moveVector.addScaledVector(dir, f);
