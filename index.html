@@ -7,31 +7,34 @@
 <style>
 :root{--bg:#0f1117;--card:#181b25;--line:#2a2f3f;--tx:#e8e6df;--mut:#9a9aa8;--gold:#e0b44c;--ok:#4cc38a;--bad:#e5564f}
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(circle at 50% -10%,#232842,var(--bg) 60%);color:var(--tx);font-family:system-ui,Segoe UI,Roboto,sans-serif;min-height:100vh}
+body{margin:0;background:radial-gradient(circle at 50% -10%,#232842,var(--bg) 60%);color:var(--tx);font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh}
 header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line)}
-h1{margin:0;font-size:20px;letter-spacing:.08em;color:var(--gold)}
+h1{margin:0;font-size:20px;letter-spacing:.08em;color:var(--gold);display:flex;align-items:center;gap:8px}
 .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:8px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:6px}
 button:hover{border-color:var(--gold)}
 button.p{background:var(--gold);color:#1a1405;border-color:var(--gold);font-weight:600}
 button:disabled{opacity:.4;cursor:not-allowed}
 .lang button.on{background:var(--gold);color:#1a1405}
-.coins{color:var(--gold);font-weight:700}
+.coins{color:var(--gold);font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.ic{width:1.15em;height:1.15em;flex:none;vertical-align:-.2em}
+.ic.sy{width:30px;height:30px}.ic.big{width:34px;height:34px}.ic.logo{width:26px;height:26px}
 main{max-width:860px;margin:0 auto;padding:20px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px}
 .g{padding:10px 0;text-align:center;border-radius:8px;border:1px solid var(--line);background:#12141c}
-.g.done{border-color:var(--ok);color:var(--ok)}.g.cur{border-color:var(--gold);color:var(--gold);cursor:pointer}.g.done{cursor:pointer}
-.g.lock{opacity:.35}
-.q{font-size:26px;text-align:center;margin:18px 0;min-height:40px;word-break:break-word}
+.g.done{border-color:var(--ok);color:var(--ok);cursor:pointer}.g.cur{border-color:var(--gold);color:var(--gold);cursor:pointer}.g.lock{opacity:.35}
+.story{background:#12141c;border-left:3px solid var(--gold);padding:10px 14px;border-radius:6px;margin:10px 0;color:var(--mut)}
+.q{font-size:26px;text-align:center;margin:18px 0;min-height:40px;word-break:break-word;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center}
 .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:10px 0}
 input[type=text]{font:inherit;font-size:20px;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:#0c0e14;color:var(--tx);width:220px;text-align:center}
 .tbar{height:8px;background:#0c0e14;border-radius:4px;overflow:hidden}.tbar i{display:block;height:100%;background:var(--gold);width:100%}
-.sym{font-size:30px;padding:10px 14px}
+.slot{width:44px;height:44px;border:1px dashed var(--line);border-radius:8px;display:inline-flex;align-items:center;justify-content:center}
+.opt{min-width:200px;justify-content:center}
 .msg{text-align:center;min-height:24px;margin:8px 0}.ok{color:var(--ok)}.bad{color:var(--bad)}
 .shop{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
 .item{border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;background:#12141c}
-.item .e{font-size:34px}.item small{color:var(--mut);display:block;min-height:34px;margin:4px 0 8px}
+.item small{color:var(--mut);display:block;min-height:34px;margin:4px 0 8px}.item .big{margin-bottom:6px}
 .modal{position:fixed;inset:0;background:#000a;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:20px;z-index:9}
 .modal.open{display:flex}.modal .card{max-width:760px;width:100%;margin-top:30px}
 h2{margin:0 0 12px;font-size:18px}.mut{color:var(--mut)}
@@ -39,16 +42,16 @@ h2{margin:0 0 12px;font-size:18px}.mut{color:var(--mut)}
 </head>
 <body>
 <header>
-  <h1>⛩ 100 GATES</h1>
+  <h1><span id="icLogo"></span><span id="hTitle"></span></h1>
   <div class="bar">
-    <span class="coins">🪙 <span id="coins">0</span></span>
+    <span class="coins"><span id="icCoin"></span><span id="coins">0</span></span>
     <button onclick="openShop()" id="bShop"></button>
     <div class="lang"><button id="lEN" onclick="setLang('en')">EN</button> <button id="lRU" onclick="setLang('ru')">RU</button></div>
   </div>
 </header>
 <main>
   <section id="home">
-    <div class="card"><h2 id="tTitle"></h2><p class="mut" id="tIntro"></p>
+    <div class="card"><h2 id="tTitle"></h2><p class="mut" id="tIntro"></p><p class="mut" id="tHow"></p>
       <button class="p" id="bPlay" onclick="play(S.level)"></button>
       <button id="bReset" onclick="resetAll()"></button></div>
     <div class="card"><h2 id="tMap"></h2><div class="grid" id="map"></div></div>
@@ -57,6 +60,7 @@ h2{margin:0 0 12px;font-size:18px}.mut{color:var(--mut)}
   <section id="game" style="display:none">
     <div class="card">
       <div class="bar" style="justify-content:space-between"><b id="gTitle"></b><span id="gLives"></span></div>
+      <div class="story" id="gStory"></div>
       <div class="tbar" style="margin:10px 0"><i id="tfill"></i></div>
       <div class="mut" id="gTask" style="text-align:center"></div>
       <div class="q" id="gQ"></div>
@@ -69,7 +73,7 @@ h2{margin:0 0 12px;font-size:18px}.mut{color:var(--mut)}
 </main>
 <div class="modal" id="shop" onclick="if(event.target===this)closeShop()">
   <div class="card">
-    <div class="bar" style="justify-content:space-between"><h2 id="sTitle"></h2><button onclick="closeShop()">✕</button></div>
+    <div class="bar" style="justify-content:space-between"><h2 id="sTitle"></h2><button onclick="closeShop()">X</button></div>
     <h3 id="sCoins"></h3><div class="shop" id="packs"></div>
     <h3 id="sItems" style="margin-top:22px"></h3><div class="shop" id="items"></div>
     <div class="msg" id="sMsg"></div>
@@ -84,54 +88,100 @@ h2{margin:0 0 12px;font-size:18px}.mut{color:var(--mut)}
 
 <script>
 /* ============ PAYMENT CONFIG ============
- DEMO:true  -> coins are credited instantly (for testing only!)
+ DEMO:true  -> coins are credited instantly (testing only!)
  DEMO:false -> opens your payment link. Real crediting must be done by your server
- after a webhook from the payment provider (Stripe / NOWPayments / Coinbase Commerce, etc.).
- Put your payment links below. */
+ after a webhook from the payment provider (Stripe / NOWPayments / Coinbase Commerce...). */
 const PAY = {
   DEMO: true,
   prices: {50:'$0.99', 100:'$1.99', 200:'$3.99', 500:'$8.99'},
-  card:   {50:'', 100:'', 200:'', 500:''},   // e.g. Stripe Payment Links
-  crypto: {50:'', 100:'', 200:'', 500:''}    // e.g. NOWPayments / Coinbase Commerce links
+  card:   {50:'', 100:'', 200:'', 500:''},
+  crypto: {50:'', 100:'', 200:'', 500:''}
 };
+/* ============ ICONS (SVG, no emoji) ============ */
+const sv=(b,c)=>`<svg class="ic ${c||''}" viewBox="0 0 24 24">${b}</svg>`;
+const IC={
+ coin:'<circle cx="12" cy="12" r="11" fill="#e0b44c" stroke="#9c7116" stroke-width="1.5"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="#9c7116" stroke-width="1.3"/><path d="M12 7l1.5 3.200 3.500.4-2.600 2.400.7 3.500L12 14.700l-3.100 1.800.7-3.500L7 10.600l3.500-.4z" fill="#9c7116"/>',
+ heart:'<path d="M12 21s-8-5.300-8-11a4.500 4.500 0 018-2.800A4.500 4.500 0 0120 10c0 5.700-8 11-8 11z" fill="#e5564f"/>',
+ logo:'<path d="M3 22V11a9 9 0 0118 0v11h-5V11a4 4 0 00-8 0v11z" fill="#e0b44c"/>',
+ cart:'<circle cx="9" cy="20" r="1.8" fill="currentColor"/><circle cx="18" cy="20" r="1.8" fill="currentColor"/><path d="M2 3h3l3 12h11l2-8H6" stroke="currentColor" stroke-width="2" fill="none"/>',
+ hint:'<circle cx="12" cy="10" r="6.500" fill="#e0b44c"/><rect x="9" y="16" width="6" height="5" rx="1.200" fill="#9a9aa8"/>',
+ tm:'<path d="M6 3h12v4l-5 5 5 5v4H6v-4l5-5-5-5z" fill="#6cb6ff"/>',
+ sh:'<path d="M12 2l8 3v6c0 5-3.500 9-8 11-4.500-2-8-6-8-11V5z" fill="#4cc38a"/>',
+ sk:'<circle cx="8" cy="12" r="4.500" fill="none" stroke="#e0b44c" stroke-width="2.500"/><path d="M12.500 12H22M18 12v4M21 12v3" stroke="#e0b44c" stroke-width="2.500" fill="none"/>'
+};
+const ic=(n,c)=>sv(IC[n],c);
+const SY=['<circle cx="12" cy="12" r="9" fill="#e5564f"/>','<rect x="4" y="4" width="16" height="16" rx="2" fill="#4c9be5"/>','<path d="M12 3l10 18H2z" fill="#4cc38a"/>','<path d="M12 2l10 10-10 10L2 12z" fill="#e0b44c"/>','<path d="M12 2l3 7 7 .6-5.300 4.700 1.600 7.200L12 17.800 5.700 21.500l1.600-7.200L2 9.600 9 9z" fill="#b36be5"/>','<path d="M12 2l9 5v10l-9 5-9-5V7z" fill="#e58a4c"/>','<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="#4cd0d0"/>','<circle cx="12" cy="12" r="7" fill="none" stroke="#e8e6df" stroke-width="4"/>'];
+const sy=i=>sv(SY[i],'sy');
 /* ============ TEXTS ============ */
 const T = {
- en:{title:'Welcome, traveller',intro:'100 gates stand between you and the end of the road. Each gate hides a riddle — and each one is harder than the last. Solve them all.',play:'Continue',reset:'New game',map:'The 100 gates',inv:'Inventory',shop:'🛒 Shop',back:'← Back',
-  coins:'Buy coins',items:'Inventory items',buy:'Buy',gate:'Gate',lives:'Lives',time:'sec',
-  m:'Solve the equation',s:'Find the next number',c:'Decode the word (letters are shifted)',r:'Memorize the sequence, then repeat it',
-  go:'Check',win:'Gate opened! +',lose:'Wrong!',out:'Time is up!',dead:'No lives left. Try again.',empty:'Empty',
-  hint:'Hint',tm:'Time +15s',sh:'Shield',sk:'Skip key',hintD:'Reveals the first character of the answer',tmD:'Adds 15 seconds',shD:'Adds one extra life',skD:'Opens the current gate instantly',
-  nocoins:'Not enough coins',bought:'Purchased!',payT:'Choose payment',card:'💳 Bank card',crypto:'₿ Crypto',payNo:'Payment link is not configured yet.',demo:'DEMO mode: coins credited for testing.',
-  finish:'You opened all 100 gates! Legend.',sure:'Reset all progress?',watch:'Memorize…',now:'Your turn!',pk:'coins'},
- ru:{title:'Добро пожаловать, путник',intro:'100 врат отделяют вас от конца пути. За каждыми — загадка, и каждая сложнее предыдущей. Пройдите их все.',play:'Продолжить',reset:'Новая игра',map:'100 врат',inv:'Инвентарь',shop:'🛒 Магазин',back:'← Назад',
-  coins:'Купить монеты',items:'Предметы инвентаря',buy:'Купить',gate:'Врата',lives:'Жизни',time:'сек',
-  m:'Решите пример',s:'Найдите следующее число',c:'Расшифруйте слово (буквы сдвинуты)',r:'Запомните последовательность и повторите её',
-  go:'Проверить',win:'Врата открыты! +',lose:'Неверно!',out:'Время вышло!',dead:'Жизни закончились. Попробуйте снова.',empty:'Пусто',
-  hint:'Подсказка',tm:'Время +15с',sh:'Щит',sk:'Ключ-пропуск',hintD:'Показывает первый символ ответа',tmD:'Добавляет 15 секунд',shD:'Даёт ещё одну жизнь',skD:'Мгновенно открывает текущие врата',
-  nocoins:'Не хватает монет',bought:'Куплено!',payT:'Способ оплаты',card:'💳 Банковская карта',crypto:'₿ Криптовалюта',payNo:'Ссылка на оплату ещё не настроена.',demo:'DEMO-режим: монеты начислены для теста.',
-  finish:'Вы открыли все 100 врат! Легенда.',sure:'Сбросить весь прогресс?',watch:'Запоминайте…',now:'Ваш ход!',pk:'монет'}
+ en:{gates:'100 GATES',title:'Welcome, traveller',
+  intro:'The Lost Kingdom hid the Sun Crown behind 100 magic gates. Each gate is a lock with a puzzle. Open all of them, cross ten realms and reach the Throne of the Sun.',
+  how:'How to play: solve the puzzle on each gate to open it and earn coins. Every 10th gate is guarded: solve 3 puzzles in a row. Spend coins in the shop on helpful items.',
+  play:'Continue',reset:'New game',map:'The 100 gates',inv:'Inventory',shop:'Shop',back:'Back',
+  coins:'Buy coins',items:'Inventory items',buy:'Buy',gate:'Gate',lives:'Lives',guard:'Guardian gate',
+  m:'The runes show a sum. Type the result.',s:'Find the pattern and type the next number.',
+  c:'The sage’s key: every letter is shifted forward by {k}. Shift it back to read the word. Type it in English letters.',
+  r:'Memorize the sequence of symbols, then repeat it.',q:'The gate asks a riddle. Choose the right answer.',
+  go:'Open',win:'Gate opened! +',part:'Lock opened',lose:'Wrong!',out:'Time is up!',dead:'No lives left. The gate resets.',empty:'Empty',
+  hint:'Hint',tm:'Time +15s',sh:'Shield',sk:'Skip key',hintD:'Reveals the first character, or removes two wrong riddle answers',tmD:'Adds 15 seconds',shD:'Adds one extra life',skD:'Opens the current gate instantly',
+  nocoins:'Not enough coins',bought:'Purchased!',payT:'Choose payment method',card:'Bank card',crypto:'Crypto',payNo:'Payment link is not configured yet.',demo:'DEMO mode: coins credited for testing.',
+  finish:'You opened all 100 gates and took the Sun Crown. Legend!',sure:'Reset all progress?',watch:'Memorize…',pk:'coins',first:'First character: '},
+ ru:{gates:'100 ВРАТ',title:'Добро пожаловать, путник',
+  intro:'Затерянное королевство спрятало Корону Солнца за 100 волшебными вратами. Каждые врата — замок с загадкой. Откройте их все, пройдите десять земель и дойдите до Трона Солнца.',
+  how:'Как играть: решите загадку на вратах, чтобы открыть их и получить монеты. Каждые 10-е врата охраняет страж: нужно решить 3 загадки подряд. Монеты тратьте в магазине на полезные предметы.',
+  play:'Продолжить',reset:'Новая игра',map:'100 врат',inv:'Инвентарь',shop:'Магазин',back:'Назад',
+  coins:'Купить монеты',items:'Предметы инвентаря',buy:'Купить',gate:'Врата',lives:'Жизни',guard:'Врата стража',
+  m:'На вратах руны с примером. Введите результат.',s:'Найдите закономерность и введите следующее число.',
+  c:'Ключ мудреца: каждая буква сдвинута вперёд на {k}. Сдвиньте её назад и прочитайте слово. Вводите английскими буквами.',
+  r:'Запомните последовательность символов и повторите её.',q:'Врата задают загадку. Выберите верный ответ.',
+  go:'Открыть',win:'Врата открыты! +',part:'Замок открыт',lose:'Неверно!',out:'Время вышло!',dead:'Жизни закончились. Врата сброшены.',empty:'Пусто',
+  hint:'Подсказка',tm:'Время +15 с',sh:'Щит',sk:'Ключ-пропуск',hintD:'Показывает первый символ или убирает два неверных ответа в загадке',tmD:'Добавляет 15 секунд',shD:'Даёт ещё одну жизнь',skD:'Мгновенно открывает текущие врата',
+  nocoins:'Не хватает монет',bought:'Куплено!',payT:'Выберите способ оплаты',card:'Банковская карта',crypto:'Криптовалюта',payNo:'Ссылка на оплату ещё не настроена.',demo:'DEMO-режим: монеты начислены для проверки.',
+  finish:'Вы открыли все 100 врат и забрали Корону Солнца. Легенда!',sure:'Сбросить весь прогресс?',watch:'Запоминайте…',pk:'монет',first:'Первый символ: '}
 };
-const ITEMS={hint:{e:'💡',p:10,k:'hint'},tm:{e:'⏳',p:15,k:'tm'},sh:{e:'🛡',p:25,k:'sh'},sk:{e:'🗝',p:60,k:'sk'}};
+const CH=[
+ ['Whispering Forest','Шепчущий лес','Ancient trees lean closer as you reach the first gates.','Древние деревья склоняются ближе, когда вы подходите к первым вратам.'],
+ ['Crystal Caves','Хрустальные пещеры','Light glitters on the walls and the gates hum with magic.','Свет играет на стенах, а врата гудят от магии.'],
+ ['Foggy Swamp','Туманное болото','Mist hides the path. Only a clear mind opens these gates.','Туман скрывает тропу. Эти врата открывает только ясный ум.'],
+ ['Burning Desert','Пылающая пустыня','Sand covers the old runes and the sun burns your back.','Песок засыпал древние руны, а солнце жжёт спину.'],
+ ['Frozen Peaks','Ледяные вершины','Frost seals every lock. Think before you act.','Иней сковал каждый замок. Подумайте, прежде чем действовать.'],
+ ['Sunken Ruins','Затонувшие руины','Echoes of a drowned kingdom guard the gates.','Эхо затонувшего королевства стережёт врата.'],
+ ['Volcano Forge','Вулканическая кузница','Molten locks demand a steady mind.','Расплавленные замки требуют твёрдого ума.'],
+ ['Sky Citadel','Небесная цитадель','Clouds drift beneath your feet and the gates stand near the stars.','Облака плывут под ногами, а врата стоят рядом со звёздами.'],
+ ['Shadow Abyss','Бездна теней','Darkness whispers wrong answers. Do not listen.','Тьма шепчет неверные ответы. Не слушайте её.'],
+ ['Throne of the Sun','Трон Солнца','The final gates. Beyond them waits the Sun Crown.','Последние врата. За ними ждёт Корона Солнца.']
+];
+const RID=[
+ {q:['The more of me you take, the more you leave behind. What am I?','Чем больше меня берёшь, тем больше оставляешь позади. Что это?'],o:[['Footsteps','Шаги'],['Gold','Золото'],['Water','Вода'],['Sand','Песок']],a:0},
+ {q:['I have hands but cannot clap. What am I?','У меня есть стрелки, но нет рук. Что это?'],o:[['A statue','Статуя'],['A clock','Часы'],['A river','Река'],['A map','Карта']],a:1},
+ {q:['I speak without a mouth and hear without ears. What am I?','Я говорю без рта и слышу без ушей. Кто я?'],o:[['A ghost','Призрак'],['A bell','Колокол'],['An echo','Эхо'],['A bird','Птица']],a:2},
+ {q:['What goes up but never comes down?','Что поднимается вверх, но никогда не опускается?'],o:[['Smoke','Дым'],['A rocket','Ракета'],['Rain','Дождь'],['Your age','Возраст']],a:3},
+ {q:['What has many teeth but cannot bite?','Что имеет много зубов, но не кусается?'],o:[['A comb','Расчёска'],['A dragon','Дракон'],['A saw tooth','Пила'],['A key','Ключ']],a:0},
+ {q:['What can you break without touching it?','Что можно сломать, не прикасаясь?'],o:[['A glass','Стекло'],['A promise','Обещание'],['A rock','Камень'],['A wall','Стену']],a:1},
+ {q:['It follows you everywhere but vanishes in the dark. What is it?','Оно следует за тобой повсюду, но исчезает во тьме. Что это?'],o:[['A dog','Собака'],['Wind','Ветер'],['A shadow','Тень'],['Fog','Туман']],a:2}
+];
+const ITEMS={hint:{p:10},tm:{p:15},sh:{p:25},sk:{p:60}};
 const WORDS=['GATE','KEY','TORCH','SHADOW','DRAGON','CASTLE','TEMPLE','MYSTERY','GUARDIAN','LABYRINTH','TREASURE','KINGDOM','PHOENIX','ECLIPSE','SERPENT'];
-const SYM=['🔥','🌊','🌿','⚡','🌙','⭐','💎','🗡'];
 /* ============ STATE ============ */
 let S;
 try{S=JSON.parse(localStorage.getItem('g100'))}catch(e){}
-S=S||{coins:20,level:1,inv:{hint:1,tm:0,sh:0,sk:0},lang:(navigator.language||'en').startsWith('ru')?'ru':'en'};
+S=S||{coins:20,level:1,inv:{hint:1,tm:0,sh:0,sk:0},lang:(navigator.language||'en').toLowerCase().startsWith('ru')?'ru':'en'};
 function save(){try{localStorage.setItem('g100',JSON.stringify(S))}catch(e){}}
-const $=id=>document.getElementById(id), t=k=>T[S.lang][k];
+const $=id=>document.getElementById(id), t=k=>T[S.lang][k], li=()=>S.lang==='ru'?1:0;
 const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 let G=null, timer=null, pendingPack=0;
 /* ============ UI ============ */
 function setLang(l){S.lang=l;save();document.documentElement.lang=l;render()}
 function render(){
  $('lEN').classList.toggle('on',S.lang==='en');$('lRU').classList.toggle('on',S.lang==='ru');
- $('coins').textContent=S.coins;$('bShop').textContent=t('shop');
- $('tTitle').textContent=t('title');$('tIntro').textContent=t('intro');$('bPlay').textContent=t('play')+' ('+t('gate')+' '+Math.min(S.level,100)+')';
+ $('icLogo').innerHTML=ic('logo','logo');$('icCoin').innerHTML=ic('coin');$('hTitle').textContent=t('gates');
+ $('coins').textContent=S.coins;$('bShop').innerHTML=ic('cart')+' '+t('shop');
+ $('tTitle').textContent=t('title');$('tIntro').textContent=t('intro');$('tHow').textContent=t('how');
+ $('bPlay').textContent=t('play')+' ('+t('gate')+' '+Math.min(S.level,100)+')';
  $('bReset').textContent=t('reset');$('tMap').textContent=t('map');$('tInv').textContent=t('inv');$('bBack').textContent=t('back');
  let m='';for(let i=1;i<=100;i++){const c=i<S.level?'done':i===S.level?'cur':'lock';m+=`<div class="g ${c}" ${i<=S.level?`onclick="play(${i})"`:''}>${i}</div>`}
  $('map').innerHTML=m;
- const inv=Object.keys(ITEMS).filter(k=>S.inv[k]>0).map(k=>`${ITEMS[k].e} ${t(k)} ×${S.inv[k]}`).join(' &nbsp; ');
+ const inv=Object.keys(ITEMS).filter(k=>S.inv[k]>0).map(k=>`<span style="margin-right:14px">${ic(k)} ${t(k)} ×${S.inv[k]}</span>`).join('');
  $('inv').innerHTML=inv||t('empty');
  renderShop();if(G)drawGame();
 }
@@ -140,25 +190,26 @@ function resetAll(){if(confirm(t('sure'))){S.level=1;S.coins=20;S.inv={hint:1,tm
 /* ============ SHOP ============ */
 function renderShop(){
  $('sTitle').textContent=t('shop');$('sCoins').textContent=t('coins');$('sItems').textContent=t('items');
- $('packs').innerHTML=[50,100,200,500].map(n=>`<div class="item"><div class="e">🪙</div><b>${n} ${t('pk')}</b><small>${PAY.prices[n]}</small><button class="p" onclick="askPay(${n})">${t('buy')}</button></div>`).join('');
- $('items').innerHTML=Object.keys(ITEMS).map(k=>`<div class="item"><div class="e">${ITEMS[k].e}</div><b>${t(k)}</b><small>${t(k+'D')}<br>(×${S.inv[k]})</small><button onclick="buyItem('${k}')">🪙 ${ITEMS[k].p}</button></div>`).join('');
+ $('pTitle').textContent='';
+ $('packs').innerHTML=[50,100,200,500].map(n=>`<div class="item">${ic('coin','big')}<br><b>${n} ${t('pk')}</b><small>${PAY.prices[n]}</small><button class="p" onclick="askPay(${n})">${t('buy')}</button></div>`).join('');
+ $('items').innerHTML=Object.keys(ITEMS).map(k=>`<div class="item">${ic(k,'big')}<br><b>${t(k)}</b><small>${t(k+'D')}<br>×${S.inv[k]}</small><button onclick="buyItem('${k}')">${ic('coin')} ${ITEMS[k].p}</button></div>`).join('');
 }
 function openShop(){$('sMsg').textContent='';renderShop();$('shop').classList.add('open')}
 function closeShop(){$('shop').classList.remove('open')}
 function buyItem(k){const m=$('sMsg');if(S.coins<ITEMS[k].p){m.className='msg bad';m.textContent=t('nocoins');return}
- S.coins-=ITEMS[k].p;S.inv[k]++;save();m.className='msg ok';m.textContent=t('bought');render();$('shop').classList.add('open')}
+ S.coins-=ITEMS[k].p;S.inv[k]++;save();render();m.className='msg ok';m.textContent=t('bought')}
 function askPay(n){pendingPack=n;$('pTitle').textContent=n+' '+t('pk')+' — '+PAY.prices[n];$('pInfo').textContent=t('payT');$('pCard').textContent=t('card');$('pCrypto').textContent=t('crypto');$('pay').classList.add('open')}
 function pay(method){
  const n=pendingPack,m=$('sMsg');$('pay').classList.remove('open');
- if(PAY.DEMO){S.coins+=n;save();m.className='msg ok';m.textContent=t('demo');render();$('shop').classList.add('open');return}
+ if(PAY.DEMO){S.coins+=n;save();render();m.className='msg ok';m.textContent=t('demo');return}
  const url=PAY[method][n];
  if(!url){m.className='msg bad';m.textContent=t('payNo');return}
  window.open(url,'_blank','noopener');
 }
 /* ============ PUZZLES ============ */
 function makePuzzle(L){
- const type=['m','s','c','r'][L%4], d=Math.min(1+Math.floor(L/12),6);
- const P={type,time:Math.max(18,70-Math.floor(L*0.5))};
+ const type=['m','s','c','r','q'][(L-1)%5], d=Math.min(1+Math.floor(L/12),6);
+ const P={type,time:Math.max(30,100-Math.floor(L*0.6))};
  if(type==='m'){
   const mx=Math.pow(10,d)-1,a=R(2,mx),b=R(2,mx);
   if(L<10){P.q=`${a} + ${b}`;P.a=a+b}
@@ -173,61 +224,86 @@ function makePuzzle(L){
   P.q=s.join(', ')+', ?';
  }
  if(type==='c'){
-  const pool=WORDS.filter(w=>w.length<=3+Math.floor(L/10)+2);const w=pool[R(0,pool.length-1)]||WORDS[0],k=R(1,3+Math.floor(L/20));
-  P.a=w;P.q=w.split('').map(ch=>String.fromCharCode((ch.charCodeAt(0)-65+k)%26+65)).join('');P.k=k;
+  const pool=WORDS.filter(w=>w.length<=3+Math.floor(L/10)+2),w=pool[R(0,pool.length-1)]||WORDS[0],k=R(1,3+Math.floor(L/20));
+  P.a=w;P.k=k;P.q=w.split('').map(ch=>String.fromCharCode((ch.charCodeAt(0)-65+k)%26+65)).join('');
  }
- if(type==='r'){const n=Math.min(3+Math.floor(L/8),12);P.seq=Array.from({length:n},()=>R(0,SYM.length-1));P.time=30+n*3}
+ if(type==='r'){const n=Math.min(3+Math.floor(L/8),12);P.seq=Array.from({length:n},()=>R(0,SY.length-1));P.time=30+n*4}
+ if(type==='q'){P.r=RID[R(0,RID.length-1)];P.time=Math.max(25,60-Math.floor(L/3))}
  P.a=String(P.a);return P;
 }
 /* ============ GAME ============ */
+const chap=L=>CH[Math.min(9,Math.floor((L-1)/10))];
 function play(L){
  if(L>100){alert(t('finish'));return}
- G={L,lives:3,msg:'',pos:0};newPuzzle();$('home').style.display='none';$('game').style.display='';
+ G={L,lives:3,need:L%10===0?3:1,done:0,sid:0};newPuzzle();$('home').style.display='none';$('game').style.display='';
 }
 function newPuzzle(){
- clearInterval(timer);G.p=makePuzzle(G.L);G.pos=0;G.left=G.p.time;G.total=G.p.time;G.msg='';G.show=G.p.type==='r';
- if(G.show){G.showTime=Math.max(2000,G.p.seq.length*700);setTimeout(()=>{if(G){G.show=false;drawGame();startTimer()}},G.showTime)}else startTimer();
+ clearInterval(timer);G.p=makePuzzle(G.L);G.pos=0;G.left=G.total=G.p.time;G.msg='';G.hid=[];G.ok=false;
+ if(G.p.type==='r')startShow();else startTimer();
  drawGame();
 }
-function startTimer(){clearInterval(timer);timer=setInterval(()=>{if(!G)return;G.left-=0.25;$('tfill').style.width=Math.max(0,G.left/G.total*100)+'%';if(G.left<=0){fail(t('out'))}},250)}
+function startShow(){
+ G.show=true;G.pos=0;const id=++G.sid;
+ setTimeout(()=>{if(G&&G.sid===id){G.show=false;drawGame();startTimer()}},Math.max(2500,G.p.seq.length*800));
+}
+function replay(){clearInterval(timer);G.left=G.total;startShow();drawGame()}
+function startTimer(){clearInterval(timer);timer=setInterval(()=>{if(!G||G.show)return;G.left-=0.25;$('tfill').style.width=Math.max(0,G.left/G.total*100)+'%';if(G.left<=0)fail(t('out'))},250)}
 function drawGame(){
- $('gTitle').textContent=t('gate')+' '+G.L+' / 100';$('gLives').textContent=t('lives')+': '+'❤'.repeat(G.lives);
- const p=G.p;$('gTask').textContent=t(p.type);
- const inEl=$('gIn');
+ const p=G.p,c=chap(G.L),boss=G.need>1;
+ $('gTitle').textContent=t('gate')+' '+G.L+' / 100'+(boss?' — '+t('guard')+' ('+(G.done+1)+'/'+G.need+')':'');
+ $('gLives').innerHTML=t('lives')+': '+(ic('heart').repeat(G.lives));
+ $('gStory').innerHTML='<b>'+c[li()]+'</b> — '+c[2+li()];
+ $('gTask').textContent=p.type==='c'?t('c').replace('{k}',p.k):t(p.type);
+ const q=$('gQ'),inEl=$('gIn'),old=$('ans')?$('ans').value:'';
  if(p.type==='r'){
-  if(G.show){$('gQ').textContent=p.seq.map(i=>SYM[i]).join(' ');inEl.innerHTML='<span class="mut">'+t('watch')+'</span>'}
-  else{$('gQ').textContent=p.seq.slice(0,G.pos).map(i=>SYM[i]).join(' ')+' '+'▫'.repeat(p.seq.length-G.pos);
-   inEl.innerHTML=SYM.map((s,i)=>`<button class="sym" onclick="tap(${i})">${s}</button>`).join('')}
+  if(G.show){q.innerHTML=p.seq.map(sy).join('');inEl.innerHTML='<span class="mut">'+t('watch')+'</span>'}
+  else{q.innerHTML=p.seq.map((s,i)=>`<span class="slot">${i<G.pos?sy(s):''}</span>`).join('');
+   inEl.innerHTML=SY.map((s,i)=>`<button onclick="tap(${i})">${sy(i)}</button>`).join('')}
+ }else if(p.type==='q'){
+  q.textContent=p.r.q[li()];
+  inEl.innerHTML=p.r.o.map((o,i)=>`<button class="opt" ${G.hid.includes(i)?'disabled':''} onclick="pick(${i})">${o[li()]}</button>`).join('');
  }else{
-  $('gQ').textContent=p.q;
-  if(!inEl.querySelector('input')){inEl.innerHTML=`<input type="text" id="ans" autocomplete="off" onkeydown="if(event.key==='Enter')check()"><button class="p" onclick="check()">${t('go')}</button>`;setTimeout(()=>{const a=$('ans');a&&a.focus()},50)}
-  else inEl.querySelector('button').textContent=t('go');
+  q.textContent=p.q;
+  inEl.innerHTML=`<input type="text" id="ans" autocomplete="off" value="${old}" onkeydown="if(event.key==='Enter')check()"><button class="p" onclick="check()">${t('go')}</button>`;
+  setTimeout(()=>{const a=$('ans');a&&a.focus()},30);
  }
- $('gMsg').textContent=G.msg;$('gMsg').className='msg '+(G.ok?'ok':'bad');
- $('gItems').innerHTML=Object.keys(ITEMS).map(k=>`<button onclick="useItem('${k}')" ${S.inv[k]>0?'':'disabled'}>${ITEMS[k].e} ${t(k)} ×${S.inv[k]}</button>`).join('');
+ $('gMsg').innerHTML=G.msg;$('gMsg').className='msg '+(G.ok?'ok':'bad');
+ $('gItems').innerHTML=Object.keys(ITEMS).map(k=>`<button onclick="useItem('${k}')" ${S.inv[k]>0&&!G.show?'':'disabled'}>${ic(k)} ${t(k)} ×${S.inv[k]}</button>`).join('');
+ $('coins').textContent=S.coins;
 }
-function tap(i){if(G.show)return;const p=G.p;if(p.seq[G.pos]===i){G.pos++;if(G.pos>=p.seq.length)win();else drawGame()}else{G.pos=0;fail(t('lose'))}}
-function check(){const v=($('ans').value||'').trim().toUpperCase().replace('−','-');if(!v)return;if(v===G.p.a.toUpperCase())win();else{$('ans').value='';fail(t('lose'))}}
+function tap(i){if(G.show)return;if(G.p.seq[G.pos]===i){G.pos++;if(G.pos>=G.p.seq.length)solved();else drawGame()}else fail(t('lose'))}
+function pick(i){if(i===G.p.r.a)solved();else fail(t('lose'))}
+function check(){const v=($('ans').value||'').trim().toUpperCase().replace('−','-');if(!v)return;if(v===G.p.a.toUpperCase())solved();else{$('ans').value='';fail(t('lose'))}}
 function fail(msg){
- G.lives--;G.ok=false;
- if(G.lives<=0){clearInterval(timer);G.msg=t('dead');G.lives=3;G.msg=msg+' '+t('dead');G.p=makePuzzle(G.L);setTimeout(newPuzzle,1200);drawGame();return}
- G.msg=msg;G.left=Math.max(G.left,5);if(G.p.type==='r'){newPuzzleKeepLives()}else{G.p=makePuzzle(G.L);G.left=G.total=G.p.time;$('gIn').innerHTML='';drawGame()}
+ G.lives--;G.ok=false;G.msg=msg;
+ if(G.lives<=0){clearInterval(timer);G.msg=msg+' '+t('dead');G.lives=3;G.done=0;drawGame();setTimeout(()=>{if(G)newPuzzle()},1600);return}
+ if(G.p.type==='r')replay();else{G.left=Math.max(G.left,10);drawGame()}
 }
-function newPuzzleKeepLives(){const l=G.lives,m=G.msg;newPuzzle();G.lives=l;G.msg=m;drawGame()}
-function win(){
- clearInterval(timer);const r=5+Math.floor(G.L/5);S.coins+=r;if(G.L>=S.level)S.level=G.L+1;save();
- G.ok=true;G.msg=t('win')+r+' 🪙';$('gMsg').textContent=G.msg;$('gMsg').className='msg ok';$('coins').textContent=S.coins;
+function solved(){
+ clearInterval(timer);G.done++;G.ok=true;
+ if(G.done<G.need){G.msg=t('part')+' '+G.done+'/'+G.need;drawGame();setTimeout(()=>{if(G)newPuzzle()},900);return}
+ gateOpen();
+}
+function gateOpen(){
+ clearInterval(timer);const boss=G.L%10===0,r=(5+Math.floor(G.L/5))*(boss?3:1);let extra='';
+ S.coins+=r;if(boss){const k=Object.keys(ITEMS)[R(0,3)];S.inv[k]++;extra=' + '+ic(k)+' '+t(k)}
+ if(G.L>=S.level)S.level=G.L+1;save();G.ok=true;G.msg=t('win')+r+' '+ic('coin')+extra;drawGame();
  const next=G.L+1;
- setTimeout(()=>{if(next>100){alert(t('finish'));home()}else{G.L=next;G.lives=3;$('gIn').innerHTML='';newPuzzle()}},1100);
+ setTimeout(()=>{if(!G)return;if(next>100){alert(t('finish'));home()}else{G.L=next;G.lives=3;G.done=0;G.need=next%10===0?3:1;newPuzzle()}},1800);
 }
 function useItem(k){
  if(!G||S.inv[k]<1||G.show)return;const p=G.p;
- if(k==='hint'){if(p.type==='r'){G.show=true;setTimeout(()=>{G.show=false;drawGame()},2000)}else{G.msg='💡 '+p.a[0]+'…';G.ok=true}}
+ if(k==='sk'){S.inv[k]--;save();gateOpen();return}
+ if(k==='hint'){
+  if(p.type==='q'){const w=[0,1,2,3].filter(i=>i!==p.r.a&&!G.hid.includes(i));if(!w.length)return;G.hid.push(...w.sort(()=>Math.random()-.5).slice(0,2))}
+  else if(p.type==='r'){S.inv[k]--;save();replay();return}
+  else{G.msg=t('first')+p.a[0];G.ok=true}
+ }
  if(k==='tm'){G.left+=15;G.total=Math.max(G.total,G.left)}
  if(k==='sh'){G.lives++}
- if(k==='sk'){S.inv[k]--;save();win();return}
- S.inv[k]--;save();$('coins').textContent=S.coins;drawGame();
+ S.inv[k]--;save();drawGame();
 }
+document.documentElement.lang=S.lang;
 render();
 </script>
 </body>
