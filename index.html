@@ -1,231 +1,1487 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>100 Gates — Team Arena</title>
-<style>
-:root{--bg:#0f1117;--card:#181b25;--line:#2a2f3f;--tx:#e8e6df;--mut:#9a9aa8;--gold:#e0b44c;--ok:#4cc38a;--bad:#e5564f}
-*{box-sizing:border-box}
-body{margin:0;background:radial-gradient(circle at 50% -10%,#232842,var(--bg) 60%);color:var(--tx);font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh}
-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--line)}
-h1{margin:0;font-size:20px;letter-spacing:.08em;color:var(--gold);display:flex;align-items:center;gap:8px}
-.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:6px}
-button:hover{border-color:var(--gold)}button.p{background:var(--gold);color:#1a1405;border-color:var(--gold);font-weight:600}button:disabled{opacity:.4;cursor:not-allowed}
-.lang button.on{background:var(--gold);color:#1a1405}
-.coins{color:var(--gold);font-weight:700;display:inline-flex;align-items:center;gap:6px}
-.ic{width:1.15em;height:1.15em;flex:none;vertical-align:-.2em}.ic.big{width:34px;height:34px}.ic.logo{width:26px;height:26px}
-main{max-width:980px;margin:0 auto;padding:14px}
-.wrap{position:relative}
-canvas{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px;background:#151a26;cursor:crosshair}
-#ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0009;border-radius:12px;padding:10px;overflow:auto}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;max-width:640px;width:100%}
-.cls{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:12px 0}
-.cc{border:2px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;background:#12141c}.cc.on{border-color:var(--gold)}.cc small{color:var(--mut);display:block;margin-top:4px}
-.dot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:6px;vertical-align:-2px}
-.row{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0}
-.mut{color:var(--mut)}h2{margin:0 0 10px}
-.shop{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-.item{border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;background:#12141c}.item small{color:var(--mut);display:block;min-height:34px;margin:4px 0 8px}
-.modal{position:fixed;inset:0;background:#000a;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:20px;z-index:9}.modal.open{display:flex}.modal .card{margin-top:30px;max-width:760px}
-.msg{text-align:center;min-height:22px}.ok{color:var(--ok)}.bad{color:var(--bad)}
-</style>
-</head>
-<body>
-<header>
- <h1><span id="icLogo"></span><span id="hTitle"></span></h1>
- <div class="bar"><span class="coins"><span id="icCoin"></span><span id="coins">0</span></span>
- <button onclick="openShop()" id="bShop"></button>
- <div class="lang"><button id="lEN" onclick="setLang('en')">EN</button> <button id="lRU" onclick="setLang('ru')">RU</button></div></div>
-</header>
-<main>
- <div class="wrap"><canvas id="cv" width="960" height="640"></canvas><div id="ov"></div></div>
- <div class="row" id="invbar"></div>
- <p class="mut" id="ctl" style="text-align:center;margin:4px"></p>
-</main>
-<div class="modal" id="shop" onclick="if(event.target===this)closeShop()"><div class="card">
- <div class="bar" style="justify-content:space-between"><h2 id="sTitle"></h2><button onclick="closeShop()">X</button></div>
- <h3 id="sCoins"></h3><div class="shop" id="packs"></div><h3 id="sItems" style="margin-top:20px"></h3><div class="shop" id="items"></div><div class="msg" id="sMsg"></div></div></div>
-<div class="modal" id="pay" onclick="if(event.target===this)this.classList.remove('open')"><div class="card" style="max-width:420px;text-align:center">
- <h2 id="pTitle"></h2><p id="pInfo" class="mut"></p><div class="row"><button class="p" onclick="pay('card')" id="pCard"></button><button class="p" onclick="pay('crypto')" id="pCrypto"></button></div></div></div>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Escape: 100 Rooms Horror Quest</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@300;400;600;800&display=swap');
 
-<script>
-/* ===== PAYMENT CONFIG =====
- DEMO:true -> coins credited instantly (testing only). DEMO:false -> opens your payment link;
- real crediting must be done by your server after the provider's webhook (Stripe / NOWPayments / Coinbase Commerce). */
-const PAY={DEMO:true,prices:{50:'$0.99',100:'$1.99',200:'$3.99',500:'$8.99'},
- card:{50:'',100:'',200:'',500:''},crypto:{50:'',100:'',200:'',500:''}};
-/* ===== icons ===== */
-const sv=(b,c)=>`<svg class="ic ${c||''}" viewBox="0 0 24 24">${b}</svg>`;
-const IC={
- coin:'<circle cx="12" cy="12" r="11" fill="#e0b44c" stroke="#9c7116" stroke-width="1.5"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="#9c7116" stroke-width="1.3"/><path d="M12 7l1.5 3.2 3.5.4-2.6 2.4.7 3.5L12 14.7l-3.100 1.800.7-3.500L7 10.600l3.500-.400z" fill="#9c7116"/>',
- logo:'<path d="M3 22V11a9 9 0 0118 0v11h-5V11a4 4 0 00-8 0v11z" fill="#e0b44c"/>',
- cart:'<circle cx="9" cy="20" r="1.8" fill="currentColor"/><circle cx="18" cy="20" r="1.8" fill="currentColor"/><path d="M2 3h3l3 12h11l2-8H6" stroke="currentColor" stroke-width="2" fill="none"/>',
- med:'<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="#e5564f"/>',
- sh:'<path d="M12 2l8 3v6c0 5-3.500 9-8 11-4.500-2-8-6-8-11V5z" fill="#4cc38a"/>',
- rage:'<path d="M13 2L4 14h6l-1 8 9-12h-6z" fill="#e0b44c"/>',
- bomb:'<circle cx="11" cy="14" r="7" fill="#9a9aa8"/><path d="M15 8l4-4" stroke="#e0b44c" stroke-width="2.500"/>'
-};
-const ic=(n,c)=>sv(IC[n],c);
-/* ===== texts ===== */
-const T={
-en:{gates:'100 GATES',title:'Team Arena',intro:'Blue team vs Red team. Pick a class, fight through 100 arenas with your allies, earn coins and spend them on gear. Every 10th arena has a boss.',
- ctl:'WASD / arrows — move · mouse — aim · hold left click — shoot · keys 1–4 — use items (desktop)',
- cls:'Choose your class',runner:'Runner',rocket:'Rocketeer',heavy:'Heavy Gunner',
- runnerD:'Fast and light, rapid fire. Great for flanking.',rocketD:'Slower, fires rockets with splash damage.',heavyD:'Huge health and a minigun, but slow.',
- level:'Arena',play:'Fight!',next:'Next arena',retry:'Try again',menu:'Menu',win:'Victory!',lose:'Your team has fallen',reward:'Reward',
- shop:'Shop',coins:'Buy coins',items:'Gear',buy:'Buy',nocoins:'Not enough coins',bought:'Purchased!',
- med:'Medkit',sh:'Shield',rage:'Rage',bomb:'Bomb',medD:'Restores 60 health',shD:'Takes 70% less damage for 8 s',rageD:'Double damage for 10 s',bombD:'Blasts nearby enemies',
- payT:'Choose payment method',card:'Bank card',crypto:'Crypto',payNo:'Payment link is not configured yet.',demo:'DEMO mode: coins credited for testing.',pk:'coins',
- hp:'Health',foes:'Enemies',boss:'BOSS ARENA',done:'You cleared all 100 arenas. Legend!'},
-ru:{gates:'100 ВРАТ',title:'Командная арена',intro:'Синяя команда против красной. Выберите класс, пройдите 100 арен вместе с союзниками, зарабатывайте монеты и покупайте снаряжение. На каждой 10-й арене вас ждёт босс.',
- ctl:'WASD / стрелки — движение · мышь — прицел · зажмите левую кнопку — стрельба · клавиши 1–4 — предметы (на компьютере)',
- cls:'Выберите класс',runner:'Бегун',rocket:'Ракетчик',heavy:'Пулемётчик',
- runnerD:'Быстрый и лёгкий, стреляет часто. Хорош для обхода.',rocketD:'Медленнее, стреляет ракетами с уроном по площади.',heavyD:'Очень много здоровья и пулемёт, но медленный.',
- level:'Арена',play:'В бой!',next:'Следующая арена',retry:'Ещё раз',menu:'Меню',win:'Победа!',lose:'Ваша команда пала',reward:'Награда',
- shop:'Магазин',coins:'Купить монеты',items:'Снаряжение',buy:'Купить',nocoins:'Не хватает монет',bought:'Куплено!',
- med:'Аптечка',sh:'Щит',rage:'Ярость',bomb:'Бомба',medD:'Восстанавливает 60 здоровья',shD:'Урон меньше на 70% в течение 8 с',rageD:'Двойной урон в течение 10 с',bombD:'Взрывает врагов рядом',
- payT:'Выберите способ оплаты',card:'Банковская карта',crypto:'Криптовалюта',payNo:'Ссылка на оплату ещё не настроена.',demo:'DEMO-режим: монеты начислены для проверки.',pk:'монет',
- hp:'Здоровье',foes:'Враги',boss:'АРЕНА БОССА',done:'Вы прошли все 100 арен. Легенда!'}};
-const ITEMS={med:10,sh:15,rage:20,bomb:25},IK=['med','sh','rage','bomb'];
-const CLS={runner:{hp:100,spd:235,dmg:9,rate:.11,spread:.1,bs:720,splash:0,col:'#4c9be5'},
- rocket:{hp:150,spd:165,dmg:38,rate:.8,spread:.02,bs:430,splash:80,col:'#e58a4c'},
- heavy:{hp:320,spd:115,dmg:6,rate:.06,spread:.17,bs:650,splash:0,col:'#4cc38a'}};
-/* ===== state ===== */
-let S;try{S=JSON.parse(localStorage.getItem('g100tf'))}catch(e){}
-S=S||{coins:20,level:1,sel:1,cls:'runner',inv:{med:2,sh:1,rage:1,bomb:1},lang:(navigator.language||'en').toLowerCase().startsWith('ru')?'ru':'en'};
-const save=()=>{try{localStorage.setItem('g100tf',JSON.stringify(S))}catch(e){}};
-const $=id=>document.getElementById(id),t=k=>T[S.lang][k];
-const W=960,H=640,cv=$('cv'),cx=cv.getContext('2d');
-let mode='menu',G=null,P=null,last=0,mx=W/2,my=H/2,down=false,pendingPack=0;const keys={};
-/* ===== UI ===== */
-function setLang(l){S.lang=l;save();document.documentElement.lang=l;render()}
-function render(){
- $('lEN').classList.toggle('on',S.lang==='en');$('lRU').classList.toggle('on',S.lang==='ru');
- $('icLogo').innerHTML=ic('logo','logo');$('icCoin').innerHTML=ic('coin');$('hTitle').textContent=t('gates');
- $('coins').textContent=Math.floor(S.coins);$('bShop').innerHTML=ic('cart')+' '+t('shop');$('ctl').textContent=t('ctl');
- renderShop();renderInv();if(mode==='menu')showMenu();
-}
-function renderInv(){$('invbar').innerHTML=IK.map((k,i)=>`<button onclick="useItem('${k}')" ${S.inv[k]>0?'':'disabled'}>${i+1} ${ic(k)} ${t(k)} ×${S.inv[k]}</button>`).join('')}
-function ov(h){$('ov').style.display=h?'flex':'none';$('ov').innerHTML=h||''}
-function showMenu(){
- mode='menu';const L=Math.min(S.sel||1,S.level);
- ov(`<div class="card"><h2>${t('title')}</h2><p class="mut">${t('intro')}</p><b>${t('cls')}</b>
- <div class="cls">${Object.keys(CLS).map(k=>`<div class="cc ${S.cls===k?'on':''}" onclick="pickCls('${k}')"><span class="dot" style="background:${CLS[k].col}"></span><b>${t(k)}</b><small>${t(k+'D')}</small></div>`).join('')}</div>
- <div class="row"><button onclick="selLvl(-1)">−</button><b>${t('level')} ${L} / 100 ${L%10===0?'· '+t('boss'):''}</b><button onclick="selLvl(1)">+</button></div>
- <div class="row"><button class="p" onclick="startLevel(${L})">${t('play')}</button></div></div>`);
-}
-function pickCls(k){S.cls=k;save();showMenu()}
-function selLvl(d){S.sel=Math.max(1,Math.min(S.level,(S.sel||1)+d));save();showMenu()}
-/* ===== shop ===== */
-function renderShop(){
- $('sTitle').textContent=t('shop');$('sCoins').textContent=t('coins');$('sItems').textContent=t('items');
- $('packs').innerHTML=[50,100,200,500].map(n=>`<div class="item">${ic('coin','big')}<br><b>${n} ${t('pk')}</b><small>${PAY.prices[n]}</small><button class="p" onclick="askPay(${n})">${t('buy')}</button></div>`).join('');
- $('items').innerHTML=IK.map(k=>`<div class="item">${ic(k,'big')}<br><b>${t(k)}</b><small>${t(k+'D')}<br>×${S.inv[k]}</small><button onclick="buyItem('${k}')">${ic('coin')} ${ITEMS[k]}</button></div>`).join('');
-}
-const openShop=()=>{$('sMsg').textContent='';renderShop();$('shop').classList.add('open')},closeShop=()=>$('shop').classList.remove('open');
-function buyItem(k){const m=$('sMsg');if(S.coins<ITEMS[k]){m.className='msg bad';m.textContent=t('nocoins');return}
- S.coins-=ITEMS[k];S.inv[k]++;save();render();m.className='msg ok';m.textContent=t('bought')}
-function askPay(n){pendingPack=n;$('pTitle').textContent=n+' '+t('pk')+' — '+PAY.prices[n];$('pInfo').textContent=t('payT');$('pCard').textContent=t('card');$('pCrypto').textContent=t('crypto');$('pay').classList.add('open')}
-function pay(method){const n=pendingPack,m=$('sMsg');$('pay').classList.remove('open');
- if(PAY.DEMO){S.coins+=n;save();render();m.className='msg ok';m.textContent=t('demo');return}
- const u=PAY[method][n];if(!u){m.className='msg bad';m.textContent=t('payNo');return}window.open(u,'_blank','noopener')}
-/* ===== game ===== */
-function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let a=Math.imul(s^s>>>15,1|s);a=a+Math.imul(a^a>>>7,61|a)^a;return((a^a>>>14)>>>0)/4294967296}}
-const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-function mkWalls(L){const r=rng(L*7919+13),w=[],n=4+Math.min(6,Math.floor(L/8));
- for(let i=0;i<n;i++){const a=60+r()*120,b=40+r()*110;w.push({x:230+r()*(W-460-a),y:40+r()*(H-80-b),w:a,h:b})}return w}
-function hitW(e){for(const w of G.walls){const nx=clamp(e.x,w.x,w.x+w.w),ny=clamp(e.y,w.y,w.y+w.h);if((e.x-nx)**2+(e.y-ny)**2<e.r*e.r)return true}return false}
-function move(e,dx,dy){e.x=clamp(e.x+dx,e.r,W-e.r);if(hitW(e))e.x-=dx;e.y=clamp(e.y+dy,e.r,H-e.r);if(hitW(e))e.y-=dy}
-function mk(team,x,y,o){return Object.assign({team,x,y,r:15,cd:rnd(0,1),t:0,sd:1,dead:false},o)}
-function startLevel(L){
- closeShop();const c=CLS[S.cls],boss=L%10===0;
- G={L,walls:mkWalls(L),bul:[],par:[],al:[],en:[],kills:0,boss};
- P=mk('b',70,H/2,{hp:c.hp,max:c.hp,c,sh:0,rage:0,player:true});
- G.al.push(P);
- for(let i=0;i<3;i++)G.al.push(mk('b',70+rnd(0,60),H/2+(i-1)*80+rnd(-20,20),{hp:130,max:130,spd:130,dmg:8,rate:.4,spread:.12,bs:600,range:260}));
- const n=Math.min(4+Math.floor(L*.6),30),hp=30+L*2.5,dm=4+L*.28;
- for(let i=0;i<n;i++)G.en.push(mk('r',W-70-rnd(0,120),rnd(50,H-50),{hp,max:hp,spd:70+Math.min(L,60)*1.2,dmg:dm,rate:Math.max(.35,1.3-L*.01),spread:.2,bs:480,range:rnd(200,320)}));
- if(boss){const b=mk('r',W-60,H/2,{r:28,boss:true,hp:hp*9,max:hp*9,spd:80,dmg:dm*1.6,rate:.45,spread:.3,bs:420,range:300});G.en.push(b)}
- mode='play';ov('');renderInv();
-}
-function shoot(e,ang,bs,dmg,splash){G.bul.push({x:e.x+Math.cos(ang)*(e.r+4),y:e.y+Math.sin(ang)*(e.r+4),vx:Math.cos(ang)*bs,vy:Math.sin(ang)*bs,dmg,team:e.team,splash,life:1.6})}
-function hurt(e,d){if(e.dead)return;if(e.player&&e.sh>0)d*=.3;e.hp-=d;if(e.hp<=0){e.dead=true;boom(e.x,e.y,e.boss?40:16,e.team==='r'?'#e5564f':'#4c9be5');if(e.team==='r'){S.coins+=e.boss?20:1;G.kills++}}}
-function boom(x,y,n,c){for(let i=0;i<n;i++){const a=rnd(0,6.28),s=rnd(40,220);G.par.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:rnd(.2,.6),c})}}
-function explode(b,foes){for(const f of foes)if(!f.dead){const d=Math.hypot(f.x-b.x,f.y-b.y);if(d<b.splash+f.r)hurt(f,b.dmg*(1-d/(b.splash+f.r)*.6))}boom(b.x,b.y,18,'#e58a4c')}
-function ai(e,dt){
- const foes=(e.team==='r'?G.al:G.en).filter(f=>!f.dead);if(!foes.length)return;
- let f=foes[0],bd=1e9;for(const q of foes){const d=Math.hypot(q.x-e.x,q.y-e.y);if(d<bd){bd=d;f=q}}
- const a=Math.atan2(f.y-e.y,f.x-e.x);e.t-=dt;if(e.t<=0){e.t=rnd(.6,1.8);e.sd=Math.random()<.5?1:-1}
- let k=bd>e.range?1:bd<e.range*.55?-1:0;
- move(e,(Math.cos(a)*k+Math.cos(a+1.57)*.5*e.sd)*e.spd*dt,(Math.sin(a)*k+Math.sin(a+1.57)*.5*e.sd)*e.spd*dt);
- e.cd-=dt;if(bd<540&&e.cd<=0){e.cd=e.rate*rnd(.8,1.3);shoot(e,a+rnd(-e.spread,e.spread),e.bs,e.dmg,0)}
-}
-function update(dt){
- const c=P.c;
- if(!P.dead){
-  let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
-  const l=Math.hypot(dx,dy)||1;move(P,dx/l*c.spd*dt,dy/l*c.spd*dt);
-  P.ang=Math.atan2(my-P.y,mx-P.x);P.cd-=dt;P.sh=Math.max(0,P.sh-dt);P.rage=Math.max(0,P.rage-dt);
-  if(down&&P.cd<=0){P.cd=c.rate;shoot(P,P.ang+rnd(-c.spread,c.spread),c.bs,c.dmg*(P.rage>0?2:1),c.splash)}
- }
- for(const a of G.al)if(!a.dead&&!a.player){ai(a,dt);const f=G.en.find(q=>!q.dead);if(f)a.ang=Math.atan2(f.y-a.y,f.x-a.x)}
- for(const e of G.en)if(!e.dead){ai(e,dt);const f=G.al.find(q=>!q.dead);if(f)e.ang=Math.atan2(f.y-e.y,f.x-e.x)}
- for(const b of G.bul){
-  b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;const foes=b.team==='b'?G.en:G.al;let hit=false;
-  if(b.x<0||b.y<0||b.x>W||b.y>H||b.life<=0)hit=true;
-  for(const w of G.walls)if(b.x>w.x&&b.x<w.x+w.w&&b.y>w.y&&b.y<w.y+w.h)hit=true;
-  if(!hit)for(const f of foes)if(!f.dead&&Math.hypot(f.x-b.x,f.y-b.y)<f.r+3){if(!b.splash)hurt(f,b.dmg);hit=true;break}
-  if(hit){b.dead=true;if(b.splash)explode(b,foes);else boom(b.x,b.y,3,'#e0b44c')}
- }
- G.bul=G.bul.filter(b=>!b.dead);
- for(const p of G.par){p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt}G.par=G.par.filter(p=>p.l>0);
- if(P.dead)finish(false);else if(!G.en.some(e=>!e.dead))finish(true);
-}
-function finish(w){
- mode=w?'win':'lose';const L=G.L,r=w?(10+L*2)*(G.boss?3:1):0;
- if(w){S.coins+=r;if(L>=S.level)S.level=Math.min(100,L+1);S.sel=Math.min(100,L+1)}save();render();mode=w?'win':'lose';
- ov(`<div class="card" style="text-align:center"><h2>${w?t('win'):t('lose')}</h2>
- ${w?`<p>${t('reward')}: +${r} ${ic('coin')}</p>${L>=100?`<p>${t('done')}</p>`:''}`:''}
- <div class="row">${w&&L<100?`<button class="p" onclick="startLevel(${L+1})">${t('next')}</button>`:`<button class="p" onclick="startLevel(${L})">${t('retry')}</button>`}<button onclick="showMenu()">${t('menu')}</button></div></div>`);
-}
-function useItem(k){
- if(mode!=='play'||S.inv[k]<1||P.dead)return;
- if(k==='med')P.hp=Math.min(P.max,P.hp+60);
- if(k==='sh')P.sh=8;if(k==='rage')P.rage=10;
- if(k==='bomb'){for(const e of G.en)if(!e.dead&&Math.hypot(e.x-P.x,e.y-P.y)<260)hurt(e,90);boom(P.x,P.y,40,'#e0b44c')}
- S.inv[k]--;save();renderInv();
-}
-/* ===== draw ===== */
-function bar(x,y,w,v,m,c){cx.fillStyle='#0008';cx.fillRect(x,y,w,5);cx.fillStyle=c;cx.fillRect(x,y,w*clamp(v/m,0,1),5)}
-function draw(){
- cx.clearRect(0,0,W,H);cx.fillStyle='#151a26';cx.fillRect(0,0,W,H);
- cx.fillStyle='#4c9be522';cx.fillRect(0,0,200,H);cx.fillStyle='#e5564f22';cx.fillRect(W-200,0,200,H);
- cx.strokeStyle='#ffffff08';for(let x=0;x<W;x+=40){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke()}for(let y=0;y<H;y+=40){cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke()}
- if(!G)return;
- for(const w of G.walls){cx.fillStyle='#2a2f3f';cx.fillRect(w.x,w.y,w.w,w.h);cx.strokeStyle='#4a5070';cx.strokeRect(w.x,w.y,w.w,w.h)}
- for(const e of [...G.al,...G.en]){if(e.dead)continue;
-  cx.fillStyle=e.player?e.c.col:e.team==='b'?'#7fb8f0':e.boss?'#a82a25':'#e5564f';cx.beginPath();cx.arc(e.x,e.y,e.r,0,6.28);cx.fill();
-  if(e.player&&e.sh>0){cx.strokeStyle='#4cc38a';cx.lineWidth=3;cx.beginPath();cx.arc(e.x,e.y,e.r+5,0,6.28);cx.stroke();cx.lineWidth=1}
-  if(e.player&&e.rage>0){cx.strokeStyle='#e0b44c';cx.beginPath();cx.arc(e.x,e.y,e.r+9,0,6.28);cx.stroke()}
-  const a=e.ang||0;cx.strokeStyle='#0c0e14';cx.lineWidth=5;cx.beginPath();cx.moveTo(e.x,e.y);cx.lineTo(e.x+Math.cos(a)*(e.r+10),e.y+Math.sin(a)*(e.r+10));cx.stroke();cx.lineWidth=1;
-  bar(e.x-16,e.y-e.r-10,32,e.hp,e.max,e.team==='b'?'#4cc38a':'#e5564f')}
- for(const b of G.bul){cx.fillStyle=b.splash?'#e58a4c':'#e0b44c';cx.beginPath();cx.arc(b.x,b.y,b.splash?6:3,0,6.28);cx.fill()}
- for(const p of G.par){cx.globalAlpha=clamp(p.l*3,0,1);cx.fillStyle=p.c;cx.fillRect(p.x,p.y,3,3)}cx.globalAlpha=1;
- cx.fillStyle='#e8e6df';cx.font='bold 15px system-ui,Arial';
- cx.fillText(t('level')+' '+G.L+(G.boss?' · '+t('boss'):''),14,24);cx.fillText(t('foes')+': '+G.en.filter(e=>!e.dead).length,14,44);
- cx.fillText(t('hp')+': '+Math.max(0,Math.ceil(P.hp)),W-150,24);bar(W-150,32,130,P.hp,P.max,'#4cc38a');
-}
-function loop(ts){requestAnimationFrame(loop);const dt=Math.min(.05,(ts-last)/1000||0);last=ts;if(mode==='play')update(dt);draw();$('coins').textContent=Math.floor(S.coins)}
-/* ===== input ===== */
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)&&mode==='play')e.preventDefault();
- if(k>='1'&&k<='4')useItem(IK[+k-1])});
-addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
-function pos(e){const r=cv.getBoundingClientRect();mx=(e.clientX-r.left)*W/r.width;my=(e.clientY-r.top)*H/r.height}
-cv.addEventListener('mousemove',pos);cv.addEventListener('mousedown',e=>{pos(e);down=true});addEventListener('mouseup',()=>down=false);
-cv.addEventListener('contextmenu',e=>e.preventDefault());
-document.documentElement.lang=S.lang;render();requestAnimationFrame(loop);
-</script>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            user-select: none;
+            background-color: #050505;
+            font-family: 'Inter', sans-serif;
+            color: #e2e8f0;
+        }
+
+        .font-horror {
+            font-family: 'Creepster', cursive;
+        }
+
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Custom Scrollbar for HUD Modals */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 3px;
+        }
+
+        .vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            box-shadow: 0 0 100px rgba(0,0,0,0.9) inset;
+            pointer-events: none;
+        }
+
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            transition: transform 0.1s ease, background-color 0.1s ease;
+        }
+
+        .crosshair.active {
+            transform: translate(-50%, -50%) scale(2);
+            background-color: #ef4444;
+        }
+
+        .damage-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 40%, rgba(220, 38, 38, 0.6) 100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="relative">
+
+    <!-- 3D Render Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Visual Overlays -->
+    <div class="vignette"></div>
+    <div id="damage-flash" class="damage-overlay"></div>
+    <div id="crosshair" class="crosshair hidden"></div>
+
+    <!-- UI Overlay Screen Container -->
+    <div id="ui-layer" class="absolute inset-0 flex flex-col justify-between pointer-events-none z-10">
+        
+        <!-- TOP HUD BAR -->
+        <div id="hud-top" class="p-4 flex justify-between items-center hidden">
+            <div class="flex items-center space-x-4 bg-black/60 backdrop-blur-md p-2 rounded-xl border border-gray-800 pointer-events-auto">
+                <div class="flex items-center text-yellow-500 font-bold">
+                    <i class="fa-solid fa-coins mr-2"></i>
+                    <span id="coin-count">0</span>
+                </div>
+                <div class="h-4 w-px bg-gray-700"></div>
+                <div class="text-sm font-semibold text-gray-300">
+                    <span id="txt-location">Location 1</span> - <span id="txt-level">Level 1</span>
+                </div>
+            </div>
+
+            <!-- Flashlight & Action Buttons -->
+            <div class="flex items-center space-x-3 pointer-events-auto">
+                <div id="flashlight-hud" class="flex items-center bg-black/60 backdrop-blur-md px-3 py-2 rounded-xl border border-gray-800">
+                    <i class="fa-solid fa-flashlight mr-2 text-yellow-400"></i>
+                    <div class="w-20 bg-gray-700 h-2 rounded-full overflow-hidden">
+                        <div id="battery-bar" class="bg-yellow-400 h-full w-full transition-all"></div>
+                    </div>
+                </div>
+
+                <button id="btn-journal" class="bg-black/60 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
+                    <i class="fa-solid fa-book-bookmark text-lg"></i>
+                </button>
+                <button id="btn-shop-hud" class="bg-black/60 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
+                    <i class="fa-solid fa-cart-shopping text-lg text-green-400"></i>
+                </button>
+                <button id="btn-settings-hud" class="bg-black/60 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- CENTER INTERACTION PROMPT -->
+        <div id="interaction-prompt" class="self-center mb-20 bg-black/75 backdrop-blur-md px-4 py-2 rounded-lg border border-gray-700 text-white font-medium shadow-lg hidden">
+            Press <span id="prompt-key" class="bg-red-600 px-2 py-0.5 rounded text-xs uppercase font-bold">E</span> to <span id="prompt-action">Interact</span>
+        </div>
+
+        <!-- BOTTOM HUD STATUS -->
+        <div id="hud-bottom" class="p-4 flex justify-between items-end hidden">
+            <div id="hiding-status" class="bg-blue-900/80 backdrop-blur-md text-blue-200 px-3 py-1.5 rounded-lg border border-blue-600 text-sm font-semibold hidden">
+                <i class="fa-solid fa-eye-slash mr-2"></i><span id="txt-hiding">Hidden</span>
+            </div>
+            <div id="crouch-status" class="bg-gray-800/80 backdrop-blur-md text-gray-300 px-3 py-1.5 rounded-lg border border-gray-600 text-sm font-semibold hidden">
+                <i class="fa-solid fa-user-ninja mr-2"></i><span id="txt-crouching">Crouching</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN MENU OVERLAY -->
+    <div id="main-menu" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-20 pointer-events-auto p-4">
+        <h1 class="font-horror text-6xl md:text-8xl text-red-700 tracking-wider mb-2 text-center drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">DARK ESCAPE</h1>
+        <p class="text-gray-400 text-sm md:text-base mb-8 tracking-widest uppercase" id="txt-subtitle">100 Rooms First-Person Horror Quest</p>
+
+        <div class="flex flex-col w-full max-w-xs space-y-3">
+            <button id="btn-play" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3 rounded-xl shadow-lg transition duration-200 uppercase tracking-wider flex items-center justify-center">
+                <i class="fa-solid fa-play mr-2"></i> <span id="lbl-play">Start Game</span>
+            </button>
+            <button id="btn-levels" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center border border-gray-700">
+                <i class="fa-solid fa-list mr-2"></i> <span id="lbl-levels">Level Select</span>
+            </button>
+            <button id="btn-shop-menu" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center border border-gray-700">
+                <i class="fa-solid fa-store mr-2 text-green-400"></i> <span id="lbl-shop">Horror Shop</span>
+            </button>
+            <button id="btn-settings-menu" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center border border-gray-700">
+                <i class="fa-solid fa-gear mr-2"></i> <span id="lbl-settings">Settings</span>
+            </button>
+        </div>
+
+        <div class="absolute bottom-4 left-4 flex space-x-2">
+            <button id="lang-ru" class="px-3 py-1 bg-gray-800 text-xs rounded border border-gray-700 hover:bg-gray-700">RU</button>
+            <button id="lang-en" class="px-3 py-1 bg-gray-800 text-xs rounded border border-gray-700 hover:bg-gray-700">EN</button>
+        </div>
+    </div>
+
+    <!-- LEVEL SELECT MODAL -->
+    <div id="modal-levels" class="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-30 pointer-events-auto p-6 hidden">
+        <div class="flex justify-between items-center w-full max-w-4xl mb-6">
+            <h2 class="text-2xl font-bold text-white flex items-center"><i class="fa-solid fa-map mr-3 text-red-600"></i><span id="lbl-select-level">Select Level</span></h2>
+            <button id="close-levels" class="text-gray-400 hover:text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="levels-grid" class="grid grid-cols-2 md:grid-cols-5 gap-3 w-full max-w-4xl overflow-y-auto max-h-[70vh] p-2">
+            <!-- Level cards generated dynamically -->
+        </div>
+    </div>
+
+    <!-- JOURNAL / EVIDENCE MODAL -->
+    <div id="modal-journal" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-30 pointer-events-auto p-4 hidden">
+        <div class="bg-gray-900 border border-gray-800 w-full max-w-2xl rounded-2xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-800">
+                <h3 class="text-xl font-bold text-red-500 flex items-center"><i class="fa-solid fa-book-open mr-2"></i><span id="lbl-journal-title">Evidence Journal</span></h3>
+                <button id="close-journal" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="notes-list" class="flex-1 overflow-y-auto space-y-3 pr-2">
+                <!-- Notes injected dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SHOP MODAL -->
+    <div id="modal-shop" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-30 pointer-events-auto p-4 hidden">
+        <div class="bg-gray-900 border border-gray-800 w-full max-w-2xl rounded-2xl p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-800">
+                <div class="flex items-center space-x-3">
+                    <h3 class="text-xl font-bold text-green-400 flex items-center"><i class="fa-solid fa-store mr-2"></i><span id="lbl-shop-title">Black Market</span></h3>
+                    <span class="text-xs bg-green-950 text-green-400 border border-green-800 px-2 py-0.5 rounded-full font-semibold"><span id="shop-coins">0</span> coins</span>
+                </div>
+                <button id="close-shop" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-white" id="shop-item-bat-title">Batteries</h4>
+                        <p class="text-xs text-gray-400" id="shop-item-bat-desc">Restores flashlight power</p>
+                        <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">50 Coins</span>
+                    </div>
+                    <button onclick="buyItem('battery', 50)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
+                </div>
+                <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-white" id="shop-item-key-title">Lockpick</h4>
+                        <p class="text-xs text-gray-400" id="shop-item-key-desc">Opens door without key</p>
+                        <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">100 Coins</span>
+                    </div>
+                    <button onclick="buyItem('lockpick', 100)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
+                </div>
+                <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-white" id="shop-item-decoy-title">Noise Maker</h4>
+                        <p class="text-xs text-gray-400" id="shop-item-decoy-desc">Distracts the room host</p>
+                        <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">200 Coins</span>
+                    </div>
+                    <button onclick="buyItem('decoy', 200)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
+                </div>
+                <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-white" id="shop-item-clue-title">Direct Hint</h4>
+                        <p class="text-xs text-gray-400" id="shop-item-clue-desc">Reveals key/code position</p>
+                        <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">500 Coins</span>
+                    </div>
+                    <button onclick="buyItem('hint', 500)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
+                </div>
+            </div>
+
+            <!-- Test Payment Simulator -->
+            <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 flex flex-col md:flex-row justify-between items-center">
+                <span class="text-xs text-gray-400 mb-2 md:mb-0" id="txt-need-coins">Need extra coins for investigation?</span>
+                <button id="btn-add-coins" class="bg-yellow-600 hover:bg-yellow-500 text-black font-bold text-xs px-4 py-2 rounded-lg transition flex items-center">
+                    <i class="fa-solid fa-credit-card mr-2"></i><span id="lbl-add-coins">Simulate Payment (+500 Coins)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="modal-settings" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-30 pointer-events-auto p-4 hidden">
+        <div class="bg-gray-900 border border-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-5">
+            <div class="flex justify-between items-center pb-3 border-b border-gray-800">
+                <h3 class="text-xl font-bold text-white flex items-center"><i class="fa-solid fa-gear mr-2 text-gray-400"></i><span id="lbl-settings-title">Game Settings</span></h3>
+                <button id="close-settings" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <!-- Graphics -->
+            <div>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2" id="lbl-graphics">Graphics Quality</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button id="gfx-low" class="gfx-btn bg-gray-800 text-xs py-2 rounded-lg border border-gray-700 hover:bg-gray-700">Low</button>
+                    <button id="gfx-med" class="gfx-btn bg-gray-800 text-xs py-2 rounded-lg border border-gray-700 hover:bg-gray-700">Medium</button>
+                    <button id="gfx-high" class="gfx-btn bg-gray-800 text-xs py-2 rounded-lg border border-gray-700 hover:bg-gray-700">High</button>
+                </div>
+            </div>
+
+            <!-- Sound Volume Controls -->
+            <div class="space-y-3">
+                <div>
+                    <div class="flex justify-between text-xs font-semibold text-gray-400 mb-1">
+                        <span id="lbl-music-vol">Music Volume</span>
+                        <span id="val-music">80%</span>
+                    </div>
+                    <input type="range" id="slider-music" min="0" max="100" value="80" class="w-full accent-red-600 bg-gray-800 rounded-lg h-1.5 cursor-pointer">
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs font-semibold text-gray-400 mb-1">
+                        <span id="lbl-sfx-vol">SFX Volume</span>
+                        <span id="val-sfx">90%</span>
+                    </div>
+                    <input type="range" id="slider-sfx" min="0" max="100" value="90" class="w-full accent-red-600 bg-gray-800 rounded-lg h-1.5 cursor-pointer">
+                </div>
+            </div>
+
+            <!-- Keybind Remapping -->
+            <div class="pt-2 border-t border-gray-800 space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-semibold text-gray-300" id="lbl-move-keys">Movement Controls</span>
+                    <button id="btn-toggle-keys" class="bg-gray-800 text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-red-400 font-bold">WASD</button>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-semibold text-gray-300" id="lbl-interact-key">Interaction Key</span>
+                    <button id="btn-rebind-interact" class="bg-gray-800 text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-red-400 font-bold uppercase">E</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAUSE MENU MODAL -->
+    <div id="modal-pause" class="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-30 pointer-events-auto hidden">
+        <h2 class="font-horror text-5xl text-red-600 mb-6 tracking-wide">PAUSED</h2>
+        <div class="flex flex-col w-full max-w-xs space-y-3">
+            <button id="btn-resume" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition shadow-lg uppercase tracking-wider">Resume</button>
+            <button id="btn-pause-settings" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition border border-gray-700">Settings</button>
+            <button id="btn-quit" class="w-full bg-gray-900 hover:bg-gray-800 text-red-400 font-semibold py-3 rounded-xl transition border border-red-900/40">Quit to Menu</button>
+        </div>
+    </div>
+
+    <!-- SAFE COMBINATION MODAL -->
+    <div id="modal-safe" class="absolute inset-0 bg-black/85 flex items-center justify-center z-30 pointer-events-auto hidden">
+        <div class="bg-gray-900 border border-gray-700 p-6 rounded-2xl text-center max-w-xs w-full shadow-2xl">
+            <h3 class="text-lg font-bold text-gray-200 mb-3" id="lbl-safe-title">Enter Safe Code</h3>
+            <div id="safe-display" class="bg-black text-red-500 font-mono text-3xl py-2 px-4 rounded border border-gray-800 tracking-widest mb-4">----</div>
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <button onclick="pressSafeNum(1)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">1</button>
+                <button onclick="pressSafeNum(2)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">2</button>
+                <button onclick="pressSafeNum(3)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">3</button>
+                <button onclick="pressSafeNum(4)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">4</button>
+                <button onclick="pressSafeNum(5)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">5</button>
+                <button onclick="pressSafeNum(6)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">6</button>
+                <button onclick="pressSafeNum(7)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">7</button>
+                <button onclick="pressSafeNum(8)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">8</button>
+                <button onclick="pressSafeNum(9)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">9</button>
+                <button onclick="clearSafeCode()" class="bg-red-900 hover:bg-red-800 text-white font-bold py-3 rounded-lg text-xs">CLR</button>
+                <button onclick="pressSafeNum(0)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">0</button>
+                <button onclick="closeSafeModal()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg text-xs">ESC</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN SCRIPT -->
+    <script>
+        /* ====================================================================
+           1. GAME CONFIGURATION & TRANSLATIONS
+           ==================================================================== */
+        const LOCATIONS = [
+            { id: 1, name: { en: "Manor House", ru: "Старинный Особняк" }, color: 0xffaa55, fogDensity: 0.035, monsterColor: 0x882222 },
+            { id: 2, name: { en: "Dark Basement", ru: "Тёмный Подвал" }, color: 0x335577, fogDensity: 0.05, monsterColor: 0x224466 },
+            { id: 3, name: { en: "Abandoned School", ru: "Заброшенная Школа" }, color: 0x77aa77, fogDensity: 0.04, monsterColor: 0x336633 },
+            { id: 4, name: { en: "Creepy Hospital", ru: "Мрачная Больница" }, color: 0x66cccc, fogDensity: 0.045, monsterColor: 0x228888 },
+            { id: 5, name: { en: "Haunted Forest", ru: "Проклятый Лес" }, color: 0x334433, fogDensity: 0.06, monsterColor: 0x112211 },
+            { id: 6, name: { en: "Echoing Mine", ru: "Заброшенная Шахта" }, color: 0xaa7744, fogDensity: 0.055, monsterColor: 0x664422 },
+            { id: 7, name: { en: "Ghost Ship", ru: "Призрачный Корабль" }, color: 0x445588, fogDensity: 0.045, monsterColor: 0x112244 },
+            { id: 8, name: { en: "Psychiatric Ward", ru: "Психбольница" }, color: 0xaaaaaa, fogDensity: 0.04, monsterColor: 0x555555 },
+            { id: 9, name: { en: "Cold Bunker", ru: "Бункер Холодной Войны" }, color: 0xaa4444, fogDensity: 0.05, monsterColor: 0x661111 },
+            { id: 10, name: { en: "Final Castle", ru: "Финиширующий Замок" }, color: 0x8833aa, fogDensity: 0.035, monsterColor: 0x441166 }
+        ];
+
+        const TRANSLATIONS = {
+            en: {
+                subtitle: "100 Rooms First-Person Horror Quest",
+                start: "Start Game",
+                levels: "Level Select",
+                shop: "Horror Shop",
+                settings: "Settings",
+                selectLevel: "Select Level",
+                journal: "Evidence Journal",
+                safeTitle: "Enter Safe Combination",
+                interact: "Interact",
+                openDoor: "Open Door",
+                lockedDoor: "Door Locked (Need Key)",
+                pickKey: "Pick up Key",
+                readNote: "Read Document",
+                hide: "Hide",
+                exitHide: "Exit Hideout",
+                openSafe: "Unlock Safe",
+                hiding: "Hidden",
+                crouching: "Crouching",
+                graphics: "Graphics Quality",
+                musicVol: "Music Volume",
+                sfxVol: "SFX Volume",
+                moveKeys: "Movement Keys",
+                interactKey: "Interaction Key",
+                needCoins: "Need extra coins for investigation?",
+                simPayment: "Simulate Payment (+500 Coins)"
+            },
+            ru: {
+                subtitle: "100 Комнат: 3D Квест-Хоррор",
+                start: "Начать Игру",
+                levels: "Выбор Уровня",
+                shop: "Магазин Улик",
+                settings: "Настройки",
+                selectLevel: "Выберите Уровень",
+                journal: "Дневник Улик",
+                safeTitle: "Введите Код Сейфа",
+                interact: "Взаимодействовать",
+                openDoor: "Открыть Дверь",
+                lockedDoor: "Дверь Заперта (Нужен Ключ)",
+                pickKey: "Взять Ключ",
+                readNote: "Прочесть Документ",
+                hide: "Спрятаться",
+                exitHide: "Вылезти",
+                openSafe: "Открыть Сейф",
+                hiding: "Спрятан",
+                crouching: "Присед",
+                graphics: "Качество Графики",
+                musicVol: "Громкость Музыки",
+                sfxVol: "Громкость Эффектов",
+                moveKeys: "Клавиши Движения",
+                interactKey: "Клавиша Взаимодействия",
+                needCoins: "Нужны монеты для расследования?",
+                simPayment: "Тестовая Оплата (+500 Монет)"
+            }
+        };
+
+        // State storage
+        let gameState = {
+            lang: 'ru',
+            currentLevel: 1,
+            unlockedLevel: 1,
+            coins: 100,
+            hasKey: false,
+            inventory: [],
+            collectedNotes: [],
+            battery: 100,
+            isFlashlightOn: true,
+            isHiding: false,
+            isCrouching: false,
+            settings: {
+                graphics: 'med', // low, med, high
+                musicVol: 80,
+                sfxVol: 90,
+                moveType: 'WASD', // WASD or ARROWS
+                interactKey: 'e'
+            }
+        };
+
+        // Save/Load LocalStorage
+        function saveGame() {
+            localStorage.setItem('dark_escape_save', JSON.stringify({
+                unlockedLevel: gameState.unlockedLevel,
+                coins: gameState.coins,
+                settings: gameState.settings,
+                lang: gameState.lang
+            }));
+        }
+
+        function loadGame() {
+            const raw = localStorage.getItem('dark_escape_save');
+            if (raw) {
+                try {
+                    const data = JSON.parse(raw);
+                    gameState.unlockedLevel = data.unlockedLevel || 1;
+                    gameState.coins = data.coins || 100;
+                    if (data.settings) gameState.settings = Object.assign(gameState.settings, data.settings);
+                    if (data.lang) gameState.lang = data.lang;
+                } catch(e) {}
+            }
+        }
+
+        /* ====================================================================
+           2. CANVAS PROCEDURAL TEXTURE GENERATORS
+           ==================================================================== */
+        const Textures = {};
+
+        function createProceduralTextures() {
+            Textures.wood = createNoiseTexture('#4a2e16', '#2d1a0b', 'wood');
+            Textures.wall = createNoiseTexture('#3a3d40', '#1f2124', 'wallpaper');
+            Textures.brick = createBrickTexture();
+            Textures.metal = createNoiseTexture('#4b5563', '#1f2937', 'metal');
+            Textures.tile = createTileTexture();
+            Textures.paper = createNoiseTexture('#fef08a', '#ca8a04', 'paper');
+        }
+
+        function createNoiseTexture(color1, color2, type) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = color1;
+            ctx.fillRect(0, 0, 256, 256);
+
+            ctx.fillStyle = color2;
+            for (let i = 0; i < 3000; i++) {
+                const x = Math.random() * 256;
+                const y = Math.random() * 256;
+                const w = type === 'wood' ? Math.random() * 20 + 5 : Math.random() * 3 + 1;
+                const h = type === 'wood' ? Math.random() * 2 + 1 : Math.random() * 3 + 1;
+                ctx.globalAlpha = Math.random() * 0.3;
+                ctx.fillRect(x, y, w, h);
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            return texture;
+        }
+
+        function createBrickTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#1c1917';
+            ctx.fillRect(0, 0, 256, 256);
+
+            ctx.fillStyle = '#7f1d1d';
+            const rows = 16;
+            const cols = 8;
+            const rh = 256 / rows;
+            const cw = 256 / cols;
+
+            for (let r = 0; r < rows; r++) {
+                const offset = (r % 2) * (cw / 2);
+                for (let c = -1; c < cols + 1; c++) {
+                    ctx.fillRect(c * cw + offset + 1, r * rh + 1, cw - 2, rh - 2);
+                }
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            return texture;
+        }
+
+        function createTileTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, 256, 256);
+
+            ctx.fillStyle = '#334155';
+            const size = 32;
+            for (let x = 0; x < 256; x += size) {
+                for (let y = 0; y < 256; y += size) {
+                    ctx.fillRect(x + 1, y + 1, size - 2, size - 2);
+                }
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            return texture;
+        }
+
+        /* ====================================================================
+           3. AUDIO SYNTHESIZER (Web Audio API)
+           ==================================================================== */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playFootstep() {
+                if (!this.ctx || gameState.settings.sfxVol === 0) return;
+                const vol = (gameState.settings.sfxVol / 100) * 0.3;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.1);
+
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            }
+
+            playDoorScreech() {
+                if (!this.ctx || gameState.settings.sfxVol === 0) return;
+                const vol = (gameState.settings.sfxVol / 100) * 0.4;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(450, this.ctx.currentTime + 0.4);
+
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.5);
+            }
+
+            playPickup() {
+                if (!this.ctx || gameState.settings.sfxVol === 0) return;
+                const vol = (gameState.settings.sfxVol / 100) * 0.5;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.15);
+
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+
+            playGrowl() {
+                if (!this.ctx || gameState.settings.sfxVol === 0) return;
+                const vol = (gameState.settings.sfxVol / 100) * 0.6;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(60, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(40, this.ctx.currentTime + 0.8);
+
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.8);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.8);
+            }
+        }
+
+        const audio = new SoundEngine();
+
+        /* ====================================================================
+           4. THREE.JS ENGINE & GAME LOGIC
+           ==================================================================== */
+        let scene, camera, renderer, flashlight;
+        let interactiveObjects = [];
+        let monster, monsterPointA, monsterPointB, monsterDir = 1;
+        let isGameRunning = false;
+        let isPointerLocked = false;
+        let currentSafeCode = "1234";
+        let enteredSafeCode = "";
+
+        // Controls
+        const keys = {};
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        let velocity = new THREE.Vector3();
+        let direction = new THREE.Vector3();
+        let headBobTimer = 0;
+
+        function init3DEngine() {
+            const canvas = document.getElementById('game-canvas');
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 1.6, 3);
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Flashlight setup
+            flashlight = new THREE.SpotLight(0xffffff, 2, 12, Math.PI / 6, 0.4, 1);
+            flashlight.castShadow = true;
+            scene.add(flashlight);
+            scene.add(flashlight.target);
+
+            createProceduralTextures();
+
+            // Pointer lock listeners
+            canvas.addEventListener('click', () => {
+                if (isGameRunning && !isPointerLocked && !gameState.isHiding) {
+                    canvas.requestPointerLock();
+                }
+            });
+
+            document.addEventListener('pointerlockchange', () => {
+                isPointerLocked = document.pointerLockElement === canvas;
+                if (!isPointerLocked && isGameRunning && !gameState.isHiding && !isModalOpen()) {
+                    openPauseMenu();
+                }
+            });
+
+            document.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('keydown', onKeyDown);
+            window.addEventListener('keyup', onKeyUp);
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        /* Mouse Look */
+        let pitch = 0, yaw = 0;
+        function onMouseMove(e) {
+            if (!isPointerLocked) return;
+
+            const movementX = e.movementX || 0;
+            const movementY = e.movementY || 0;
+
+            yaw -= movementX * 0.002;
+            pitch -= movementY * 0.002;
+            pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
+
+            camera.rotation.order = "YXZ";
+            camera.rotation.x = pitch;
+            camera.rotation.y = yaw;
+        }
+
+        /* Key Input Handlers */
+        function onKeyDown(e) {
+            if (!isGameRunning) return;
+            const code = e.key.toLowerCase();
+
+            // Dynamic keys based on settings
+            const isWASD = gameState.settings.moveType === 'WASD';
+            const fwdKey = isWASD ? 'w' : 'arrowup';
+            const backKey = isWASD ? 's' : 'arrowdown';
+            const leftKey = isWASD ? 'a' : 'arrowleft';
+            const rightKey = isWASD ? 'd' : 'arrowright';
+            const interactKey = gameState.settings.interactKey.toLowerCase();
+
+            if (code === fwdKey) moveForward = true;
+            if (code === backKey) moveBackward = true;
+            if (code === leftKey) moveLeft = true;
+            if (code === rightKey) moveRight = true;
+
+            if (code === 'shift') keys.sprint = true;
+            if (code === 'control') toggleCrouch();
+
+            if (code === interactKey) {
+                checkInteraction();
+            }
+
+            if (code === 'f') {
+                toggleFlashlight();
+            }
+        }
+
+        function onKeyUp(e) {
+            const code = e.key.toLowerCase();
+            const isWASD = gameState.settings.moveType === 'WASD';
+            if (code === (isWASD ? 'w' : 'arrowup')) moveForward = false;
+            if (code === (isWASD ? 's' : 'arrowdown')) moveBackward = false;
+            if (code === (isWASD ? 'a' : 'arrowleft')) moveLeft = false;
+            if (code === (isWASD ? 'd' : 'arrowright')) moveRight = false;
+            if (code === 'shift') keys.sprint = false;
+        }
+
+        function toggleCrouch() {
+            gameState.isCrouching = !gameState.isCrouching;
+            const status = document.getElementById('crouch-status');
+            if (gameState.isCrouching) {
+                camera.position.y = 0.9;
+                status.classList.remove('hidden');
+            } else {
+                camera.position.y = 1.6;
+                status.classList.add('hidden');
+            }
+        }
+
+        function toggleFlashlight() {
+            if (gameState.battery <= 0) return;
+            gameState.isFlashlightOn = !gameState.isFlashlightOn;
+            flashlight.visible = gameState.isFlashlightOn;
+        }
+
+        /* ====================================================================
+           5. LEVEL & ENVIRONMENT BUILDING
+           ==================================================================== */
+        function buildLevel(levelNum) {
+            // Clear existing scene objects
+            interactiveObjects = [];
+            while (scene.children.length > 0) {
+                scene.remove(scene.children[0]);
+            }
+
+            // Re-add flashlight
+            scene.add(flashlight);
+            scene.add(flashlight.target);
+
+            const locIndex = Math.floor((levelNum - 1) / 10);
+            const loc = LOCATIONS[locIndex] || LOCATIONS[0];
+
+            // Ambient Fog and Ambient Light
+            scene.fog = new THREE.FogExp2(loc.color, loc.fogDensity);
+            scene.background = new THREE.Color(0x050505);
+
+            const ambientLight = new THREE.AmbientLight(loc.color, 0.15);
+            scene.add(ambientLight);
+
+            // Room Geometry (Dimensions: 8x4x10)
+            const roomGroup = new THREE.Group();
+
+            // Floor
+            const floorMat = new THREE.MeshStandardMaterial({ map: locIndex % 2 === 0 ? Textures.wood : Textures.tile, roughness: 0.8 });
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 12), floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            roomGroup.add(floor);
+
+            // Ceiling
+            const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+            const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(10, 12), ceilingMat);
+            ceiling.position.y = 4;
+            ceiling.rotation.x = Math.PI / 2;
+            roomGroup.add(ceiling);
+
+            // Walls
+            const wallMat = new THREE.MeshStandardMaterial({ map: locIndex % 3 === 0 ? Textures.brick : Textures.wall, roughness: 0.9 });
+            
+            // Back Wall (Exit Door)
+            const backWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.2), wallMat);
+            backWall.position.set(0, 2, -6);
+            roomGroup.add(backWall);
+
+            // Front Wall
+            const frontWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.2), wallMat);
+            frontWall.position.set(0, 2, 6);
+            roomGroup.add(frontWall);
+
+            // Left Wall
+            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 12), wallMat);
+            leftWall.position.set(-5, 2, 0);
+            roomGroup.add(leftWall);
+
+            // Right Wall
+            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 12), wallMat);
+            rightWall.position.set(5, 2, 0);
+            roomGroup.add(rightWall);
+
+            scene.add(roomGroup);
+
+            // --- INTERACTIVE FURNITURE & OBJECTS ---
+            // 1. Exit Door
+            createDoor(0, 0, -5.8, levelNum);
+
+            // 2. Wardrobe (Hiding Spot)
+            createWardrobe(-3.8, 0, -2);
+
+            // 3. Table with Safe or Key
+            createTable(3.5, 0, 1);
+
+            // 4. Safe or Note
+            currentSafeCode = `${Math.floor(1000 + Math.random() * 9000)}`;
+            createSafe(3.5, 0.9, 1, currentSafeCode);
+
+            // 5. Clue Document / Note
+            const noteText = {
+                en: `Investigation Log Level ${levelNum}: Safe code seems to be [${currentSafeCode}]. Search the safe to find the room exit key.`,
+                ru: `Запись расследования уровень ${levelNum}: Код от сейфа кажется [${currentSafeCode}]. Вскройте сейф, чтобы найти ключ от двери.`
+            };
+            createNote(-3.5, 0.95, -2, noteText);
+
+            // --- MONSTER HOST ---
+            createMonster(loc.monsterColor);
+
+            // Reset Player Position
+            camera.position.set(0, 1.6, 4);
+            yaw = 0; pitch = 0;
+            gameState.hasKey = false;
+            gameState.isHiding = false;
+
+            // Update UI HUD
+            document.getElementById('txt-location').innerText = loc.name[gameState.lang];
+            document.getElementById('txt-level').innerText = `Lvl ${levelNum}`;
+        }
+
+        /* Composite 3D Models Creation */
+        function createDoor(x, y, z, levelNum) {
+            const doorGroup = new THREE.Group();
+            doorGroup.position.set(x, y, z);
+
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.2, 0.3), new THREE.MeshStandardMaterial({ map: Textures.wood }));
+            frame.position.y = 1.6;
+            doorGroup.add(frame);
+
+            const door = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 0.1), new THREE.MeshStandardMaterial({ map: Textures.wood, color: 0x553311 }));
+            door.position.y = 1.5;
+            door.castShadow = true;
+            doorGroup.add(door);
+
+            // Handle
+            const handle = new THREE.Mesh(new THREE.SphereGeometry(0.08), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8 }));
+            handle.position.set(0.8, 1.5, 0.1);
+            doorGroup.add(handle);
+
+            scene.add(doorGroup);
+
+            interactiveObjects.push({
+                mesh: doorGroup,
+                type: 'door',
+                action: () => {
+                    if (gameState.hasKey) {
+                        audio.playDoorScreech();
+                        nextLevel();
+                    } else {
+                        showPrompt(TRANSLATIONS[gameState.lang].lockedDoor);
+                    }
+                },
+                prompt: TRANSLATIONS[gameState.lang].openDoor
+            });
+        }
+
+        function createWardrobe(x, y, z) {
+            const group = new THREE.Group();
+            group.position.set(x, y, z);
+
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 3.2, 1.2), new THREE.MeshStandardMaterial({ map: Textures.wood }));
+            body.position.y = 1.6;
+            body.castShadow = true;
+            group.add(body);
+
+            scene.add(group);
+
+            interactiveObjects.push({
+                mesh: group,
+                type: 'wardrobe',
+                action: () => toggleHiding(x, y, z),
+                prompt: TRANSLATIONS[gameState.lang].hide
+            });
+        }
+
+        function createTable(x, y, z) {
+            const group = new THREE.Group();
+            group.position.set(x, y, z);
+
+            const top = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 1.2), new THREE.MeshStandardMaterial({ map: Textures.wood }));
+            top.position.y = 0.85;
+            group.add(top);
+
+            const legGeo = new THREE.BoxGeometry(0.1, 0.8, 0.1);
+            const legMat = new THREE.MeshStandardMaterial({ map: Textures.wood });
+
+            [[-0.9, -0.5], [0.9, -0.5], [-0.9, 0.5], [0.9, 0.5]].forEach(pos => {
+                const leg = new THREE.Mesh(legGeo, legMat);
+                leg.position.set(pos[0], 0.4, pos[1]);
+                group.add(leg);
+            });
+
+            scene.add(group);
+        }
+
+        function createSafe(x, y, z, code) {
+            const group = new THREE.Group();
+            group.position.set(x, y, z);
+
+            const safeMesh = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.7, 0.6), new THREE.MeshStandardMaterial({ map: Textures.metal }));
+            safeMesh.castShadow = true;
+            group.add(safeMesh);
+
+            scene.add(group);
+
+            interactiveObjects.push({
+                mesh: group,
+                type: 'safe',
+                code: code,
+                action: () => openSafeModal(),
+                prompt: TRANSLATIONS[gameState.lang].openSafe
+            });
+        }
+
+        function createNote(x, y, z, textObj) {
+            const noteMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.4), new THREE.MeshStandardMaterial({ map: Textures.paper, side: THREE.DoubleSide }));
+            noteMesh.position.set(x, y, z);
+            noteMesh.rotation.x = -Math.PI / 2;
+            scene.add(noteMesh);
+
+            interactiveObjects.push({
+                mesh: noteMesh,
+                type: 'note',
+                text: textObj,
+                action: () => {
+                    audio.playPickup();
+                    gameState.collectedNotes.push(textObj[gameState.lang]);
+                    showPrompt(textObj[gameState.lang]);
+                },
+                prompt: TRANSLATIONS[gameState.lang].readNote
+            });
+        }
+
+        function createKey(x, y, z) {
+            const keyGroup = new THREE.Group();
+            keyGroup.position.set(x, y, z);
+
+            const ring = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.02, 8, 16), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9 }));
+            keyGroup.add(ring);
+
+            scene.add(keyGroup);
+
+            interactiveObjects.push({
+                mesh: keyGroup,
+                type: 'key',
+                action: () => {
+                    audio.playPickup();
+                    gameState.hasKey = true;
+                    scene.remove(keyGroup);
+                    showPrompt("Key acquired!");
+                },
+                prompt: TRANSLATIONS[gameState.lang].pickKey
+            });
+        }
+
+        function createMonster(colorHex) {
+            const group = new THREE.Group();
+            group.position.set(0, 1.2, -2);
+
+            // Creepy Low-poly silhouette
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.2, 1.8, 8), new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.3 }));
+            group.add(body);
+
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+            head.position.y = 1.1;
+            group.add(head);
+
+            // Glowing red eyes
+            const eyeGeo = new THREE.SphereGeometry(0.04, 6, 6);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const leftEye = new THREE.Mesh(eyeGeo, eyeMat); leftEye.position.set(-0.08, 1.15, 0.2);
+            const rightEye = new THREE.Mesh(eyeGeo, eyeMat); rightEye.position.set(0.08, 1.15, 0.2);
+            group.add(leftEye); group.add(rightEye);
+
+            monster = group;
+            monsterPointA = new THREE.Vector3(-3, 1.2, -2);
+            monsterPointB = new THREE.Vector3(3, 1.2, -2);
+            scene.add(monster);
+        }
+
+        /* ====================================================================
+           6. GAMEPLAY UPDATES & INTERACTION LOOP
+           ==================================================================== */
+        function updateMovement(delta) {
+            if (!isPointerLocked || gameState.isHiding) return;
+
+            const speed = (keys.sprint ? 4.5 : 2.5) * (gameState.isCrouching ? 0.5 : 1.0);
+
+            direction.z = Number(moveForward) - Number(moveBackward);
+            direction.x = Number(moveRight) - Number(moveLeft);
+            direction.normalize();
+
+            if (moveForward || moveBackward || moveLeft || moveRight) {
+                camera.moveForward(direction.z * speed * delta);
+                camera.moveRight(direction.x * speed * delta);
+
+                // Footstep sounds & headbobbing
+                headBobTimer += delta * speed * 3;
+                camera.position.y = (gameState.isCrouching ? 0.9 : 1.6) + Math.sin(headBobTimer) * 0.05;
+
+                if (Math.sin(headBobTimer) > 0.9) {
+                    audio.playFootstep();
+                }
+            }
+
+            // Keep within room boundaries
+            camera.position.x = Math.max(-4.5, Math.min(4.5, camera.position.x));
+            camera.position.z = Math.max(-5.5, Math.min(5.5, camera.position.z));
+
+            // Attach flashlight to camera
+            flashlight.position.copy(camera.position);
+            const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+            flashlight.target.position.copy(camera.position).add(dir);
+
+            // Flashlight battery drain
+            if (gameState.isFlashlightOn) {
+                gameState.battery = Math.max(0, gameState.battery - delta * 0.8);
+                document.getElementById('battery-bar').style.width = `${gameState.battery}%`;
+                if (gameState.battery <= 0) {
+                    gameState.isFlashlightOn = false;
+                    flashlight.visible = false;
+                }
+            }
+        }
+
+        function updateMonsterAI(delta) {
+            if (!monster) return;
+
+            // Patrol back and forth
+            const target = monsterDir === 1 ? monsterPointB : monsterPointA;
+            monster.position.lerp(target, delta * 0.5);
+
+            if (monster.position.distanceTo(target) < 0.3) {
+                monsterDir *= -1;
+            }
+
+            // Check distance to player
+            if (!gameState.isHiding) {
+                const dist = monster.position.distanceTo(camera.position);
+                if (dist < 1.5) {
+                    // Player caught!
+                    audio.playGrowl();
+                    triggerGameOver();
+                }
+            }
+        }
+
+        function checkRaycastPrompts() {
+            if (!isPointerLocked) return;
+
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            let foundPrompt = false;
+
+            for (let i = 0; i < intersects.length; i++) {
+                const obj = intersects[i].object;
+                let parent = obj;
+                while (parent && !parent.userData.interactive && parent !== scene) {
+                    const match = interactiveObjects.find(io => io.mesh === parent);
+                    if (match && intersects[i].distance < 3) {
+                        showInteractionUI(match.prompt);
+                        foundPrompt = true;
+                        break;
+                    }
+                    parent = parent.parent;
+                }
+                if (foundPrompt) break;
+            }
+
+            if (!foundPrompt) {
+                hideInteractionUI();
+            }
+        }
+
+        function checkInteraction() {
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+
+            const intersects = raycaster.intersectObjects(scene.children, true);
+
+            for (let i = 0; i < intersects.length; i++) {
+                let parent = intersects[i].object;
+                while (parent && parent !== scene) {
+                    const match = interactiveObjects.find(io => io.mesh === parent);
+                    if (match && intersects[i].distance < 3) {
+                        match.action();
+                        return;
+                    }
+                    parent = parent.parent;
+                }
+            }
+        }
+
+        function toggleHiding(x, y, z) {
+            gameState.isHiding = !gameState.isHiding;
+            const status = document.getElementById('hiding-status');
+
+            if (gameState.isHiding) {
+                camera.position.set(x, y + 1.2, z);
+                status.classList.remove('hidden');
+                document.exitPointerLock();
+            } else {
+                camera.position.set(x, 1.6, z + 1.5);
+                status.classList.add('hidden');
+                document.getElementById('game-canvas').requestPointerLock();
+            }
+        }
+
+        function triggerGameOver() {
+            document.getElementById('damage-flash').style.opacity = '1';
+            setTimeout(() => {
+                document.getElementById('damage-flash').style.opacity = '0';
+                buildLevel(gameState.currentLevel); // Restart level
+            }, 400);
+        }
+
+        function nextLevel() {
+            gameState.coins += 20;
+            saveGame();
+            if (gameState.currentLevel < 100) {
+                gameState.currentLevel++;
+                if (gameState.currentLevel > gameState.unlockedLevel) {
+                    gameState.unlockedLevel = gameState.currentLevel;
+                }
+                saveGame();
+                buildLevel(gameState.currentLevel);
+            } else {
+                alert("CONGRATULATIONS! You escaped all 100 rooms!");
+                exitToMenu();
+            }
+        }
+
+        /* ====================================================================
+           7. UI & MODAL MANAGEMENT
+           ==================================================================== */
+        function updateLanguageUI() {
+            const lang = gameState.lang;
+            const t = TRANSLATIONS[lang];
+
+            document.getElementById('txt-subtitle').innerText = t.subtitle;
+            document.getElementById('lbl-play').innerText = t.start;
+            document.getElementById('lbl-levels').innerText = t.levels;
+            document.getElementById('lbl-shop').innerText = t.shop;
+            document.getElementById('lbl-settings').innerText = t.settings;
+            document.getElementById('lbl-select-level').innerText = t.selectLevel;
+            document.getElementById('lbl-journal-title').innerText = t.journal;
+            document.getElementById('lbl-safe-title').innerText = t.safeTitle;
+            document.getElementById('txt-hiding').innerText = t.hiding;
+            document.getElementById('txt-crouching').innerText = t.crouching;
+            document.getElementById('lbl-graphics').innerText = t.graphics;
+            document.getElementById('lbl-music-vol').innerText = t.musicVol;
+            document.getElementById('lbl-sfx-vol').innerText = t.sfxVol;
+            document.getElementById('lbl-move-keys').innerText = t.moveKeys;
+            document.getElementById('lbl-interact-key').innerText = t.interactKey;
+            document.getElementById('txt-need-coins').innerText = t.needCoins;
+            document.getElementById('lbl-add-coins').innerText = t.simPayment;
+
+            document.getElementById('prompt-key').innerText = gameState.settings.interactKey.toUpperCase();
+        }
+
+        function showInteractionUI(text) {
+            const prompt = document.getElementById('interaction-prompt');
+            document.getElementById('prompt-action').innerText = text;
+            prompt.classList.remove('hidden');
+            document.getElementById('crosshair').classList.add('active');
+        }
+
+        function hideInteractionUI() {
+            document.getElementById('interaction-prompt').classList.add('hidden');
+            document.getElementById('crosshair').classList.remove('active');
+        }
+
+        function showPrompt(msg) {
+            const prompt = document.getElementById('interaction-prompt');
+            document.getElementById('prompt-action').innerText = msg;
+            prompt.classList.remove('hidden');
+            setTimeout(() => prompt.classList.add('hidden'), 2500);
+        }
+
+        function isModalOpen() {
+            return !document.getElementById('modal-levels').classList.contains('hidden') ||
+                   !document.getElementById('modal-journal').classList.contains('hidden') ||
+                   !document.getElementById('modal-shop').classList.contains('hidden') ||
+                   !document.getElementById('modal-settings').classList.contains('hidden') ||
+                   !document.getElementById('modal-pause').classList.contains('hidden') ||
+                   !document.getElementById('modal-safe').classList.contains('hidden');
+        }
+
+        function renderLevelGrid() {
+            const grid = document.getElementById('levels-grid');
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= 100; i++) {
+                const locIndex = Math.floor((i - 1) / 10);
+                const isUnlocked = i <= gameState.unlockedLevel;
+
+                const card = document.createElement('button');
+                card.className = `p-3 rounded-xl border font-bold text-center flex flex-col items-center justify-center transition ${
+                    isUnlocked ? 'bg-gray-800 border-gray-700 text-white hover:bg-red-900/40 hover:border-red-600' : 'bg-gray-950 border-gray-900 text-gray-600 cursor-not-allowed'
+                }`;
+
+                card.innerHTML = `
+                    <span class="text-xs text-gray-400">Lvl ${i}</span>
+                    <i class="fa-solid ${isUnlocked ? 'fa-door-open text-red-500' : 'fa-lock text-gray-700'} my-1 text-lg"></i>
+                    <span class="text-[10px] truncate w-full">${LOCATIONS[locIndex].name[gameState.lang]}</span>
+                `;
+
+                if (isUnlocked) {
+                    card.onclick = () => {
+                        gameState.currentLevel = i;
+                        document.getElementById('modal-levels').classList.add('hidden');
+                        startGame();
+                    };
+                }
+
+                grid.appendChild(card);
+            }
+        }
+
+        function renderJournal() {
+            const list = document.getElementById('notes-list');
+            list.innerHTML = '';
+
+            if (gameState.collectedNotes.length === 0) {
+                list.innerHTML = `<div class="text-gray-500 text-sm text-center py-8">No evidence collected yet. Explore rooms for documents.</div>`;
+                return;
+            }
+
+            gameState.collectedNotes.forEach((note, idx) => {
+                const item = document.createElement('div');
+                item.className = 'bg-gray-800/60 p-3 rounded-xl border border-gray-700 text-sm text-gray-200';
+                item.innerHTML = `<span class="text-xs text-red-400 font-bold block mb-1">Entry #${idx + 1}</span>${note}`;
+                list.appendChild(item);
+            });
+        }
+
+        /* Safe Number Pad Input */
+        function openSafeModal() {
+            document.exitPointerLock();
+            enteredSafeCode = "";
+            document.getElementById('safe-display').innerText = "----";
+            document.getElementById('modal-safe').classList.remove('hidden');
+        }
+
+        function closeSafeModal() {
+            document.getElementById('modal-safe').classList.add('hidden');
+            if (isGameRunning) document.getElementById('game-canvas').requestPointerLock();
+        }
+
+        function pressSafeNum(num) {
+            if (enteredSafeCode.length < 4) {
+                enteredSafeCode += num;
+                document.getElementById('safe-display').innerText = enteredSafeCode;
+                if (enteredSafeCode.length === 4) {
+                    if (enteredSafeCode === currentSafeCode) {
+                        closeSafeModal();
+                        createKey(3.5, 0.9, 1.4);
+                        showPrompt("Safe Opened! Key inside.");
+                    } else {
+                        document.getElementById('safe-display').innerText = "ERR";
+                        setTimeout(() => {
+                            enteredSafeCode = "";
+                            document.getElementById('safe-display').innerText = "----";
+                        }, 800);
+                    }
+                }
+            }
+        }
+
+        function clearSafeCode() {
+            enteredSafeCode = "";
+            document.getElementById('safe-display').innerText = "----";
+        }
+
+        /* Shop Logic */
+        function buyItem(item, price) {
+            if (gameState.coins >= price) {
+                gameState.coins -= price;
+                document.getElementById('coin-count').innerText = gameState.coins;
+                document.getElementById('shop-coins').innerText = gameState.coins;
+                saveGame();
+
+                if (item === 'battery') gameState.battery = 100;
+                if (item === 'lockpick') gameState.hasKey = true;
+                if (item === 'hint') showPrompt(`Hint: Safe code is ${currentSafeCode}`);
+            } else {
+                alert("Not enough coins!");
+            }
+        }
+
+        /* Game State Transitions */
+        function startGame() {
+            audio.init();
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('hud-top').classList.remove('hidden');
+            document.getElementById('hud-bottom').classList.remove('hidden');
+            document.getElementById('crosshair').classList.remove('hidden');
+
+            isGameRunning = true;
+            buildLevel(gameState.currentLevel);
+            document.getElementById('game-canvas').requestPointerLock();
+        }
+
+        function openPauseMenu() {
+            document.getElementById('modal-pause').classList.remove('hidden');
+        }
+
+        function exitToMenu() {
+            isGameRunning = false;
+            document.exitPointerLock();
+            document.getElementById('modal-pause').classList.add('hidden');
+            document.getElementById('hud-top').classList.add('hidden');
+            document.getElementById('hud-bottom').classList.add('hidden');
+            document.getElementById('crosshair').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+        }
+
+        function onWindowResize() {
+            if (!camera || !renderer) return;
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        /* ====================================================================
+           8. MAIN RENDER LOOP & EVENT BINDINGS
+           ==================================================================== */
+        let lastTime = performance.now();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const now = performance.now();
+            const delta = (now - lastTime) / 1000;
+            lastTime = now;
+
+            if (isGameRunning && !isModalOpen()) {
+                updateMovement(delta);
+                updateMonsterAI(delta);
+                checkRaycastPrompts();
+            }
+
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        // Initialize Application
+        window.onload = () => {
+            loadGame();
+            init3DEngine();
+            updateLanguageUI();
+
+            document.getElementById('coin-count').innerText = gameState.coins;
+            document.getElementById('shop-coins').innerText = gameState.coins;
+
+            // Main Menu Buttons
+            document.getElementById('btn-play').onclick = () => startGame();
+            document.getElementById('btn-levels').onclick = () => {
+                renderLevelGrid();
+                document.getElementById('modal-levels').classList.remove('hidden');
+            };
+            document.getElementById('close-levels').onclick = () => document.getElementById('modal-levels').classList.add('hidden');
+
+            document.getElementById('btn-shop-menu').onclick = () => document.getElementById('modal-shop').classList.remove('hidden');
+            document.getElementById('btn-shop-hud').onclick = () => document.getElementById('modal-shop').classList.remove('hidden');
+            document.getElementById('close-shop').onclick = () => document.getElementById('modal-shop').classList.add('hidden');
+
+            document.getElementById('btn-settings-menu').onclick = () => document.getElementById('modal-settings').classList.remove('hidden');
+            document.getElementById('btn-settings-hud').onclick = () => document.getElementById('modal-settings').classList.remove('hidden');
+            document.getElementById('btn-pause-settings').onclick = () => document.getElementById('modal-settings').classList.remove('hidden');
+            document.getElementById('close-settings').onclick = () => document.getElementById('modal-settings').classList.add('hidden');
+
+            document.getElementById('btn-journal').onclick = () => {
+                renderJournal();
+                document.getElementById('modal-journal').classList.remove('hidden');
+            };
+            document.getElementById('close-journal').onclick = () => document.getElementById('modal-journal').classList.add('hidden');
+
+            // Pause Menu
+            document.getElementById('btn-resume').onclick = () => {
+                document.getElementById('modal-pause').classList.add('hidden');
+                document.getElementById('game-canvas').requestPointerLock();
+            };
+            document.getElementById('btn-quit').onclick = () => exitToMenu();
+
+            // Languages
+            document.getElementById('lang-ru').onclick = () => { gameState.lang = 'ru'; updateLanguageUI(); saveGame(); };
+            document.getElementById('lang-en').onclick = () => { gameState.lang = 'en'; updateLanguageUI(); saveGame(); };
+
+            // Payment Simulator
+            document.getElementById('btn-add-coins').onclick = () => {
+                gameState.coins += 500;
+                document.getElementById('coin-count').innerText = gameState.coins;
+                document.getElementById('shop-coins').innerText = gameState.coins;
+                saveGame();
+            };
+
+            // Movement & Interaction Key Bindings
+            document.getElementById('btn-toggle-keys').onclick = (e) => {
+                gameState.settings.moveType = gameState.settings.moveType === 'WASD' ? 'ARROWS' : 'WASD';
+                e.target.innerText = gameState.settings.moveType;
+                saveGame();
+            };
+
+            document.getElementById('btn-rebind-interact').onclick = (e) => {
+                const key = prompt("Press new interaction key (e.g. F, E, Q, R):", gameState.settings.interactKey);
+                if (key && key.length === 1) {
+                    gameState.settings.interactKey = key.toLowerCase();
+                    e.target.innerText = key.toUpperCase();
+                    updateLanguageUI();
+                    saveGame();
+                }
+            };
+
+            // Start Render Loop
+            animate();
+        };
+    </script>
 </body>
 </html>
