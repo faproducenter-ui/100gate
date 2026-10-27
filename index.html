@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dark Escape: 100 Rooms Horror Quest</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,6 +20,8 @@
             height: 100%;
             overflow: hidden;
             user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
             background-color: #050505;
             font-family: 'Inter', sans-serif;
             color: #e2e8f0;
@@ -29,13 +31,19 @@
             font-family: 'Creepster', cursive;
         }
 
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
         #game-canvas {
             width: 100%;
             height: 100%;
             display: block;
         }
 
-        /* Custom Scrollbar for HUD Modals */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -53,7 +61,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            box-shadow: 0 0 100px rgba(0,0,0,0.9) inset;
+            box-shadow: 0 0 120px rgba(0,0,0,0.92) inset;
             pointer-events: none;
         }
 
@@ -62,17 +70,17 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 8px;
-            height: 8px;
-            background-color: rgba(255, 255, 255, 0.5);
-            border: 1px solid rgba(0, 0, 0, 0.5);
+            width: 10px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border: 2px solid rgba(0, 0, 0, 0.8);
             border-radius: 50%;
             pointer-events: none;
             transition: transform 0.1s ease, background-color 0.1s ease;
         }
 
         .crosshair.active {
-            transform: translate(-50%, -50%) scale(2);
+            transform: translate(-50%, -50%) scale(1.8);
             background-color: #ef4444;
         }
 
@@ -82,265 +90,304 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, transparent 40%, rgba(220, 38, 38, 0.6) 100%);
+            background: radial-gradient(circle, transparent 30%, rgba(220, 38, 38, 0.7) 100%);
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease-in-out;
+        }
+
+        .touch-btn {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+        .touch-btn:active {
+            background: rgba(220, 38, 38, 0.6);
         }
     </style>
 </head>
 <body class="relative">
 
-    <!-- 3D Render Canvas -->
-    <canvas id="game-canvas"></canvas>
+    <div id="game-container">
+        <!-- 3D Render Canvas -->
+        <canvas id="game-canvas" tabindex="1"></canvas>
 
-    <!-- Visual Overlays -->
-    <div class="vignette"></div>
-    <div id="damage-flash" class="damage-overlay"></div>
-    <div id="crosshair" class="crosshair hidden"></div>
+        <!-- Visual Overlays -->
+        <div class="vignette"></div>
+        <div id="damage-flash" class="damage-overlay"></div>
+        <div id="crosshair" class="crosshair hidden"></div>
 
-    <!-- UI Overlay Screen Container -->
-    <div id="ui-layer" class="absolute inset-0 flex flex-col justify-between pointer-events-none z-10">
-        
-        <!-- TOP HUD BAR -->
-        <div id="hud-top" class="p-4 flex justify-between items-center hidden">
-            <div class="flex items-center space-x-4 bg-black/60 backdrop-blur-md p-2 rounded-xl border border-gray-800 pointer-events-auto">
-                <div class="flex items-center text-yellow-500 font-bold">
-                    <i class="fa-solid fa-coins mr-2"></i>
-                    <span id="coin-count">0</span>
-                </div>
-                <div class="h-4 w-px bg-gray-700"></div>
-                <div class="text-sm font-semibold text-gray-300">
-                    <span id="txt-location">Location 1</span> - <span id="txt-level">Level 1</span>
-                </div>
+        <!-- Touch / On-screen Controls Overlay for mobile or optional click input -->
+        <div id="mobile-controls" class="absolute inset-0 pointer-events-none z-10 hidden flex justify-between items-end p-6">
+            <!-- D-Pad -->
+            <div class="relative w-36 h-36 pointer-events-auto">
+                <button id="btn-touch-up" class="touch-btn absolute top-0 left-12 w-12 h-12 text-xl"><i class="fa-solid fa-arrow-up"></i></button>
+                <button id="btn-touch-left" class="touch-btn absolute top-12 left-0 w-12 h-12 text-xl"><i class="fa-solid fa-arrow-left"></i></button>
+                <button id="btn-touch-right" class="touch-btn absolute top-12 right-0 w-12 h-12 text-xl"><i class="fa-solid fa-arrow-right"></i></button>
+                <button id="btn-touch-down" class="touch-btn absolute bottom-0 left-12 w-12 h-12 text-xl"><i class="fa-solid fa-arrow-down"></i></button>
             </div>
-
-            <!-- Flashlight & Action Buttons -->
-            <div class="flex items-center space-x-3 pointer-events-auto">
-                <div id="flashlight-hud" class="flex items-center bg-black/60 backdrop-blur-md px-3 py-2 rounded-xl border border-gray-800">
-                    <i class="fa-solid fa-flashlight mr-2 text-yellow-400"></i>
-                    <div class="w-20 bg-gray-700 h-2 rounded-full overflow-hidden">
-                        <div id="battery-bar" class="bg-yellow-400 h-full w-full transition-all"></div>
-                    </div>
-                </div>
-
-                <button id="btn-journal" class="bg-black/60 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
-                    <i class="fa-solid fa-book-bookmark text-lg"></i>
-                </button>
-                <button id="btn-shop-hud" class="bg-black/60 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
-                    <i class="fa-solid fa-cart-shopping text-lg text-green-400"></i>
-                </button>
-                <button id="btn-settings-hud" class="bg-black/60 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
-                    <i class="fa-solid fa-gear text-lg"></i>
-                </button>
+            <!-- Actions -->
+            <div class="flex space-x-3 pointer-events-auto">
+                <button id="btn-touch-crouch" class="touch-btn w-14 h-14 text-sm font-bold bg-gray-800/80">CTRL</button>
+                <button id="btn-touch-flash" class="touch-btn w-14 h-14 text-lg bg-yellow-900/60"><i class="fa-solid fa-lightbulb"></i></button>
+                <button id="btn-touch-interact" class="touch-btn w-16 h-16 text-xl bg-red-700/80 font-bold">E</button>
             </div>
         </div>
 
-        <!-- CENTER INTERACTION PROMPT -->
-        <div id="interaction-prompt" class="self-center mb-20 bg-black/75 backdrop-blur-md px-4 py-2 rounded-lg border border-gray-700 text-white font-medium shadow-lg hidden">
-            Press <span id="prompt-key" class="bg-red-600 px-2 py-0.5 rounded text-xs uppercase font-bold">E</span> to <span id="prompt-action">Interact</span>
-        </div>
-
-        <!-- BOTTOM HUD STATUS -->
-        <div id="hud-bottom" class="p-4 flex justify-between items-end hidden">
-            <div id="hiding-status" class="bg-blue-900/80 backdrop-blur-md text-blue-200 px-3 py-1.5 rounded-lg border border-blue-600 text-sm font-semibold hidden">
-                <i class="fa-solid fa-eye-slash mr-2"></i><span id="txt-hiding">Hidden</span>
-            </div>
-            <div id="crouch-status" class="bg-gray-800/80 backdrop-blur-md text-gray-300 px-3 py-1.5 rounded-lg border border-gray-600 text-sm font-semibold hidden">
-                <i class="fa-solid fa-user-ninja mr-2"></i><span id="txt-crouching">Crouching</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN MENU OVERLAY -->
-    <div id="main-menu" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-20 pointer-events-auto p-4">
-        <h1 class="font-horror text-6xl md:text-8xl text-red-700 tracking-wider mb-2 text-center drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">DARK ESCAPE</h1>
-        <p class="text-gray-400 text-sm md:text-base mb-8 tracking-widest uppercase" id="txt-subtitle">100 Rooms First-Person Horror Quest</p>
-
-        <div class="flex flex-col w-full max-w-xs space-y-3">
-            <button id="btn-play" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3 rounded-xl shadow-lg transition duration-200 uppercase tracking-wider flex items-center justify-center">
-                <i class="fa-solid fa-play mr-2"></i> <span id="lbl-play">Start Game</span>
-            </button>
-            <button id="btn-levels" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center border border-gray-700">
-                <i class="fa-solid fa-list mr-2"></i> <span id="lbl-levels">Level Select</span>
-            </button>
-            <button id="btn-shop-menu" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center border border-gray-700">
-                <i class="fa-solid fa-store mr-2 text-green-400"></i> <span id="lbl-shop">Horror Shop</span>
-            </button>
-            <button id="btn-settings-menu" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center border border-gray-700">
-                <i class="fa-solid fa-gear mr-2"></i> <span id="lbl-settings">Settings</span>
-            </button>
-        </div>
-
-        <div class="absolute bottom-4 left-4 flex space-x-2">
-            <button id="lang-ru" class="px-3 py-1 bg-gray-800 text-xs rounded border border-gray-700 hover:bg-gray-700">RU</button>
-            <button id="lang-en" class="px-3 py-1 bg-gray-800 text-xs rounded border border-gray-700 hover:bg-gray-700">EN</button>
-        </div>
-    </div>
-
-    <!-- LEVEL SELECT MODAL -->
-    <div id="modal-levels" class="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-30 pointer-events-auto p-6 hidden">
-        <div class="flex justify-between items-center w-full max-w-4xl mb-6">
-            <h2 class="text-2xl font-bold text-white flex items-center"><i class="fa-solid fa-map mr-3 text-red-600"></i><span id="lbl-select-level">Select Level</span></h2>
-            <button id="close-levels" class="text-gray-400 hover:text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div id="levels-grid" class="grid grid-cols-2 md:grid-cols-5 gap-3 w-full max-w-4xl overflow-y-auto max-h-[70vh] p-2">
-            <!-- Level cards generated dynamically -->
-        </div>
-    </div>
-
-    <!-- JOURNAL / EVIDENCE MODAL -->
-    <div id="modal-journal" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-30 pointer-events-auto p-4 hidden">
-        <div class="bg-gray-900 border border-gray-800 w-full max-w-2xl rounded-2xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
-            <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-800">
-                <h3 class="text-xl font-bold text-red-500 flex items-center"><i class="fa-solid fa-book-open mr-2"></i><span id="lbl-journal-title">Evidence Journal</span></h3>
-                <button id="close-journal" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div id="notes-list" class="flex-1 overflow-y-auto space-y-3 pr-2">
-                <!-- Notes injected dynamically -->
-            </div>
-        </div>
-    </div>
-
-    <!-- SHOP MODAL -->
-    <div id="modal-shop" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-30 pointer-events-auto p-4 hidden">
-        <div class="bg-gray-900 border border-gray-800 w-full max-w-2xl rounded-2xl p-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-800">
-                <div class="flex items-center space-x-3">
-                    <h3 class="text-xl font-bold text-green-400 flex items-center"><i class="fa-solid fa-store mr-2"></i><span id="lbl-shop-title">Black Market</span></h3>
-                    <span class="text-xs bg-green-950 text-green-400 border border-green-800 px-2 py-0.5 rounded-full font-semibold"><span id="shop-coins">0</span> coins</span>
-                </div>
-                <button id="close-shop" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
+        <!-- UI Overlay Screen Container -->
+        <div id="ui-layer" class="absolute inset-0 flex flex-col justify-between pointer-events-none z-10">
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
-                    <div>
-                        <h4 class="font-bold text-white" id="shop-item-bat-title">Batteries</h4>
-                        <p class="text-xs text-gray-400" id="shop-item-bat-desc">Restores flashlight power</p>
-                        <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">50 Coins</span>
+            <!-- TOP HUD BAR -->
+            <div id="hud-top" class="p-4 flex justify-between items-center hidden">
+                <div class="flex items-center space-x-4 bg-black/70 backdrop-blur-md p-2 rounded-xl border border-gray-800 pointer-events-auto">
+                    <div class="flex items-center text-yellow-500 font-bold">
+                        <i class="fa-solid fa-coins mr-2"></i>
+                        <span id="coin-count">0</span>
                     </div>
-                    <button onclick="buyItem('battery', 50)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
+                    <div class="h-4 w-px bg-gray-700"></div>
+                    <div class="text-sm font-semibold text-gray-300">
+                        <span id="txt-location">Location 1</span> - <span id="txt-level">Level 1</span>
+                    </div>
                 </div>
-                <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
-                    <div>
-                        <h4 class="font-bold text-white" id="shop-item-key-title">Lockpick</h4>
-                        <p class="text-xs text-gray-400" id="shop-item-key-desc">Opens door without key</p>
-                        <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">100 Coins</span>
+
+                <!-- Flashlight & Action Buttons -->
+                <div class="flex items-center space-x-3 pointer-events-auto">
+                    <div id="flashlight-hud" class="flex items-center bg-black/70 backdrop-blur-md px-3 py-2 rounded-xl border border-gray-800">
+                        <i class="fa-solid fa-flashlight mr-2 text-yellow-400"></i>
+                        <div class="w-20 bg-gray-700 h-2 rounded-full overflow-hidden">
+                            <div id="battery-bar" class="bg-yellow-400 h-full w-full transition-all"></div>
+                        </div>
                     </div>
-                    <button onclick="buyItem('lockpick', 100)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
-                </div>
-                <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
-                    <div>
-                        <h4 class="font-bold text-white" id="shop-item-decoy-title">Noise Maker</h4>
-                        <p class="text-xs text-gray-400" id="shop-item-decoy-desc">Distracts the room host</p>
-                        <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">200 Coins</span>
-                    </div>
-                    <button onclick="buyItem('decoy', 200)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
-                </div>
-                <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
-                    <div>
-                        <h4 class="font-bold text-white" id="shop-item-clue-title">Direct Hint</h4>
-                        <p class="text-xs text-gray-400" id="shop-item-clue-desc">Reveals key/code position</p>
-                        <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">500 Coins</span>
-                    </div>
-                    <button onclick="buyItem('hint', 500)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
+
+                    <button id="btn-journal" class="bg-black/70 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
+                        <i class="fa-solid fa-book-bookmark text-lg"></i>
+                    </button>
+                    <button id="btn-shop-hud" class="bg-black/70 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
+                        <i class="fa-solid fa-cart-shopping text-lg text-green-400"></i>
+                    </button>
+                    <button id="btn-settings-hud" class="bg-black/70 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
+                        <i class="fa-solid fa-gear text-lg"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- Test Payment Simulator -->
-            <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 flex flex-col md:flex-row justify-between items-center">
-                <span class="text-xs text-gray-400 mb-2 md:mb-0" id="txt-need-coins">Need extra coins for investigation?</span>
-                <button id="btn-add-coins" class="bg-yellow-600 hover:bg-yellow-500 text-black font-bold text-xs px-4 py-2 rounded-lg transition flex items-center">
-                    <i class="fa-solid fa-credit-card mr-2"></i><span id="lbl-add-coins">Simulate Payment (+500 Coins)</span>
+            <!-- CENTER INTERACTION PROMPT & CLICK NOTICE -->
+            <div id="click-to-play-notice" class="self-center my-auto bg-black/80 backdrop-blur-md px-6 py-4 rounded-xl border border-red-800 text-white font-semibold text-center pointer-events-auto cursor-pointer hidden shadow-2xl">
+                <i class="fa-solid fa-mouse-pointer text-3xl text-red-500 mb-2 block animate-bounce"></i>
+                <span id="lbl-click-focus">Click here or press canvas to resume & look around</span>
+            </div>
+
+            <div id="interaction-prompt" class="self-center mb-16 bg-black/85 backdrop-blur-md px-5 py-2.5 rounded-lg border border-gray-700 text-white font-medium shadow-lg hidden pointer-events-auto">
+                Press <span id="prompt-key" class="bg-red-600 px-2 py-0.5 rounded text-xs uppercase font-bold">E</span> to <span id="prompt-action">Interact</span>
+            </div>
+
+            <!-- BOTTOM HUD STATUS -->
+            <div id="hud-bottom" class="p-4 flex justify-between items-end hidden">
+                <div id="hiding-status" class="bg-blue-900/90 backdrop-blur-md text-blue-200 px-3 py-1.5 rounded-lg border border-blue-600 text-sm font-semibold hidden">
+                    <i class="fa-solid fa-eye-slash mr-2"></i><span id="txt-hiding">Hidden</span>
+                </div>
+                <div id="crouch-status" class="bg-gray-800/90 backdrop-blur-md text-gray-300 px-3 py-1.5 rounded-lg border border-gray-600 text-sm font-semibold hidden">
+                    <i class="fa-solid fa-user-ninja mr-2"></i><span id="txt-crouching">Crouching</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN MENU OVERLAY -->
+        <div id="main-menu" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-20 pointer-events-auto p-4">
+            <h1 class="font-horror text-6xl md:text-8xl text-red-700 tracking-wider mb-2 text-center drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">DARK ESCAPE</h1>
+            <p class="text-gray-400 text-sm md:text-base mb-8 tracking-widest uppercase text-center" id="txt-subtitle">100 Rooms First-Person Horror Quest</p>
+
+            <div class="flex flex-col w-full max-w-xs space-y-3">
+                <button id="btn-play" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg transition duration-200 uppercase tracking-wider flex items-center justify-center">
+                    <i class="fa-solid fa-play mr-2"></i> <span id="lbl-play">Start Game</span>
+                </button>
+                <button id="btn-levels" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center border border-gray-700">
+                    <i class="fa-solid fa-list mr-2"></i> <span id="lbl-levels">Level Select</span>
+                </button>
+                <button id="btn-shop-menu" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center border border-gray-700">
+                    <i class="fa-solid fa-store mr-2 text-green-400"></i> <span id="lbl-shop">Horror Shop</span>
+                </button>
+                <button id="btn-settings-menu" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center border border-gray-700">
+                    <i class="fa-solid fa-gear mr-2"></i> <span id="lbl-settings">Settings</span>
                 </button>
             </div>
-        </div>
-    </div>
 
-    <!-- SETTINGS MODAL -->
-    <div id="modal-settings" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-30 pointer-events-auto p-4 hidden">
-        <div class="bg-gray-900 border border-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-5">
-            <div class="flex justify-between items-center pb-3 border-b border-gray-800">
-                <h3 class="text-xl font-bold text-white flex items-center"><i class="fa-solid fa-gear mr-2 text-gray-400"></i><span id="lbl-settings-title">Game Settings</span></h3>
-                <button id="close-settings" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="absolute bottom-4 left-4 flex space-x-2">
+                <button id="lang-ru" class="px-3 py-1 bg-gray-800 text-xs rounded border border-gray-700 hover:bg-gray-700">RU</button>
+                <button id="lang-en" class="px-3 py-1 bg-gray-800 text-xs rounded border border-gray-700 hover:bg-gray-700">EN</button>
             </div>
+        </div>
 
-            <!-- Graphics -->
-            <div>
-                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2" id="lbl-graphics">Graphics Quality</label>
-                <div class="grid grid-cols-3 gap-2">
-                    <button id="gfx-low" class="gfx-btn bg-gray-800 text-xs py-2 rounded-lg border border-gray-700 hover:bg-gray-700">Low</button>
-                    <button id="gfx-med" class="gfx-btn bg-gray-800 text-xs py-2 rounded-lg border border-gray-700 hover:bg-gray-700">Medium</button>
-                    <button id="gfx-high" class="gfx-btn bg-gray-800 text-xs py-2 rounded-lg border border-gray-700 hover:bg-gray-700">High</button>
+        <!-- LEVEL SELECT MODAL -->
+        <div id="modal-levels" class="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-30 pointer-events-auto p-6 hidden">
+            <div class="flex justify-between items-center w-full max-w-4xl mb-6">
+                <h2 class="text-2xl font-bold text-white flex items-center"><i class="fa-solid fa-map mr-3 text-red-600"></i><span id="lbl-select-level">Select Level</span></h2>
+                <button id="close-levels" class="text-gray-400 hover:text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="levels-grid" class="grid grid-cols-2 md:grid-cols-5 gap-3 w-full max-w-4xl overflow-y-auto max-h-[70vh] p-2">
+            </div>
+        </div>
+
+        <!-- JOURNAL / EVIDENCE MODAL -->
+        <div id="modal-journal" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-30 pointer-events-auto p-4 hidden">
+            <div class="bg-gray-900 border border-gray-800 w-full max-w-2xl rounded-2xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-800">
+                    <h3 class="text-xl font-bold text-red-500 flex items-center"><i class="fa-solid fa-book-open mr-2"></i><span id="lbl-journal-title">Evidence Journal</span></h3>
+                    <button id="close-journal" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <div id="notes-list" class="flex-1 overflow-y-auto space-y-3 pr-2">
                 </div>
             </div>
+        </div>
 
-            <!-- Sound Volume Controls -->
-            <div class="space-y-3">
-                <div>
-                    <div class="flex justify-between text-xs font-semibold text-gray-400 mb-1">
-                        <span id="lbl-music-vol">Music Volume</span>
-                        <span id="val-music">80%</span>
+        <!-- SHOP MODAL -->
+        <div id="modal-shop" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-30 pointer-events-auto p-4 hidden">
+            <div class="bg-gray-900 border border-gray-800 w-full max-w-2xl rounded-2xl p-6 shadow-2xl">
+                <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-800">
+                    <div class="flex items-center space-x-3">
+                        <h3 class="text-xl font-bold text-green-400 flex items-center"><i class="fa-solid fa-store mr-2"></i><span id="lbl-shop-title">Black Market</span></h3>
+                        <span class="text-xs bg-green-950 text-green-400 border border-green-800 px-2 py-0.5 rounded-full font-semibold"><span id="shop-coins">0</span> coins</span>
                     </div>
-                    <input type="range" id="slider-music" min="0" max="100" value="80" class="w-full accent-red-600 bg-gray-800 rounded-lg h-1.5 cursor-pointer">
+                    <button id="close-shop" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
-                <div>
-                    <div class="flex justify-between text-xs font-semibold text-gray-400 mb-1">
-                        <span id="lbl-sfx-vol">SFX Volume</span>
-                        <span id="val-sfx">90%</span>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
+                        <div>
+                            <h4 class="font-bold text-white">Batteries</h4>
+                            <p class="text-xs text-gray-400">Restores flashlight power</p>
+                            <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">50 Coins</span>
+                        </div>
+                        <button onclick="buyItem('battery', 50)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
                     </div>
-                    <input type="range" id="slider-sfx" min="0" max="100" value="90" class="w-full accent-red-600 bg-gray-800 rounded-lg h-1.5 cursor-pointer">
+                    <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
+                        <div>
+                            <h4 class="font-bold text-white">Lockpick</h4>
+                            <p class="text-xs text-gray-400">Opens door without key</p>
+                            <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">100 Coins</span>
+                        </div>
+                        <button onclick="buyItem('lockpick', 100)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
+                    </div>
+                    <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
+                        <div>
+                            <h4 class="font-bold text-white">Noise Maker</h4>
+                            <p class="text-xs text-gray-400">Distracts the room host</p>
+                            <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">200 Coins</span>
+                        </div>
+                        <button onclick="buyItem('decoy', 200)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
+                    </div>
+                    <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
+                        <div>
+                            <h4 class="font-bold text-white">Direct Hint</h4>
+                            <p class="text-xs text-gray-400">Reveals key/code position</p>
+                            <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">500 Coins</span>
+                        </div>
+                        <button onclick="buyItem('hint', 500)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 flex flex-col md:flex-row justify-between items-center">
+                    <span class="text-xs text-gray-400 mb-2 md:mb-0" id="txt-need-coins">Need extra coins for investigation?</span>
+                    <button id="btn-add-coins" class="bg-yellow-600 hover:bg-yellow-500 text-black font-bold text-xs px-4 py-2 rounded-lg transition flex items-center">
+                        <i class="fa-solid fa-credit-card mr-2"></i><span id="lbl-add-coins">Simulate Payment (+500 Coins)</span>
+                    </button>
                 </div>
             </div>
+        </div>
 
-            <!-- Keybind Remapping -->
-            <div class="pt-2 border-t border-gray-800 space-y-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-semibold text-gray-300" id="lbl-move-keys">Movement Controls</span>
-                    <button id="btn-toggle-keys" class="bg-gray-800 text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-red-400 font-bold">WASD</button>
+        <!-- SETTINGS MODAL -->
+        <div id="modal-settings" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-30 pointer-events-auto p-4 hidden">
+            <div class="bg-gray-900 border border-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-5">
+                <div class="flex justify-between items-center pb-3 border-b border-gray-800">
+                    <h3 class="text-xl font-bold text-white flex items-center"><i class="fa-solid fa-gear mr-2 text-gray-400"></i><span id="lbl-settings-title">Game Settings</span></h3>
+                    <button id="close-settings" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-semibold text-gray-300" id="lbl-interact-key">Interaction Key</span>
-                    <button id="btn-rebind-interact" class="bg-gray-800 text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-red-400 font-bold uppercase">E</button>
+
+                <!-- Graphics -->
+                <div>
+                    <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2" id="lbl-graphics">Graphics Quality</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button id="gfx-low" onclick="setGraphics('low')" class="gfx-btn bg-gray-800 text-xs py-2 rounded-lg border border-gray-700 hover:bg-gray-700">Low</button>
+                        <button id="gfx-med" onclick="setGraphics('med')" class="gfx-btn bg-gray-800 text-xs py-2 rounded-lg border border-gray-700 hover:bg-gray-700">Medium</button>
+                        <button id="gfx-high" onclick="setGraphics('high')" class="gfx-btn bg-gray-800 text-xs py-2 rounded-lg border border-gray-700 hover:bg-gray-700">High</button>
+                    </div>
+                </div>
+
+                <!-- Sound Volume Controls -->
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold text-gray-400 mb-1">
+                            <span id="lbl-music-vol">Music Volume</span>
+                            <span id="val-music">80%</span>
+                        </div>
+                        <input type="range" id="slider-music" min="0" max="100" value="80" class="w-full accent-red-600 bg-gray-800 rounded-lg h-1.5 cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold text-gray-400 mb-1">
+                            <span id="lbl-sfx-vol">SFX Volume</span>
+                            <span id="val-sfx">90%</span>
+                        </div>
+                        <input type="range" id="slider-sfx" min="0" max="100" value="90" class="w-full accent-red-600 bg-gray-800 rounded-lg h-1.5 cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Keybind Remapping & Controls Toggle -->
+                <div class="pt-2 border-t border-gray-800 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-semibold text-gray-300" id="lbl-move-keys">Movement Controls</span>
+                        <button id="btn-toggle-keys" class="bg-gray-800 text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-red-400 font-bold">WASD + Arrows</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-semibold text-gray-300" id="lbl-interact-key">Interaction Key</span>
+                        <button id="btn-rebind-interact" class="bg-gray-800 text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-red-400 font-bold uppercase">E</button>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-semibold text-gray-300">On-Screen Virtual Buttons</span>
+                        <button id="btn-toggle-touch" class="bg-gray-800 text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-green-400 font-bold">Auto/On</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAUSE MENU MODAL -->
+        <div id="modal-pause" class="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-30 pointer-events-auto hidden">
+            <h2 class="font-horror text-5xl text-red-600 mb-6 tracking-wide">PAUSED</h2>
+            <div class="flex flex-col w-full max-w-xs space-y-3">
+                <button id="btn-resume" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition shadow-lg uppercase tracking-wider">Resume</button>
+                <button id="btn-pause-settings" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition border border-gray-700">Settings</button>
+                <button id="btn-quit" class="w-full bg-gray-900 hover:bg-gray-800 text-red-400 font-semibold py-3 rounded-xl transition border border-red-900/40">Quit to Menu</button>
+            </div>
+        </div>
+
+        <!-- SAFE COMBINATION MODAL -->
+        <div id="modal-safe" class="absolute inset-0 bg-black/85 flex items-center justify-center z-30 pointer-events-auto hidden">
+            <div class="bg-gray-900 border border-gray-700 p-6 rounded-2xl text-center max-w-xs w-full shadow-2xl">
+                <h3 class="text-lg font-bold text-gray-200 mb-3" id="lbl-safe-title">Enter Safe Code</h3>
+                <div id="safe-display" class="bg-black text-red-500 font-mono text-3xl py-2 px-4 rounded border border-gray-800 tracking-widest mb-4">----</div>
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <button onclick="pressSafeNum(1)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">1</button>
+                    <button onclick="pressSafeNum(2)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">2</button>
+                    <button onclick="pressSafeNum(3)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">3</button>
+                    <button onclick="pressSafeNum(4)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">4</button>
+                    <button onclick="pressSafeNum(5)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">5</button>
+                    <button onclick="pressSafeNum(6)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">6</button>
+                    <button onclick="pressSafeNum(7)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">7</button>
+                    <button onclick="pressSafeNum(8)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">8</button>
+                    <button onclick="pressSafeNum(9)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">9</button>
+                    <button onclick="clearSafeCode()" class="bg-red-900 hover:bg-red-800 text-white font-bold py-3 rounded-lg text-xs">CLR</button>
+                    <button onclick="pressSafeNum(0)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">0</button>
+                    <button onclick="closeSafeModal()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg text-xs">ESC</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- PAUSE MENU MODAL -->
-    <div id="modal-pause" class="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-30 pointer-events-auto hidden">
-        <h2 class="font-horror text-5xl text-red-600 mb-6 tracking-wide">PAUSED</h2>
-        <div class="flex flex-col w-full max-w-xs space-y-3">
-            <button id="btn-resume" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition shadow-lg uppercase tracking-wider">Resume</button>
-            <button id="btn-pause-settings" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition border border-gray-700">Settings</button>
-            <button id="btn-quit" class="w-full bg-gray-900 hover:bg-gray-800 text-red-400 font-semibold py-3 rounded-xl transition border border-red-900/40">Quit to Menu</button>
-        </div>
-    </div>
-
-    <!-- SAFE COMBINATION MODAL -->
-    <div id="modal-safe" class="absolute inset-0 bg-black/85 flex items-center justify-center z-30 pointer-events-auto hidden">
-        <div class="bg-gray-900 border border-gray-700 p-6 rounded-2xl text-center max-w-xs w-full shadow-2xl">
-            <h3 class="text-lg font-bold text-gray-200 mb-3" id="lbl-safe-title">Enter Safe Code</h3>
-            <div id="safe-display" class="bg-black text-red-500 font-mono text-3xl py-2 px-4 rounded border border-gray-800 tracking-widest mb-4">----</div>
-            <div class="grid grid-cols-3 gap-2 mb-4">
-                <button onclick="pressSafeNum(1)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">1</button>
-                <button onclick="pressSafeNum(2)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">2</button>
-                <button onclick="pressSafeNum(3)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">3</button>
-                <button onclick="pressSafeNum(4)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">4</button>
-                <button onclick="pressSafeNum(5)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">5</button>
-                <button onclick="pressSafeNum(6)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">6</button>
-                <button onclick="pressSafeNum(7)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">7</button>
-                <button onclick="pressSafeNum(8)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">8</button>
-                <button onclick="pressSafeNum(9)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">9</button>
-                <button onclick="clearSafeCode()" class="bg-red-900 hover:bg-red-800 text-white font-bold py-3 rounded-lg text-xs">CLR</button>
-                <button onclick="pressSafeNum(0)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">0</button>
-                <button onclick="closeSafeModal()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg text-xs">ESC</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN SCRIPT -->
+    <!-- MAIN GAME SCRIPT -->
     <script>
         /* ====================================================================
            1. GAME CONFIGURATION & TRANSLATIONS
@@ -373,7 +420,7 @@
                 lockedDoor: "Door Locked (Need Key)",
                 pickKey: "Pick up Key",
                 readNote: "Read Document",
-                hide: "Hide",
+                hide: "Hide in Wardrobe",
                 exitHide: "Exit Hideout",
                 openSafe: "Unlock Safe",
                 hiding: "Hidden",
@@ -400,8 +447,8 @@
                 lockedDoor: "Дверь Заперта (Нужен Ключ)",
                 pickKey: "Взять Ключ",
                 readNote: "Прочесть Документ",
-                hide: "Спрятаться",
-                exitHide: "Вылезти",
+                hide: "Спрятаться в Шкаф",
+                exitHide: "Вылезти из Шкафа",
                 openSafe: "Открыть Сейф",
                 hiding: "Спрятан",
                 crouching: "Присед",
@@ -428,40 +475,42 @@
             isFlashlightOn: true,
             isHiding: false,
             isCrouching: false,
+            showTouchControls: false,
             settings: {
                 graphics: 'med', // low, med, high
                 musicVol: 80,
                 sfxVol: 90,
-                moveType: 'WASD', // WASD or ARROWS
+                moveType: 'ALL', // ALL, WASD, ARROWS
                 interactKey: 'e'
             }
         };
 
-        // Save/Load LocalStorage
         function saveGame() {
-            localStorage.setItem('dark_escape_save', JSON.stringify({
-                unlockedLevel: gameState.unlockedLevel,
-                coins: gameState.coins,
-                settings: gameState.settings,
-                lang: gameState.lang
-            }));
+            try {
+                localStorage.setItem('dark_escape_save', JSON.stringify({
+                    unlockedLevel: gameState.unlockedLevel,
+                    coins: gameState.coins,
+                    settings: gameState.settings,
+                    lang: gameState.lang
+                }));
+            } catch(e) {}
         }
 
         function loadGame() {
-            const raw = localStorage.getItem('dark_escape_save');
-            if (raw) {
-                try {
+            try {
+                const raw = localStorage.getItem('dark_escape_save');
+                if (raw) {
                     const data = JSON.parse(raw);
                     gameState.unlockedLevel = data.unlockedLevel || 1;
                     gameState.coins = data.coins || 100;
                     if (data.settings) gameState.settings = Object.assign(gameState.settings, data.settings);
                     if (data.lang) gameState.lang = data.lang;
-                } catch(e) {}
-            }
+                }
+            } catch(e) {}
         }
 
         /* ====================================================================
-           2. CANVAS PROCEDURAL TEXTURE GENERATORS
+           2. CANVAS PROCEDURAL TEXTURES
            ==================================================================== */
         const Textures = {};
 
@@ -484,12 +533,12 @@
             ctx.fillRect(0, 0, 256, 256);
 
             ctx.fillStyle = color2;
-            for (let i = 0; i < 3000; i++) {
+            for (let i = 0; i < 2500; i++) {
                 const x = Math.random() * 256;
                 const y = Math.random() * 256;
-                const w = type === 'wood' ? Math.random() * 20 + 5 : Math.random() * 3 + 1;
+                const w = type === 'wood' ? Math.random() * 18 + 4 : Math.random() * 3 + 1;
                 const h = type === 'wood' ? Math.random() * 2 + 1 : Math.random() * 3 + 1;
-                ctx.globalAlpha = Math.random() * 0.3;
+                ctx.globalAlpha = Math.random() * 0.25;
                 ctx.fillRect(x, y, w, h);
             }
 
@@ -509,10 +558,8 @@
             ctx.fillRect(0, 0, 256, 256);
 
             ctx.fillStyle = '#7f1d1d';
-            const rows = 16;
-            const cols = 8;
-            const rh = 256 / rows;
-            const cw = 256 / cols;
+            const rows = 16, cols = 8;
+            const rh = 256 / rows, cw = 256 / cols;
 
             for (let r = 0; r < rows; r++) {
                 const offset = (r % 2) * (cw / 2);
@@ -551,104 +598,92 @@
         }
 
         /* ====================================================================
-           3. AUDIO SYNTHESIZER (Web Audio API)
+           3. AUDIO SYNTHESIZER
            ==================================================================== */
         class SoundEngine {
-            constructor() {
-                this.ctx = null;
-            }
-
+            constructor() { this.ctx = null; }
             init() {
                 if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
                 }
             }
-
             playFootstep() {
                 if (!this.ctx || gameState.settings.sfxVol === 0) return;
-                const vol = (gameState.settings.sfxVol / 100) * 0.3;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(120, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.1);
-
-                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.1);
+                try {
+                    const vol = (gameState.settings.sfxVol / 100) * 0.25;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.08);
+                } catch(e) {}
             }
-
             playDoorScreech() {
                 if (!this.ctx || gameState.settings.sfxVol === 0) return;
-                const vol = (gameState.settings.sfxVol / 100) * 0.4;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(200, this.ctx.currentTime);
-                osc.frequency.linearRampToValueAtTime(450, this.ctx.currentTime + 0.4);
-
-                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.5);
+                try {
+                    const vol = (gameState.settings.sfxVol / 100) * 0.35;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(400, this.ctx.currentTime + 0.35);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.4);
+                } catch(e) {}
             }
-
             playPickup() {
                 if (!this.ctx || gameState.settings.sfxVol === 0) return;
-                const vol = (gameState.settings.sfxVol / 100) * 0.5;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(440, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.15);
-
-                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.15);
+                try {
+                    const vol = (gameState.settings.sfxVol / 100) * 0.4;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.12);
+                } catch(e) {}
             }
-
             playGrowl() {
                 if (!this.ctx || gameState.settings.sfxVol === 0) return;
-                const vol = (gameState.settings.sfxVol / 100) * 0.6;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(60, this.ctx.currentTime);
-                osc.frequency.linearRampToValueAtTime(40, this.ctx.currentTime + 0.8);
-
-                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.8);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.8);
+                try {
+                    const vol = (gameState.settings.sfxVol / 100) * 0.5;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(65, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(35, this.ctx.currentTime + 0.7);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.7);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.7);
+                } catch(e) {}
             }
         }
-
         const audio = new SoundEngine();
 
         /* ====================================================================
-           4. THREE.JS ENGINE & GAME LOGIC
+           4. THREE.JS ENGINE & INPUT MECHANICS
            ==================================================================== */
         let scene, camera, renderer, flashlight;
         let interactiveObjects = [];
@@ -658,21 +693,23 @@
         let currentSafeCode = "1234";
         let enteredSafeCode = "";
 
-        // Controls
-        const keys = {};
-        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-        let velocity = new THREE.Vector3();
-        let direction = new THREE.Vector3();
+        // Movement Flags
+        const keyState = { fwd: false, bwd: false, left: false, right: false, sprint: false };
+        let pitch = 0, yaw = 0;
         let headBobTimer = 0;
+
+        // Touch Dragging State
+        let touchLookId = null;
+        let lastTouchX = 0, lastTouchY = 0;
 
         function init3DEngine() {
             const canvas = document.getElementById('game-canvas');
             scene = new THREE.Scene();
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 1.6, 3);
+            camera.position.set(0, 1.6, 3.8);
 
-            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: 'high-performance' });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = true;
@@ -686,36 +723,79 @@
 
             createProceduralTextures();
 
-            // Pointer lock listeners
-            canvas.addEventListener('click', () => {
-                if (isGameRunning && !isPointerLocked && !gameState.isHiding) {
+            // Focus & Pointer Lock Handling
+            canvas.focus();
+            
+            const requestLock = () => {
+                if (!isGameRunning || isModalOpen() || gameState.isHiding) return;
+                audio.init();
+                try {
                     canvas.requestPointerLock();
-                }
-            });
+                } catch(e) {}
+            };
+
+            canvas.addEventListener('click', requestLock);
+            document.getElementById('click-to-play-notice').addEventListener('click', requestLock);
 
             document.addEventListener('pointerlockchange', () => {
-                isPointerLocked = document.pointerLockElement === canvas;
-                if (!isPointerLocked && isGameRunning && !gameState.isHiding && !isModalOpen()) {
-                    openPauseMenu();
+                isPointerLocked = (document.pointerLockElement === canvas);
+                const clickNotice = document.getElementById('click-to-play-notice');
+                if (isGameRunning && !isPointerLocked && !gameState.isHiding && !isModalOpen()) {
+                    clickNotice.classList.remove('hidden');
+                } else {
+                    clickNotice.classList.add('hidden');
                 }
             });
 
+            // Universal Look Input (Mouse & Touch Drag)
             document.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('keydown', onKeyDown);
-            window.addEventListener('keyup', onKeyUp);
+            
+            // Touch Look
+            canvas.addEventListener('touchstart', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const t = e.changedTouches[i];
+                    if (t.clientX > window.innerWidth / 2 && touchLookId === null) {
+                        touchLookId = t.identifier;
+                        lastTouchX = t.clientX;
+                        lastTouchY = t.clientY;
+                    }
+                }
+            }, { passive: true });
+
+            canvas.addEventListener('touchmove', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const t = e.changedTouches[i];
+                    if (t.identifier === touchLookId) {
+                        const dx = t.clientX - lastTouchX;
+                        const dy = t.clientY - lastTouchY;
+                        lastTouchX = t.clientX;
+                        lastTouchY = t.clientY;
+                        applyRotation(dx * 0.004, dy * 0.004);
+                    }
+                }
+            }, { passive: true });
+
+            const clearTouchLook = (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === touchLookId) {
+                        touchLookId = null;
+                    }
+                }
+            };
+            canvas.addEventListener('touchend', clearTouchLook);
+            canvas.addEventListener('touchcancel', clearTouchLook);
+
+            // Universal Keyboard Listeners
+            window.addEventListener('keydown', onKeyDown, true);
+            window.addEventListener('keyup', onKeyUp, true);
             window.addEventListener('resize', onWindowResize);
+
+            bindVirtualTouchButtons();
         }
 
-        /* Mouse Look */
-        let pitch = 0, yaw = 0;
-        function onMouseMove(e) {
-            if (!isPointerLocked) return;
-
-            const movementX = e.movementX || 0;
-            const movementY = e.movementY || 0;
-
-            yaw -= movementX * 0.002;
-            pitch -= movementY * 0.002;
+        function applyRotation(dx, dy) {
+            yaw -= dx;
+            pitch -= dy;
             pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
 
             camera.rotation.order = "YXZ";
@@ -723,44 +803,68 @@
             camera.rotation.y = yaw;
         }
 
-        /* Key Input Handlers */
+        function onMouseMove(e) {
+            if (!isGameRunning || !isPointerLocked || gameState.isHiding) return;
+            applyRotation(e.movementX * 0.0022, e.movementY * 0.0022);
+        }
+
         function onKeyDown(e) {
-            if (!isGameRunning) return;
-            const code = e.key.toLowerCase();
+            if (!isGameRunning || isModalOpen()) return;
+            const k = e.key.toLowerCase();
+            const code = e.code;
 
-            // Dynamic keys based on settings
-            const isWASD = gameState.settings.moveType === 'WASD';
-            const fwdKey = isWASD ? 'w' : 'arrowup';
-            const backKey = isWASD ? 's' : 'arrowdown';
-            const leftKey = isWASD ? 'a' : 'arrowleft';
-            const rightKey = isWASD ? 'd' : 'arrowright';
-            const interactKey = gameState.settings.interactKey.toLowerCase();
+            // Robust multi-key binding (WASD + Arrow Keys supported simultaneously)
+            if (k === 'w' || k === 'arrowup' || code === 'KeyW' || code === 'ArrowUp') keyState.fwd = true;
+            if (k === 's' || k === 'arrowdown' || code === 'KeyS' || code === 'ArrowDown') keyState.bwd = true;
+            if (k === 'a' || k === 'arrowleft' || code === 'KeyA' || code === 'ArrowLeft') keyState.left = true;
+            if (k === 'd' || k === 'arrowright' || code === 'KeyD' || code === 'ArrowRight') keyState.right = true;
 
-            if (code === fwdKey) moveForward = true;
-            if (code === backKey) moveBackward = true;
-            if (code === leftKey) moveLeft = true;
-            if (code === rightKey) moveRight = true;
+            if (k === 'shift' || code.includes('Shift')) keyState.sprint = true;
+            if (k === 'control' || code.includes('Control')) toggleCrouch();
 
-            if (code === 'shift') keys.sprint = true;
-            if (code === 'control') toggleCrouch();
-
-            if (code === interactKey) {
+            const customInteract = gameState.settings.interactKey.toLowerCase();
+            if (k === customInteract || k === 'e' || code === 'KeyE') {
                 checkInteraction();
             }
 
-            if (code === 'f') {
+            if (k === 'f' || code === 'KeyF') {
                 toggleFlashlight();
+            }
+
+            if (k === 'escape' || code === 'Escape') {
+                openPauseMenu();
             }
         }
 
         function onKeyUp(e) {
-            const code = e.key.toLowerCase();
-            const isWASD = gameState.settings.moveType === 'WASD';
-            if (code === (isWASD ? 'w' : 'arrowup')) moveForward = false;
-            if (code === (isWASD ? 's' : 'arrowdown')) moveBackward = false;
-            if (code === (isWASD ? 'a' : 'arrowleft')) moveLeft = false;
-            if (code === (isWASD ? 'd' : 'arrowright')) moveRight = false;
-            if (code === 'shift') keys.sprint = false;
+            const k = e.key.toLowerCase();
+            const code = e.code;
+
+            if (k === 'w' || k === 'arrowup' || code === 'KeyW' || code === 'ArrowUp') keyState.fwd = false;
+            if (k === 's' || k === 'arrowdown' || code === 'KeyS' || code === 'ArrowDown') keyState.bwd = false;
+            if (k === 'a' || k === 'arrowleft' || code === 'KeyA' || code === 'ArrowLeft') keyState.left = false;
+            if (k === 'd' || k === 'arrowright' || code === 'KeyD' || code === 'ArrowRight') keyState.right = false;
+
+            if (k === 'shift' || code.includes('Shift')) keyState.sprint = false;
+        }
+
+        function bindVirtualTouchButtons() {
+            const bindBtn = (id, startAction, endAction) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('touchstart', (e) => { e.preventDefault(); startAction(); }, { passive: false });
+                el.addEventListener('touchend', (e) => { e.preventDefault(); if (endAction) endAction(); }, { passive: false });
+                el.addEventListener('mousedown', startAction);
+                if (endAction) el.addEventListener('mouseup', endAction);
+            };
+
+            bindBtn('btn-touch-up', () => keyState.fwd = true, () => keyState.fwd = false);
+            bindBtn('btn-touch-down', () => keyState.bwd = true, () => keyState.bwd = false);
+            bindBtn('btn-touch-left', () => keyState.left = true, () => keyState.left = false);
+            bindBtn('btn-touch-right', () => keyState.right = true, () => keyState.right = false);
+            bindBtn('btn-touch-crouch', () => toggleCrouch());
+            bindBtn('btn-touch-flash', () => toggleFlashlight());
+            bindBtn('btn-touch-interact', () => checkInteraction());
         }
 
         function toggleCrouch() {
@@ -782,107 +886,78 @@
         }
 
         /* ====================================================================
-           5. LEVEL & ENVIRONMENT BUILDING
+           5. LEVEL & ENVIRONMENT BUILDER
            ==================================================================== */
         function buildLevel(levelNum) {
-            // Clear existing scene objects
             interactiveObjects = [];
             while (scene.children.length > 0) {
                 scene.remove(scene.children[0]);
             }
 
-            // Re-add flashlight
             scene.add(flashlight);
             scene.add(flashlight.target);
 
             const locIndex = Math.floor((levelNum - 1) / 10);
             const loc = LOCATIONS[locIndex] || LOCATIONS[0];
 
-            // Ambient Fog and Ambient Light
             scene.fog = new THREE.FogExp2(loc.color, loc.fogDensity);
             scene.background = new THREE.Color(0x050505);
 
-            const ambientLight = new THREE.AmbientLight(loc.color, 0.15);
+            const ambientLight = new THREE.AmbientLight(loc.color, 0.2);
             scene.add(ambientLight);
 
-            // Room Geometry (Dimensions: 8x4x10)
+            // Room Base (Dimensions: 10x4x12)
             const roomGroup = new THREE.Group();
 
-            // Floor
             const floorMat = new THREE.MeshStandardMaterial({ map: locIndex % 2 === 0 ? Textures.wood : Textures.tile, roughness: 0.8 });
             const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 12), floorMat);
             floor.rotation.x = -Math.PI / 2;
             floor.receiveShadow = true;
             roomGroup.add(floor);
 
-            // Ceiling
             const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
             const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(10, 12), ceilingMat);
             ceiling.position.y = 4;
             ceiling.rotation.x = Math.PI / 2;
             roomGroup.add(ceiling);
 
-            // Walls
             const wallMat = new THREE.MeshStandardMaterial({ map: locIndex % 3 === 0 ? Textures.brick : Textures.wall, roughness: 0.9 });
             
-            // Back Wall (Exit Door)
-            const backWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.2), wallMat);
-            backWall.position.set(0, 2, -6);
-            roomGroup.add(backWall);
-
-            // Front Wall
-            const frontWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.2), wallMat);
-            frontWall.position.set(0, 2, 6);
-            roomGroup.add(frontWall);
-
-            // Left Wall
-            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 12), wallMat);
-            leftWall.position.set(-5, 2, 0);
-            roomGroup.add(leftWall);
-
-            // Right Wall
-            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 12), wallMat);
-            rightWall.position.set(5, 2, 0);
-            roomGroup.add(rightWall);
+            const backWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.2), wallMat); backWall.position.set(0, 2, -6); roomGroup.add(backWall);
+            const frontWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.2), wallMat); frontWall.position.set(0, 2, 6); roomGroup.add(frontWall);
+            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 12), wallMat); leftWall.position.set(-5, 2, 0); roomGroup.add(leftWall);
+            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 12), wallMat); rightWall.position.set(5, 2, 0); roomGroup.add(rightWall);
 
             scene.add(roomGroup);
 
-            // --- INTERACTIVE FURNITURE & OBJECTS ---
-            // 1. Exit Door
+            // Furniture Models
             createDoor(0, 0, -5.8, levelNum);
-
-            // 2. Wardrobe (Hiding Spot)
             createWardrobe(-3.8, 0, -2);
-
-            // 3. Table with Safe or Key
             createTable(3.5, 0, 1);
 
-            // 4. Safe or Note
             currentSafeCode = `${Math.floor(1000 + Math.random() * 9000)}`;
             createSafe(3.5, 0.9, 1, currentSafeCode);
 
-            // 5. Clue Document / Note
             const noteText = {
-                en: `Investigation Log Level ${levelNum}: Safe code seems to be [${currentSafeCode}]. Search the safe to find the room exit key.`,
-                ru: `Запись расследования уровень ${levelNum}: Код от сейфа кажется [${currentSafeCode}]. Вскройте сейф, чтобы найти ключ от двери.`
+                en: `Investigation Log Level ${levelNum}: Safe code is [${currentSafeCode}]. Unlock the safe to grab the room key!`,
+                ru: `Дневник расследования Уровень ${levelNum}: Код от сейфа [${currentSafeCode}]. Откройте сейф, чтобы достать ключ.`
             };
             createNote(-3.5, 0.95, -2, noteText);
 
-            // --- MONSTER HOST ---
             createMonster(loc.monsterColor);
 
-            // Reset Player Position
+            // Reset Position
             camera.position.set(0, 1.6, 4);
             yaw = 0; pitch = 0;
+            camera.rotation.set(0, 0, 0);
+
             gameState.hasKey = false;
             gameState.isHiding = false;
 
-            // Update UI HUD
             document.getElementById('txt-location').innerText = loc.name[gameState.lang];
             document.getElementById('txt-level').innerText = `Lvl ${levelNum}`;
         }
 
-        /* Composite 3D Models Creation */
         function createDoor(x, y, z, levelNum) {
             const doorGroup = new THREE.Group();
             doorGroup.position.set(x, y, z);
@@ -896,7 +971,6 @@
             door.castShadow = true;
             doorGroup.add(door);
 
-            // Handle
             const handle = new THREE.Mesh(new THREE.SphereGeometry(0.08), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8 }));
             handle.position.set(0.8, 1.5, 0.1);
             doorGroup.add(handle);
@@ -933,7 +1007,7 @@
                 mesh: group,
                 type: 'wardrobe',
                 action: () => toggleHiding(x, y, z),
-                prompt: TRANSLATIONS[gameState.lang].hide
+                prompt: gameState.isHiding ? TRANSLATIONS[gameState.lang].exitHide : TRANSLATIONS[gameState.lang].hide
             });
         }
 
@@ -988,7 +1062,9 @@
                 text: textObj,
                 action: () => {
                     audio.playPickup();
-                    gameState.collectedNotes.push(textObj[gameState.lang]);
+                    if (!gameState.collectedNotes.includes(textObj[gameState.lang])) {
+                        gameState.collectedNotes.push(textObj[gameState.lang]);
+                    }
                     showPrompt(textObj[gameState.lang]);
                 },
                 prompt: TRANSLATIONS[gameState.lang].readNote
@@ -1011,7 +1087,7 @@
                     audio.playPickup();
                     gameState.hasKey = true;
                     scene.remove(keyGroup);
-                    showPrompt("Key acquired!");
+                    showPrompt("Key collected!");
                 },
                 prompt: TRANSLATIONS[gameState.lang].pickKey
             });
@@ -1021,7 +1097,6 @@
             const group = new THREE.Group();
             group.position.set(0, 1.2, -2);
 
-            // Creepy Low-poly silhouette
             const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.2, 1.8, 8), new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.3 }));
             group.add(body);
 
@@ -1029,7 +1104,6 @@
             head.position.y = 1.1;
             group.add(head);
 
-            // Glowing red eyes
             const eyeGeo = new THREE.SphereGeometry(0.04, 6, 6);
             const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
             const leftEye = new THREE.Mesh(eyeGeo, eyeMat); leftEye.position.set(-0.08, 1.15, 0.2);
@@ -1037,48 +1111,58 @@
             group.add(leftEye); group.add(rightEye);
 
             monster = group;
-            monsterPointA = new THREE.Vector3(-3, 1.2, -2);
-            monsterPointB = new THREE.Vector3(3, 1.2, -2);
+            monsterPointA = new THREE.Vector3(-3.5, 1.2, -2);
+            monsterPointB = new THREE.Vector3(3.5, 1.2, -2);
             scene.add(monster);
         }
 
         /* ====================================================================
-           6. GAMEPLAY UPDATES & INTERACTION LOOP
+           6. GAME LOOP & UPDATES
            ==================================================================== */
         function updateMovement(delta) {
-            if (!isPointerLocked || gameState.isHiding) return;
+            if (gameState.isHiding) return;
 
-            const speed = (keys.sprint ? 4.5 : 2.5) * (gameState.isCrouching ? 0.5 : 1.0);
+            const speed = (keyState.sprint ? 4.2 : 2.4) * (gameState.isCrouching ? 0.5 : 1.0);
 
-            direction.z = Number(moveForward) - Number(moveBackward);
-            direction.x = Number(moveRight) - Number(moveLeft);
-            direction.normalize();
+            const moveDir = new THREE.Vector3();
+            if (keyState.fwd) moveDir.z -= 1;
+            if (keyState.bwd) moveDir.z += 1;
+            if (keyState.left) moveDir.x -= 1;
+            if (keyState.right) moveDir.x += 1;
 
-            if (moveForward || moveBackward || moveLeft || moveRight) {
-                camera.moveForward(direction.z * speed * delta);
-                camera.moveRight(direction.x * speed * delta);
+            moveDir.normalize();
 
-                // Footstep sounds & headbobbing
-                headBobTimer += delta * speed * 3;
-                camera.position.y = (gameState.isCrouching ? 0.9 : 1.6) + Math.sin(headBobTimer) * 0.05;
+            if (moveDir.lengthSq() > 0) {
+                // Direction relative to camera rotation
+                const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+                forward.y = 0; forward.normalize();
 
-                if (Math.sin(headBobTimer) > 0.9) {
+                const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+                right.y = 0; right.normalize();
+
+                camera.position.addScaledVector(forward, -moveDir.z * speed * delta);
+                camera.position.addScaledVector(right, moveDir.x * speed * delta);
+
+                headBobTimer += delta * speed * 3.5;
+                camera.position.y = (gameState.isCrouching ? 0.9 : 1.6) + Math.sin(headBobTimer) * 0.04;
+
+                if (Math.sin(headBobTimer) > 0.92) {
                     audio.playFootstep();
                 }
             }
 
-            // Keep within room boundaries
-            camera.position.x = Math.max(-4.5, Math.min(4.5, camera.position.x));
-            camera.position.z = Math.max(-5.5, Math.min(5.5, camera.position.z));
+            // Room collision boundary bounds
+            camera.position.x = Math.max(-4.4, Math.min(4.4, camera.position.x));
+            camera.position.z = Math.max(-5.4, Math.min(5.4, camera.position.z));
 
-            // Attach flashlight to camera
+            // Attach flashlight
             flashlight.position.copy(camera.position);
             const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
             flashlight.target.position.copy(camera.position).add(dir);
 
-            // Flashlight battery drain
+            // Flashlight Battery Drain
             if (gameState.isFlashlightOn) {
-                gameState.battery = Math.max(0, gameState.battery - delta * 0.8);
+                gameState.battery = Math.max(0, gameState.battery - delta * 0.7);
                 document.getElementById('battery-bar').style.width = `${gameState.battery}%`;
                 if (gameState.battery <= 0) {
                     gameState.isFlashlightOn = false;
@@ -1090,19 +1174,16 @@
         function updateMonsterAI(delta) {
             if (!monster) return;
 
-            // Patrol back and forth
             const target = monsterDir === 1 ? monsterPointB : monsterPointA;
-            monster.position.lerp(target, delta * 0.5);
+            monster.position.lerp(target, delta * 0.6);
 
-            if (monster.position.distanceTo(target) < 0.3) {
+            if (monster.position.distanceTo(target) < 0.2) {
                 monsterDir *= -1;
             }
 
-            // Check distance to player
             if (!gameState.isHiding) {
                 const dist = monster.position.distanceTo(camera.position);
-                if (dist < 1.5) {
-                    // Player caught!
+                if (dist < 1.4) {
                     audio.playGrowl();
                     triggerGameOver();
                 }
@@ -1110,8 +1191,6 @@
         }
 
         function checkRaycastPrompts() {
-            if (!isPointerLocked) return;
-
             const raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
 
@@ -1119,11 +1198,10 @@
             let foundPrompt = false;
 
             for (let i = 0; i < intersects.length; i++) {
-                const obj = intersects[i].object;
-                let parent = obj;
-                while (parent && !parent.userData.interactive && parent !== scene) {
+                let parent = intersects[i].object;
+                while (parent && parent !== scene) {
                     const match = interactiveObjects.find(io => io.mesh === parent);
-                    if (match && intersects[i].distance < 3) {
+                    if (match && intersects[i].distance < 3.2) {
                         showInteractionUI(match.prompt);
                         foundPrompt = true;
                         break;
@@ -1148,7 +1226,7 @@
                 let parent = intersects[i].object;
                 while (parent && parent !== scene) {
                     const match = interactiveObjects.find(io => io.mesh === parent);
-                    if (match && intersects[i].distance < 3) {
+                    if (match && intersects[i].distance < 3.2) {
                         match.action();
                         return;
                     }
@@ -1168,7 +1246,7 @@
             } else {
                 camera.position.set(x, 1.6, z + 1.5);
                 status.classList.add('hidden');
-                document.getElementById('game-canvas').requestPointerLock();
+                document.getElementById('game-canvas').focus();
             }
         }
 
@@ -1176,7 +1254,7 @@
             document.getElementById('damage-flash').style.opacity = '1';
             setTimeout(() => {
                 document.getElementById('damage-flash').style.opacity = '0';
-                buildLevel(gameState.currentLevel); // Restart level
+                buildLevel(gameState.currentLevel);
             }, 400);
         }
 
@@ -1222,6 +1300,23 @@
             document.getElementById('lbl-add-coins').innerText = t.simPayment;
 
             document.getElementById('prompt-key').innerText = gameState.settings.interactKey.toUpperCase();
+        }
+
+        function setGraphics(level) {
+            gameState.settings.graphics = level;
+            if (renderer) {
+                if (level === 'low') {
+                    renderer.shadowMap.enabled = false;
+                    renderer.setPixelRatio(1);
+                } else if (level === 'med') {
+                    renderer.shadowMap.enabled = true;
+                    renderer.setPixelRatio(1.25);
+                } else {
+                    renderer.shadowMap.enabled = true;
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                }
+            }
+            saveGame();
         }
 
         function showInteractionUI(text) {
@@ -1300,7 +1395,6 @@
             });
         }
 
-        /* Safe Number Pad Input */
         function openSafeModal() {
             document.exitPointerLock();
             enteredSafeCode = "";
@@ -1310,7 +1404,7 @@
 
         function closeSafeModal() {
             document.getElementById('modal-safe').classList.add('hidden');
-            if (isGameRunning) document.getElementById('game-canvas').requestPointerLock();
+            if (isGameRunning) document.getElementById('game-canvas').focus();
         }
 
         function pressSafeNum(num) {
@@ -1338,7 +1432,6 @@
             document.getElementById('safe-display').innerText = "----";
         }
 
-        /* Shop Logic */
         function buyItem(item, price) {
             if (gameState.coins >= price) {
                 gameState.coins -= price;
@@ -1354,7 +1447,6 @@
             }
         }
 
-        /* Game State Transitions */
         function startGame() {
             audio.init();
             document.getElementById('main-menu').classList.add('hidden');
@@ -1362,12 +1454,20 @@
             document.getElementById('hud-bottom').classList.remove('hidden');
             document.getElementById('crosshair').classList.remove('hidden');
 
+            if ('ontouchstart' in window || gameState.showTouchControls) {
+                document.getElementById('mobile-controls').classList.remove('hidden');
+            }
+
             isGameRunning = true;
             buildLevel(gameState.currentLevel);
-            document.getElementById('game-canvas').requestPointerLock();
+
+            const canvas = document.getElementById('game-canvas');
+            canvas.focus();
+            try { canvas.requestPointerLock(); } catch(e) {}
         }
 
         function openPauseMenu() {
+            document.exitPointerLock();
             document.getElementById('modal-pause').classList.remove('hidden');
         }
 
@@ -1378,6 +1478,7 @@
             document.getElementById('hud-top').classList.add('hidden');
             document.getElementById('hud-bottom').classList.add('hidden');
             document.getElementById('crosshair').classList.add('hidden');
+            document.getElementById('mobile-controls').classList.add('hidden');
             document.getElementById('main-menu').classList.remove('hidden');
         }
 
@@ -1389,7 +1490,7 @@
         }
 
         /* ====================================================================
-           8. MAIN RENDER LOOP & EVENT BINDINGS
+           8. RENDER LOOP
            ==================================================================== */
         let lastTime = performance.now();
 
@@ -1397,7 +1498,7 @@
             requestAnimationFrame(animate);
 
             const now = performance.now();
-            const delta = (now - lastTime) / 1000;
+            const delta = Math.min((now - lastTime) / 1000, 0.1);
             lastTime = now;
 
             if (isGameRunning && !isModalOpen()) {
@@ -1411,7 +1512,6 @@
             }
         }
 
-        // Initialize Application
         window.onload = () => {
             loadGame();
             init3DEngine();
@@ -1420,7 +1520,6 @@
             document.getElementById('coin-count').innerText = gameState.coins;
             document.getElementById('shop-coins').innerText = gameState.coins;
 
-            // Main Menu Buttons
             document.getElementById('btn-play').onclick = () => startGame();
             document.getElementById('btn-levels').onclick = () => {
                 renderLevelGrid();
@@ -1443,18 +1542,16 @@
             };
             document.getElementById('close-journal').onclick = () => document.getElementById('modal-journal').classList.add('hidden');
 
-            // Pause Menu
             document.getElementById('btn-resume').onclick = () => {
                 document.getElementById('modal-pause').classList.add('hidden');
-                document.getElementById('game-canvas').requestPointerLock();
+                document.getElementById('game-canvas').focus();
+                try { document.getElementById('game-canvas').requestPointerLock(); } catch(e) {}
             };
             document.getElementById('btn-quit').onclick = () => exitToMenu();
 
-            // Languages
             document.getElementById('lang-ru').onclick = () => { gameState.lang = 'ru'; updateLanguageUI(); saveGame(); };
             document.getElementById('lang-en').onclick = () => { gameState.lang = 'en'; updateLanguageUI(); saveGame(); };
 
-            // Payment Simulator
             document.getElementById('btn-add-coins').onclick = () => {
                 gameState.coins += 500;
                 document.getElementById('coin-count').innerText = gameState.coins;
@@ -1462,15 +1559,24 @@
                 saveGame();
             };
 
-            // Movement & Interaction Key Bindings
             document.getElementById('btn-toggle-keys').onclick = (e) => {
-                gameState.settings.moveType = gameState.settings.moveType === 'WASD' ? 'ARROWS' : 'WASD';
-                e.target.innerText = gameState.settings.moveType;
-                saveGame();
+                e.target.innerText = "WASD + Arrows";
+            };
+
+            document.getElementById('btn-toggle-touch').onclick = (e) => {
+                gameState.showTouchControls = !gameState.showTouchControls;
+                const mControls = document.getElementById('mobile-controls');
+                if (gameState.showTouchControls) {
+                    mControls.classList.remove('hidden');
+                    e.target.innerText = "ON";
+                } else {
+                    mControls.classList.add('hidden');
+                    e.target.innerText = "OFF";
+                }
             };
 
             document.getElementById('btn-rebind-interact').onclick = (e) => {
-                const key = prompt("Press new interaction key (e.g. F, E, Q, R):", gameState.settings.interactKey);
+                const key = prompt("Press new interaction key (e.g. E, F, Q):", gameState.settings.interactKey);
                 if (key && key.length === 1) {
                     gameState.settings.interactKey = key.toLowerCase();
                     e.target.innerText = key.toUpperCase();
@@ -1479,7 +1585,6 @@
                 }
             };
 
-            // Start Render Loop
             animate();
         };
     </script>
