@@ -3,308 +3,229 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>100 Gates — 100gate.online</title>
+<title>100 Gates — Team Arena</title>
 <style>
 :root{--bg:#0f1117;--card:#181b25;--line:#2a2f3f;--tx:#e8e6df;--mut:#9a9aa8;--gold:#e0b44c;--ok:#4cc38a;--bad:#e5564f}
 *{box-sizing:border-box}
 body{margin:0;background:radial-gradient(circle at 50% -10%,#232842,var(--bg) 60%);color:var(--tx);font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh}
-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line)}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--line)}
 h1{margin:0;font-size:20px;letter-spacing:.08em;color:var(--gold);display:flex;align-items:center;gap:8px}
 .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:6px}
-button:hover{border-color:var(--gold)}
-button.p{background:var(--gold);color:#1a1405;border-color:var(--gold);font-weight:600}
-button:disabled{opacity:.4;cursor:not-allowed}
+button:hover{border-color:var(--gold)}button.p{background:var(--gold);color:#1a1405;border-color:var(--gold);font-weight:600}button:disabled{opacity:.4;cursor:not-allowed}
 .lang button.on{background:var(--gold);color:#1a1405}
 .coins{color:var(--gold);font-weight:700;display:inline-flex;align-items:center;gap:6px}
-.ic{width:1.15em;height:1.15em;flex:none;vertical-align:-.2em}
-.ic.sy{width:30px;height:30px}.ic.big{width:34px;height:34px}.ic.logo{width:26px;height:26px}
-main{max-width:860px;margin:0 auto;padding:20px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px}
-.g{padding:10px 0;text-align:center;border-radius:8px;border:1px solid var(--line);background:#12141c}
-.g.done{border-color:var(--ok);color:var(--ok);cursor:pointer}.g.cur{border-color:var(--gold);color:var(--gold);cursor:pointer}.g.lock{opacity:.35}
-.story{background:#12141c;border-left:3px solid var(--gold);padding:10px 14px;border-radius:6px;margin:10px 0;color:var(--mut)}
-.q{font-size:26px;text-align:center;margin:18px 0;min-height:40px;word-break:break-word;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center}
-.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:10px 0}
-input[type=text]{font:inherit;font-size:20px;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:#0c0e14;color:var(--tx);width:220px;text-align:center}
-.tbar{height:8px;background:#0c0e14;border-radius:4px;overflow:hidden}.tbar i{display:block;height:100%;background:var(--gold);width:100%}
-.slot{width:44px;height:44px;border:1px dashed var(--line);border-radius:8px;display:inline-flex;align-items:center;justify-content:center}
-.opt{min-width:200px;justify-content:center}
-.msg{text-align:center;min-height:24px;margin:8px 0}.ok{color:var(--ok)}.bad{color:var(--bad)}
-.shop{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
-.item{border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;background:#12141c}
-.item small{color:var(--mut);display:block;min-height:34px;margin:4px 0 8px}.item .big{margin-bottom:6px}
-.modal{position:fixed;inset:0;background:#000a;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:20px;z-index:9}
-.modal.open{display:flex}.modal .card{max-width:760px;width:100%;margin-top:30px}
-h2{margin:0 0 12px;font-size:18px}.mut{color:var(--mut)}
+.ic{width:1.15em;height:1.15em;flex:none;vertical-align:-.2em}.ic.big{width:34px;height:34px}.ic.logo{width:26px;height:26px}
+main{max-width:980px;margin:0 auto;padding:14px}
+.wrap{position:relative}
+canvas{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px;background:#151a26;cursor:crosshair}
+#ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0009;border-radius:12px;padding:10px;overflow:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;max-width:640px;width:100%}
+.cls{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:12px 0}
+.cc{border:2px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;background:#12141c}.cc.on{border-color:var(--gold)}.cc small{color:var(--mut);display:block;margin-top:4px}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:6px;vertical-align:-2px}
+.row{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0}
+.mut{color:var(--mut)}h2{margin:0 0 10px}
+.shop{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.item{border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;background:#12141c}.item small{color:var(--mut);display:block;min-height:34px;margin:4px 0 8px}
+.modal{position:fixed;inset:0;background:#000a;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:20px;z-index:9}.modal.open{display:flex}.modal .card{margin-top:30px;max-width:760px}
+.msg{text-align:center;min-height:22px}.ok{color:var(--ok)}.bad{color:var(--bad)}
 </style>
 </head>
 <body>
 <header>
-  <h1><span id="icLogo"></span><span id="hTitle"></span></h1>
-  <div class="bar">
-    <span class="coins"><span id="icCoin"></span><span id="coins">0</span></span>
-    <button onclick="openShop()" id="bShop"></button>
-    <div class="lang"><button id="lEN" onclick="setLang('en')">EN</button> <button id="lRU" onclick="setLang('ru')">RU</button></div>
-  </div>
+ <h1><span id="icLogo"></span><span id="hTitle"></span></h1>
+ <div class="bar"><span class="coins"><span id="icCoin"></span><span id="coins">0</span></span>
+ <button onclick="openShop()" id="bShop"></button>
+ <div class="lang"><button id="lEN" onclick="setLang('en')">EN</button> <button id="lRU" onclick="setLang('ru')">RU</button></div></div>
 </header>
 <main>
-  <section id="home">
-    <div class="card"><h2 id="tTitle"></h2><p class="mut" id="tIntro"></p><p class="mut" id="tHow"></p>
-      <button class="p" id="bPlay" onclick="play(S.level)"></button>
-      <button id="bReset" onclick="resetAll()"></button></div>
-    <div class="card"><h2 id="tMap"></h2><div class="grid" id="map"></div></div>
-    <div class="card"><h2 id="tInv"></h2><div id="inv" class="mut"></div></div>
-  </section>
-  <section id="game" style="display:none">
-    <div class="card">
-      <div class="bar" style="justify-content:space-between"><b id="gTitle"></b><span id="gLives"></span></div>
-      <div class="story" id="gStory"></div>
-      <div class="tbar" style="margin:10px 0"><i id="tfill"></i></div>
-      <div class="mut" id="gTask" style="text-align:center"></div>
-      <div class="q" id="gQ"></div>
-      <div id="gIn" class="row"></div>
-      <div class="msg" id="gMsg"></div>
-      <div class="row" id="gItems"></div>
-      <div class="row"><button onclick="home()" id="bBack"></button></div>
-    </div>
-  </section>
+ <div class="wrap"><canvas id="cv" width="960" height="640"></canvas><div id="ov"></div></div>
+ <div class="row" id="invbar"></div>
+ <p class="mut" id="ctl" style="text-align:center;margin:4px"></p>
 </main>
-<div class="modal" id="shop" onclick="if(event.target===this)closeShop()">
-  <div class="card">
-    <div class="bar" style="justify-content:space-between"><h2 id="sTitle"></h2><button onclick="closeShop()">X</button></div>
-    <h3 id="sCoins"></h3><div class="shop" id="packs"></div>
-    <h3 id="sItems" style="margin-top:22px"></h3><div class="shop" id="items"></div>
-    <div class="msg" id="sMsg"></div>
-  </div>
-</div>
-<div class="modal" id="pay" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="card" style="max-width:420px;text-align:center">
-    <h2 id="pTitle"></h2><p id="pInfo" class="mut"></p>
-    <div class="row"><button class="p" onclick="pay('card')" id="pCard"></button><button class="p" onclick="pay('crypto')" id="pCrypto"></button></div>
-  </div>
-</div>
+<div class="modal" id="shop" onclick="if(event.target===this)closeShop()"><div class="card">
+ <div class="bar" style="justify-content:space-between"><h2 id="sTitle"></h2><button onclick="closeShop()">X</button></div>
+ <h3 id="sCoins"></h3><div class="shop" id="packs"></div><h3 id="sItems" style="margin-top:20px"></h3><div class="shop" id="items"></div><div class="msg" id="sMsg"></div></div></div>
+<div class="modal" id="pay" onclick="if(event.target===this)this.classList.remove('open')"><div class="card" style="max-width:420px;text-align:center">
+ <h2 id="pTitle"></h2><p id="pInfo" class="mut"></p><div class="row"><button class="p" onclick="pay('card')" id="pCard"></button><button class="p" onclick="pay('crypto')" id="pCrypto"></button></div></div></div>
 
 <script>
-/* ============ PAYMENT CONFIG ============
- DEMO:true  -> coins are credited instantly (testing only!)
- DEMO:false -> opens your payment link. Real crediting must be done by your server
- after a webhook from the payment provider (Stripe / NOWPayments / Coinbase Commerce...). */
-const PAY = {
-  DEMO: true,
-  prices: {50:'$0.99', 100:'$1.99', 200:'$3.99', 500:'$8.99'},
-  card:   {50:'', 100:'', 200:'', 500:''},
-  crypto: {50:'', 100:'', 200:'', 500:''}
-};
-/* ============ ICONS (SVG, no emoji) ============ */
+/* ===== PAYMENT CONFIG =====
+ DEMO:true -> coins credited instantly (testing only). DEMO:false -> opens your payment link;
+ real crediting must be done by your server after the provider's webhook (Stripe / NOWPayments / Coinbase Commerce). */
+const PAY={DEMO:true,prices:{50:'$0.99',100:'$1.99',200:'$3.99',500:'$8.99'},
+ card:{50:'',100:'',200:'',500:''},crypto:{50:'',100:'',200:'',500:''}};
+/* ===== icons ===== */
 const sv=(b,c)=>`<svg class="ic ${c||''}" viewBox="0 0 24 24">${b}</svg>`;
 const IC={
- coin:'<circle cx="12" cy="12" r="11" fill="#e0b44c" stroke="#9c7116" stroke-width="1.5"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="#9c7116" stroke-width="1.3"/><path d="M12 7l1.5 3.200 3.500.4-2.600 2.400.7 3.500L12 14.700l-3.100 1.800.7-3.500L7 10.600l3.500-.4z" fill="#9c7116"/>',
- heart:'<path d="M12 21s-8-5.300-8-11a4.500 4.500 0 018-2.800A4.500 4.500 0 0120 10c0 5.700-8 11-8 11z" fill="#e5564f"/>',
+ coin:'<circle cx="12" cy="12" r="11" fill="#e0b44c" stroke="#9c7116" stroke-width="1.5"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="#9c7116" stroke-width="1.3"/><path d="M12 7l1.5 3.2 3.5.4-2.6 2.4.7 3.5L12 14.7l-3.100 1.800.7-3.500L7 10.600l3.500-.400z" fill="#9c7116"/>',
  logo:'<path d="M3 22V11a9 9 0 0118 0v11h-5V11a4 4 0 00-8 0v11z" fill="#e0b44c"/>',
  cart:'<circle cx="9" cy="20" r="1.8" fill="currentColor"/><circle cx="18" cy="20" r="1.8" fill="currentColor"/><path d="M2 3h3l3 12h11l2-8H6" stroke="currentColor" stroke-width="2" fill="none"/>',
- hint:'<circle cx="12" cy="10" r="6.500" fill="#e0b44c"/><rect x="9" y="16" width="6" height="5" rx="1.200" fill="#9a9aa8"/>',
- tm:'<path d="M6 3h12v4l-5 5 5 5v4H6v-4l5-5-5-5z" fill="#6cb6ff"/>',
+ med:'<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="#e5564f"/>',
  sh:'<path d="M12 2l8 3v6c0 5-3.500 9-8 11-4.500-2-8-6-8-11V5z" fill="#4cc38a"/>',
- sk:'<circle cx="8" cy="12" r="4.500" fill="none" stroke="#e0b44c" stroke-width="2.500"/><path d="M12.500 12H22M18 12v4M21 12v3" stroke="#e0b44c" stroke-width="2.500" fill="none"/>'
+ rage:'<path d="M13 2L4 14h6l-1 8 9-12h-6z" fill="#e0b44c"/>',
+ bomb:'<circle cx="11" cy="14" r="7" fill="#9a9aa8"/><path d="M15 8l4-4" stroke="#e0b44c" stroke-width="2.500"/>'
 };
 const ic=(n,c)=>sv(IC[n],c);
-const SY=['<circle cx="12" cy="12" r="9" fill="#e5564f"/>','<rect x="4" y="4" width="16" height="16" rx="2" fill="#4c9be5"/>','<path d="M12 3l10 18H2z" fill="#4cc38a"/>','<path d="M12 2l10 10-10 10L2 12z" fill="#e0b44c"/>','<path d="M12 2l3 7 7 .6-5.300 4.700 1.600 7.200L12 17.800 5.700 21.500l1.600-7.200L2 9.600 9 9z" fill="#b36be5"/>','<path d="M12 2l9 5v10l-9 5-9-5V7z" fill="#e58a4c"/>','<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="#4cd0d0"/>','<circle cx="12" cy="12" r="7" fill="none" stroke="#e8e6df" stroke-width="4"/>'];
-const sy=i=>sv(SY[i],'sy');
-/* ============ TEXTS ============ */
-const T = {
- en:{gates:'100 GATES',title:'Welcome, traveller',
-  intro:'The Lost Kingdom hid the Sun Crown behind 100 magic gates. Each gate is a lock with a puzzle. Open all of them, cross ten realms and reach the Throne of the Sun.',
-  how:'How to play: solve the puzzle on each gate to open it and earn coins. Every 10th gate is guarded: solve 3 puzzles in a row. Spend coins in the shop on helpful items.',
-  play:'Continue',reset:'New game',map:'The 100 gates',inv:'Inventory',shop:'Shop',back:'Back',
-  coins:'Buy coins',items:'Inventory items',buy:'Buy',gate:'Gate',lives:'Lives',guard:'Guardian gate',
-  m:'The runes show a sum. Type the result.',s:'Find the pattern and type the next number.',
-  c:'The sage’s key: every letter is shifted forward by {k}. Shift it back to read the word. Type it in English letters.',
-  r:'Memorize the sequence of symbols, then repeat it.',q:'The gate asks a riddle. Choose the right answer.',
-  go:'Open',win:'Gate opened! +',part:'Lock opened',lose:'Wrong!',out:'Time is up!',dead:'No lives left. The gate resets.',empty:'Empty',
-  hint:'Hint',tm:'Time +15s',sh:'Shield',sk:'Skip key',hintD:'Reveals the first character, or removes two wrong riddle answers',tmD:'Adds 15 seconds',shD:'Adds one extra life',skD:'Opens the current gate instantly',
-  nocoins:'Not enough coins',bought:'Purchased!',payT:'Choose payment method',card:'Bank card',crypto:'Crypto',payNo:'Payment link is not configured yet.',demo:'DEMO mode: coins credited for testing.',
-  finish:'You opened all 100 gates and took the Sun Crown. Legend!',sure:'Reset all progress?',watch:'Memorize…',pk:'coins',first:'First character: '},
- ru:{gates:'100 ВРАТ',title:'Добро пожаловать, путник',
-  intro:'Затерянное королевство спрятало Корону Солнца за 100 волшебными вратами. Каждые врата — замок с загадкой. Откройте их все, пройдите десять земель и дойдите до Трона Солнца.',
-  how:'Как играть: решите загадку на вратах, чтобы открыть их и получить монеты. Каждые 10-е врата охраняет страж: нужно решить 3 загадки подряд. Монеты тратьте в магазине на полезные предметы.',
-  play:'Продолжить',reset:'Новая игра',map:'100 врат',inv:'Инвентарь',shop:'Магазин',back:'Назад',
-  coins:'Купить монеты',items:'Предметы инвентаря',buy:'Купить',gate:'Врата',lives:'Жизни',guard:'Врата стража',
-  m:'На вратах руны с примером. Введите результат.',s:'Найдите закономерность и введите следующее число.',
-  c:'Ключ мудреца: каждая буква сдвинута вперёд на {k}. Сдвиньте её назад и прочитайте слово. Вводите английскими буквами.',
-  r:'Запомните последовательность символов и повторите её.',q:'Врата задают загадку. Выберите верный ответ.',
-  go:'Открыть',win:'Врата открыты! +',part:'Замок открыт',lose:'Неверно!',out:'Время вышло!',dead:'Жизни закончились. Врата сброшены.',empty:'Пусто',
-  hint:'Подсказка',tm:'Время +15 с',sh:'Щит',sk:'Ключ-пропуск',hintD:'Показывает первый символ или убирает два неверных ответа в загадке',tmD:'Добавляет 15 секунд',shD:'Даёт ещё одну жизнь',skD:'Мгновенно открывает текущие врата',
-  nocoins:'Не хватает монет',bought:'Куплено!',payT:'Выберите способ оплаты',card:'Банковская карта',crypto:'Криптовалюта',payNo:'Ссылка на оплату ещё не настроена.',demo:'DEMO-режим: монеты начислены для проверки.',
-  finish:'Вы открыли все 100 врат и забрали Корону Солнца. Легенда!',sure:'Сбросить весь прогресс?',watch:'Запоминайте…',pk:'монет',first:'Первый символ: '}
-};
-const CH=[
- ['Whispering Forest','Шепчущий лес','Ancient trees lean closer as you reach the first gates.','Древние деревья склоняются ближе, когда вы подходите к первым вратам.'],
- ['Crystal Caves','Хрустальные пещеры','Light glitters on the walls and the gates hum with magic.','Свет играет на стенах, а врата гудят от магии.'],
- ['Foggy Swamp','Туманное болото','Mist hides the path. Only a clear mind opens these gates.','Туман скрывает тропу. Эти врата открывает только ясный ум.'],
- ['Burning Desert','Пылающая пустыня','Sand covers the old runes and the sun burns your back.','Песок засыпал древние руны, а солнце жжёт спину.'],
- ['Frozen Peaks','Ледяные вершины','Frost seals every lock. Think before you act.','Иней сковал каждый замок. Подумайте, прежде чем действовать.'],
- ['Sunken Ruins','Затонувшие руины','Echoes of a drowned kingdom guard the gates.','Эхо затонувшего королевства стережёт врата.'],
- ['Volcano Forge','Вулканическая кузница','Molten locks demand a steady mind.','Расплавленные замки требуют твёрдого ума.'],
- ['Sky Citadel','Небесная цитадель','Clouds drift beneath your feet and the gates stand near the stars.','Облака плывут под ногами, а врата стоят рядом со звёздами.'],
- ['Shadow Abyss','Бездна теней','Darkness whispers wrong answers. Do not listen.','Тьма шепчет неверные ответы. Не слушайте её.'],
- ['Throne of the Sun','Трон Солнца','The final gates. Beyond them waits the Sun Crown.','Последние врата. За ними ждёт Корона Солнца.']
-];
-const RID=[
- {q:['The more of me you take, the more you leave behind. What am I?','Чем больше меня берёшь, тем больше оставляешь позади. Что это?'],o:[['Footsteps','Шаги'],['Gold','Золото'],['Water','Вода'],['Sand','Песок']],a:0},
- {q:['I have hands but cannot clap. What am I?','У меня есть стрелки, но нет рук. Что это?'],o:[['A statue','Статуя'],['A clock','Часы'],['A river','Река'],['A map','Карта']],a:1},
- {q:['I speak without a mouth and hear without ears. What am I?','Я говорю без рта и слышу без ушей. Кто я?'],o:[['A ghost','Призрак'],['A bell','Колокол'],['An echo','Эхо'],['A bird','Птица']],a:2},
- {q:['What goes up but never comes down?','Что поднимается вверх, но никогда не опускается?'],o:[['Smoke','Дым'],['A rocket','Ракета'],['Rain','Дождь'],['Your age','Возраст']],a:3},
- {q:['What has many teeth but cannot bite?','Что имеет много зубов, но не кусается?'],o:[['A comb','Расчёска'],['A dragon','Дракон'],['A saw tooth','Пила'],['A key','Ключ']],a:0},
- {q:['What can you break without touching it?','Что можно сломать, не прикасаясь?'],o:[['A glass','Стекло'],['A promise','Обещание'],['A rock','Камень'],['A wall','Стену']],a:1},
- {q:['It follows you everywhere but vanishes in the dark. What is it?','Оно следует за тобой повсюду, но исчезает во тьме. Что это?'],o:[['A dog','Собака'],['Wind','Ветер'],['A shadow','Тень'],['Fog','Туман']],a:2}
-];
-const ITEMS={hint:{p:10},tm:{p:15},sh:{p:25},sk:{p:60}};
-const WORDS=['GATE','KEY','TORCH','SHADOW','DRAGON','CASTLE','TEMPLE','MYSTERY','GUARDIAN','LABYRINTH','TREASURE','KINGDOM','PHOENIX','ECLIPSE','SERPENT'];
-/* ============ STATE ============ */
-let S;
-try{S=JSON.parse(localStorage.getItem('g100'))}catch(e){}
-S=S||{coins:20,level:1,inv:{hint:1,tm:0,sh:0,sk:0},lang:(navigator.language||'en').toLowerCase().startsWith('ru')?'ru':'en'};
-function save(){try{localStorage.setItem('g100',JSON.stringify(S))}catch(e){}}
-const $=id=>document.getElementById(id), t=k=>T[S.lang][k], li=()=>S.lang==='ru'?1:0;
-const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-let G=null, timer=null, pendingPack=0;
-/* ============ UI ============ */
+/* ===== texts ===== */
+const T={
+en:{gates:'100 GATES',title:'Team Arena',intro:'Blue team vs Red team. Pick a class, fight through 100 arenas with your allies, earn coins and spend them on gear. Every 10th arena has a boss.',
+ ctl:'WASD / arrows — move · mouse — aim · hold left click — shoot · keys 1–4 — use items (desktop)',
+ cls:'Choose your class',runner:'Runner',rocket:'Rocketeer',heavy:'Heavy Gunner',
+ runnerD:'Fast and light, rapid fire. Great for flanking.',rocketD:'Slower, fires rockets with splash damage.',heavyD:'Huge health and a minigun, but slow.',
+ level:'Arena',play:'Fight!',next:'Next arena',retry:'Try again',menu:'Menu',win:'Victory!',lose:'Your team has fallen',reward:'Reward',
+ shop:'Shop',coins:'Buy coins',items:'Gear',buy:'Buy',nocoins:'Not enough coins',bought:'Purchased!',
+ med:'Medkit',sh:'Shield',rage:'Rage',bomb:'Bomb',medD:'Restores 60 health',shD:'Takes 70% less damage for 8 s',rageD:'Double damage for 10 s',bombD:'Blasts nearby enemies',
+ payT:'Choose payment method',card:'Bank card',crypto:'Crypto',payNo:'Payment link is not configured yet.',demo:'DEMO mode: coins credited for testing.',pk:'coins',
+ hp:'Health',foes:'Enemies',boss:'BOSS ARENA',done:'You cleared all 100 arenas. Legend!'},
+ru:{gates:'100 ВРАТ',title:'Командная арена',intro:'Синяя команда против красной. Выберите класс, пройдите 100 арен вместе с союзниками, зарабатывайте монеты и покупайте снаряжение. На каждой 10-й арене вас ждёт босс.',
+ ctl:'WASD / стрелки — движение · мышь — прицел · зажмите левую кнопку — стрельба · клавиши 1–4 — предметы (на компьютере)',
+ cls:'Выберите класс',runner:'Бегун',rocket:'Ракетчик',heavy:'Пулемётчик',
+ runnerD:'Быстрый и лёгкий, стреляет часто. Хорош для обхода.',rocketD:'Медленнее, стреляет ракетами с уроном по площади.',heavyD:'Очень много здоровья и пулемёт, но медленный.',
+ level:'Арена',play:'В бой!',next:'Следующая арена',retry:'Ещё раз',menu:'Меню',win:'Победа!',lose:'Ваша команда пала',reward:'Награда',
+ shop:'Магазин',coins:'Купить монеты',items:'Снаряжение',buy:'Купить',nocoins:'Не хватает монет',bought:'Куплено!',
+ med:'Аптечка',sh:'Щит',rage:'Ярость',bomb:'Бомба',medD:'Восстанавливает 60 здоровья',shD:'Урон меньше на 70% в течение 8 с',rageD:'Двойной урон в течение 10 с',bombD:'Взрывает врагов рядом',
+ payT:'Выберите способ оплаты',card:'Банковская карта',crypto:'Криптовалюта',payNo:'Ссылка на оплату ещё не настроена.',demo:'DEMO-режим: монеты начислены для проверки.',pk:'монет',
+ hp:'Здоровье',foes:'Враги',boss:'АРЕНА БОССА',done:'Вы прошли все 100 арен. Легенда!'}};
+const ITEMS={med:10,sh:15,rage:20,bomb:25},IK=['med','sh','rage','bomb'];
+const CLS={runner:{hp:100,spd:235,dmg:9,rate:.11,spread:.1,bs:720,splash:0,col:'#4c9be5'},
+ rocket:{hp:150,spd:165,dmg:38,rate:.8,spread:.02,bs:430,splash:80,col:'#e58a4c'},
+ heavy:{hp:320,spd:115,dmg:6,rate:.06,spread:.17,bs:650,splash:0,col:'#4cc38a'}};
+/* ===== state ===== */
+let S;try{S=JSON.parse(localStorage.getItem('g100tf'))}catch(e){}
+S=S||{coins:20,level:1,sel:1,cls:'runner',inv:{med:2,sh:1,rage:1,bomb:1},lang:(navigator.language||'en').toLowerCase().startsWith('ru')?'ru':'en'};
+const save=()=>{try{localStorage.setItem('g100tf',JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id),t=k=>T[S.lang][k];
+const W=960,H=640,cv=$('cv'),cx=cv.getContext('2d');
+let mode='menu',G=null,P=null,last=0,mx=W/2,my=H/2,down=false,pendingPack=0;const keys={};
+/* ===== UI ===== */
 function setLang(l){S.lang=l;save();document.documentElement.lang=l;render()}
 function render(){
  $('lEN').classList.toggle('on',S.lang==='en');$('lRU').classList.toggle('on',S.lang==='ru');
  $('icLogo').innerHTML=ic('logo','logo');$('icCoin').innerHTML=ic('coin');$('hTitle').textContent=t('gates');
- $('coins').textContent=S.coins;$('bShop').innerHTML=ic('cart')+' '+t('shop');
- $('tTitle').textContent=t('title');$('tIntro').textContent=t('intro');$('tHow').textContent=t('how');
- $('bPlay').textContent=t('play')+' ('+t('gate')+' '+Math.min(S.level,100)+')';
- $('bReset').textContent=t('reset');$('tMap').textContent=t('map');$('tInv').textContent=t('inv');$('bBack').textContent=t('back');
- let m='';for(let i=1;i<=100;i++){const c=i<S.level?'done':i===S.level?'cur':'lock';m+=`<div class="g ${c}" ${i<=S.level?`onclick="play(${i})"`:''}>${i}</div>`}
- $('map').innerHTML=m;
- const inv=Object.keys(ITEMS).filter(k=>S.inv[k]>0).map(k=>`<span style="margin-right:14px">${ic(k)} ${t(k)} ×${S.inv[k]}</span>`).join('');
- $('inv').innerHTML=inv||t('empty');
- renderShop();if(G)drawGame();
+ $('coins').textContent=Math.floor(S.coins);$('bShop').innerHTML=ic('cart')+' '+t('shop');$('ctl').textContent=t('ctl');
+ renderShop();renderInv();if(mode==='menu')showMenu();
 }
-function home(){clearInterval(timer);G=null;$('game').style.display='none';$('home').style.display='';render()}
-function resetAll(){if(confirm(t('sure'))){S.level=1;S.coins=20;S.inv={hint:1,tm:0,sh:0,sk:0};save();render()}}
-/* ============ SHOP ============ */
+function renderInv(){$('invbar').innerHTML=IK.map((k,i)=>`<button onclick="useItem('${k}')" ${S.inv[k]>0?'':'disabled'}>${i+1} ${ic(k)} ${t(k)} ×${S.inv[k]}</button>`).join('')}
+function ov(h){$('ov').style.display=h?'flex':'none';$('ov').innerHTML=h||''}
+function showMenu(){
+ mode='menu';const L=Math.min(S.sel||1,S.level);
+ ov(`<div class="card"><h2>${t('title')}</h2><p class="mut">${t('intro')}</p><b>${t('cls')}</b>
+ <div class="cls">${Object.keys(CLS).map(k=>`<div class="cc ${S.cls===k?'on':''}" onclick="pickCls('${k}')"><span class="dot" style="background:${CLS[k].col}"></span><b>${t(k)}</b><small>${t(k+'D')}</small></div>`).join('')}</div>
+ <div class="row"><button onclick="selLvl(-1)">−</button><b>${t('level')} ${L} / 100 ${L%10===0?'· '+t('boss'):''}</b><button onclick="selLvl(1)">+</button></div>
+ <div class="row"><button class="p" onclick="startLevel(${L})">${t('play')}</button></div></div>`);
+}
+function pickCls(k){S.cls=k;save();showMenu()}
+function selLvl(d){S.sel=Math.max(1,Math.min(S.level,(S.sel||1)+d));save();showMenu()}
+/* ===== shop ===== */
 function renderShop(){
  $('sTitle').textContent=t('shop');$('sCoins').textContent=t('coins');$('sItems').textContent=t('items');
- $('pTitle').textContent='';
  $('packs').innerHTML=[50,100,200,500].map(n=>`<div class="item">${ic('coin','big')}<br><b>${n} ${t('pk')}</b><small>${PAY.prices[n]}</small><button class="p" onclick="askPay(${n})">${t('buy')}</button></div>`).join('');
- $('items').innerHTML=Object.keys(ITEMS).map(k=>`<div class="item">${ic(k,'big')}<br><b>${t(k)}</b><small>${t(k+'D')}<br>×${S.inv[k]}</small><button onclick="buyItem('${k}')">${ic('coin')} ${ITEMS[k].p}</button></div>`).join('');
+ $('items').innerHTML=IK.map(k=>`<div class="item">${ic(k,'big')}<br><b>${t(k)}</b><small>${t(k+'D')}<br>×${S.inv[k]}</small><button onclick="buyItem('${k}')">${ic('coin')} ${ITEMS[k]}</button></div>`).join('');
 }
-function openShop(){$('sMsg').textContent='';renderShop();$('shop').classList.add('open')}
-function closeShop(){$('shop').classList.remove('open')}
-function buyItem(k){const m=$('sMsg');if(S.coins<ITEMS[k].p){m.className='msg bad';m.textContent=t('nocoins');return}
- S.coins-=ITEMS[k].p;S.inv[k]++;save();render();m.className='msg ok';m.textContent=t('bought')}
+const openShop=()=>{$('sMsg').textContent='';renderShop();$('shop').classList.add('open')},closeShop=()=>$('shop').classList.remove('open');
+function buyItem(k){const m=$('sMsg');if(S.coins<ITEMS[k]){m.className='msg bad';m.textContent=t('nocoins');return}
+ S.coins-=ITEMS[k];S.inv[k]++;save();render();m.className='msg ok';m.textContent=t('bought')}
 function askPay(n){pendingPack=n;$('pTitle').textContent=n+' '+t('pk')+' — '+PAY.prices[n];$('pInfo').textContent=t('payT');$('pCard').textContent=t('card');$('pCrypto').textContent=t('crypto');$('pay').classList.add('open')}
-function pay(method){
- const n=pendingPack,m=$('sMsg');$('pay').classList.remove('open');
+function pay(method){const n=pendingPack,m=$('sMsg');$('pay').classList.remove('open');
  if(PAY.DEMO){S.coins+=n;save();render();m.className='msg ok';m.textContent=t('demo');return}
- const url=PAY[method][n];
- if(!url){m.className='msg bad';m.textContent=t('payNo');return}
- window.open(url,'_blank','noopener');
+ const u=PAY[method][n];if(!u){m.className='msg bad';m.textContent=t('payNo');return}window.open(u,'_blank','noopener')}
+/* ===== game ===== */
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let a=Math.imul(s^s>>>15,1|s);a=a+Math.imul(a^a>>>7,61|a)^a;return((a^a>>>14)>>>0)/4294967296}}
+const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function mkWalls(L){const r=rng(L*7919+13),w=[],n=4+Math.min(6,Math.floor(L/8));
+ for(let i=0;i<n;i++){const a=60+r()*120,b=40+r()*110;w.push({x:230+r()*(W-460-a),y:40+r()*(H-80-b),w:a,h:b})}return w}
+function hitW(e){for(const w of G.walls){const nx=clamp(e.x,w.x,w.x+w.w),ny=clamp(e.y,w.y,w.y+w.h);if((e.x-nx)**2+(e.y-ny)**2<e.r*e.r)return true}return false}
+function move(e,dx,dy){e.x=clamp(e.x+dx,e.r,W-e.r);if(hitW(e))e.x-=dx;e.y=clamp(e.y+dy,e.r,H-e.r);if(hitW(e))e.y-=dy}
+function mk(team,x,y,o){return Object.assign({team,x,y,r:15,cd:rnd(0,1),t:0,sd:1,dead:false},o)}
+function startLevel(L){
+ closeShop();const c=CLS[S.cls],boss=L%10===0;
+ G={L,walls:mkWalls(L),bul:[],par:[],al:[],en:[],kills:0,boss};
+ P=mk('b',70,H/2,{hp:c.hp,max:c.hp,c,sh:0,rage:0,player:true});
+ G.al.push(P);
+ for(let i=0;i<3;i++)G.al.push(mk('b',70+rnd(0,60),H/2+(i-1)*80+rnd(-20,20),{hp:130,max:130,spd:130,dmg:8,rate:.4,spread:.12,bs:600,range:260}));
+ const n=Math.min(4+Math.floor(L*.6),30),hp=30+L*2.5,dm=4+L*.28;
+ for(let i=0;i<n;i++)G.en.push(mk('r',W-70-rnd(0,120),rnd(50,H-50),{hp,max:hp,spd:70+Math.min(L,60)*1.2,dmg:dm,rate:Math.max(.35,1.3-L*.01),spread:.2,bs:480,range:rnd(200,320)}));
+ if(boss){const b=mk('r',W-60,H/2,{r:28,boss:true,hp:hp*9,max:hp*9,spd:80,dmg:dm*1.6,rate:.45,spread:.3,bs:420,range:300});G.en.push(b)}
+ mode='play';ov('');renderInv();
 }
-/* ============ PUZZLES ============ */
-function makePuzzle(L){
- const type=['m','s','c','r','q'][(L-1)%5], d=Math.min(1+Math.floor(L/12),6);
- const P={type,time:Math.max(30,100-Math.floor(L*0.6))};
- if(type==='m'){
-  const mx=Math.pow(10,d)-1,a=R(2,mx),b=R(2,mx);
-  if(L<10){P.q=`${a} + ${b}`;P.a=a+b}
-  else if(L<30){const op=R(0,1)?'+':'−';P.q=`${a} ${op} ${b}`;P.a=op==='+'?a+b:a-b}
-  else{const c=R(2,Math.min(12,3+Math.floor(L/10))),x=R(2,30);P.q=`${a} + ${x} × ${c}`;P.a=a+x*c}
+function shoot(e,ang,bs,dmg,splash){G.bul.push({x:e.x+Math.cos(ang)*(e.r+4),y:e.y+Math.sin(ang)*(e.r+4),vx:Math.cos(ang)*bs,vy:Math.sin(ang)*bs,dmg,team:e.team,splash,life:1.6})}
+function hurt(e,d){if(e.dead)return;if(e.player&&e.sh>0)d*=.3;e.hp-=d;if(e.hp<=0){e.dead=true;boom(e.x,e.y,e.boss?40:16,e.team==='r'?'#e5564f':'#4c9be5');if(e.team==='r'){S.coins+=e.boss?20:1;G.kills++}}}
+function boom(x,y,n,c){for(let i=0;i<n;i++){const a=rnd(0,6.28),s=rnd(40,220);G.par.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:rnd(.2,.6),c})}}
+function explode(b,foes){for(const f of foes)if(!f.dead){const d=Math.hypot(f.x-b.x,f.y-b.y);if(d<b.splash+f.r)hurt(f,b.dmg*(1-d/(b.splash+f.r)*.6))}boom(b.x,b.y,18,'#e58a4c')}
+function ai(e,dt){
+ const foes=(e.team==='r'?G.al:G.en).filter(f=>!f.dead);if(!foes.length)return;
+ let f=foes[0],bd=1e9;for(const q of foes){const d=Math.hypot(q.x-e.x,q.y-e.y);if(d<bd){bd=d;f=q}}
+ const a=Math.atan2(f.y-e.y,f.x-e.x);e.t-=dt;if(e.t<=0){e.t=rnd(.6,1.8);e.sd=Math.random()<.5?1:-1}
+ let k=bd>e.range?1:bd<e.range*.55?-1:0;
+ move(e,(Math.cos(a)*k+Math.cos(a+1.57)*.5*e.sd)*e.spd*dt,(Math.sin(a)*k+Math.sin(a+1.57)*.5*e.sd)*e.spd*dt);
+ e.cd-=dt;if(bd<540&&e.cd<=0){e.cd=e.rate*rnd(.8,1.3);shoot(e,a+rnd(-e.spread,e.spread),e.bs,e.dmg,0)}
+}
+function update(dt){
+ const c=P.c;
+ if(!P.dead){
+  let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
+  const l=Math.hypot(dx,dy)||1;move(P,dx/l*c.spd*dt,dy/l*c.spd*dt);
+  P.ang=Math.atan2(my-P.y,mx-P.x);P.cd-=dt;P.sh=Math.max(0,P.sh-dt);P.rage=Math.max(0,P.rage-dt);
+  if(down&&P.cd<=0){P.cd=c.rate;shoot(P,P.ang+rnd(-c.spread,c.spread),c.bs,c.dmg*(P.rage>0?2:1),c.splash)}
  }
- if(type==='s'){
-  const st=R(1,10+L),k=R(2,5+Math.floor(L/4));let s=[];
-  if(L<20){for(let i=0;i<5;i++)s.push(st+k*i);P.a=st+k*5}
-  else if(L<50){for(let i=1;i<=5;i++)s.push(i*i+st);P.a=36+st}
-  else{const r=R(2,3);for(let i=0;i<5;i++)s.push(st*Math.pow(r,i));P.a=st*Math.pow(r,5)}
-  P.q=s.join(', ')+', ?';
+ for(const a of G.al)if(!a.dead&&!a.player){ai(a,dt);const f=G.en.find(q=>!q.dead);if(f)a.ang=Math.atan2(f.y-a.y,f.x-a.x)}
+ for(const e of G.en)if(!e.dead){ai(e,dt);const f=G.al.find(q=>!q.dead);if(f)e.ang=Math.atan2(f.y-e.y,f.x-e.x)}
+ for(const b of G.bul){
+  b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;const foes=b.team==='b'?G.en:G.al;let hit=false;
+  if(b.x<0||b.y<0||b.x>W||b.y>H||b.life<=0)hit=true;
+  for(const w of G.walls)if(b.x>w.x&&b.x<w.x+w.w&&b.y>w.y&&b.y<w.y+w.h)hit=true;
+  if(!hit)for(const f of foes)if(!f.dead&&Math.hypot(f.x-b.x,f.y-b.y)<f.r+3){if(!b.splash)hurt(f,b.dmg);hit=true;break}
+  if(hit){b.dead=true;if(b.splash)explode(b,foes);else boom(b.x,b.y,3,'#e0b44c')}
  }
- if(type==='c'){
-  const pool=WORDS.filter(w=>w.length<=3+Math.floor(L/10)+2),w=pool[R(0,pool.length-1)]||WORDS[0],k=R(1,3+Math.floor(L/20));
-  P.a=w;P.k=k;P.q=w.split('').map(ch=>String.fromCharCode((ch.charCodeAt(0)-65+k)%26+65)).join('');
- }
- if(type==='r'){const n=Math.min(3+Math.floor(L/8),12);P.seq=Array.from({length:n},()=>R(0,SY.length-1));P.time=30+n*4}
- if(type==='q'){P.r=RID[R(0,RID.length-1)];P.time=Math.max(25,60-Math.floor(L/3))}
- P.a=String(P.a);return P;
+ G.bul=G.bul.filter(b=>!b.dead);
+ for(const p of G.par){p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt}G.par=G.par.filter(p=>p.l>0);
+ if(P.dead)finish(false);else if(!G.en.some(e=>!e.dead))finish(true);
 }
-/* ============ GAME ============ */
-const chap=L=>CH[Math.min(9,Math.floor((L-1)/10))];
-function play(L){
- if(L>100){alert(t('finish'));return}
- G={L,lives:3,need:L%10===0?3:1,done:0,sid:0};newPuzzle();$('home').style.display='none';$('game').style.display='';
-}
-function newPuzzle(){
- clearInterval(timer);G.p=makePuzzle(G.L);G.pos=0;G.left=G.total=G.p.time;G.msg='';G.hid=[];G.ok=false;
- if(G.p.type==='r')startShow();else startTimer();
- drawGame();
-}
-function startShow(){
- G.show=true;G.pos=0;const id=++G.sid;
- setTimeout(()=>{if(G&&G.sid===id){G.show=false;drawGame();startTimer()}},Math.max(2500,G.p.seq.length*800));
-}
-function replay(){clearInterval(timer);G.left=G.total;startShow();drawGame()}
-function startTimer(){clearInterval(timer);timer=setInterval(()=>{if(!G||G.show)return;G.left-=0.25;$('tfill').style.width=Math.max(0,G.left/G.total*100)+'%';if(G.left<=0)fail(t('out'))},250)}
-function drawGame(){
- const p=G.p,c=chap(G.L),boss=G.need>1;
- $('gTitle').textContent=t('gate')+' '+G.L+' / 100'+(boss?' — '+t('guard')+' ('+(G.done+1)+'/'+G.need+')':'');
- $('gLives').innerHTML=t('lives')+': '+(ic('heart').repeat(G.lives));
- $('gStory').innerHTML='<b>'+c[li()]+'</b> — '+c[2+li()];
- $('gTask').textContent=p.type==='c'?t('c').replace('{k}',p.k):t(p.type);
- const q=$('gQ'),inEl=$('gIn'),old=$('ans')?$('ans').value:'';
- if(p.type==='r'){
-  if(G.show){q.innerHTML=p.seq.map(sy).join('');inEl.innerHTML='<span class="mut">'+t('watch')+'</span>'}
-  else{q.innerHTML=p.seq.map((s,i)=>`<span class="slot">${i<G.pos?sy(s):''}</span>`).join('');
-   inEl.innerHTML=SY.map((s,i)=>`<button onclick="tap(${i})">${sy(i)}</button>`).join('')}
- }else if(p.type==='q'){
-  q.textContent=p.r.q[li()];
-  inEl.innerHTML=p.r.o.map((o,i)=>`<button class="opt" ${G.hid.includes(i)?'disabled':''} onclick="pick(${i})">${o[li()]}</button>`).join('');
- }else{
-  q.textContent=p.q;
-  inEl.innerHTML=`<input type="text" id="ans" autocomplete="off" value="${old}" onkeydown="if(event.key==='Enter')check()"><button class="p" onclick="check()">${t('go')}</button>`;
-  setTimeout(()=>{const a=$('ans');a&&a.focus()},30);
- }
- $('gMsg').innerHTML=G.msg;$('gMsg').className='msg '+(G.ok?'ok':'bad');
- $('gItems').innerHTML=Object.keys(ITEMS).map(k=>`<button onclick="useItem('${k}')" ${S.inv[k]>0&&!G.show?'':'disabled'}>${ic(k)} ${t(k)} ×${S.inv[k]}</button>`).join('');
- $('coins').textContent=S.coins;
-}
-function tap(i){if(G.show)return;if(G.p.seq[G.pos]===i){G.pos++;if(G.pos>=G.p.seq.length)solved();else drawGame()}else fail(t('lose'))}
-function pick(i){if(i===G.p.r.a)solved();else fail(t('lose'))}
-function check(){const v=($('ans').value||'').trim().toUpperCase().replace('−','-');if(!v)return;if(v===G.p.a.toUpperCase())solved();else{$('ans').value='';fail(t('lose'))}}
-function fail(msg){
- G.lives--;G.ok=false;G.msg=msg;
- if(G.lives<=0){clearInterval(timer);G.msg=msg+' '+t('dead');G.lives=3;G.done=0;drawGame();setTimeout(()=>{if(G)newPuzzle()},1600);return}
- if(G.p.type==='r')replay();else{G.left=Math.max(G.left,10);drawGame()}
-}
-function solved(){
- clearInterval(timer);G.done++;G.ok=true;
- if(G.done<G.need){G.msg=t('part')+' '+G.done+'/'+G.need;drawGame();setTimeout(()=>{if(G)newPuzzle()},900);return}
- gateOpen();
-}
-function gateOpen(){
- clearInterval(timer);const boss=G.L%10===0,r=(5+Math.floor(G.L/5))*(boss?3:1);let extra='';
- S.coins+=r;if(boss){const k=Object.keys(ITEMS)[R(0,3)];S.inv[k]++;extra=' + '+ic(k)+' '+t(k)}
- if(G.L>=S.level)S.level=G.L+1;save();G.ok=true;G.msg=t('win')+r+' '+ic('coin')+extra;drawGame();
- const next=G.L+1;
- setTimeout(()=>{if(!G)return;if(next>100){alert(t('finish'));home()}else{G.L=next;G.lives=3;G.done=0;G.need=next%10===0?3:1;newPuzzle()}},1800);
+function finish(w){
+ mode=w?'win':'lose';const L=G.L,r=w?(10+L*2)*(G.boss?3:1):0;
+ if(w){S.coins+=r;if(L>=S.level)S.level=Math.min(100,L+1);S.sel=Math.min(100,L+1)}save();render();mode=w?'win':'lose';
+ ov(`<div class="card" style="text-align:center"><h2>${w?t('win'):t('lose')}</h2>
+ ${w?`<p>${t('reward')}: +${r} ${ic('coin')}</p>${L>=100?`<p>${t('done')}</p>`:''}`:''}
+ <div class="row">${w&&L<100?`<button class="p" onclick="startLevel(${L+1})">${t('next')}</button>`:`<button class="p" onclick="startLevel(${L})">${t('retry')}</button>`}<button onclick="showMenu()">${t('menu')}</button></div></div>`);
 }
 function useItem(k){
- if(!G||S.inv[k]<1||G.show)return;const p=G.p;
- if(k==='sk'){S.inv[k]--;save();gateOpen();return}
- if(k==='hint'){
-  if(p.type==='q'){const w=[0,1,2,3].filter(i=>i!==p.r.a&&!G.hid.includes(i));if(!w.length)return;G.hid.push(...w.sort(()=>Math.random()-.5).slice(0,2))}
-  else if(p.type==='r'){S.inv[k]--;save();replay();return}
-  else{G.msg=t('first')+p.a[0];G.ok=true}
- }
- if(k==='tm'){G.left+=15;G.total=Math.max(G.total,G.left)}
- if(k==='sh'){G.lives++}
- S.inv[k]--;save();drawGame();
+ if(mode!=='play'||S.inv[k]<1||P.dead)return;
+ if(k==='med')P.hp=Math.min(P.max,P.hp+60);
+ if(k==='sh')P.sh=8;if(k==='rage')P.rage=10;
+ if(k==='bomb'){for(const e of G.en)if(!e.dead&&Math.hypot(e.x-P.x,e.y-P.y)<260)hurt(e,90);boom(P.x,P.y,40,'#e0b44c')}
+ S.inv[k]--;save();renderInv();
 }
-document.documentElement.lang=S.lang;
-render();
+/* ===== draw ===== */
+function bar(x,y,w,v,m,c){cx.fillStyle='#0008';cx.fillRect(x,y,w,5);cx.fillStyle=c;cx.fillRect(x,y,w*clamp(v/m,0,1),5)}
+function draw(){
+ cx.clearRect(0,0,W,H);cx.fillStyle='#151a26';cx.fillRect(0,0,W,H);
+ cx.fillStyle='#4c9be522';cx.fillRect(0,0,200,H);cx.fillStyle='#e5564f22';cx.fillRect(W-200,0,200,H);
+ cx.strokeStyle='#ffffff08';for(let x=0;x<W;x+=40){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke()}for(let y=0;y<H;y+=40){cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke()}
+ if(!G)return;
+ for(const w of G.walls){cx.fillStyle='#2a2f3f';cx.fillRect(w.x,w.y,w.w,w.h);cx.strokeStyle='#4a5070';cx.strokeRect(w.x,w.y,w.w,w.h)}
+ for(const e of [...G.al,...G.en]){if(e.dead)continue;
+  cx.fillStyle=e.player?e.c.col:e.team==='b'?'#7fb8f0':e.boss?'#a82a25':'#e5564f';cx.beginPath();cx.arc(e.x,e.y,e.r,0,6.28);cx.fill();
+  if(e.player&&e.sh>0){cx.strokeStyle='#4cc38a';cx.lineWidth=3;cx.beginPath();cx.arc(e.x,e.y,e.r+5,0,6.28);cx.stroke();cx.lineWidth=1}
+  if(e.player&&e.rage>0){cx.strokeStyle='#e0b44c';cx.beginPath();cx.arc(e.x,e.y,e.r+9,0,6.28);cx.stroke()}
+  const a=e.ang||0;cx.strokeStyle='#0c0e14';cx.lineWidth=5;cx.beginPath();cx.moveTo(e.x,e.y);cx.lineTo(e.x+Math.cos(a)*(e.r+10),e.y+Math.sin(a)*(e.r+10));cx.stroke();cx.lineWidth=1;
+  bar(e.x-16,e.y-e.r-10,32,e.hp,e.max,e.team==='b'?'#4cc38a':'#e5564f')}
+ for(const b of G.bul){cx.fillStyle=b.splash?'#e58a4c':'#e0b44c';cx.beginPath();cx.arc(b.x,b.y,b.splash?6:3,0,6.28);cx.fill()}
+ for(const p of G.par){cx.globalAlpha=clamp(p.l*3,0,1);cx.fillStyle=p.c;cx.fillRect(p.x,p.y,3,3)}cx.globalAlpha=1;
+ cx.fillStyle='#e8e6df';cx.font='bold 15px system-ui,Arial';
+ cx.fillText(t('level')+' '+G.L+(G.boss?' · '+t('boss'):''),14,24);cx.fillText(t('foes')+': '+G.en.filter(e=>!e.dead).length,14,44);
+ cx.fillText(t('hp')+': '+Math.max(0,Math.ceil(P.hp)),W-150,24);bar(W-150,32,130,P.hp,P.max,'#4cc38a');
+}
+function loop(ts){requestAnimationFrame(loop);const dt=Math.min(.05,(ts-last)/1000||0);last=ts;if(mode==='play')update(dt);draw();$('coins').textContent=Math.floor(S.coins)}
+/* ===== input ===== */
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)&&mode==='play')e.preventDefault();
+ if(k>='1'&&k<='4')useItem(IK[+k-1])});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
+function pos(e){const r=cv.getBoundingClientRect();mx=(e.clientX-r.left)*W/r.width;my=(e.clientY-r.top)*H/r.height}
+cv.addEventListener('mousemove',pos);cv.addEventListener('mousedown',e=>{pos(e);down=true});addEventListener('mouseup',()=>down=false);
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+document.documentElement.lang=S.lang;render();requestAnimationFrame(loop);
 </script>
 </body>
 </html>
