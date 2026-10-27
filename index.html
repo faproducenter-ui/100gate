@@ -2,1642 +2,582 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dark Escape: 100 Rooms Horror Quest</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Horror Quest - 100 Levels</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', monospace; color: #fff; }
+        #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        
+        /* UI Overlay */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        .interactive { pointer-events: auto; }
+        
+        /* Top Right Bar: Lang & Gear */
+        #top-bar { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; z-index: 20; }
+        .icon-btn { background: rgba(20, 20, 20, 0.85); border: 2px solid #666; color: #fff; padding: 8px 14px; font-weight: bold; cursor: pointer; border-radius: 4px; transition: 0.2s; }
+        .icon-btn:hover { border-color: #ff3333; color: #ff3333; background: #111; }
+
+        /* Crosshair & Prompts */
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: rgba(255, 255, 255, 0.7); border-radius: 50%; transform: translate(-50%, -50%); border: 1px solid #000; }
+        #interact-prompt { position: absolute; top: 55%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 8px 16px; border: 1px solid #888; border-radius: 4px; display: none; font-size: 14px; text-shadow: 0 0 5px #ff0000; }
+
+        /* HUD elements */
+        #hud { position: absolute; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 16px; text-shadow: 1px 1px 3px #000; }
+        .hud-item { background: rgba(0,0,0,0.6); padding: 6px 12px; border-left: 3px solid #ff3333; border-radius: 2px; }
+
+        /* Modals / Windows */
+        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(15, 15, 15, 0.95); border: 2px solid #555; padding: 25px; width: 90%; max-width: 500px; display: none; flex-direction: column; gap: 15px; z-index: 30; border-radius: 8px; box-shadow: 0 0 20px #000; }
+        .modal h2 { text-align: center; color: #ff3333; border-bottom: 1px solid #444; padding-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        .modal-content { font-size: 15px; line-height: 1.5; color: #ddd; max-height: 300px; overflow-y: auto; background: #080808; padding: 15px; border: 1px solid #222; }
+        .btn { background: #222; border: 1px solid #666; color: #fff; padding: 10px 20px; cursor: pointer; text-align: center; font-family: inherit; font-weight: bold; transition: 0.2s; margin-top: 5px; }
+        .btn:hover { background: #ff3333; border-color: #ff3333; color: #000; }
+
+        /* Keypad Safe Modal */
+        #safe-input { width: 100%; background: #000; border: 2px solid #444; color: #0f0; font-size: 32px; text-align: center; padding: 10px; letter-spacing: 8px; margin-bottom: 10px; }
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .keypad button { background: #222; border: 1px solid #444; color: #fff; font-size: 20px; padding: 15px; cursor: pointer; }
+        .keypad button:hover { background: #444; }
+
+        /* Menus */
+        #main-menu, #pause-menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,5,5,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; z-index: 40; }
+        .menu-title { font-size: 42px; color: #ff1111; letter-spacing: 5px; text-shadow: 0 0 10px #ff0000; text-align: center; }
+        .menu-btn { width: 250px; font-size: 18px; padding: 12px; }
+
+        /* Click to focus overlay */
+        #click-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 25; font-size: 24px; color: #ff3333; cursor: pointer; text-shadow: 0 0 8px #000; }
+
+        /* Settings form */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .setting-row select, .setting-row input { background: #222; border: 1px solid #555; color: #fff; padding: 5px 10px; }
+    </style>
     <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@300;400;600;800&family=Special+Elite&display=swap');
-
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none;
-            background-color: #050505;
-            font-family: 'Inter', sans-serif;
-            color: #e2e8f0;
-        }
-
-        .font-horror {
-            font-family: 'Creepster', cursive;
-        }
-
-        .font-paper {
-            font-family: 'Special Elite', cursive;
-        }
-
-        #game-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            touch-action: none;
-        }
-
-        #game-canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #111827;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #374151;
-            border-radius: 3px;
-        }
-
-        .vignette {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            box-shadow: 0 0 130px rgba(0,0,0,0.95) inset;
-            pointer-events: none;
-        }
-
-        .crosshair {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 8px;
-            height: 8px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border: 2px solid rgba(0, 0, 0, 0.9);
-            border-radius: 50%;
-            pointer-events: none;
-            transition: transform 0.15s ease, background-color 0.15s ease;
-        }
-
-        .crosshair.active {
-            transform: translate(-50%, -50%) scale(2.2);
-            background-color: #ef4444;
-            border-color: #ffffff;
-        }
-
-        .damage-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, transparent 20%, rgba(220, 38, 38, 0.85) 100%);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.25s ease-in-out;
-        }
-
-        .touch-btn {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            touch-action: manipulation;
-        }
-        .touch-btn:active {
-            background: rgba(220, 38, 38, 0.7);
-        }
-
-        .glow-beacon {
-            position: absolute;
-            transform: translate(-50%, -100%);
-            background: rgba(239, 68, 68, 0.9);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 800;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            pointer-events: none;
-            animation: pulseGlow 1.5s infinite alternate ease-in-out;
-        }
-
-        @keyframes pulseGlow {
-            0% { transform: translate(-50%, -100%) scale(0.95); box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
-            100% { transform: translate(-50%, -100%) scale(1.1); box-shadow: 0 0 25px rgba(239, 68, 68, 1); }
-        }
-    </style>
 </head>
-<body class="relative">
+<body>
 
-    <div id="game-container">
-        <!-- 3D Render Canvas -->
-        <canvas id="game-canvas" tabindex="1"></canvas>
+    <div id="canvas-container"></div>
 
-        <!-- Dynamic Item Floating Beacon Indicator -->
-        <div id="item-beacon" class="glow-beacon hidden">
-            <i class="fa-solid fa-note-sticky mr-1"></i> <span id="beacon-text">БУМАГА / NOTE</span>
+    <div id="ui-layer">
+        <!-- Top Bar -->
+        <div id="top-bar">
+            <button id="lang-btn" class="icon-btn interactive">RU / EN</button>
+            <button id="gear-btn" class="icon-btn interactive">⚙️</button>
         </div>
 
-        <!-- Visual Overlays -->
-        <div class="vignette"></div>
-        <div id="damage-flash" class="damage-overlay"></div>
-        <div id="crosshair" class="crosshair hidden"></div>
+        <!-- Crosshair & Prompt -->
+        <div id="crosshair"></div>
+        <div id="interact-prompt">Нажмите [E] для взаимодействия</div>
 
-        <!-- Touch / On-screen Controls Overlay -->
-        <div id="mobile-controls" class="absolute inset-0 pointer-events-none z-10 hidden flex justify-between items-end p-6">
-            <!-- D-Pad -->
-            <div class="relative w-36 h-36 pointer-events-auto">
-                <button id="btn-touch-up" class="touch-btn absolute top-0 left-12 w-12 h-12 text-xl"><i class="fa-solid fa-arrow-up"></i></button>
-                <button id="btn-touch-left" class="touch-btn absolute top-12 left-0 w-12 h-12 text-xl"><i class="fa-solid fa-arrow-left"></i></button>
-                <button id="btn-touch-right" class="touch-btn absolute top-12 right-0 w-12 h-12 text-xl"><i class="fa-solid fa-arrow-right"></i></button>
-                <button id="btn-touch-down" class="touch-btn absolute bottom-0 left-12 w-12 h-12 text-xl"><i class="fa-solid fa-arrow-down"></i></button>
-            </div>
-            <!-- Actions -->
-            <div class="flex space-x-3 pointer-events-auto">
-                <button id="btn-touch-crouch" class="touch-btn w-14 h-14 text-sm font-bold bg-gray-800/80">CTRL</button>
-                <button id="btn-touch-flash" class="touch-btn w-14 h-14 text-lg bg-yellow-900/60"><i class="fa-solid fa-lightbulb"></i></button>
-                <button id="btn-touch-interact" class="touch-btn w-16 h-16 text-xl bg-red-700/80 font-bold">E</button>
-            </div>
+        <!-- HUD -->
+        <div id="hud">
+            <div class="hud-item" id="hud-level">Уровень: 1 (Локация 1: Дом)</div>
+            <div class="hud-item" id="hud-objective">Цель: Найдите бумагу с кодом от сейфа</div>
+            <div class="hud-item" id="hud-coins">Монеты: 0</div>
         </div>
 
-        <!-- UI Overlay Layer -->
-        <div id="ui-layer" class="absolute inset-0 flex flex-col justify-between pointer-events-none z-10">
-            
-            <!-- TOP HUD BAR -->
-            <div id="hud-top" class="p-4 flex justify-between items-center hidden">
-                <div class="flex items-center space-x-4 bg-black/70 backdrop-blur-md p-2 rounded-xl border border-gray-800 pointer-events-auto">
-                    <div class="flex items-center text-yellow-500 font-bold">
-                        <i class="fa-solid fa-coins mr-2"></i>
-                        <span id="coin-count">0</span>
-                    </div>
-                    <div class="h-4 w-px bg-gray-700"></div>
-                    <div class="text-sm font-semibold text-gray-300">
-                        <span id="txt-location">Location 1</span> - <span id="txt-level">Level 1</span>
-                    </div>
-                </div>
+        <!-- Click to focus overlay -->
+        <div id="click-overlay" class="interactive">Кликните по экрану для управления поворотом камеры</div>
 
-                <!-- Flashlight & Actions -->
-                <div class="flex items-center space-x-3 pointer-events-auto">
-                    <div id="flashlight-hud" class="flex items-center bg-black/70 backdrop-blur-md px-3 py-2 rounded-xl border border-gray-800">
-                        <i class="fa-solid fa-flashlight mr-2 text-yellow-400"></i>
-                        <div class="w-20 bg-gray-700 h-2 rounded-full overflow-hidden">
-                            <div id="battery-bar" class="bg-yellow-400 h-full w-full transition-all"></div>
-                        </div>
-                    </div>
-
-                    <button id="btn-journal" class="bg-black/70 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
-                        <i class="fa-solid fa-book-bookmark text-lg text-yellow-400"></i>
-                    </button>
-                    <button id="btn-shop-hud" class="bg-black/70 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
-                        <i class="fa-solid fa-cart-shopping text-lg text-green-400"></i>
-                    </button>
-                    <button id="btn-settings-hud" class="bg-black/70 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
-                        <i class="fa-solid fa-gear text-lg"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- CENTER PROMPTS & CLICK NOTICE -->
-            <div id="click-to-play-notice" class="self-center my-auto bg-black/85 backdrop-blur-md px-6 py-4 rounded-xl border border-red-800 text-white font-semibold text-center pointer-events-auto cursor-pointer hidden shadow-2xl">
-                <i class="fa-solid fa-mouse-pointer text-3xl text-red-500 mb-2 block animate-bounce"></i>
-                <span id="lbl-click-focus">Нажмите сюда, чтобы осмотреться мышью / Click to play</span>
-            </div>
-
-            <div id="interaction-prompt" class="self-center mb-16 bg-black/90 backdrop-blur-md px-6 py-3 rounded-xl border border-red-600 text-white font-semibold shadow-2xl hidden pointer-events-auto flex items-center space-x-3">
-                <span id="prompt-key" class="bg-red-600 px-2.5 py-1 rounded text-sm uppercase font-black tracking-wider shadow">E</span>
-                <span id="prompt-action" class="text-sm">Взаимодействовать</span>
-            </div>
-
-            <!-- BOTTOM HUD STATUS -->
-            <div id="hud-bottom" class="p-4 flex justify-between items-end hidden">
-                <div id="hiding-status" class="bg-blue-900/90 backdrop-blur-md text-blue-200 px-3 py-1.5 rounded-lg border border-blue-600 text-sm font-semibold hidden">
-                    <i class="fa-solid fa-eye-slash mr-2"></i><span id="txt-hiding">Hidden</span>
-                </div>
-                <div id="crouch-status" class="bg-gray-800/90 backdrop-blur-md text-gray-300 px-3 py-1.5 rounded-lg border border-gray-600 text-sm font-semibold hidden">
-                    <i class="fa-solid fa-user-ninja mr-2"></i><span id="txt-crouching">Crouching</span>
-                </div>
-            </div>
+        <!-- Paper Modal -->
+        <div id="paper-modal" class="modal interactive">
+            <h2 id="paper-title">Найденный документ</h2>
+            <div id="paper-body" class="modal-content"></div>
+            <button id="paper-close" class="btn">Закрыть</button>
         </div>
 
-        <!-- MAIN MENU -->
-        <div id="main-menu" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-20 pointer-events-auto p-4">
-            <h1 class="font-horror text-6xl md:text-8xl text-red-700 tracking-wider mb-2 text-center drop-shadow-[0_5px_5px_rgba(0,0,0,0.9)]">DARK ESCAPE</h1>
-            <p class="text-gray-400 text-sm md:text-base mb-8 tracking-widest uppercase text-center" id="txt-subtitle">100 Rooms First-Person Horror Quest</p>
-
-            <div class="flex flex-col w-full max-w-xs space-y-3">
-                <button id="btn-play" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg transition duration-200 uppercase tracking-wider flex items-center justify-center">
-                    <i class="fa-solid fa-play mr-2"></i> <span id="lbl-play">Start Game</span>
-                </button>
-                <button id="btn-levels" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center border border-gray-700">
-                    <i class="fa-solid fa-list mr-2"></i> <span id="lbl-levels">Level Select</span>
-                </button>
-                <button id="btn-shop-menu" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center border border-gray-700">
-                    <i class="fa-solid fa-store mr-2 text-green-400"></i> <span id="lbl-shop">Horror Shop</span>
-                </button>
-                <button id="btn-settings-menu" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center border border-gray-700">
-                    <i class="fa-solid fa-gear mr-2"></i> <span id="lbl-settings">Settings</span>
-                </button>
+        <!-- Safe Keypad Modal -->
+        <div id="safe-modal" class="modal interactive">
+            <h2>Введите код от сейфа</h2>
+            <input type="text" id="safe-input" readonly maxlength="4" value="">
+            <div class="keypad">
+                <button onclick="pressNum('1')">1</button>
+                <button onclick="pressNum('2')">2</button>
+                <button onclick="pressNum('3')">3</button>
+                <button onclick="pressNum('4')">4</button>
+                <button onclick="pressNum('5')">5</button>
+                <button onclick="pressNum('6')">6</button>
+                <button onclick="pressNum('7')">7</button>
+                <button onclick="pressNum('8')">8</button>
+                <button onclick="pressNum('9')">9</button>
+                <button onclick="clearNum()">C</button>
+                <button onclick="pressNum('0')">0</button>
+                <button onclick="checkSafeCode()">OK</button>
             </div>
-
-            <div class="absolute bottom-4 left-4 flex space-x-2">
-                <button id="lang-ru" class="px-3 py-1 bg-gray-800 text-xs rounded border border-gray-700 hover:bg-gray-700">RU</button>
-                <button id="lang-en" class="px-3 py-1 bg-gray-800 text-xs rounded border border-gray-700 hover:bg-gray-700">EN</button>
-            </div>
+            <button id="safe-close" class="btn" style="margin-top:10px;">Отмена</button>
         </div>
 
-        <!-- READ NOTE DOCUMENT MODAL -->
-        <div id="modal-read-note" class="absolute inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-40 pointer-events-auto p-4 hidden">
-            <div class="bg-[#fef08a] text-amber-950 w-full max-w-lg rounded-xl p-6 shadow-2xl border-4 border-amber-900 relative transform rotate-1 font-paper">
-                <div class="flex justify-between items-center mb-4 border-b-2 border-amber-800/40 pb-2">
-                    <h3 class="text-xl font-black uppercase flex items-center"><i class="fa-solid fa-file-lines mr-2"></i><span id="lbl-note-modal-title">Найденная Записка</span></h3>
-                    <button id="close-read-note" class="text-amber-950 hover:text-red-700 text-2xl font-bold"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div id="read-note-body" class="text-base md:text-lg leading-relaxed mb-6 font-semibold min-h-[120px]">
-                    ...
-                </div>
-                <div class="bg-amber-200/80 p-3 rounded-lg border border-amber-400 text-center text-xs font-bold uppercase text-amber-900">
-                    <i class="fa-solid fa-floppy-disk mr-1"></i> <span id="lbl-note-saved">Запись сохранена в Дневник Улик</span>
-                </div>
-            </div>
+        <!-- Journal Modal -->
+        <div id="journal-modal" class="modal interactive">
+            <h2>Дневник улик</h2>
+            <div id="journal-body" class="modal-content">Пока нет записей.</div>
+            <button id="journal-close" class="btn">Закрыть</button>
         </div>
 
-        <!-- LEVEL SELECT MODAL -->
-        <div id="modal-levels" class="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-30 pointer-events-auto p-6 hidden">
-            <div class="flex justify-between items-center w-full max-w-4xl mb-6">
-                <h2 class="text-2xl font-bold text-white flex items-center"><i class="fa-solid fa-map mr-3 text-red-600"></i><span id="lbl-select-level">Select Level</span></h2>
-                <button id="close-levels" class="text-gray-400 hover:text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal interactive">
+            <h2>Настройки</h2>
+            <div class="setting-row">
+                <span>Графика:</span>
+                <select id="setting-graphics">
+                    <option value="high">Высокая (Тени, Туман)</option>
+                    <option value="low">Низкая (Для слабых ПК)</option>
+                </select>
             </div>
-            <div id="levels-grid" class="grid grid-cols-2 md:grid-cols-5 gap-3 w-full max-w-4xl overflow-y-auto max-h-[70vh] p-2">
+            <div class="setting-row">
+                <span>Клавиша взаимодействия:</span>
+                <button id="bind-interact" class="btn" style="padding: 4px 10px;">E</button>
             </div>
+            <div class="setting-row">
+                <span>Клавиши движения:</span>
+                <select id="setting-move">
+                    <option value="wasd">WASD</option>
+                    <option value="arrows">Стрелки</option>
+                </select>
+            </div>
+            <button id="settings-close" class="btn">Сохранить и Закрыть</button>
         </div>
 
-        <!-- JOURNAL / EVIDENCE MODAL -->
-        <div id="modal-journal" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-30 pointer-events-auto p-4 hidden">
-            <div class="bg-gray-900 border border-gray-800 w-full max-w-2xl rounded-2xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
-                <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-800">
-                    <h3 class="text-xl font-bold text-yellow-500 flex items-center"><i class="fa-solid fa-book-open mr-2"></i><span id="lbl-journal-title">Evidence Journal</span></h3>
-                    <button id="close-journal" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-                </div>
-                <div id="notes-list" class="flex-1 overflow-y-auto space-y-3 pr-2">
-                </div>
-            </div>
-        </div>
-
-        <!-- SHOP MODAL -->
-        <div id="modal-shop" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-30 pointer-events-auto p-4 hidden">
-            <div class="bg-gray-900 border border-gray-800 w-full max-w-2xl rounded-2xl p-6 shadow-2xl">
-                <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-800">
-                    <div class="flex items-center space-x-3">
-                        <h3 class="text-xl font-bold text-green-400 flex items-center"><i class="fa-solid fa-store mr-2"></i><span id="lbl-shop-title">Black Market</span></h3>
-                        <span class="text-xs bg-green-950 text-green-400 border border-green-800 px-2.5 py-0.5 rounded-full font-semibold"><span id="shop-coins">0</span> coins</span>
-                    </div>
-                    <button id="close-shop" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
-                        <div>
-                            <h4 class="font-bold text-white">Batteries</h4>
-                            <p class="text-xs text-gray-400">Restores flashlight power</p>
-                            <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">50 Coins</span>
-                        </div>
-                        <button onclick="buyItem('battery', 50)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
-                    </div>
-                    <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
-                        <div>
-                            <h4 class="font-bold text-white">Lockpick</h4>
-                            <p class="text-xs text-gray-400">Opens door without key</p>
-                            <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">100 Coins</span>
-                        </div>
-                        <button onclick="buyItem('lockpick', 100)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
-                    </div>
-                    <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
-                        <div>
-                            <h4 class="font-bold text-white">Noise Maker</h4>
-                            <p class="text-xs text-gray-400">Distracts the room host</p>
-                            <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">200 Coins</span>
-                        </div>
-                        <button onclick="buyItem('decoy', 200)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
-                    </div>
-                    <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex items-center justify-between">
-                        <div>
-                            <h4 class="font-bold text-white">Direct Hint</h4>
-                            <p class="text-xs text-gray-400">Reveals key/code position</p>
-                            <span class="text-yellow-400 text-sm font-bold mt-1 inline-block">500 Coins</span>
-                        </div>
-                        <button onclick="buyItem('hint', 500)" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-bold transition">Buy</button>
-                    </div>
-                </div>
-
-                <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 flex flex-col md:flex-row justify-between items-center">
-                    <span class="text-xs text-gray-400 mb-2 md:mb-0" id="txt-need-coins">Need extra coins for investigation?</span>
-                    <button id="btn-add-coins" class="bg-yellow-600 hover:bg-yellow-500 text-black font-bold text-xs px-4 py-2 rounded-lg transition flex items-center">
-                        <i class="fa-solid fa-credit-card mr-2"></i><span id="lbl-add-coins">Simulate Payment (+500 Coins)</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- SETTINGS MODAL -->
-        <div id="modal-settings" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-30 pointer-events-auto p-4 hidden">
-            <div class="bg-gray-900 border border-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-5">
-                <div class="flex justify-between items-center pb-3 border-b border-gray-800">
-                    <h3 class="text-xl font-bold text-white flex items-center"><i class="fa-solid fa-gear mr-2 text-gray-400"></i><span id="lbl-settings-title">Game Settings</span></h3>
-                    <button id="close-settings" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-                </div>
-
-                <!-- Graphics -->
-                <div>
-                    <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2" id="lbl-graphics">Graphics Quality</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button id="gfx-low" onclick="setGraphics('low')" class="gfx-btn bg-gray-800 text-xs py-2 rounded-lg border border-gray-700 hover:bg-gray-700">Low</button>
-                        <button id="gfx-med" onclick="setGraphics('med')" class="gfx-btn bg-gray-800 text-xs py-2 rounded-lg border border-gray-700 hover:bg-gray-700">Medium</button>
-                        <button id="gfx-high" onclick="setGraphics('high')" class="gfx-btn bg-gray-800 text-xs py-2 rounded-lg border border-gray-700 hover:bg-gray-700">High</button>
-                    </div>
-                </div>
-
-                <!-- Sound Volume Controls -->
-                <div class="space-y-3">
-                    <div>
-                        <div class="flex justify-between text-xs font-semibold text-gray-400 mb-1">
-                            <span id="lbl-music-vol">Music Volume</span>
-                            <span id="val-music">80%</span>
-                        </div>
-                        <input type="range" id="slider-music" min="0" max="100" value="80" class="w-full accent-red-600 bg-gray-800 rounded-lg h-1.5 cursor-pointer">
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-xs font-semibold text-gray-400 mb-1">
-                            <span id="lbl-sfx-vol">SFX Volume</span>
-                            <span id="val-sfx">90%</span>
-                        </div>
-                        <input type="range" id="slider-sfx" min="0" max="100" value="90" class="w-full accent-red-600 bg-gray-800 rounded-lg h-1.5 cursor-pointer">
-                    </div>
-                </div>
-
-                <!-- Keybind Remapping & Controls Toggle -->
-                <div class="pt-2 border-t border-gray-800 space-y-3">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-semibold text-gray-300" id="lbl-move-keys">Movement Controls</span>
-                        <button id="btn-toggle-keys" class="bg-gray-800 text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-red-400 font-bold">WASD + Arrows</button>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-semibold text-gray-300" id="lbl-interact-key">Interaction Key</span>
-                        <button id="btn-rebind-interact" class="bg-gray-800 text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-red-400 font-bold uppercase">E</button>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-semibold text-gray-300">On-Screen Virtual Buttons</span>
-                        <button id="btn-toggle-touch" class="bg-gray-800 text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-green-400 font-bold">Auto/On</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- PAUSE MENU MODAL -->
-        <div id="modal-pause" class="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-30 pointer-events-auto hidden">
-            <h2 class="font-horror text-5xl text-red-600 mb-6 tracking-wide">PAUSED</h2>
-            <div class="flex flex-col w-full max-w-xs space-y-3">
-                <button id="btn-resume" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition shadow-lg uppercase tracking-wider">Resume</button>
-                <button id="btn-pause-settings" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-3 rounded-xl transition border border-gray-700">Settings</button>
-                <button id="btn-quit" class="w-full bg-gray-900 hover:bg-gray-800 text-red-400 font-semibold py-3 rounded-xl transition border border-red-900/40">Quit to Menu</button>
-            </div>
-        </div>
-
-        <!-- SAFE COMBINATION MODAL -->
-        <div id="modal-safe" class="absolute inset-0 bg-black/85 flex items-center justify-center z-30 pointer-events-auto hidden">
-            <div class="bg-gray-900 border border-gray-700 p-6 rounded-2xl text-center max-w-xs w-full shadow-2xl">
-                <h3 class="text-lg font-bold text-gray-200 mb-3" id="lbl-safe-title">Enter Safe Code</h3>
-                <div id="safe-display" class="bg-black text-red-500 font-mono text-3xl py-2 px-4 rounded border border-gray-800 tracking-widest mb-4">----</div>
-                <div class="grid grid-cols-3 gap-2 mb-4">
-                    <button onclick="pressSafeNum(1)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">1</button>
-                    <button onclick="pressSafeNum(2)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">2</button>
-                    <button onclick="pressSafeNum(3)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">3</button>
-                    <button onclick="pressSafeNum(4)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">4</button>
-                    <button onclick="pressSafeNum(5)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">5</button>
-                    <button onclick="pressSafeNum(6)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">6</button>
-                    <button onclick="pressSafeNum(7)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">7</button>
-                    <button onclick="pressSafeNum(8)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">8</button>
-                    <button onclick="pressSafeNum(9)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">9</button>
-                    <button onclick="clearSafeCode()" class="bg-red-900 hover:bg-red-800 text-white font-bold py-3 rounded-lg text-xs">CLR</button>
-                    <button onclick="pressSafeNum(0)" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">0</button>
-                    <button onclick="closeSafeModal()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg text-xs">ESC</button>
-                </div>
-            </div>
+        <!-- Main Menu -->
+        <div id="main-menu" class="interactive">
+            <div class="menu-title">ТЕМНЫЕ КОМНАТЫ</div>
+            <button id="start-btn" class="btn menu-btn">ИГРАТЬ</button>
+            <button id="journal-btn" class="btn menu-btn">ДНЕВНИК УЛИК</button>
+            <button id="menu-settings-btn" class="btn menu-btn">НАСТРОЙКИ</button>
         </div>
     </div>
 
-    <!-- MAIN GAME SCRIPT -->
     <script>
-        /* ====================================================================
-           1. CONFIGURATION & TRANSLATIONS
-           ==================================================================== */
-        const LOCATIONS = [
-            { id: 1, name: { en: "Manor House", ru: "Старинный Особняк" }, color: 0xffaa55, fogDensity: 0.035, monsterColor: 0x882222 },
-            { id: 2, name: { en: "Dark Basement", ru: "Тёмный Подвал" }, color: 0x335577, fogDensity: 0.05, monsterColor: 0x224466 },
-            { id: 3, name: { en: "Abandoned School", ru: "Заброшенная Школа" }, color: 0x77aa77, fogDensity: 0.04, monsterColor: 0x336633 },
-            { id: 4, name: { en: "Creepy Hospital", ru: "Мрачная Больница" }, color: 0x66cccc, fogDensity: 0.045, monsterColor: 0x228888 },
-            { id: 5, name: { en: "Haunted Forest", ru: "Проклятый Лес" }, color: 0x334433, fogDensity: 0.06, monsterColor: 0x112211 },
-            { id: 6, name: { en: "Echoing Mine", ru: "Заброшенная Шахта" }, color: 0xaa7744, fogDensity: 0.055, monsterColor: 0x664422 },
-            { id: 7, name: { en: "Ghost Ship", ru: "Призрачный Корабль" }, color: 0x445588, fogDensity: 0.045, monsterColor: 0x112244 },
-            { id: 8, name: { en: "Psychiatric Ward", ru: "Психбольница" }, color: 0xaaaaaa, fogDensity: 0.04, monsterColor: 0x555555 },
-            { id: 9, name: { en: "Cold Bunker", ru: "Бункер Холодной Войны" }, color: 0xaa4444, fogDensity: 0.05, monsterColor: 0x661111 },
-            { id: 10, name: { en: "Final Castle", ru: "Финиширующий Замок" }, color: 0x8833aa, fogDensity: 0.035, monsterColor: 0x441166 }
-        ];
+        // --- GAME STATE & LOCALIZATION ---
+        let currentLang = 'RU';
+        let currentLevel = 1;
+        let coins = 0;
+        let safeCode = "4821"; // Synced level code
+        let keyFound = false;
+        let paperFound = false;
+        let journalEntries = [];
 
-        const TRANSLATIONS = {
-            en: {
-                subtitle: "100 Rooms First-Person Horror Quest",
-                start: "Start Game",
-                levels: "Level Select",
-                shop: "Horror Shop",
-                settings: "Settings",
-                selectLevel: "Select Level",
-                journal: "Evidence Journal",
-                safeTitle: "Enter Safe Combination",
-                interact: "Interact",
-                openDoor: "Open Door",
-                lockedDoor: "Door Locked (Need Key)",
-                pickKey: "Pick up Key",
-                readNote: "Read Document",
-                hide: "Hide in Wardrobe",
-                exitHide: "Exit Hideout",
-                openSafe: "Unlock Safe",
-                hiding: "Hidden",
-                crouching: "Crouching",
-                graphics: "Graphics Quality",
-                musicVol: "Music Volume",
-                sfxVol: "SFX Volume",
-                moveKeys: "Movement Keys",
-                interactKey: "Interaction Key",
-                needCoins: "Need extra coins for investigation?",
-                simPayment: "Simulate Payment (+500 Coins)"
+        // Keybinds
+        let interactKey = 'KeyE';
+        let moveType = 'wasd'; // 'wasd' or 'arrows'
+
+        const i18n = {
+            RU: {
+                level: "Уровень: ",
+                location: "Локация",
+                obj1: "Найдите бумагу с кодом от сейфа",
+                obj2: "Введите код в сейф и заберите ключ",
+                obj3: "Откройте дверь полученным ключом",
+                coins: "Монеты: ",
+                promptInteract: "Нажмите [{KEY}] для взаимодействия",
+                paperTitle: "Записка расследования",
+                safeTitle: "Введите код сейфа",
+                journalTitle: "Дневник улик",
+                journalEmpty: "Вы пока не нашли ни одного документа.",
+                start: "ИГРАТЬ",
+                journal: "ДНЕВНИК УЛИК",
+                settings: "НАСТРОЙКИ",
+                locNames: ["Дом", "Подвал", "Школа", "Больница", "Лес", "Шахта", "Корабль", "Психбольница", "Бункер", "Замок"]
             },
-            ru: {
-                subtitle: "100 Комнат: 3D Квест-Хоррор",
-                start: "Начать Игру",
-                levels: "Выбор Уровня",
-                shop: "Магазин Улик",
-                settings: "Настройки",
-                selectLevel: "Выберите Уровень",
-                journal: "Дневник Улик",
-                safeTitle: "Введите Код Сейфа",
-                interact: "Взаимодействовать",
-                openDoor: "Открыть Дверь",
-                lockedDoor: "Дверь Заперта (Нужен Ключ)",
-                pickKey: "Взять Ключ",
-                readNote: "Прочесть Документ",
-                hide: "Спрятаться в Шкаф",
-                exitHide: "Вылезти из Шкафа",
-                openSafe: "Открыть Сейф",
-                hiding: "Спрятан",
-                crouching: "Присед",
-                graphics: "Качество Графики",
-                musicVol: "Громкость Музыки",
-                sfxVol: "Громкость Эффектов",
-                moveKeys: "Клавиши Движения",
-                interactKey: "Клавиша Взаимодействия",
-                needCoins: "Нужны монеты для расследования?",
-                simPayment: "Тестовая Оплата (+500 Монет)"
+            EN: {
+                level: "Level: ",
+                location: "Location",
+                obj1: "Find the note with the safe code",
+                obj2: "Enter the code into the safe to get the key",
+                obj3: "Unlock the exit door with the key",
+                coins: "Coins: ",
+                promptInteract: "Press [{KEY}] to interact",
+                paperTitle: "Investigation Note",
+                safeTitle: "Enter Safe Code",
+                journalTitle: "Evidence Journal",
+                journalEmpty: "No documents collected yet.",
+                start: "PLAY",
+                journal: "EVIDENCE JOURNAL",
+                settings: "SETTINGS",
+                locNames: ["House", "Basement", "School", "Hospital", "Forest", "Mine", "Ship", "Asylum", "Bunker", "Castle"]
             }
         };
 
-        let gameState = {
-            lang: 'ru',
-            currentLevel: 1,
-            unlockedLevel: 1,
-            coins: 100,
-            hasKey: false,
-            inventory: [],
-            collectedNotes: [],
-            battery: 100,
-            isFlashlightOn: true,
-            isHiding: false,
-            isCrouching: false,
-            showTouchControls: false,
-            settings: {
-                graphics: 'med',
-                musicVol: 80,
-                sfxVol: 90,
-                moveType: 'ALL',
-                interactKey: 'e'
-            }
-        };
-
-        function saveGame() {
-            try {
-                localStorage.setItem('dark_escape_save', JSON.stringify({
-                    unlockedLevel: gameState.unlockedLevel,
-                    coins: gameState.coins,
-                    settings: gameState.settings,
-                    lang: gameState.lang
-                }));
-            } catch(e) {}
-        }
-
-        function loadGame() {
-            try {
-                const raw = localStorage.getItem('dark_escape_save');
-                if (raw) {
-                    const data = JSON.parse(raw);
-                    gameState.unlockedLevel = data.unlockedLevel || 1;
-                    gameState.coins = data.coins || 100;
-                    if (data.settings) gameState.settings = Object.assign(gameState.settings, data.settings);
-                    if (data.lang) gameState.lang = data.lang;
-                }
-            } catch(e) {}
-        }
-
-        /* ====================================================================
-           2. PROCEDURAL CANVAS TEXTURES
-           ==================================================================== */
-        const Textures = {};
-
-        function createProceduralTextures() {
-            Textures.wood = createNoiseTexture('#4a2e16', '#2d1a0b', 'wood');
-            Textures.wall = createNoiseTexture('#3a3d40', '#1f2124', 'wallpaper');
-            Textures.brick = createBrickTexture();
-            Textures.metal = createNoiseTexture('#4b5563', '#1f2937', 'metal');
-            Textures.tile = createTileTexture();
-            Textures.paper = createPaperTexture();
-        }
-
-        function createNoiseTexture(color1, color2, type) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = color1; ctx.fillRect(0, 0, 256, 256);
-            ctx.fillStyle = color2;
-            for (let i = 0; i < 2500; i++) {
-                const x = Math.random() * 256, y = Math.random() * 256;
-                const w = type === 'wood' ? Math.random() * 18 + 4 : Math.random() * 3 + 1;
-                const h = type === 'wood' ? Math.random() * 2 + 1 : Math.random() * 3 + 1;
-                ctx.globalAlpha = Math.random() * 0.25;
-                ctx.fillRect(x, y, w, h);
-            }
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
-            return texture;
-        }
-
-        function createBrickTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#1c1917'; ctx.fillRect(0, 0, 256, 256);
-            ctx.fillStyle = '#7f1d1d';
-            const rows = 16, cols = 8, rh = 256 / rows, cw = 256 / cols;
-            for (let r = 0; r < rows; r++) {
-                const offset = (r % 2) * (cw / 2);
-                for (let c = -1; c < cols + 1; c++) {
-                    ctx.fillRect(c * cw + offset + 1, r * rh + 1, cw - 2, rh - 2);
-                }
-            }
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
-            return texture;
-        }
-
-        function createTileTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 256, 256);
-            ctx.fillStyle = '#334155';
-            const size = 32;
-            for (let x = 0; x < 256; x += size) {
-                for (let y = 0; y < 256; y += size) {
-                    ctx.fillRect(x + 1, y + 1, size - 2, size - 2);
-                }
-            }
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
-            return texture;
-        }
-
-        function createPaperTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#fef08a'; ctx.fillRect(0, 0, 256, 256);
-            ctx.fillStyle = '#78350f';
-            ctx.font = 'bold 24px monospace';
-            ctx.fillText('CONFIDENTIAL', 20, 50);
-            ctx.fillText('CODE: ????', 20, 100);
-            ctx.fillRect(20, 120, 216, 4);
-            const texture = new THREE.CanvasTexture(canvas);
-            return texture;
-        }
-
-        /* ====================================================================
-           3. AUDIO SYNTHESIZER
-           ==================================================================== */
-        class SoundEngine {
-            constructor() { this.ctx = null; }
-            init() {
-                if (!this.ctx) {
-                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    if (AudioCtx) this.ctx = new AudioCtx();
-                }
-                if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
-            }
-            playFootstep() {
-                if (!this.ctx || gameState.settings.sfxVol === 0) return;
-                try {
-                    const vol = (gameState.settings.sfxVol / 100) * 0.25;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(100, this.ctx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.08);
-                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-                    osc.connect(gain); gain.connect(this.ctx.destination);
-                    osc.start(); osc.stop(this.ctx.currentTime + 0.08);
-                } catch(e) {}
-            }
-            playDoorScreech() {
-                if (!this.ctx || gameState.settings.sfxVol === 0) return;
-                try {
-                    const vol = (gameState.settings.sfxVol / 100) * 0.35;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(180, this.ctx.currentTime);
-                    osc.frequency.linearRampToValueAtTime(400, this.ctx.currentTime + 0.35);
-                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
-                    osc.connect(gain); gain.connect(this.ctx.destination);
-                    osc.start(); osc.stop(this.ctx.currentTime + 0.4);
-                } catch(e) {}
-            }
-            playPickup() {
-                if (!this.ctx || gameState.settings.sfxVol === 0) return;
-                try {
-                    const vol = (gameState.settings.sfxVol / 100) * 0.4;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(440, this.ctx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.12);
-                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
-                    osc.connect(gain); gain.connect(this.ctx.destination);
-                    osc.start(); osc.stop(this.ctx.currentTime + 0.12);
-                } catch(e) {}
-            }
-            playGrowl() {
-                if (!this.ctx || gameState.settings.sfxVol === 0) return;
-                try {
-                    const vol = (gameState.settings.sfxVol / 100) * 0.5;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(65, this.ctx.currentTime);
-                    osc.frequency.linearRampToValueAtTime(35, this.ctx.currentTime + 0.7);
-                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.7);
-                    osc.connect(gain); gain.connect(this.ctx.destination);
-                    osc.start(); osc.stop(this.ctx.currentTime + 0.7);
-                } catch(e) {}
-            }
-        }
-        const audio = new SoundEngine();
-
-        /* ====================================================================
-           4. THREE.JS ENGINE & ENGINE LOGIC
-           ==================================================================== */
-        let scene, camera, renderer, flashlight;
-        let interactiveObjects = [];
-        let noteBeaconMesh = null;
-        let monster, monsterPointA, monsterPointB, monsterDir = 1;
-        let isGameRunning = false;
-        let isPointerLocked = false;
-        let currentSafeCode = "1234";
-        let enteredSafeCode = "";
-
-        const keyState = { fwd: false, bwd: false, left: false, right: false, sprint: false };
-        let pitch = 0, yaw = 0;
-        let headBobTimer = 0;
-
-        let touchLookId = null;
-        let lastTouchX = 0, lastTouchY = 0;
-
-        function init3DEngine() {
-            const canvas = document.getElementById('game-canvas');
-            scene = new THREE.Scene();
-
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 1.6, 3.8);
-
-            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: 'high-performance' });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-            flashlight = new THREE.SpotLight(0xffffff, 2.5, 14, Math.PI / 5, 0.4, 1);
-            flashlight.castShadow = true;
-            scene.add(flashlight);
-            scene.add(flashlight.target);
-
-            createProceduralTextures();
-
-            canvas.focus();
-
-            const requestLock = () => {
-                if (!isGameRunning || isModalOpen() || gameState.isHiding) return;
-                audio.init();
-                try { canvas.requestPointerLock(); } catch(e) {}
-            };
-
-            canvas.addEventListener('click', requestLock);
-            document.getElementById('click-to-play-notice').addEventListener('click', requestLock);
-
-            document.addEventListener('pointerlockchange', () => {
-                isPointerLocked = (document.pointerLockElement === canvas);
-                const clickNotice = document.getElementById('click-to-play-notice');
-                if (isGameRunning && !isPointerLocked && !gameState.isHiding && !isModalOpen()) {
-                    clickNotice.classList.remove('hidden');
-                } else {
-                    clickNotice.classList.add('hidden');
-                }
-            });
-
-            document.addEventListener('mousemove', onMouseMove);
-
-            canvas.addEventListener('touchstart', (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const t = e.changedTouches[i];
-                    if (t.clientX > window.innerWidth / 2 && touchLookId === null) {
-                        touchLookId = t.identifier;
-                        lastTouchX = t.clientX; lastTouchY = t.clientY;
-                    }
-                }
-            }, { passive: true });
-
-            canvas.addEventListener('touchmove', (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const t = e.changedTouches[i];
-                    if (t.identifier === touchLookId) {
-                        const dx = t.clientX - lastTouchX, dy = t.clientY - lastTouchY;
-                        lastTouchX = t.clientX; lastTouchY = t.clientY;
-                        applyRotation(dx * 0.004, dy * 0.004);
-                    }
-                }
-            }, { passive: true });
-
-            const clearTouchLook = (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === touchLookId) touchLookId = null;
-                }
-            };
-            canvas.addEventListener('touchend', clearTouchLook);
-            canvas.addEventListener('touchcancel', clearTouchLook);
-
-            window.addEventListener('keydown', onKeyDown, true);
-            window.addEventListener('keyup', onKeyUp, true);
-            window.addEventListener('resize', onWindowResize);
-
-            bindVirtualTouchButtons();
-        }
-
-        function applyRotation(dx, dy) {
-            yaw -= dx; pitch -= dy;
-            pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
-            camera.rotation.order = "YXZ";
-            camera.rotation.x = pitch; camera.rotation.y = yaw;
-        }
-
-        function onMouseMove(e) {
-            if (!isGameRunning || !isPointerLocked || gameState.isHiding) return;
-            applyRotation(e.movementX * 0.0022, e.movementY * 0.0022);
-        }
-
-        function onKeyDown(e) {
-            if (!isGameRunning || isModalOpen()) return;
-            const k = e.key.toLowerCase(), code = e.code;
-
-            if (k === 'w' || k === 'arrowup' || code === 'KeyW' || code === 'ArrowUp') keyState.fwd = true;
-            if (k === 's' || k === 'arrowdown' || code === 'KeyS' || code === 'ArrowDown') keyState.bwd = true;
-            if (k === 'a' || k === 'arrowleft' || code === 'KeyA' || code === 'ArrowLeft') keyState.left = true;
-            if (k === 'd' || k === 'arrowright' || code === 'KeyD' || code === 'ArrowRight') keyState.right = true;
-
-            if (k === 'shift' || code.includes('Shift')) keyState.sprint = true;
-            if (k === 'control' || code.includes('Control')) toggleCrouch();
-
-            const customInteract = gameState.settings.interactKey.toLowerCase();
-            if (k === customInteract || k === 'e' || code === 'KeyE') checkInteraction();
-            if (k === 'f' || code === 'KeyF') toggleFlashlight();
-            if (k === 'escape' || code === 'Escape') openPauseMenu();
-        }
-
-        function onKeyUp(e) {
-            const k = e.key.toLowerCase(), code = e.code;
-            if (k === 'w' || k === 'arrowup' || code === 'KeyW' || code === 'ArrowUp') keyState.fwd = false;
-            if (k === 's' || k === 'arrowdown' || code === 'KeyS' || code === 'ArrowDown') keyState.bwd = false;
-            if (k === 'a' || k === 'arrowleft' || code === 'KeyA' || code === 'ArrowLeft') keyState.left = false;
-            if (k === 'd' || k === 'arrowright' || code === 'KeyD' || code === 'ArrowRight') keyState.right = false;
-            if (k === 'shift' || code.includes('Shift')) keyState.sprint = false;
-        }
-
-        function bindVirtualTouchButtons() {
-            const bindBtn = (id, startAction, endAction) => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.addEventListener('touchstart', (e) => { e.preventDefault(); startAction(); }, { passive: false });
-                el.addEventListener('touchend', (e) => { e.preventDefault(); if (endAction) endAction(); }, { passive: false });
-                el.addEventListener('mousedown', startAction);
-                if (endAction) el.addEventListener('mouseup', endAction);
-            };
-
-            bindBtn('btn-touch-up', () => keyState.fwd = true, () => keyState.fwd = false);
-            bindBtn('btn-touch-down', () => keyState.bwd = true, () => keyState.bwd = false);
-            bindBtn('btn-touch-left', () => keyState.left = true, () => keyState.left = false);
-            bindBtn('btn-touch-right', () => keyState.right = true, () => keyState.right = false);
-            bindBtn('btn-touch-crouch', () => toggleCrouch());
-            bindBtn('btn-touch-flash', () => toggleFlashlight());
-            bindBtn('btn-touch-interact', () => checkInteraction());
-        }
-
-        function toggleCrouch() {
-            gameState.isCrouching = !gameState.isCrouching;
-            const status = document.getElementById('crouch-status');
-            if (gameState.isCrouching) {
-                camera.position.y = 0.9;
-                status.classList.remove('hidden');
+        function updateUI() {
+            const locIdx = Math.floor((currentLevel - 1) / 10);
+            const locName = i18n[currentLang].locNames[locIdx] || "Неизвестно";
+            document.getElementById('hud-level').innerText = `${i18n[currentLang].level}${currentLevel} (${i18n[currentLang].location} ${locIdx + 1}: ${locName})`;
+            document.getElementById('hud-coins').innerText = `${i18n[currentLang].coins}${coins}`;
+            
+            if (!paperFound) {
+                document.getElementById('hud-objective').innerText = `Цель: ${i18n[currentLang].obj1}`;
+            } else if (!keyFound) {
+                document.getElementById('hud-objective').innerText = `Цель: ${i18n[currentLang].obj2}`;
             } else {
-                camera.position.y = 1.6;
-                status.classList.add('hidden');
-            }
-        }
-
-        function toggleFlashlight() {
-            if (gameState.battery <= 0) return;
-            gameState.isFlashlightOn = !gameState.isFlashlightOn;
-            flashlight.visible = gameState.isFlashlightOn;
-        }
-
-        /* ====================================================================
-           5. ENVIRONMENT & PROMINENT ITEM BUILDER
-           ==================================================================== */
-        function buildLevel(levelNum) {
-            interactiveObjects = [];
-            noteBeaconMesh = null;
-            document.getElementById('item-beacon').classList.add('hidden');
-
-            while (scene.children.length > 0) {
-                scene.remove(scene.children[0]);
+                document.getElementById('hud-objective').innerText = `Цель: ${i18n[currentLang].obj3}`;
             }
 
-            scene.add(flashlight);
-            scene.add(flashlight.target);
+            document.getElementById('start-btn').innerText = i18n[currentLang].start;
+            document.getElementById('journal-btn').innerText = i18n[currentLang].journal;
+            document.getElementById('menu-settings-btn').innerText = i18n[currentLang].settings;
+        }
 
-            const locIndex = Math.floor((levelNum - 1) / 10);
-            const loc = LOCATIONS[locIndex] || LOCATIONS[0];
+        // --- THREE.JS ENGINE SETUP ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050508);
+        scene.fog = new THREE.FogExp2(0x050508, 0.12);
 
-            scene.fog = new THREE.FogExp2(loc.color, loc.fogDensity);
-            scene.background = new THREE.Color(0x050505);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
 
-            const ambientLight = new THREE.AmbientLight(loc.color, 0.25);
-            scene.add(ambientLight);
+        // Flashlight
+        const flashlight = new THREE.SpotLight(0xffffff, 2.5, 15, Math.PI / 6, 0.5, 1);
+        flashlight.castShadow = true;
+        scene.add(flashlight);
+        scene.add(flashlight.target);
 
-            // Room Setup
-            const roomGroup = new THREE.Group();
+        // Ambient
+        const ambientLight = new THREE.AmbientLight(0x222233, 0.4);
+        scene.add(ambientLight);
 
-            const floorMat = new THREE.MeshStandardMaterial({ map: locIndex % 2 === 0 ? Textures.wood : Textures.tile, roughness: 0.8 });
-            const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 12), floorMat);
-            floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true;
+        // --- PROCEDURAL TEXTURES ---
+        function createWoodTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#4a2f13'; ctx.fillRect(0,0,256,256);
+            ctx.fillStyle = '#2d1a08';
+            for(let i=0; i<30; i++) {
+                ctx.fillRect(0, Math.random()*256, 256, Math.random()*4+1);
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createWallTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#665544'; ctx.fillRect(0,0,256,256);
+            ctx.fillStyle = '#443322';
+            for(let i=0; i<500; i++) {
+                ctx.fillRect(Math.random()*256, Math.random()*256, 2, 2);
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        const woodMat = new THREE.MeshStandardMaterial({ map: createWoodTexture() });
+        const wallMat = new THREE.MeshStandardMaterial({ map: createWallTexture() });
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.3, metalness: 0.8 });
+        const paperMat = new THREE.MeshBasicMaterial({ color: 0xffffcc });
+        const goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.2, metalness: 0.9 });
+
+        // --- LEVEL GENERATION & OBJECTS ---
+        let interactables = [];
+        let roomGroup = new THREE.Group();
+        scene.add(roomGroup);
+
+        function generateLevelCode() {
+            safeCode = Math.floor(1000 + Math.random() * 9000).toString();
+        }
+
+        function buildRoom() {
+            // Clear previous room
+            while(roomGroup.children.length > 0){ 
+                roomGroup.remove(roomGroup.children[0]); 
+            }
+            interactables = [];
+
+            generateLevelCode();
+            keyFound = false;
+            paperFound = false;
+
+            // Room Box (6x6x3.5)
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), woodMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
             roomGroup.add(floor);
 
-            const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
-            const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(10, 12), ceilingMat);
-            ceiling.position.y = 4; ceiling.rotation.x = Math.PI / 2;
+            const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), wallMat);
+            ceiling.position.y = 3.5;
+            ceiling.rotation.x = Math.PI / 2;
             roomGroup.add(ceiling);
 
-            const wallMat = new THREE.MeshStandardMaterial({ map: locIndex % 3 === 0 ? Textures.brick : Textures.wall, roughness: 0.9 });
-            
-            const backWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.2), wallMat); backWall.position.set(0, 2, -6); roomGroup.add(backWall);
-            const frontWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.2), wallMat); frontWall.position.set(0, 2, 6); roomGroup.add(frontWall);
-            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 12), wallMat); leftWall.position.set(-5, 2, 0); roomGroup.add(leftWall);
-            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 12), wallMat); rightWall.position.set(5, 2, 0); roomGroup.add(rightWall);
-
-            scene.add(roomGroup);
-
-            // Create Furniture
-            createDoor(0, 0, -5.8, levelNum);
-            createWardrobe(-3.8, 0, -2);
-
-            // Table right in front of spawn position (0,0,1) for max visibility
-            createTable(0, 0, 1);
-
-            currentSafeCode = `${Math.floor(1000 + Math.random() * 9000)}`;
-            createSafe(3.5, 0, 1, currentSafeCode);
-
-            const noteText = {
-                en: `INVESTIGATION FILE (LEVEL ${levelNum})\n\nSecrets of this room are locked inside the safe. Code is: [ ${currentSafeCode} ].\n\nEnter code into safe to grab the door key!`,
-                ru: `ДОКУМЕНТ РАССЛЕДОВАНИЯ (УРОВЕНЬ ${levelNum})\n\nСекреты этой комнаты спрятаны в сейфе. КОД ОТ СЕЙФА: [ ${currentSafeCode} ].\n\nВведите код на сейфе справа, чтобы достать ключ от выходной двери!`
+            // Walls
+            const createWall = (x, z, ry) => {
+                const wall = new THREE.Mesh(new THREE.PlaneGeometry(8, 3.5), wallMat);
+                wall.position.set(x, 1.75, z);
+                wall.rotation.y = ry;
+                wall.receiveShadow = true;
+                roomGroup.add(wall);
             };
+            createWall(0, -4, 0); // Back
+            createWall(-4, 0, Math.PI/2); // Left
+            createWall(4, 0, -Math.PI/2); // Right
 
-            // NOTE PLACED DIRECTLY ON MAIN TABLE IN FRONT OF PLAYER
-            createNote(0, 0.92, 1, noteText);
+            // Front wall with door frame
+            const doorWall = new THREE.Mesh(new THREE.PlaneGeometry(8, 3.5), wallMat);
+            doorWall.position.set(0, 1.75, 4);
+            doorWall.rotation.y = Math.PI;
+            roomGroup.add(doorWall);
 
-            createMonster(loc.monsterColor);
+            // Exit Door
+            const door = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.1), woodMat);
+            door.position.set(0, 1.1, 3.9);
+            door.castShadow = true;
+            door.userData = { type: 'door' };
+            roomGroup.add(door);
+            interactables.push(door);
 
-            // Spawn Player Looking directly at table and note!
-            camera.position.set(0, 1.6, 3.8);
-            yaw = 0; pitch = -0.2;
-            camera.rotation.set(pitch, yaw, 0, "YXZ");
+            // Table with Note (Center Front)
+            const table = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.8, 1.0), woodMat);
+            table.position.set(0, 0.4, -1);
+            table.castShadow = true;
+            roomGroup.add(table);
 
-            gameState.hasKey = false;
-            gameState.isHiding = false;
+            // Document Note on Table
+            const paper = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.01, 0.4), paperMat);
+            paper.position.set(0, 0.81, -1);
+            paper.userData = { type: 'paper' };
+            roomGroup.add(paper);
+            interactables.push(paper);
 
-            document.getElementById('txt-location').innerText = loc.name[gameState.lang];
-            document.getElementById('txt-level').innerText = `Lvl ${levelNum}`;
+            // Add glowing point light above paper
+            const paperLight = new THREE.PointLight(0xffff99, 1, 2);
+            paperLight.position.set(0, 1.5, -1);
+            roomGroup.add(paperLight);
+
+            // Safe on the side
+            const safe = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), metalMat);
+            safe.position.set(-2.5, 0.4, -2.5);
+            safe.castShadow = true;
+            safe.userData = { type: 'safe' };
+            roomGroup.add(safe);
+            interactables.push(safe);
+
+            updateUI();
         }
 
-        function createDoor(x, y, z, levelNum) {
-            const doorGroup = new THREE.Group();
-            doorGroup.position.set(x, y, z);
+        // --- PLAYER CONTROLS & PHYSICS ---
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        let isLocked = false;
+        let yaw = 0, pitch = 0;
 
-            const frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.2, 0.3), new THREE.MeshStandardMaterial({ map: Textures.wood }));
-            frame.position.y = 1.6; doorGroup.add(frame);
+        camera.position.set(0, 1.6, 2.5);
 
-            const door = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 0.1), new THREE.MeshStandardMaterial({ map: Textures.wood, color: 0x553311 }));
-            door.position.y = 1.5; door.castShadow = true; doorGroup.add(door);
+        // Key Listeners
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'KeyW' || (moveType === 'arrows' && e.code === 'ArrowUp')) moveForward = true;
+            if (e.code === 'KeyS' || (moveType === 'arrows' && e.code === 'ArrowDown')) moveBackward = true;
+            if (e.code === 'KeyA' || (moveType === 'arrows' && e.code === 'ArrowLeft')) moveLeft = true;
+            if (e.code === 'KeyD' || (moveType === 'arrows' && e.code === 'ArrowRight')) moveRight = true;
 
-            const handle = new THREE.Mesh(new THREE.SphereGeometry(0.08), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8 }));
-            handle.position.set(0.8, 1.5, 0.1); doorGroup.add(handle);
-
-            scene.add(doorGroup);
-
-            interactiveObjects.push({
-                mesh: doorGroup,
-                type: 'door',
-                action: () => {
-                    if (gameState.hasKey) {
-                        audio.playDoorScreech();
-                        nextLevel();
-                    } else {
-                        showPrompt(TRANSLATIONS[gameState.lang].lockedDoor);
-                    }
-                },
-                prompt: TRANSLATIONS[gameState.lang].openDoor
-            });
-        }
-
-        function createWardrobe(x, y, z) {
-            const group = new THREE.Group();
-            group.position.set(x, y, z);
-
-            const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 3.2, 1.2), new THREE.MeshStandardMaterial({ map: Textures.wood }));
-            body.position.y = 1.6; body.castShadow = true; group.add(body);
-
-            scene.add(group);
-
-            interactiveObjects.push({
-                mesh: group,
-                type: 'wardrobe',
-                action: () => toggleHiding(x, y, z),
-                prompt: gameState.isHiding ? TRANSLATIONS[gameState.lang].exitHide : TRANSLATIONS[gameState.lang].hide
-            });
-        }
-
-        function createTable(x, y, z) {
-            const group = new THREE.Group();
-            group.position.set(x, y, z);
-
-            const top = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.1, 1.4), new THREE.MeshStandardMaterial({ map: Textures.wood }));
-            top.position.y = 0.85; top.receiveShadow = true; top.castShadow = true;
-            group.add(top);
-
-            const legGeo = new THREE.BoxGeometry(0.12, 0.8, 0.12);
-            const legMat = new THREE.MeshStandardMaterial({ map: Textures.wood });
-
-            [[-1.1, -0.6], [1.1, -0.6], [-1.1, 0.6], [1.1, 0.6]].forEach(pos => {
-                const leg = new THREE.Mesh(legGeo, legMat);
-                leg.position.set(pos[0], 0.4, pos[1]);
-                leg.castShadow = true;
-                group.add(leg);
-            });
-
-            scene.add(group);
-        }
-
-        function createSafe(x, y, z, code) {
-            const group = new THREE.Group();
-            group.position.set(x, y, z);
-
-            const baseMat = new THREE.MeshStandardMaterial({ map: Textures.metal, metalness: 0.6, roughness: 0.4 });
-            const safeMesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.8), baseMat);
-            safeMesh.position.y = 0.5;
-            safeMesh.castShadow = true;
-            group.add(safeMesh);
-
-            scene.add(group);
-
-            interactiveObjects.push({
-                mesh: group,
-                type: 'safe',
-                code: code,
-                action: () => openSafeModal(),
-                prompt: TRANSLATIONS[gameState.lang].openSafe
-            });
-        }
-
-        function createNote(x, y, z, textObj) {
-            const group = new THREE.Group();
-            group.position.set(x, y, z);
-
-            // Paper Sheet Mesh
-            const noteMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.6), new THREE.MeshStandardMaterial({ map: Textures.paper, side: THREE.DoubleSide, roughness: 0.5 }));
-            noteMesh.rotation.x = -Math.PI / 2;
-            group.add(noteMesh);
-
-            // GLOWING PARTICLES / LIGHT BEACON SO YOU CAN SEE IT IMMEDIATELY!
-            const noteLight = new THREE.PointLight(0xfef08a, 2, 3);
-            noteLight.position.set(0, 0.2, 0);
-            group.add(noteLight);
-
-            // Pulsing highlight ring below paper
-            const ringMesh = new THREE.Mesh(
-                new THREE.RingGeometry(0.3, 0.38, 16),
-                new THREE.MeshBasicMaterial({ color: 0xef4444, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
-            );
-            ringMesh.rotation.x = -Math.PI / 2;
-            ringMesh.position.y = -0.01;
-            group.add(ringMesh);
-
-            scene.add(group);
-            noteBeaconMesh = group;
-
-            interactiveObjects.push({
-                mesh: group,
-                type: 'note',
-                text: textObj,
-                action: () => {
-                    audio.playPickup();
-                    const noteContent = textObj[gameState.lang];
-                    if (!gameState.collectedNotes.includes(noteContent)) {
-                        gameState.collectedNotes.push(noteContent);
-                    }
-                    showNoteModal(noteContent);
-                },
-                prompt: TRANSLATIONS[gameState.lang].readNote
-            });
-        }
-
-        function showNoteModal(text) {
-            document.exitPointerLock();
-            document.getElementById('read-note-body').innerText = text;
-            document.getElementById('modal-read-note').classList.remove('hidden');
-        }
-
-        function createKey(x, y, z) {
-            const keyGroup = new THREE.Group();
-            keyGroup.position.set(x, y, z);
-
-            const ring = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.025, 8, 16), new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.9, roughness: 0.2 }));
-            keyGroup.add(ring);
-
-            const keyLight = new THREE.PointLight(0xf59e0b, 2.5, 3);
-            keyLight.position.set(0, 0.2, 0);
-            keyGroup.add(keyLight);
-
-            scene.add(keyGroup);
-
-            interactiveObjects.push({
-                mesh: keyGroup,
-                type: 'key',
-                action: () => {
-                    audio.playPickup();
-                    gameState.hasKey = true;
-                    scene.remove(keyGroup);
-                    showPrompt(gameState.lang === 'ru' ? "Ключ от двери взят!" : "Door key collected!");
-                },
-                prompt: TRANSLATIONS[gameState.lang].pickKey
-            });
-        }
-
-        function createMonster(colorHex) {
-            const group = new THREE.Group();
-            group.position.set(0, 1.2, -2);
-
-            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.2, 1.8, 8), new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.3 }));
-            group.add(body);
-
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-            head.position.y = 1.1; group.add(head);
-
-            const eyeGeo = new THREE.SphereGeometry(0.04, 6, 6);
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const leftEye = new THREE.Mesh(eyeGeo, eyeMat); leftEye.position.set(-0.08, 1.15, 0.2);
-            const rightEye = new THREE.Mesh(eyeGeo, eyeMat); rightEye.position.set(0.08, 1.15, 0.2);
-            group.add(leftEye); group.add(rightEye);
-
-            monster = group;
-            monsterPointA = new THREE.Vector3(-3.5, 1.2, -2);
-            monsterPointB = new THREE.Vector3(3.5, 1.2, -2);
-            scene.add(monster);
-        }
-
-        /* ====================================================================
-           6. GAME LOOP & UPDATES
-           ==================================================================== */
-        function updateMovement(delta) {
-            if (gameState.isHiding) return;
-
-            const speed = (keyState.sprint ? 4.2 : 2.4) * (gameState.isCrouching ? 0.5 : 1.0);
-
-            const moveDir = new THREE.Vector3();
-            if (keyState.fwd) moveDir.z -= 1;
-            if (keyState.bwd) moveDir.z += 1;
-            if (keyState.left) moveDir.x -= 1;
-            if (keyState.right) moveDir.x += 1;
-
-            moveDir.normalize();
-
-            if (moveDir.lengthSq() > 0) {
-                const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-                forward.y = 0; forward.normalize();
-
-                const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
-                right.y = 0; right.normalize();
-
-                camera.position.addScaledVector(forward, -moveDir.z * speed * delta);
-                camera.position.addScaledVector(right, moveDir.x * speed * delta);
-
-                headBobTimer += delta * speed * 3.5;
-                camera.position.y = (gameState.isCrouching ? 0.9 : 1.6) + Math.sin(headBobTimer) * 0.04;
-
-                if (Math.sin(headBobTimer) > 0.92) audio.playFootstep();
+            if (e.code === interactKey) {
+                checkInteraction();
             }
+        });
 
-            camera.position.x = Math.max(-4.4, Math.min(4.4, camera.position.x));
-            camera.position.z = Math.max(-5.4, Math.min(5.4, camera.position.z));
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = false;
+            if (e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = false;
+            if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = false;
+            if (e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = false;
+        });
 
-            flashlight.position.copy(camera.position);
-            const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-            flashlight.target.position.copy(camera.position).add(dir);
+        // Pointer Lock Camera Look
+        document.addEventListener('mousemove', (e) => {
+            if (!isLocked) return;
+            yaw -= e.movementX * 0.0025;
+            pitch -= e.movementY * 0.0025;
+            pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
 
-            if (gameState.isFlashlightOn) {
-                gameState.battery = Math.max(0, gameState.battery - delta * 0.7);
-                document.getElementById('battery-bar').style.width = `${gameState.battery}%`;
-                if (gameState.battery <= 0) {
-                    gameState.isFlashlightOn = false;
-                    flashlight.visible = false;
-                }
-            }
+            camera.rotation.set(0, 0, 0);
+            camera.rotation.y = yaw;
+            camera.rotation.x = pitch;
+        });
 
-            // Update floating beacon over note paper
-            if (noteBeaconMesh) {
-                const vec = new THREE.Vector3();
-                noteBeaconMesh.getWorldPosition(vec);
-                vec.y += 0.5;
-                vec.project(camera);
+        const clickOverlay = document.getElementById('click-overlay');
+        clickOverlay.addEventListener('click', () => {
+            container.requestPointerLock();
+        });
 
-                const beacon = document.getElementById('item-beacon');
-                if (vec.z < 1) {
-                    const x = (vec.x * 0.5 + 0.5) * window.innerWidth;
-                    const y = (-(vec.y * 0.5) + 0.5) * window.innerHeight;
-                    beacon.style.left = `${x}px`;
-                    beacon.style.top = `${y}px`;
-                    beacon.classList.remove('hidden');
-                } else {
-                    beacon.classList.add('hidden');
-                }
-            }
-        }
+        document.addEventListener('pointerlockchange', () => {
+            isLocked = (document.pointerLockElement === container);
+            clickOverlay.style.display = isLocked ? 'none' : 'flex';
+        });
 
-        function updateMonsterAI(delta) {
-            if (!monster) return;
+        // --- INTERACTION SYSTEM ---
+        const raycaster = new THREE.Raycaster();
+        let hoveredObject = null;
 
-            const target = monsterDir === 1 ? monsterPointB : monsterPointA;
-            monster.position.lerp(target, delta * 0.6);
-
-            if (monster.position.distanceTo(target) < 0.2) {
-                monsterDir *= -1;
-            }
-
-            if (!gameState.isHiding) {
-                const dist = monster.position.distanceTo(camera.position);
-                if (dist < 1.4) {
-                    audio.playGrowl();
-                    triggerGameOver();
-                }
-            }
-        }
-
-        function checkRaycastPrompts() {
-            const raycaster = new THREE.Raycaster();
+        function updateRaycast() {
             raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            const intersects = raycaster.intersectObjects(interactables);
 
-            const intersects = raycaster.intersectObjects(scene.children, true);
-            let foundPrompt = false;
+            const prompt = document.getElementById('interact-prompt');
 
-            for (let i = 0; i < intersects.length; i++) {
-                let parent = intersects[i].object;
-                while (parent && parent !== scene) {
-                    const match = interactiveObjects.find(io => io.mesh === parent);
-                    if (match && intersects[i].distance < 3.8) {
-                        showInteractionUI(match.prompt);
-                        foundPrompt = true;
-                        break;
-                    }
-                    parent = parent.parent;
-                }
-                if (foundPrompt) break;
+            if (intersects.length > 0 && intersects[0].distance < 2.5) {
+                hoveredObject = intersects[0].object;
+                const keyName = interactKey.replace('Key', '');
+                prompt.innerText = i18n[currentLang].promptInteract.replace('{KEY}', keyName);
+                prompt.style.display = 'block';
+            } else {
+                hoveredObject = null;
+                prompt.style.display = 'none';
             }
-
-            if (!foundPrompt) hideInteractionUI();
         }
 
         function checkInteraction() {
-            const raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            if (!hoveredObject) return;
 
-            const intersects = raycaster.intersectObjects(scene.children, true);
+            const type = hoveredObject.userData.type;
 
-            for (let i = 0; i < intersects.length; i++) {
-                let parent = intersects[i].object;
-                while (parent && parent !== scene) {
-                    const match = interactiveObjects.find(io => io.mesh === parent);
-                    if (match && intersects[i].distance < 3.8) {
-                        match.action();
-                        return;
-                    }
-                    parent = parent.parent;
+            if (type === 'paper') {
+                paperFound = true;
+                const noteText = `${i18n[currentLang].paperTitle} #${currentLevel}:\n\n` + 
+                    `Секретная комбинация для открытия центрального сейфа: [ ${safeCode} ].\n` +
+                    `Запомните эти цифры, найдите сейф и заберите ключ от следующей комнаты.`;
+                
+                document.getElementById('paper-body').innerText = noteText;
+                document.getElementById('paper-modal').style.display = 'flex';
+                
+                if (!journalEntries.includes(noteText)) {
+                    journalEntries.push(noteText);
                 }
-            }
-        }
-
-        function toggleHiding(x, y, z) {
-            gameState.isHiding = !gameState.isHiding;
-            const status = document.getElementById('hiding-status');
-
-            if (gameState.isHiding) {
-                camera.position.set(x, y + 1.2, z);
-                status.classList.remove('hidden');
-                document.exitPointerLock();
-            } else {
-                camera.position.set(x, 1.6, z + 1.5);
-                status.classList.add('hidden');
-                document.getElementById('game-canvas').focus();
-            }
-        }
-
-        function triggerGameOver() {
-            document.getElementById('damage-flash').style.opacity = '1';
-            setTimeout(() => {
-                document.getElementById('damage-flash').style.opacity = '0';
-                buildLevel(gameState.currentLevel);
-            }, 400);
-        }
-
-        function nextLevel() {
-            gameState.coins += 20;
-            saveGame();
-            if (gameState.currentLevel < 100) {
-                gameState.currentLevel++;
-                if (gameState.currentLevel > gameState.unlockedLevel) {
-                    gameState.unlockedLevel = gameState.currentLevel;
+                updateUI();
+                if (document.pointerLockElement) document.exitPointerLock();
+            } 
+            else if (type === 'safe') {
+                if (keyFound) {
+                    alert("Сейф уже открыт, ключ найден!");
+                    return;
                 }
-                saveGame();
-                buildLevel(gameState.currentLevel);
-            } else {
-                alert("ПОЗДРАВЛЯЕМ! Вы прошли все 100 уровней и сбежали!");
-                exitToMenu();
-            }
-        }
-
-        /* ====================================================================
-           7. UI & MODAL MANAGERS
-           ==================================================================== */
-        function updateLanguageUI() {
-            const lang = gameState.lang;
-            const t = TRANSLATIONS[lang];
-
-            document.getElementById('txt-subtitle').innerText = t.subtitle;
-            document.getElementById('lbl-play').innerText = t.start;
-            document.getElementById('lbl-levels').innerText = t.levels;
-            document.getElementById('lbl-shop').innerText = t.shop;
-            document.getElementById('lbl-settings').innerText = t.settings;
-            document.getElementById('lbl-select-level').innerText = t.selectLevel;
-            document.getElementById('lbl-journal-title').innerText = t.journal;
-            document.getElementById('lbl-safe-title').innerText = t.safeTitle;
-            document.getElementById('txt-hiding').innerText = t.hiding;
-            document.getElementById('txt-crouching').innerText = t.crouching;
-            document.getElementById('lbl-graphics').innerText = t.graphics;
-            document.getElementById('lbl-music-vol').innerText = t.musicVol;
-            document.getElementById('lbl-sfx-vol').innerText = t.sfxVol;
-            document.getElementById('lbl-move-keys').innerText = t.moveKeys;
-            document.getElementById('lbl-interact-key').innerText = t.interactKey;
-            document.getElementById('txt-need-coins').innerText = t.needCoins;
-            document.getElementById('lbl-add-coins').innerText = t.simPayment;
-
-            document.getElementById('prompt-key').innerText = gameState.settings.interactKey.toUpperCase();
-        }
-
-        function setGraphics(level) {
-            gameState.settings.graphics = level;
-            if (renderer) {
-                if (level === 'low') {
-                    renderer.shadowMap.enabled = false;
-                    renderer.setPixelRatio(1);
-                } else if (level === 'med') {
-                    renderer.shadowMap.enabled = true;
-                    renderer.setPixelRatio(1.25);
+                document.getElementById('safe-input').value = "";
+                document.getElementById('safe-modal').style.display = 'flex';
+                if (document.pointerLockElement) document.exitPointerLock();
+            } 
+            else if (type === 'door') {
+                if (keyFound) {
+                    alert("Вы открыли дверь и перешли на следующий уровень!");
+                    currentLevel++;
+                    coins += 50;
+                    buildRoom();
+                    camera.position.set(0, 1.6, 2.5);
                 } else {
-                    renderer.shadowMap.enabled = true;
-                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                }
-            }
-            saveGame();
-        }
-
-        function showInteractionUI(text) {
-            const prompt = document.getElementById('interaction-prompt');
-            document.getElementById('prompt-action').innerText = text;
-            prompt.classList.remove('hidden');
-            document.getElementById('crosshair').classList.add('active');
-        }
-
-        function hideInteractionUI() {
-            document.getElementById('interaction-prompt').classList.add('hidden');
-            document.getElementById('crosshair').classList.remove('active');
-        }
-
-        function showPrompt(msg) {
-            const prompt = document.getElementById('interaction-prompt');
-            document.getElementById('prompt-action').innerText = msg;
-            prompt.classList.remove('hidden');
-            setTimeout(() => prompt.classList.add('hidden'), 2500);
-        }
-
-        function isModalOpen() {
-            return !document.getElementById('modal-levels').classList.contains('hidden') ||
-                   !document.getElementById('modal-journal').classList.contains('hidden') ||
-                   !document.getElementById('modal-shop').classList.contains('hidden') ||
-                   !document.getElementById('modal-settings').classList.contains('hidden') ||
-                   !document.getElementById('modal-pause').classList.contains('hidden') ||
-                   !document.getElementById('modal-safe').classList.contains('hidden') ||
-                   !document.getElementById('modal-read-note').classList.contains('hidden');
-        }
-
-        function renderLevelGrid() {
-            const grid = document.getElementById('levels-grid');
-            grid.innerHTML = '';
-
-            for (let i = 1; i <= 100; i++) {
-                const locIndex = Math.floor((i - 1) / 10);
-                const isUnlocked = i <= gameState.unlockedLevel;
-
-                const card = document.createElement('button');
-                card.className = `p-3 rounded-xl border font-bold text-center flex flex-col items-center justify-center transition ${
-                    isUnlocked ? 'bg-gray-800 border-gray-700 text-white hover:bg-red-900/40 hover:border-red-600' : 'bg-gray-950 border-gray-900 text-gray-600 cursor-not-allowed'
-                }`;
-
-                card.innerHTML = `
-                    <span class="text-xs text-gray-400">Lvl ${i}</span>
-                    <i class="fa-solid ${isUnlocked ? 'fa-door-open text-red-500' : 'fa-lock text-gray-700'} my-1 text-lg"></i>
-                    <span class="text-[10px] truncate w-full">${LOCATIONS[locIndex].name[gameState.lang]}</span>
-                `;
-
-                if (isUnlocked) {
-                    card.onclick = () => {
-                        gameState.currentLevel = i;
-                        document.getElementById('modal-levels').classList.add('hidden');
-                        startGame();
-                    };
-                }
-
-                grid.appendChild(card);
-            }
-        }
-
-        function renderJournal() {
-            const list = document.getElementById('notes-list');
-            list.innerHTML = '';
-
-            if (gameState.collectedNotes.length === 0) {
-                list.innerHTML = `<div class="text-gray-500 text-sm text-center py-8">Записок пока нет. Ищите документы в комнатах! / No evidence collected yet.</div>`;
-                return;
-            }
-
-            gameState.collectedNotes.forEach((note, idx) => {
-                const item = document.createElement('div');
-                item.className = 'bg-yellow-950/40 p-4 rounded-xl border border-yellow-700/50 text-sm text-yellow-100 font-paper';
-                item.innerHTML = `<span class="text-xs text-yellow-500 font-bold block mb-1">Улика / Evidence #${idx + 1}</span>${note}`;
-                list.appendChild(item);
-            });
-        }
-
-        function openSafeModal() {
-            document.exitPointerLock();
-            enteredSafeCode = "";
-            document.getElementById('safe-display').innerText = "----";
-            document.getElementById('modal-safe').classList.remove('hidden');
-        }
-
-        function closeSafeModal() {
-            document.getElementById('modal-safe').classList.add('hidden');
-            if (isGameRunning) document.getElementById('game-canvas').focus();
-        }
-
-        function pressSafeNum(num) {
-            if (enteredSafeCode.length < 4) {
-                enteredSafeCode += num;
-                document.getElementById('safe-display').innerText = enteredSafeCode;
-                if (enteredSafeCode.length === 4) {
-                    if (enteredSafeCode === currentSafeCode) {
-                        closeSafeModal();
-                        createKey(3.5, 1.1, 1.2);
-                        showPrompt(gameState.lang === 'ru' ? "Сейф открыт! Внутри ключ." : "Safe Opened! Key inside.");
-                    } else {
-                        document.getElementById('safe-display').innerText = "ERR";
-                        setTimeout(() => {
-                            enteredSafeCode = "";
-                            document.getElementById('safe-display').innerText = "----";
-                        }, 800);
-                    }
+                    alert("Дверь заперта! Вам нужен ключ из сейфа.");
                 }
             }
         }
 
-        function clearSafeCode() {
-            enteredSafeCode = "";
-            document.getElementById('safe-display').innerText = "----";
-        }
-
-        function buyItem(item, price) {
-            if (gameState.coins >= price) {
-                gameState.coins -= price;
-                document.getElementById('coin-count').innerText = gameState.coins;
-                document.getElementById('shop-coins').innerText = gameState.coins;
-                saveGame();
-
-                if (item === 'battery') gameState.battery = 100;
-                if (item === 'lockpick') gameState.hasKey = true;
-                if (item === 'hint') showPrompt(`Подсказка: Код сейфа ${currentSafeCode}`);
+        // Keypad logic
+        window.pressNum = function(num) {
+            const input = document.getElementById('safe-input');
+            if (input.value.length < 4) input.value += num;
+        };
+        window.clearNum = function() {
+            document.getElementById('safe-input').value = "";
+        };
+        window.checkSafeCode = function() {
+            const val = document.getElementById('safe-input').value;
+            if (val === safeCode) {
+                alert("Код верный! Вы забрали КЛЮЧ.");
+                keyFound = true;
+                document.getElementById('safe-modal').style.display = 'none';
+                updateUI();
             } else {
-                alert("Недостаточно монет! / Not enough coins!");
+                alert("Неверный код! Проверьте записку еще раз.");
+                document.getElementById('safe-input').value = "";
             }
-        }
+        };
 
-        function startGame() {
-            audio.init();
-            document.getElementById('main-menu').classList.add('hidden');
-            document.getElementById('hud-top').classList.remove('hidden');
-            document.getElementById('hud-bottom').classList.remove('hidden');
-            document.getElementById('crosshair').classList.remove('hidden');
+        // --- UI & MODAL EVENT HANDLERS ---
+        document.getElementById('lang-btn').addEventListener('click', () => {
+            currentLang = currentLang === 'RU' ? 'EN' : 'RU';
+            updateUI();
+        });
 
-            if ('ontouchstart' in window || gameState.showTouchControls) {
-                document.getElementById('mobile-controls').classList.remove('hidden');
-            }
+        document.getElementById('start-btn').addEventListener('click', () => {
+            document.getElementById('main-menu').style.display = 'none';
+            container.requestPointerLock();
+            buildRoom();
+        });
 
-            isGameRunning = true;
-            buildLevel(gameState.currentLevel);
+        document.getElementById('paper-close').addEventListener('click', () => {
+            document.getElementById('paper-modal').style.display = 'none';
+            container.requestPointerLock();
+        });
 
-            const canvas = document.getElementById('game-canvas');
-            canvas.focus();
-            try { canvas.requestPointerLock(); } catch(e) {}
-        }
+        document.getElementById('safe-close').addEventListener('click', () => {
+            document.getElementById('safe-modal').style.display = 'none';
+            container.requestPointerLock();
+        });
 
-        function openPauseMenu() {
-            document.exitPointerLock();
-            document.getElementById('modal-pause').classList.remove('hidden');
-        }
+        document.getElementById('journal-btn').addEventListener('click', () => {
+            const body = document.getElementById('journal-body');
+            body.innerText = journalEntries.length > 0 ? journalEntries.join("\n\n------------------\n\n") : i18n[currentLang].journalEmpty;
+            document.getElementById('journal-modal').style.display = 'flex';
+        });
 
-        function exitToMenu() {
-            isGameRunning = false;
-            document.exitPointerLock();
-            document.getElementById('modal-pause').classList.add('hidden');
-            document.getElementById('hud-top').classList.add('hidden');
-            document.getElementById('hud-bottom').classList.add('hidden');
-            document.getElementById('crosshair').classList.add('hidden');
-            document.getElementById('mobile-controls').classList.add('hidden');
-            document.getElementById('item-beacon').classList.add('hidden');
-            document.getElementById('main-menu').classList.remove('hidden');
-        }
+        document.getElementById('journal-close').addEventListener('click', () => {
+            document.getElementById('journal-modal').style.display = 'none';
+        });
 
-        function onWindowResize() {
-            if (!camera || !renderer) return;
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
+        document.getElementById('gear-btn').addEventListener('click', () => {
+            document.getElementById('settings-modal').style.display = 'flex';
+            if (document.pointerLockElement) document.exitPointerLock();
+        });
+        document.getElementById('menu-settings-btn').addEventListener('click', () => {
+            document.getElementById('settings-modal').style.display = 'flex';
+        });
 
-        /* ====================================================================
-           8. RENDER LOOP
-           ==================================================================== */
-        let lastTime = performance.now();
+        document.getElementById('settings-close').addEventListener('click', () => {
+            moveType = document.getElementById('setting-move').value;
+            document.getElementById('settings-modal').style.display = 'none';
+        });
+
+        // --- GAME LOOP ---
+        const clock = new THREE.Clock();
 
         function animate() {
             requestAnimationFrame(animate);
 
-            const now = performance.now();
-            const delta = Math.min((now - lastTime) / 1000, 0.1);
-            lastTime = now;
+            const delta = clock.getDelta();
+            const moveSpeed = 3.0 * delta;
 
-            if (isGameRunning && !isModalOpen()) {
-                updateMovement(delta);
-                updateMonsterAI(delta);
-                checkRaycastPrompts();
+            // Player Movement
+            if (isLocked) {
+                const dir = new THREE.Vector3();
+                if (moveForward) dir.z -= 1;
+                if (moveBackward) dir.z += 1;
+                if (moveLeft) dir.x -= 1;
+                if (moveRight) dir.x += 1;
+                dir.normalize();
+
+                dir.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+                camera.position.addScaledVector(dir, moveSpeed);
+
+                // Simple Room Bounds Collisions
+                camera.position.x = Math.max(-3.5, Math.min(3.5, camera.position.x));
+                camera.position.z = Math.max(-3.5, Math.min(3.5, camera.position.z));
             }
 
-            if (renderer && scene && camera) {
-                renderer.render(scene, camera);
-            }
+            // Sync Flashlight with Camera
+            flashlight.position.copy(camera.position);
+            const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+            flashlight.target.position.copy(camera.position).add(forward);
+
+            updateRaycast();
+            renderer.render(scene, camera);
         }
 
-        window.onload = () => {
-            loadGame();
-            init3DEngine();
-            updateLanguageUI();
+        // Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
 
-            document.getElementById('coin-count').innerText = gameState.coins;
-            document.getElementById('shop-coins').innerText = gameState.coins;
-
-            document.getElementById('btn-play').onclick = () => startGame();
-            document.getElementById('btn-levels').onclick = () => {
-                renderLevelGrid();
-                document.getElementById('modal-levels').classList.remove('hidden');
-            };
-            document.getElementById('close-levels').onclick = () => document.getElementById('modal-levels').classList.add('hidden');
-
-            document.getElementById('btn-shop-menu').onclick = () => document.getElementById('modal-shop').classList.remove('hidden');
-            document.getElementById('btn-shop-hud').onclick = () => document.getElementById('modal-shop').classList.remove('hidden');
-            document.getElementById('close-shop').onclick = () => document.getElementById('modal-shop').classList.add('hidden');
-
-            document.getElementById('btn-settings-menu').onclick = () => document.getElementById('modal-settings').classList.remove('hidden');
-            document.getElementById('btn-settings-hud').onclick = () => document.getElementById('modal-settings').classList.remove('hidden');
-            document.getElementById('btn-pause-settings').onclick = () => document.getElementById('modal-settings').classList.remove('hidden');
-            document.getElementById('close-settings').onclick = () => document.getElementById('modal-settings').classList.add('hidden');
-
-            document.getElementById('close-read-note').onclick = () => {
-                document.getElementById('modal-read-note').classList.add('hidden');
-                document.getElementById('game-canvas').focus();
-                try { document.getElementById('game-canvas').requestPointerLock(); } catch(e) {}
-            };
-
-            document.getElementById('btn-journal').onclick = () => {
-                renderJournal();
-                document.getElementById('modal-journal').classList.remove('hidden');
-            };
-            document.getElementById('close-journal').onclick = () => document.getElementById('modal-journal').classList.add('hidden');
-
-            document.getElementById('btn-resume').onclick = () => {
-                document.getElementById('modal-pause').classList.add('hidden');
-                document.getElementById('game-canvas').focus();
-                try { document.getElementById('game-canvas').requestPointerLock(); } catch(e) {}
-            };
-            document.getElementById('btn-quit').onclick = () => exitToMenu();
-
-            document.getElementById('lang-ru').onclick = () => { gameState.lang = 'ru'; updateLanguageUI(); saveGame(); };
-            document.getElementById('lang-en').onclick = () => { gameState.lang = 'en'; updateLanguageUI(); saveGame(); };
-
-            document.getElementById('btn-add-coins').onclick = () => {
-                gameState.coins += 500;
-                document.getElementById('coin-count').innerText = gameState.coins;
-                document.getElementById('shop-coins').innerText = gameState.coins;
-                saveGame();
-            };
-
-            document.getElementById('btn-toggle-keys').onclick = (e) => {
-                e.target.innerText = "WASD + Arrows";
-            };
-
-            document.getElementById('btn-toggle-touch').onclick = (e) => {
-                gameState.showTouchControls = !gameState.showTouchControls;
-                const mControls = document.getElementById('mobile-controls');
-                if (gameState.showTouchControls) {
-                    mControls.classList.remove('hidden');
-                    e.target.innerText = "ON";
-                } else {
-                    mControls.classList.add('hidden');
-                    e.target.innerText = "OFF";
-                }
-            };
-
-            document.getElementById('btn-rebind-interact').onclick = (e) => {
-                const key = prompt("Press new interaction key (e.g. E, F, Q):", gameState.settings.interactKey);
-                if (key && key.length === 1) {
-                    gameState.settings.interactKey = key.toLowerCase();
-                    e.target.innerText = key.toUpperCase();
-                    updateLanguageUI();
-                    saveGame();
-                }
-            };
-
-            animate();
-        };
+        // Start animation loop
+        animate();
     </script>
 </body>
 </html>
