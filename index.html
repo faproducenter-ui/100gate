@@ -11,7 +11,7 @@
     <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@300;400;600;800&family=Special+Elite&display=swap');
 
         body, html {
             margin: 0;
@@ -29,6 +29,10 @@
 
         .font-horror {
             font-family: 'Creepster', cursive;
+        }
+
+        .font-paper {
+            font-family: 'Special Elite', cursive;
         }
 
         #game-container {
@@ -61,7 +65,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            box-shadow: 0 0 120px rgba(0,0,0,0.92) inset;
+            box-shadow: 0 0 130px rgba(0,0,0,0.95) inset;
             pointer-events: none;
         }
 
@@ -70,18 +74,19 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 10px;
-            height: 10px;
-            background-color: rgba(255, 255, 255, 0.7);
-            border: 2px solid rgba(0, 0, 0, 0.8);
+            width: 8px;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(0, 0, 0, 0.9);
             border-radius: 50%;
             pointer-events: none;
-            transition: transform 0.1s ease, background-color 0.1s ease;
+            transition: transform 0.15s ease, background-color 0.15s ease;
         }
 
         .crosshair.active {
-            transform: translate(-50%, -50%) scale(1.8);
+            transform: translate(-50%, -50%) scale(2.2);
             background-color: #ef4444;
+            border-color: #ffffff;
         }
 
         .damage-overlay {
@@ -90,15 +95,15 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, transparent 30%, rgba(220, 38, 38, 0.7) 100%);
+            background: radial-gradient(circle, transparent 20%, rgba(220, 38, 38, 0.85) 100%);
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.2s ease-in-out;
+            transition: opacity 0.25s ease-in-out;
         }
 
         .touch-btn {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.25);
             color: white;
             border-radius: 50%;
             display: flex;
@@ -107,7 +112,27 @@
             touch-action: manipulation;
         }
         .touch-btn:active {
-            background: rgba(220, 38, 38, 0.6);
+            background: rgba(220, 38, 38, 0.7);
+        }
+
+        .glow-beacon {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            pointer-events: none;
+            animation: pulseGlow 1.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: translate(-50%, -100%) scale(0.95); box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
+            100% { transform: translate(-50%, -100%) scale(1.1); box-shadow: 0 0 25px rgba(239, 68, 68, 1); }
         }
     </style>
 </head>
@@ -117,12 +142,17 @@
         <!-- 3D Render Canvas -->
         <canvas id="game-canvas" tabindex="1"></canvas>
 
+        <!-- Dynamic Item Floating Beacon Indicator -->
+        <div id="item-beacon" class="glow-beacon hidden">
+            <i class="fa-solid fa-note-sticky mr-1"></i> <span id="beacon-text">БУМАГА / NOTE</span>
+        </div>
+
         <!-- Visual Overlays -->
         <div class="vignette"></div>
         <div id="damage-flash" class="damage-overlay"></div>
         <div id="crosshair" class="crosshair hidden"></div>
 
-        <!-- Touch / On-screen Controls Overlay for mobile or optional click input -->
+        <!-- Touch / On-screen Controls Overlay -->
         <div id="mobile-controls" class="absolute inset-0 pointer-events-none z-10 hidden flex justify-between items-end p-6">
             <!-- D-Pad -->
             <div class="relative w-36 h-36 pointer-events-auto">
@@ -139,7 +169,7 @@
             </div>
         </div>
 
-        <!-- UI Overlay Screen Container -->
+        <!-- UI Overlay Layer -->
         <div id="ui-layer" class="absolute inset-0 flex flex-col justify-between pointer-events-none z-10">
             
             <!-- TOP HUD BAR -->
@@ -155,7 +185,7 @@
                     </div>
                 </div>
 
-                <!-- Flashlight & Action Buttons -->
+                <!-- Flashlight & Actions -->
                 <div class="flex items-center space-x-3 pointer-events-auto">
                     <div id="flashlight-hud" class="flex items-center bg-black/70 backdrop-blur-md px-3 py-2 rounded-xl border border-gray-800">
                         <i class="fa-solid fa-flashlight mr-2 text-yellow-400"></i>
@@ -165,7 +195,7 @@
                     </div>
 
                     <button id="btn-journal" class="bg-black/70 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
-                        <i class="fa-solid fa-book-bookmark text-lg"></i>
+                        <i class="fa-solid fa-book-bookmark text-lg text-yellow-400"></i>
                     </button>
                     <button id="btn-shop-hud" class="bg-black/70 hover:bg-gray-800 text-white p-2.5 rounded-xl border border-gray-800 transition">
                         <i class="fa-solid fa-cart-shopping text-lg text-green-400"></i>
@@ -176,14 +206,15 @@
                 </div>
             </div>
 
-            <!-- CENTER INTERACTION PROMPT & CLICK NOTICE -->
-            <div id="click-to-play-notice" class="self-center my-auto bg-black/80 backdrop-blur-md px-6 py-4 rounded-xl border border-red-800 text-white font-semibold text-center pointer-events-auto cursor-pointer hidden shadow-2xl">
+            <!-- CENTER PROMPTS & CLICK NOTICE -->
+            <div id="click-to-play-notice" class="self-center my-auto bg-black/85 backdrop-blur-md px-6 py-4 rounded-xl border border-red-800 text-white font-semibold text-center pointer-events-auto cursor-pointer hidden shadow-2xl">
                 <i class="fa-solid fa-mouse-pointer text-3xl text-red-500 mb-2 block animate-bounce"></i>
-                <span id="lbl-click-focus">Click here or press canvas to resume & look around</span>
+                <span id="lbl-click-focus">Нажмите сюда, чтобы осмотреться мышью / Click to play</span>
             </div>
 
-            <div id="interaction-prompt" class="self-center mb-16 bg-black/85 backdrop-blur-md px-5 py-2.5 rounded-lg border border-gray-700 text-white font-medium shadow-lg hidden pointer-events-auto">
-                Press <span id="prompt-key" class="bg-red-600 px-2 py-0.5 rounded text-xs uppercase font-bold">E</span> to <span id="prompt-action">Interact</span>
+            <div id="interaction-prompt" class="self-center mb-16 bg-black/90 backdrop-blur-md px-6 py-3 rounded-xl border border-red-600 text-white font-semibold shadow-2xl hidden pointer-events-auto flex items-center space-x-3">
+                <span id="prompt-key" class="bg-red-600 px-2.5 py-1 rounded text-sm uppercase font-black tracking-wider shadow">E</span>
+                <span id="prompt-action" class="text-sm">Взаимодействовать</span>
             </div>
 
             <!-- BOTTOM HUD STATUS -->
@@ -197,9 +228,9 @@
             </div>
         </div>
 
-        <!-- MAIN MENU OVERLAY -->
+        <!-- MAIN MENU -->
         <div id="main-menu" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-20 pointer-events-auto p-4">
-            <h1 class="font-horror text-6xl md:text-8xl text-red-700 tracking-wider mb-2 text-center drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">DARK ESCAPE</h1>
+            <h1 class="font-horror text-6xl md:text-8xl text-red-700 tracking-wider mb-2 text-center drop-shadow-[0_5px_5px_rgba(0,0,0,0.9)]">DARK ESCAPE</h1>
             <p class="text-gray-400 text-sm md:text-base mb-8 tracking-widest uppercase text-center" id="txt-subtitle">100 Rooms First-Person Horror Quest</p>
 
             <div class="flex flex-col w-full max-w-xs space-y-3">
@@ -223,6 +254,22 @@
             </div>
         </div>
 
+        <!-- READ NOTE DOCUMENT MODAL -->
+        <div id="modal-read-note" class="absolute inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-40 pointer-events-auto p-4 hidden">
+            <div class="bg-[#fef08a] text-amber-950 w-full max-w-lg rounded-xl p-6 shadow-2xl border-4 border-amber-900 relative transform rotate-1 font-paper">
+                <div class="flex justify-between items-center mb-4 border-b-2 border-amber-800/40 pb-2">
+                    <h3 class="text-xl font-black uppercase flex items-center"><i class="fa-solid fa-file-lines mr-2"></i><span id="lbl-note-modal-title">Найденная Записка</span></h3>
+                    <button id="close-read-note" class="text-amber-950 hover:text-red-700 text-2xl font-bold"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="read-note-body" class="text-base md:text-lg leading-relaxed mb-6 font-semibold min-h-[120px]">
+                    ...
+                </div>
+                <div class="bg-amber-200/80 p-3 rounded-lg border border-amber-400 text-center text-xs font-bold uppercase text-amber-900">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i> <span id="lbl-note-saved">Запись сохранена в Дневник Улик</span>
+                </div>
+            </div>
+        </div>
+
         <!-- LEVEL SELECT MODAL -->
         <div id="modal-levels" class="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-30 pointer-events-auto p-6 hidden">
             <div class="flex justify-between items-center w-full max-w-4xl mb-6">
@@ -237,7 +284,7 @@
         <div id="modal-journal" class="absolute inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-30 pointer-events-auto p-4 hidden">
             <div class="bg-gray-900 border border-gray-800 w-full max-w-2xl rounded-2xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
                 <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-800">
-                    <h3 class="text-xl font-bold text-red-500 flex items-center"><i class="fa-solid fa-book-open mr-2"></i><span id="lbl-journal-title">Evidence Journal</span></h3>
+                    <h3 class="text-xl font-bold text-yellow-500 flex items-center"><i class="fa-solid fa-book-open mr-2"></i><span id="lbl-journal-title">Evidence Journal</span></h3>
                     <button id="close-journal" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
                 <div id="notes-list" class="flex-1 overflow-y-auto space-y-3 pr-2">
@@ -251,7 +298,7 @@
                 <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-800">
                     <div class="flex items-center space-x-3">
                         <h3 class="text-xl font-bold text-green-400 flex items-center"><i class="fa-solid fa-store mr-2"></i><span id="lbl-shop-title">Black Market</span></h3>
-                        <span class="text-xs bg-green-950 text-green-400 border border-green-800 px-2 py-0.5 rounded-full font-semibold"><span id="shop-coins">0</span> coins</span>
+                        <span class="text-xs bg-green-950 text-green-400 border border-green-800 px-2.5 py-0.5 rounded-full font-semibold"><span id="shop-coins">0</span> coins</span>
                     </div>
                     <button id="close-shop" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
@@ -390,7 +437,7 @@
     <!-- MAIN GAME SCRIPT -->
     <script>
         /* ====================================================================
-           1. GAME CONFIGURATION & TRANSLATIONS
+           1. CONFIGURATION & TRANSLATIONS
            ==================================================================== */
         const LOCATIONS = [
             { id: 1, name: { en: "Manor House", ru: "Старинный Особняк" }, color: 0xffaa55, fogDensity: 0.035, monsterColor: 0x882222 },
@@ -462,7 +509,6 @@
             }
         };
 
-        // State storage
         let gameState = {
             lang: 'ru',
             currentLevel: 1,
@@ -477,10 +523,10 @@
             isCrouching: false,
             showTouchControls: false,
             settings: {
-                graphics: 'med', // low, med, high
+                graphics: 'med',
                 musicVol: 80,
                 sfxVol: 90,
-                moveType: 'ALL', // ALL, WASD, ARROWS
+                moveType: 'ALL',
                 interactKey: 'e'
             }
         };
@@ -510,7 +556,7 @@
         }
 
         /* ====================================================================
-           2. CANVAS PROCEDURAL TEXTURES
+           2. PROCEDURAL CANVAS TEXTURES
            ==================================================================== */
         const Textures = {};
 
@@ -520,69 +566,50 @@
             Textures.brick = createBrickTexture();
             Textures.metal = createNoiseTexture('#4b5563', '#1f2937', 'metal');
             Textures.tile = createTileTexture();
-            Textures.paper = createNoiseTexture('#fef08a', '#ca8a04', 'paper');
+            Textures.paper = createPaperTexture();
         }
 
         function createNoiseTexture(color1, color2, type) {
             const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
+            canvas.width = 256; canvas.height = 256;
             const ctx = canvas.getContext('2d');
-
-            ctx.fillStyle = color1;
-            ctx.fillRect(0, 0, 256, 256);
-
+            ctx.fillStyle = color1; ctx.fillRect(0, 0, 256, 256);
             ctx.fillStyle = color2;
             for (let i = 0; i < 2500; i++) {
-                const x = Math.random() * 256;
-                const y = Math.random() * 256;
+                const x = Math.random() * 256, y = Math.random() * 256;
                 const w = type === 'wood' ? Math.random() * 18 + 4 : Math.random() * 3 + 1;
                 const h = type === 'wood' ? Math.random() * 2 + 1 : Math.random() * 3 + 1;
                 ctx.globalAlpha = Math.random() * 0.25;
                 ctx.fillRect(x, y, w, h);
             }
-
             const texture = new THREE.CanvasTexture(canvas);
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
+            texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
             return texture;
         }
 
         function createBrickTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
+            canvas.width = 256; canvas.height = 256;
             const ctx = canvas.getContext('2d');
-
-            ctx.fillStyle = '#1c1917';
-            ctx.fillRect(0, 0, 256, 256);
-
+            ctx.fillStyle = '#1c1917'; ctx.fillRect(0, 0, 256, 256);
             ctx.fillStyle = '#7f1d1d';
-            const rows = 16, cols = 8;
-            const rh = 256 / rows, cw = 256 / cols;
-
+            const rows = 16, cols = 8, rh = 256 / rows, cw = 256 / cols;
             for (let r = 0; r < rows; r++) {
                 const offset = (r % 2) * (cw / 2);
                 for (let c = -1; c < cols + 1; c++) {
                     ctx.fillRect(c * cw + offset + 1, r * rh + 1, cw - 2, rh - 2);
                 }
             }
-
             const texture = new THREE.CanvasTexture(canvas);
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
+            texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
             return texture;
         }
 
         function createTileTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
+            canvas.width = 256; canvas.height = 256;
             const ctx = canvas.getContext('2d');
-
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(0, 0, 256, 256);
-
+            ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 256, 256);
             ctx.fillStyle = '#334155';
             const size = 32;
             for (let x = 0; x < 256; x += size) {
@@ -590,10 +617,22 @@
                     ctx.fillRect(x + 1, y + 1, size - 2, size - 2);
                 }
             }
-
             const texture = new THREE.CanvasTexture(canvas);
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
+            texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
+            return texture;
+        }
+
+        function createPaperTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fef08a'; ctx.fillRect(0, 0, 256, 256);
+            ctx.fillStyle = '#78350f';
+            ctx.font = 'bold 24px monospace';
+            ctx.fillText('CONFIDENTIAL', 20, 50);
+            ctx.fillText('CODE: ????', 20, 100);
+            ctx.fillRect(20, 120, 216, 4);
+            const texture = new THREE.CanvasTexture(canvas);
             return texture;
         }
 
@@ -607,9 +646,7 @@
                     const AudioCtx = window.AudioContext || window.webkitAudioContext;
                     if (AudioCtx) this.ctx = new AudioCtx();
                 }
-                if (this.ctx && this.ctx.state === 'suspended') {
-                    this.ctx.resume();
-                }
+                if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
             }
             playFootstep() {
                 if (!this.ctx || gameState.settings.sfxVol === 0) return;
@@ -622,10 +659,8 @@
                     osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.08);
                     gain.gain.setValueAtTime(vol, this.ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start();
-                    osc.stop(this.ctx.currentTime + 0.08);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.08);
                 } catch(e) {}
             }
             playDoorScreech() {
@@ -639,10 +674,8 @@
                     osc.frequency.linearRampToValueAtTime(400, this.ctx.currentTime + 0.35);
                     gain.gain.setValueAtTime(vol, this.ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start();
-                    osc.stop(this.ctx.currentTime + 0.4);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.4);
                 } catch(e) {}
             }
             playPickup() {
@@ -656,10 +689,8 @@
                     osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.12);
                     gain.gain.setValueAtTime(vol, this.ctx.currentTime);
                     gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start();
-                    osc.stop(this.ctx.currentTime + 0.12);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.12);
                 } catch(e) {}
             }
             playGrowl() {
@@ -673,32 +704,29 @@
                     osc.frequency.linearRampToValueAtTime(35, this.ctx.currentTime + 0.7);
                     gain.gain.setValueAtTime(vol, this.ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.7);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start();
-                    osc.stop(this.ctx.currentTime + 0.7);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.7);
                 } catch(e) {}
             }
         }
         const audio = new SoundEngine();
 
         /* ====================================================================
-           4. THREE.JS ENGINE & INPUT MECHANICS
+           4. THREE.JS ENGINE & ENGINE LOGIC
            ==================================================================== */
         let scene, camera, renderer, flashlight;
         let interactiveObjects = [];
+        let noteBeaconMesh = null;
         let monster, monsterPointA, monsterPointB, monsterDir = 1;
         let isGameRunning = false;
         let isPointerLocked = false;
         let currentSafeCode = "1234";
         let enteredSafeCode = "";
 
-        // Movement Flags
         const keyState = { fwd: false, bwd: false, left: false, right: false, sprint: false };
         let pitch = 0, yaw = 0;
         let headBobTimer = 0;
 
-        // Touch Dragging State
         let touchLookId = null;
         let lastTouchX = 0, lastTouchY = 0;
 
@@ -715,23 +743,19 @@
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-            // Flashlight setup
-            flashlight = new THREE.SpotLight(0xffffff, 2, 12, Math.PI / 6, 0.4, 1);
+            flashlight = new THREE.SpotLight(0xffffff, 2.5, 14, Math.PI / 5, 0.4, 1);
             flashlight.castShadow = true;
             scene.add(flashlight);
             scene.add(flashlight.target);
 
             createProceduralTextures();
 
-            // Focus & Pointer Lock Handling
             canvas.focus();
-            
+
             const requestLock = () => {
                 if (!isGameRunning || isModalOpen() || gameState.isHiding) return;
                 audio.init();
-                try {
-                    canvas.requestPointerLock();
-                } catch(e) {}
+                try { canvas.requestPointerLock(); } catch(e) {}
             };
 
             canvas.addEventListener('click', requestLock);
@@ -747,17 +771,14 @@
                 }
             });
 
-            // Universal Look Input (Mouse & Touch Drag)
             document.addEventListener('mousemove', onMouseMove);
-            
-            // Touch Look
+
             canvas.addEventListener('touchstart', (e) => {
                 for (let i = 0; i < e.changedTouches.length; i++) {
                     const t = e.changedTouches[i];
                     if (t.clientX > window.innerWidth / 2 && touchLookId === null) {
                         touchLookId = t.identifier;
-                        lastTouchX = t.clientX;
-                        lastTouchY = t.clientY;
+                        lastTouchX = t.clientX; lastTouchY = t.clientY;
                     }
                 }
             }, { passive: true });
@@ -766,10 +787,8 @@
                 for (let i = 0; i < e.changedTouches.length; i++) {
                     const t = e.changedTouches[i];
                     if (t.identifier === touchLookId) {
-                        const dx = t.clientX - lastTouchX;
-                        const dy = t.clientY - lastTouchY;
-                        lastTouchX = t.clientX;
-                        lastTouchY = t.clientY;
+                        const dx = t.clientX - lastTouchX, dy = t.clientY - lastTouchY;
+                        lastTouchX = t.clientX; lastTouchY = t.clientY;
                         applyRotation(dx * 0.004, dy * 0.004);
                     }
                 }
@@ -777,15 +796,12 @@
 
             const clearTouchLook = (e) => {
                 for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === touchLookId) {
-                        touchLookId = null;
-                    }
+                    if (e.changedTouches[i].identifier === touchLookId) touchLookId = null;
                 }
             };
             canvas.addEventListener('touchend', clearTouchLook);
             canvas.addEventListener('touchcancel', clearTouchLook);
 
-            // Universal Keyboard Listeners
             window.addEventListener('keydown', onKeyDown, true);
             window.addEventListener('keyup', onKeyUp, true);
             window.addEventListener('resize', onWindowResize);
@@ -794,13 +810,10 @@
         }
 
         function applyRotation(dx, dy) {
-            yaw -= dx;
-            pitch -= dy;
+            yaw -= dx; pitch -= dy;
             pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
-
             camera.rotation.order = "YXZ";
-            camera.rotation.x = pitch;
-            camera.rotation.y = yaw;
+            camera.rotation.x = pitch; camera.rotation.y = yaw;
         }
 
         function onMouseMove(e) {
@@ -810,10 +823,8 @@
 
         function onKeyDown(e) {
             if (!isGameRunning || isModalOpen()) return;
-            const k = e.key.toLowerCase();
-            const code = e.code;
+            const k = e.key.toLowerCase(), code = e.code;
 
-            // Robust multi-key binding (WASD + Arrow Keys supported simultaneously)
             if (k === 'w' || k === 'arrowup' || code === 'KeyW' || code === 'ArrowUp') keyState.fwd = true;
             if (k === 's' || k === 'arrowdown' || code === 'KeyS' || code === 'ArrowDown') keyState.bwd = true;
             if (k === 'a' || k === 'arrowleft' || code === 'KeyA' || code === 'ArrowLeft') keyState.left = true;
@@ -823,28 +834,17 @@
             if (k === 'control' || code.includes('Control')) toggleCrouch();
 
             const customInteract = gameState.settings.interactKey.toLowerCase();
-            if (k === customInteract || k === 'e' || code === 'KeyE') {
-                checkInteraction();
-            }
-
-            if (k === 'f' || code === 'KeyF') {
-                toggleFlashlight();
-            }
-
-            if (k === 'escape' || code === 'Escape') {
-                openPauseMenu();
-            }
+            if (k === customInteract || k === 'e' || code === 'KeyE') checkInteraction();
+            if (k === 'f' || code === 'KeyF') toggleFlashlight();
+            if (k === 'escape' || code === 'Escape') openPauseMenu();
         }
 
         function onKeyUp(e) {
-            const k = e.key.toLowerCase();
-            const code = e.code;
-
+            const k = e.key.toLowerCase(), code = e.code;
             if (k === 'w' || k === 'arrowup' || code === 'KeyW' || code === 'ArrowUp') keyState.fwd = false;
             if (k === 's' || k === 'arrowdown' || code === 'KeyS' || code === 'ArrowDown') keyState.bwd = false;
             if (k === 'a' || k === 'arrowleft' || code === 'KeyA' || code === 'ArrowLeft') keyState.left = false;
             if (k === 'd' || k === 'arrowright' || code === 'KeyD' || code === 'ArrowRight') keyState.right = false;
-
             if (k === 'shift' || code.includes('Shift')) keyState.sprint = false;
         }
 
@@ -886,10 +886,13 @@
         }
 
         /* ====================================================================
-           5. LEVEL & ENVIRONMENT BUILDER
+           5. ENVIRONMENT & PROMINENT ITEM BUILDER
            ==================================================================== */
         function buildLevel(levelNum) {
             interactiveObjects = [];
+            noteBeaconMesh = null;
+            document.getElementById('item-beacon').classList.add('hidden');
+
             while (scene.children.length > 0) {
                 scene.remove(scene.children[0]);
             }
@@ -903,22 +906,20 @@
             scene.fog = new THREE.FogExp2(loc.color, loc.fogDensity);
             scene.background = new THREE.Color(0x050505);
 
-            const ambientLight = new THREE.AmbientLight(loc.color, 0.2);
+            const ambientLight = new THREE.AmbientLight(loc.color, 0.25);
             scene.add(ambientLight);
 
-            // Room Base (Dimensions: 10x4x12)
+            // Room Setup
             const roomGroup = new THREE.Group();
 
             const floorMat = new THREE.MeshStandardMaterial({ map: locIndex % 2 === 0 ? Textures.wood : Textures.tile, roughness: 0.8 });
             const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 12), floorMat);
-            floor.rotation.x = -Math.PI / 2;
-            floor.receiveShadow = true;
+            floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true;
             roomGroup.add(floor);
 
             const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
             const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(10, 12), ceilingMat);
-            ceiling.position.y = 4;
-            ceiling.rotation.x = Math.PI / 2;
+            ceiling.position.y = 4; ceiling.rotation.x = Math.PI / 2;
             roomGroup.add(ceiling);
 
             const wallMat = new THREE.MeshStandardMaterial({ map: locIndex % 3 === 0 ? Textures.brick : Textures.wall, roughness: 0.9 });
@@ -930,26 +931,30 @@
 
             scene.add(roomGroup);
 
-            // Furniture Models
+            // Create Furniture
             createDoor(0, 0, -5.8, levelNum);
             createWardrobe(-3.8, 0, -2);
-            createTable(3.5, 0, 1);
+
+            // Table right in front of spawn position (0,0,1) for max visibility
+            createTable(0, 0, 1);
 
             currentSafeCode = `${Math.floor(1000 + Math.random() * 9000)}`;
-            createSafe(3.5, 0.9, 1, currentSafeCode);
+            createSafe(3.5, 0, 1, currentSafeCode);
 
             const noteText = {
-                en: `Investigation Log Level ${levelNum}: Safe code is [${currentSafeCode}]. Unlock the safe to grab the room key!`,
-                ru: `Дневник расследования Уровень ${levelNum}: Код от сейфа [${currentSafeCode}]. Откройте сейф, чтобы достать ключ.`
+                en: `INVESTIGATION FILE (LEVEL ${levelNum})\n\nSecrets of this room are locked inside the safe. Code is: [ ${currentSafeCode} ].\n\nEnter code into safe to grab the door key!`,
+                ru: `ДОКУМЕНТ РАССЛЕДОВАНИЯ (УРОВЕНЬ ${levelNum})\n\nСекреты этой комнаты спрятаны в сейфе. КОД ОТ СЕЙФА: [ ${currentSafeCode} ].\n\nВведите код на сейфе справа, чтобы достать ключ от выходной двери!`
             };
-            createNote(-3.5, 0.95, -2, noteText);
+
+            // NOTE PLACED DIRECTLY ON MAIN TABLE IN FRONT OF PLAYER
+            createNote(0, 0.92, 1, noteText);
 
             createMonster(loc.monsterColor);
 
-            // Reset Position
-            camera.position.set(0, 1.6, 4);
-            yaw = 0; pitch = 0;
-            camera.rotation.set(0, 0, 0);
+            // Spawn Player Looking directly at table and note!
+            camera.position.set(0, 1.6, 3.8);
+            yaw = 0; pitch = -0.2;
+            camera.rotation.set(pitch, yaw, 0, "YXZ");
 
             gameState.hasKey = false;
             gameState.isHiding = false;
@@ -963,17 +968,13 @@
             doorGroup.position.set(x, y, z);
 
             const frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.2, 0.3), new THREE.MeshStandardMaterial({ map: Textures.wood }));
-            frame.position.y = 1.6;
-            doorGroup.add(frame);
+            frame.position.y = 1.6; doorGroup.add(frame);
 
             const door = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 0.1), new THREE.MeshStandardMaterial({ map: Textures.wood, color: 0x553311 }));
-            door.position.y = 1.5;
-            door.castShadow = true;
-            doorGroup.add(door);
+            door.position.y = 1.5; door.castShadow = true; doorGroup.add(door);
 
             const handle = new THREE.Mesh(new THREE.SphereGeometry(0.08), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8 }));
-            handle.position.set(0.8, 1.5, 0.1);
-            doorGroup.add(handle);
+            handle.position.set(0.8, 1.5, 0.1); doorGroup.add(handle);
 
             scene.add(doorGroup);
 
@@ -997,9 +998,7 @@
             group.position.set(x, y, z);
 
             const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 3.2, 1.2), new THREE.MeshStandardMaterial({ map: Textures.wood }));
-            body.position.y = 1.6;
-            body.castShadow = true;
-            group.add(body);
+            body.position.y = 1.6; body.castShadow = true; group.add(body);
 
             scene.add(group);
 
@@ -1015,16 +1014,17 @@
             const group = new THREE.Group();
             group.position.set(x, y, z);
 
-            const top = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 1.2), new THREE.MeshStandardMaterial({ map: Textures.wood }));
-            top.position.y = 0.85;
+            const top = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.1, 1.4), new THREE.MeshStandardMaterial({ map: Textures.wood }));
+            top.position.y = 0.85; top.receiveShadow = true; top.castShadow = true;
             group.add(top);
 
-            const legGeo = new THREE.BoxGeometry(0.1, 0.8, 0.1);
+            const legGeo = new THREE.BoxGeometry(0.12, 0.8, 0.12);
             const legMat = new THREE.MeshStandardMaterial({ map: Textures.wood });
 
-            [[-0.9, -0.5], [0.9, -0.5], [-0.9, 0.5], [0.9, 0.5]].forEach(pos => {
+            [[-1.1, -0.6], [1.1, -0.6], [-1.1, 0.6], [1.1, 0.6]].forEach(pos => {
                 const leg = new THREE.Mesh(legGeo, legMat);
                 leg.position.set(pos[0], 0.4, pos[1]);
+                leg.castShadow = true;
                 group.add(leg);
             });
 
@@ -1035,7 +1035,9 @@
             const group = new THREE.Group();
             group.position.set(x, y, z);
 
-            const safeMesh = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.7, 0.6), new THREE.MeshStandardMaterial({ map: Textures.metal }));
+            const baseMat = new THREE.MeshStandardMaterial({ map: Textures.metal, metalness: 0.6, roughness: 0.4 });
+            const safeMesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.8), baseMat);
+            safeMesh.position.y = 0.5;
             safeMesh.castShadow = true;
             group.add(safeMesh);
 
@@ -1051,32 +1053,63 @@
         }
 
         function createNote(x, y, z, textObj) {
-            const noteMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.4), new THREE.MeshStandardMaterial({ map: Textures.paper, side: THREE.DoubleSide }));
-            noteMesh.position.set(x, y, z);
+            const group = new THREE.Group();
+            group.position.set(x, y, z);
+
+            // Paper Sheet Mesh
+            const noteMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.6), new THREE.MeshStandardMaterial({ map: Textures.paper, side: THREE.DoubleSide, roughness: 0.5 }));
             noteMesh.rotation.x = -Math.PI / 2;
-            scene.add(noteMesh);
+            group.add(noteMesh);
+
+            // GLOWING PARTICLES / LIGHT BEACON SO YOU CAN SEE IT IMMEDIATELY!
+            const noteLight = new THREE.PointLight(0xfef08a, 2, 3);
+            noteLight.position.set(0, 0.2, 0);
+            group.add(noteLight);
+
+            // Pulsing highlight ring below paper
+            const ringMesh = new THREE.Mesh(
+                new THREE.RingGeometry(0.3, 0.38, 16),
+                new THREE.MeshBasicMaterial({ color: 0xef4444, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
+            );
+            ringMesh.rotation.x = -Math.PI / 2;
+            ringMesh.position.y = -0.01;
+            group.add(ringMesh);
+
+            scene.add(group);
+            noteBeaconMesh = group;
 
             interactiveObjects.push({
-                mesh: noteMesh,
+                mesh: group,
                 type: 'note',
                 text: textObj,
                 action: () => {
                     audio.playPickup();
-                    if (!gameState.collectedNotes.includes(textObj[gameState.lang])) {
-                        gameState.collectedNotes.push(textObj[gameState.lang]);
+                    const noteContent = textObj[gameState.lang];
+                    if (!gameState.collectedNotes.includes(noteContent)) {
+                        gameState.collectedNotes.push(noteContent);
                     }
-                    showPrompt(textObj[gameState.lang]);
+                    showNoteModal(noteContent);
                 },
                 prompt: TRANSLATIONS[gameState.lang].readNote
             });
+        }
+
+        function showNoteModal(text) {
+            document.exitPointerLock();
+            document.getElementById('read-note-body').innerText = text;
+            document.getElementById('modal-read-note').classList.remove('hidden');
         }
 
         function createKey(x, y, z) {
             const keyGroup = new THREE.Group();
             keyGroup.position.set(x, y, z);
 
-            const ring = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.02, 8, 16), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9 }));
+            const ring = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.025, 8, 16), new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.9, roughness: 0.2 }));
             keyGroup.add(ring);
+
+            const keyLight = new THREE.PointLight(0xf59e0b, 2.5, 3);
+            keyLight.position.set(0, 0.2, 0);
+            keyGroup.add(keyLight);
 
             scene.add(keyGroup);
 
@@ -1087,7 +1120,7 @@
                     audio.playPickup();
                     gameState.hasKey = true;
                     scene.remove(keyGroup);
-                    showPrompt("Key collected!");
+                    showPrompt(gameState.lang === 'ru' ? "Ключ от двери взят!" : "Door key collected!");
                 },
                 prompt: TRANSLATIONS[gameState.lang].pickKey
             });
@@ -1101,8 +1134,7 @@
             group.add(body);
 
             const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-            head.position.y = 1.1;
-            group.add(head);
+            head.position.y = 1.1; group.add(head);
 
             const eyeGeo = new THREE.SphereGeometry(0.04, 6, 6);
             const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
@@ -1133,7 +1165,6 @@
             moveDir.normalize();
 
             if (moveDir.lengthSq() > 0) {
-                // Direction relative to camera rotation
                 const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
                 forward.y = 0; forward.normalize();
 
@@ -1146,27 +1177,41 @@
                 headBobTimer += delta * speed * 3.5;
                 camera.position.y = (gameState.isCrouching ? 0.9 : 1.6) + Math.sin(headBobTimer) * 0.04;
 
-                if (Math.sin(headBobTimer) > 0.92) {
-                    audio.playFootstep();
-                }
+                if (Math.sin(headBobTimer) > 0.92) audio.playFootstep();
             }
 
-            // Room collision boundary bounds
             camera.position.x = Math.max(-4.4, Math.min(4.4, camera.position.x));
             camera.position.z = Math.max(-5.4, Math.min(5.4, camera.position.z));
 
-            // Attach flashlight
             flashlight.position.copy(camera.position);
             const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
             flashlight.target.position.copy(camera.position).add(dir);
 
-            // Flashlight Battery Drain
             if (gameState.isFlashlightOn) {
                 gameState.battery = Math.max(0, gameState.battery - delta * 0.7);
                 document.getElementById('battery-bar').style.width = `${gameState.battery}%`;
                 if (gameState.battery <= 0) {
                     gameState.isFlashlightOn = false;
                     flashlight.visible = false;
+                }
+            }
+
+            // Update floating beacon over note paper
+            if (noteBeaconMesh) {
+                const vec = new THREE.Vector3();
+                noteBeaconMesh.getWorldPosition(vec);
+                vec.y += 0.5;
+                vec.project(camera);
+
+                const beacon = document.getElementById('item-beacon');
+                if (vec.z < 1) {
+                    const x = (vec.x * 0.5 + 0.5) * window.innerWidth;
+                    const y = (-(vec.y * 0.5) + 0.5) * window.innerHeight;
+                    beacon.style.left = `${x}px`;
+                    beacon.style.top = `${y}px`;
+                    beacon.classList.remove('hidden');
+                } else {
+                    beacon.classList.add('hidden');
                 }
             }
         }
@@ -1201,7 +1246,7 @@
                 let parent = intersects[i].object;
                 while (parent && parent !== scene) {
                     const match = interactiveObjects.find(io => io.mesh === parent);
-                    if (match && intersects[i].distance < 3.2) {
+                    if (match && intersects[i].distance < 3.8) {
                         showInteractionUI(match.prompt);
                         foundPrompt = true;
                         break;
@@ -1211,9 +1256,7 @@
                 if (foundPrompt) break;
             }
 
-            if (!foundPrompt) {
-                hideInteractionUI();
-            }
+            if (!foundPrompt) hideInteractionUI();
         }
 
         function checkInteraction() {
@@ -1226,7 +1269,7 @@
                 let parent = intersects[i].object;
                 while (parent && parent !== scene) {
                     const match = interactiveObjects.find(io => io.mesh === parent);
-                    if (match && intersects[i].distance < 3.2) {
+                    if (match && intersects[i].distance < 3.8) {
                         match.action();
                         return;
                     }
@@ -1269,13 +1312,13 @@
                 saveGame();
                 buildLevel(gameState.currentLevel);
             } else {
-                alert("CONGRATULATIONS! You escaped all 100 rooms!");
+                alert("ПОЗДРАВЛЯЕМ! Вы прошли все 100 уровней и сбежали!");
                 exitToMenu();
             }
         }
 
         /* ====================================================================
-           7. UI & MODAL MANAGEMENT
+           7. UI & MODAL MANAGERS
            ==================================================================== */
         function updateLanguageUI() {
             const lang = gameState.lang;
@@ -1344,7 +1387,8 @@
                    !document.getElementById('modal-shop').classList.contains('hidden') ||
                    !document.getElementById('modal-settings').classList.contains('hidden') ||
                    !document.getElementById('modal-pause').classList.contains('hidden') ||
-                   !document.getElementById('modal-safe').classList.contains('hidden');
+                   !document.getElementById('modal-safe').classList.contains('hidden') ||
+                   !document.getElementById('modal-read-note').classList.contains('hidden');
         }
 
         function renderLevelGrid() {
@@ -1383,14 +1427,14 @@
             list.innerHTML = '';
 
             if (gameState.collectedNotes.length === 0) {
-                list.innerHTML = `<div class="text-gray-500 text-sm text-center py-8">No evidence collected yet. Explore rooms for documents.</div>`;
+                list.innerHTML = `<div class="text-gray-500 text-sm text-center py-8">Записок пока нет. Ищите документы в комнатах! / No evidence collected yet.</div>`;
                 return;
             }
 
             gameState.collectedNotes.forEach((note, idx) => {
                 const item = document.createElement('div');
-                item.className = 'bg-gray-800/60 p-3 rounded-xl border border-gray-700 text-sm text-gray-200';
-                item.innerHTML = `<span class="text-xs text-red-400 font-bold block mb-1">Entry #${idx + 1}</span>${note}`;
+                item.className = 'bg-yellow-950/40 p-4 rounded-xl border border-yellow-700/50 text-sm text-yellow-100 font-paper';
+                item.innerHTML = `<span class="text-xs text-yellow-500 font-bold block mb-1">Улика / Evidence #${idx + 1}</span>${note}`;
                 list.appendChild(item);
             });
         }
@@ -1414,8 +1458,8 @@
                 if (enteredSafeCode.length === 4) {
                     if (enteredSafeCode === currentSafeCode) {
                         closeSafeModal();
-                        createKey(3.5, 0.9, 1.4);
-                        showPrompt("Safe Opened! Key inside.");
+                        createKey(3.5, 1.1, 1.2);
+                        showPrompt(gameState.lang === 'ru' ? "Сейф открыт! Внутри ключ." : "Safe Opened! Key inside.");
                     } else {
                         document.getElementById('safe-display').innerText = "ERR";
                         setTimeout(() => {
@@ -1441,9 +1485,9 @@
 
                 if (item === 'battery') gameState.battery = 100;
                 if (item === 'lockpick') gameState.hasKey = true;
-                if (item === 'hint') showPrompt(`Hint: Safe code is ${currentSafeCode}`);
+                if (item === 'hint') showPrompt(`Подсказка: Код сейфа ${currentSafeCode}`);
             } else {
-                alert("Not enough coins!");
+                alert("Недостаточно монет! / Not enough coins!");
             }
         }
 
@@ -1479,6 +1523,7 @@
             document.getElementById('hud-bottom').classList.add('hidden');
             document.getElementById('crosshair').classList.add('hidden');
             document.getElementById('mobile-controls').classList.add('hidden');
+            document.getElementById('item-beacon').classList.add('hidden');
             document.getElementById('main-menu').classList.remove('hidden');
         }
 
@@ -1535,6 +1580,12 @@
             document.getElementById('btn-settings-hud').onclick = () => document.getElementById('modal-settings').classList.remove('hidden');
             document.getElementById('btn-pause-settings').onclick = () => document.getElementById('modal-settings').classList.remove('hidden');
             document.getElementById('close-settings').onclick = () => document.getElementById('modal-settings').classList.add('hidden');
+
+            document.getElementById('close-read-note').onclick = () => {
+                document.getElementById('modal-read-note').classList.add('hidden');
+                document.getElementById('game-canvas').focus();
+                try { document.getElementById('game-canvas').requestPointerLock(); } catch(e) {}
+            };
 
             document.getElementById('btn-journal').onclick = () => {
                 renderJournal();
