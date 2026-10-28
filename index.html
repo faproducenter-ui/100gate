@@ -1,583 +1,170 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Horror Quest - 100 Levels</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', monospace; color: #fff; }
-        #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-        
-        /* UI Overlay */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-        .interactive { pointer-events: auto; }
-        
-        /* Top Right Bar: Lang & Gear */
-        #top-bar { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; z-index: 20; }
-        .icon-btn { background: rgba(20, 20, 20, 0.85); border: 2px solid #666; color: #fff; padding: 8px 14px; font-weight: bold; cursor: pointer; border-radius: 4px; transition: 0.2s; }
-        .icon-btn:hover { border-color: #ff3333; color: #ff3333; background: #111; }
-
-        /* Crosshair & Prompts */
-        #crosshair { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: rgba(255, 255, 255, 0.7); border-radius: 50%; transform: translate(-50%, -50%); border: 1px solid #000; }
-        #interact-prompt { position: absolute; top: 55%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 8px 16px; border: 1px solid #888; border-radius: 4px; display: none; font-size: 14px; text-shadow: 0 0 5px #ff0000; }
-
-        /* HUD elements */
-        #hud { position: absolute; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 16px; text-shadow: 1px 1px 3px #000; }
-        .hud-item { background: rgba(0,0,0,0.6); padding: 6px 12px; border-left: 3px solid #ff3333; border-radius: 2px; }
-
-        /* Modals / Windows */
-        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(15, 15, 15, 0.95); border: 2px solid #555; padding: 25px; width: 90%; max-width: 500px; display: none; flex-direction: column; gap: 15px; z-index: 30; border-radius: 8px; box-shadow: 0 0 20px #000; }
-        .modal h2 { text-align: center; color: #ff3333; border-bottom: 1px solid #444; padding-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
-        .modal-content { font-size: 15px; line-height: 1.5; color: #ddd; max-height: 300px; overflow-y: auto; background: #080808; padding: 15px; border: 1px solid #222; }
-        .btn { background: #222; border: 1px solid #666; color: #fff; padding: 10px 20px; cursor: pointer; text-align: center; font-family: inherit; font-weight: bold; transition: 0.2s; margin-top: 5px; }
-        .btn:hover { background: #ff3333; border-color: #ff3333; color: #000; }
-
-        /* Keypad Safe Modal */
-        #safe-input { width: 100%; background: #000; border: 2px solid #444; color: #0f0; font-size: 32px; text-align: center; padding: 10px; letter-spacing: 8px; margin-bottom: 10px; }
-        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .keypad button { background: #222; border: 1px solid #444; color: #fff; font-size: 20px; padding: 15px; cursor: pointer; }
-        .keypad button:hover { background: #444; }
-
-        /* Menus */
-        #main-menu, #pause-menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,5,5,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; z-index: 40; }
-        .menu-title { font-size: 42px; color: #ff1111; letter-spacing: 5px; text-shadow: 0 0 10px #ff0000; text-align: center; }
-        .menu-btn { width: 250px; font-size: 18px; padding: 12px; }
-
-        /* Click to focus overlay */
-        #click-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 25; font-size: 24px; color: #ff3333; cursor: pointer; text-shadow: 0 0 8px #000; }
-
-        /* Settings form */
-        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .setting-row select, .setting-row input { background: #222; border: 1px solid #555; color: #fff; padding: 5px 10px; }
-    </style>
-    <!-- Three.js CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Тайна 100 дверей — Prototype 01</title>
+<style>
+:root{--gold:#d5b77a;--panel:rgba(13,15,17,.94);--line:rgba(213,183,122,.35);--white:#eee9df;--muted:#aaa69e}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08090a;color:var(--white);font-family:Arial,Helvetica,sans-serif}canvas{display:block}
+#game{position:fixed;inset:0}#vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.58) 100%);z-index:2}
+#grain{position:fixed;inset:0;pointer-events:none;opacity:.06;z-index:3;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E")}
+#hud{position:fixed;inset:0;z-index:5;pointer-events:none}
+.topbar{position:absolute;top:18px;left:20px;right:20px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.brand{font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;text-shadow:0 2px 8px #000}.chapter{font-size:11px;letter-spacing:1.5px;color:#e9e2d4;margin-top:7px;text-transform:uppercase}
+.topactions{display:flex;gap:8px;pointer-events:auto}.iconbtn{width:42px;height:42px;border:1px solid var(--line);background:rgba(10,12,13,.8);color:var(--gold);border-radius:5px;font-size:19px;cursor:pointer;backdrop-filter:blur(8px)}.iconbtn:hover,.btn:hover{background:#403727}
+.leftinfo{position:absolute;left:20px;top:105px;font-size:11px;letter-spacing:1.3px;color:#d8d0c2;line-height:1.8;text-shadow:0 2px 5px #000}.status{display:inline-block;width:6px;height:6px;background:#9d322a;border-radius:50%;margin-right:8px;box-shadow:0 0 9px #c43b30}
+.crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:15px;height:15px;opacity:.7}.crosshair:before,.crosshair:after{content:"";position:absolute;background:#e8dfcb;box-shadow:0 0 4px #000}.crosshair:before{width:1px;height:13px;left:7px;top:1px}.crosshair:after{height:1px;width:13px;top:7px;left:1px}
+#prompt{position:absolute;left:50%;top:58%;transform:translateX(-50%);font-size:12px;letter-spacing:1px;text-transform:uppercase;background:rgba(0,0,0,.72);border:1px solid var(--line);padding:10px 15px;opacity:0;transition:opacity .15s;white-space:nowrap}#prompt b{color:var(--gold)}
+.bottomleft{position:absolute;bottom:20px;left:20px;font-size:11px;color:#d0c9bc;line-height:1.7;text-shadow:0 2px 5px #000}.bottomright{position:absolute;right:20px;bottom:20px;font-size:10px;color:#b7afa1;text-align:right;letter-spacing:1px;text-shadow:0 2px 5px #000}
+#toast{position:absolute;left:50%;top:18%;transform:translate(-50%,-10px);padding:12px 18px;background:rgba(12,13,13,.94);border:1px solid var(--line);color:#f0dfb9;font-size:12px;letter-spacing:.5px;opacity:0;transition:.25s;text-align:center;max-width:85vw}#toast.show{opacity:1;transform:translate(-50%,0)}
+.overlay{position:fixed;inset:0;z-index:10;background:rgba(3,4,5,.78);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:18px}.panel{width:min(560px,100%);max-height:88vh;overflow:auto;background:var(--panel);border:1px solid var(--line);box-shadow:0 20px 80px #000;padding:25px;border-radius:7px}.panel h1,.panel h2{margin:0 0 8px;font-weight:500;letter-spacing:2px}.panel h1{font-size:25px;color:var(--gold)}.panel h2{font-size:19px;color:var(--gold)}.eyebrow{font-size:10px;letter-spacing:3px;color:#aaa08d;margin-bottom:12px}.sub{color:var(--muted);font-size:13px;line-height:1.65}.rule{height:1px;background:var(--line);margin:18px 0}.btn{background:#30291e;color:#f4e6c8;border:1px solid var(--line);padding:12px 16px;border-radius:3px;cursor:pointer;letter-spacing:1px;font-size:11px;text-transform:uppercase}.btn.primary{background:#8c6d3b;color:#fff6e3;border-color:#b99b63}.btnrow{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}.field{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px}.field label{color:#ddd5c6}.field select,.field input{background:#171819;border:1px solid #514735;color:#f2e8d3;padding:8px;max-width:180px;border-radius:3px}.docpaper{background:#d9cfb5;color:#28241e;padding:22px 20px;margin-top:16px;box-shadow:0 8px 25px #0006;font-family:Georgia,serif;line-height:1.7}.docpaper h3{text-align:center;letter-spacing:2px;font-weight:normal}.docpaper .stamp{text-align:right;font-size:10px;letter-spacing:2px;color:#725e43}.inventorygrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:15px}.slot{min-height:76px;border:1px solid #494034;background:#141515;padding:12px;text-align:center;font-size:11px;color:#d9cfbc}.slot .symbol{font-size:22px;display:block;margin-bottom:8px;color:var(--gold)}.hidden{display:none!important}
+#startscreen{z-index:12;background:linear-gradient(90deg,rgba(4,5,6,.96),rgba(4,5,6,.55)),radial-gradient(ellipse at 70% 45%,#34302a,#08090a 65%)}.startcontent{width:min(850px,100%);padding:22px}.startcontent h1{font-size:clamp(34px,7vw,68px);font-weight:300;line-height:1.04;letter-spacing:3px;margin:10px 0 20px}.startcontent h1 span{color:var(--gold)}.startgrid{display:grid;grid-template-columns:1.3fr 1fr;gap:30px;align-items:end}.startcard{border-left:2px solid var(--gold);padding:4px 0 4px 17px;color:#c6beb0;font-size:13px;line-height:1.8}.keycap{display:inline-block;border:1px solid #766748;border-radius:3px;padding:3px 7px;color:#e5d4af;font-size:10px;margin:0 2px}.footnote{font-size:10px;color:#8f887b;line-height:1.6;margin-top:20px;max-width:650px}
+#mobileControls{position:fixed;inset:0;z-index:6;pointer-events:none;display:none}.joy{position:absolute;bottom:28px;left:22px;width:130px;height:130px;border:1px solid #bca16b66;border-radius:50%;background:#1118;pointer-events:auto;touch-action:none}.joy:before{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%);border:1px solid #cbb27c88;border-radius:50%;background:#cbb27c22}.mobileE{position:absolute;bottom:54px;right:25px;width:64px;height:64px;border:1px solid var(--line);border-radius:50%;background:#171613cc;color:var(--gold);pointer-events:auto;font-weight:bold}.lookarea{position:absolute;right:0;top:18%;width:55%;height:56%;pointer-events:auto;touch-action:none}
+@media(max-width:650px){.startgrid{grid-template-columns:1fr;gap:20px}.startcontent{padding:8px}.panel{padding:18px}.topbar{top:12px;left:12px;right:12px}.brand{font-size:10px}.chapter{font-size:9px}.leftinfo{left:12px;top:90px}.bottomleft{left:12px;bottom:12px}.bottomright{right:12px;bottom:12px}.topactions{gap:5px}.iconbtn{width:37px;height:37px}}
+</style>
 </head>
 <body>
-
-    <div id="canvas-container"></div>
-
-    <div id="ui-layer">
-        <!-- Top Bar -->
-        <div id="top-bar">
-            <button id="lang-btn" class="icon-btn interactive">RU / EN</button>
-            <button id="gear-btn" class="icon-btn interactive">⚙️</button>
-        </div>
-
-        <!-- Crosshair & Prompt -->
-        <div id="crosshair"></div>
-        <div id="interact-prompt">Нажмите [E] для взаимодействия</div>
-
-        <!-- HUD -->
-        <div id="hud">
-            <div class="hud-item" id="hud-level">Уровень: 1 (Локация 1: Дом)</div>
-            <div class="hud-item" id="hud-objective">Цель: Найдите бумагу с кодом от сейфа</div>
-            <div class="hud-item" id="hud-coins">Монеты: 0</div>
-        </div>
-
-        <!-- Click to focus overlay -->
-        <div id="click-overlay" class="interactive">Кликните по экрану для управления поворотом камеры</div>
-
-        <!-- Paper Modal -->
-        <div id="paper-modal" class="modal interactive">
-            <h2 id="paper-title">Найденный документ</h2>
-            <div id="paper-body" class="modal-content"></div>
-            <button id="paper-close" class="btn">Закрыть</button>
-        </div>
-
-        <!-- Safe Keypad Modal -->
-        <div id="safe-modal" class="modal interactive">
-            <h2>Введите код от сейфа</h2>
-            <input type="text" id="safe-input" readonly maxlength="4" value="">
-            <div class="keypad">
-                <button onclick="pressNum('1')">1</button>
-                <button onclick="pressNum('2')">2</button>
-                <button onclick="pressNum('3')">3</button>
-                <button onclick="pressNum('4')">4</button>
-                <button onclick="pressNum('5')">5</button>
-                <button onclick="pressNum('6')">6</button>
-                <button onclick="pressNum('7')">7</button>
-                <button onclick="pressNum('8')">8</button>
-                <button onclick="pressNum('9')">9</button>
-                <button onclick="clearNum()">C</button>
-                <button onclick="pressNum('0')">0</button>
-                <button onclick="checkSafeCode()">OK</button>
-            </div>
-            <button id="safe-close" class="btn" style="margin-top:10px;">Отмена</button>
-        </div>
-
-        <!-- Journal Modal -->
-        <div id="journal-modal" class="modal interactive">
-            <h2>Дневник улик</h2>
-            <div id="journal-body" class="modal-content">Пока нет записей.</div>
-            <button id="journal-close" class="btn">Закрыть</button>
-        </div>
-
-        <!-- Settings Modal -->
-        <div id="settings-modal" class="modal interactive">
-            <h2>Настройки</h2>
-            <div class="setting-row">
-                <span>Графика:</span>
-                <select id="setting-graphics">
-                    <option value="high">Высокая (Тени, Туман)</option>
-                    <option value="low">Низкая (Для слабых ПК)</option>
-                </select>
-            </div>
-            <div class="setting-row">
-                <span>Клавиша взаимодействия:</span>
-                <button id="bind-interact" class="btn" style="padding: 4px 10px;">E</button>
-            </div>
-            <div class="setting-row">
-                <span>Клавиши движения:</span>
-                <select id="setting-move">
-                    <option value="wasd">WASD</option>
-                    <option value="arrows">Стрелки</option>
-                </select>
-            </div>
-            <button id="settings-close" class="btn">Сохранить и Закрыть</button>
-        </div>
-
-        <!-- Main Menu -->
-        <div id="main-menu" class="interactive">
-            <div class="menu-title">ТЕМНЫЕ КОМНАТЫ</div>
-            <button id="start-btn" class="btn menu-btn">ИГРАТЬ</button>
-            <button id="journal-btn" class="btn menu-btn">ДНЕВНИК УЛИК</button>
-            <button id="menu-settings-btn" class="btn menu-btn">НАСТРОЙКИ</button>
-        </div>
-    </div>
-
-    <script>
-        // --- GAME STATE & LOCALIZATION ---
-        let currentLang = 'RU';
-        let currentLevel = 1;
-        let coins = 0;
-        let safeCode = "4821"; // Synced level code
-        let keyFound = false;
-        let paperFound = false;
-        let journalEntries = [];
-
-        // Keybinds
-        let interactKey = 'KeyE';
-        let moveType = 'wasd'; // 'wasd' or 'arrows'
-
-        const i18n = {
-            RU: {
-                level: "Уровень: ",
-                location: "Локация",
-                obj1: "Найдите бумагу с кодом от сейфа",
-                obj2: "Введите код в сейф и заберите ключ",
-                obj3: "Откройте дверь полученным ключом",
-                coins: "Монеты: ",
-                promptInteract: "Нажмите [{KEY}] для взаимодействия",
-                paperTitle: "Записка расследования",
-                safeTitle: "Введите код сейфа",
-                journalTitle: "Дневник улик",
-                journalEmpty: "Вы пока не нашли ни одного документа.",
-                start: "ИГРАТЬ",
-                journal: "ДНЕВНИК УЛИК",
-                settings: "НАСТРОЙКИ",
-                locNames: ["Дом", "Подвал", "Школа", "Больница", "Лес", "Шахта", "Корабль", "Психбольница", "Бункер", "Замок"]
-            },
-            EN: {
-                level: "Level: ",
-                location: "Location",
-                obj1: "Find the note with the safe code",
-                obj2: "Enter the code into the safe to get the key",
-                obj3: "Unlock the exit door with the key",
-                coins: "Coins: ",
-                promptInteract: "Press [{KEY}] to interact",
-                paperTitle: "Investigation Note",
-                safeTitle: "Enter Safe Code",
-                journalTitle: "Evidence Journal",
-                journalEmpty: "No documents collected yet.",
-                start: "PLAY",
-                journal: "EVIDENCE JOURNAL",
-                settings: "SETTINGS",
-                locNames: ["House", "Basement", "School", "Hospital", "Forest", "Mine", "Ship", "Asylum", "Bunker", "Castle"]
-            }
-        };
-
-        function updateUI() {
-            const locIdx = Math.floor((currentLevel - 1) / 10);
-            const locName = i18n[currentLang].locNames[locIdx] || "Неизвестно";
-            document.getElementById('hud-level').innerText = `${i18n[currentLang].level}${currentLevel} (${i18n[currentLang].location} ${locIdx + 1}: ${locName})`;
-            document.getElementById('hud-coins').innerText = `${i18n[currentLang].coins}${coins}`;
-            
-            if (!paperFound) {
-                document.getElementById('hud-objective').innerText = `Цель: ${i18n[currentLang].obj1}`;
-            } else if (!keyFound) {
-                document.getElementById('hud-objective').innerText = `Цель: ${i18n[currentLang].obj2}`;
-            } else {
-                document.getElementById('hud-objective').innerText = `Цель: ${i18n[currentLang].obj3}`;
-            }
-
-            document.getElementById('start-btn').innerText = i18n[currentLang].start;
-            document.getElementById('journal-btn').innerText = i18n[currentLang].journal;
-            document.getElementById('menu-settings-btn').innerText = i18n[currentLang].settings;
-        }
-
-        // --- THREE.JS ENGINE SETUP ---
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x050508);
-        scene.fog = new THREE.FogExp2(0x050508, 0.12);
-
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        container.appendChild(renderer.domElement);
-
-        // Flashlight
-        const flashlight = new THREE.SpotLight(0xffffff, 2.5, 15, Math.PI / 6, 0.5, 1);
-        flashlight.castShadow = true;
-        scene.add(flashlight);
-        scene.add(flashlight.target);
-
-        // Ambient
-        const ambientLight = new THREE.AmbientLight(0x222233, 0.4);
-        scene.add(ambientLight);
-
-        // --- PROCEDURAL TEXTURES ---
-        function createWoodTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#4a2f13'; ctx.fillRect(0,0,256,256);
-            ctx.fillStyle = '#2d1a08';
-            for(let i=0; i<30; i++) {
-                ctx.fillRect(0, Math.random()*256, 256, Math.random()*4+1);
-            }
-            return new THREE.CanvasTexture(canvas);
-        }
-
-        function createWallTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#665544'; ctx.fillRect(0,0,256,256);
-            ctx.fillStyle = '#443322';
-            for(let i=0; i<500; i++) {
-                ctx.fillRect(Math.random()*256, Math.random()*256, 2, 2);
-            }
-            return new THREE.CanvasTexture(canvas);
-        }
-
-        const woodMat = new THREE.MeshStandardMaterial({ map: createWoodTexture() });
-        const wallMat = new THREE.MeshStandardMaterial({ map: createWallTexture() });
-        const metalMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.3, metalness: 0.8 });
-        const paperMat = new THREE.MeshBasicMaterial({ color: 0xffffcc });
-        const goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.2, metalness: 0.9 });
-
-        // --- LEVEL GENERATION & OBJECTS ---
-        let interactables = [];
-        let roomGroup = new THREE.Group();
-        scene.add(roomGroup);
-
-        function generateLevelCode() {
-            safeCode = Math.floor(1000 + Math.random() * 9000).toString();
-        }
-
-        function buildRoom() {
-            // Clear previous room
-            while(roomGroup.children.length > 0){ 
-                roomGroup.remove(roomGroup.children[0]); 
-            }
-            interactables = [];
-
-            generateLevelCode();
-            keyFound = false;
-            paperFound = false;
-
-            // Room Box (6x6x3.5)
-            const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), woodMat);
-            floor.rotation.x = -Math.PI / 2;
-            floor.receiveShadow = true;
-            roomGroup.add(floor);
-
-            const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), wallMat);
-            ceiling.position.y = 3.5;
-            ceiling.rotation.x = Math.PI / 2;
-            roomGroup.add(ceiling);
-
-            // Walls
-            const createWall = (x, z, ry) => {
-                const wall = new THREE.Mesh(new THREE.PlaneGeometry(8, 3.5), wallMat);
-                wall.position.set(x, 1.75, z);
-                wall.rotation.y = ry;
-                wall.receiveShadow = true;
-                roomGroup.add(wall);
-            };
-            createWall(0, -4, 0); // Back
-            createWall(-4, 0, Math.PI/2); // Left
-            createWall(4, 0, -Math.PI/2); // Right
-
-            // Front wall with door frame
-            const doorWall = new THREE.Mesh(new THREE.PlaneGeometry(8, 3.5), wallMat);
-            doorWall.position.set(0, 1.75, 4);
-            doorWall.rotation.y = Math.PI;
-            roomGroup.add(doorWall);
-
-            // Exit Door
-            const door = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.1), woodMat);
-            door.position.set(0, 1.1, 3.9);
-            door.castShadow = true;
-            door.userData = { type: 'door' };
-            roomGroup.add(door);
-            interactables.push(door);
-
-            // Table with Note (Center Front)
-            const table = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.8, 1.0), woodMat);
-            table.position.set(0, 0.4, -1);
-            table.castShadow = true;
-            roomGroup.add(table);
-
-            // Document Note on Table
-            const paper = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.01, 0.4), paperMat);
-            paper.position.set(0, 0.81, -1);
-            paper.userData = { type: 'paper' };
-            roomGroup.add(paper);
-            interactables.push(paper);
-
-            // Add glowing point light above paper
-            const paperLight = new THREE.PointLight(0xffff99, 1, 2);
-            paperLight.position.set(0, 1.5, -1);
-            roomGroup.add(paperLight);
-
-            // Safe on the side
-            const safe = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), metalMat);
-            safe.position.set(-2.5, 0.4, -2.5);
-            safe.castShadow = true;
-            safe.userData = { type: 'safe' };
-            roomGroup.add(safe);
-            interactables.push(safe);
-
-            updateUI();
-        }
-
-        // --- PLAYER CONTROLS & PHYSICS ---
-        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-        let isLocked = false;
-        let yaw = 0, pitch = 0;
-
-        camera.position.set(0, 1.6, 2.5);
-
-        // Key Listeners
-        window.addEventListener('keydown', (e) => {
-            if (e.code === 'KeyW' || (moveType === 'arrows' && e.code === 'ArrowUp')) moveForward = true;
-            if (e.code === 'KeyS' || (moveType === 'arrows' && e.code === 'ArrowDown')) moveBackward = true;
-            if (e.code === 'KeyA' || (moveType === 'arrows' && e.code === 'ArrowLeft')) moveLeft = true;
-            if (e.code === 'KeyD' || (moveType === 'arrows' && e.code === 'ArrowRight')) moveRight = true;
-
-            if (e.code === interactKey) {
-                checkInteraction();
-            }
-        });
-
-        window.addEventListener('keyup', (e) => {
-            if (e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = false;
-            if (e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = false;
-            if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = false;
-            if (e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = false;
-        });
-
-        // Pointer Lock Camera Look
-        document.addEventListener('mousemove', (e) => {
-            if (!isLocked) return;
-            yaw -= e.movementX * 0.0025;
-            pitch -= e.movementY * 0.0025;
-            pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
-
-            camera.rotation.set(0, 0, 0);
-            camera.rotation.y = yaw;
-            camera.rotation.x = pitch;
-        });
-
-        const clickOverlay = document.getElementById('click-overlay');
-        clickOverlay.addEventListener('click', () => {
-            container.requestPointerLock();
-        });
-
-        document.addEventListener('pointerlockchange', () => {
-            isLocked = (document.pointerLockElement === container);
-            clickOverlay.style.display = isLocked ? 'none' : 'flex';
-        });
-
-        // --- INTERACTION SYSTEM ---
-        const raycaster = new THREE.Raycaster();
-        let hoveredObject = null;
-
-        function updateRaycast() {
-            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-            const intersects = raycaster.intersectObjects(interactables);
-
-            const prompt = document.getElementById('interact-prompt');
-
-            if (intersects.length > 0 && intersects[0].distance < 2.5) {
-                hoveredObject = intersects[0].object;
-                const keyName = interactKey.replace('Key', '');
-                prompt.innerText = i18n[currentLang].promptInteract.replace('{KEY}', keyName);
-                prompt.style.display = 'block';
-            } else {
-                hoveredObject = null;
-                prompt.style.display = 'none';
-            }
-        }
-
-        function checkInteraction() {
-            if (!hoveredObject) return;
-
-            const type = hoveredObject.userData.type;
-
-            if (type === 'paper') {
-                paperFound = true;
-                const noteText = `${i18n[currentLang].paperTitle} #${currentLevel}:\n\n` + 
-                    `Секретная комбинация для открытия центрального сейфа: [ ${safeCode} ].\n` +
-                    `Запомните эти цифры, найдите сейф и заберите ключ от следующей комнаты.`;
-                
-                document.getElementById('paper-body').innerText = noteText;
-                document.getElementById('paper-modal').style.display = 'flex';
-                
-                if (!journalEntries.includes(noteText)) {
-                    journalEntries.push(noteText);
-                }
-                updateUI();
-                if (document.pointerLockElement) document.exitPointerLock();
-            } 
-            else if (type === 'safe') {
-                if (keyFound) {
-                    alert("Сейф уже открыт, ключ найден!");
-                    return;
-                }
-                document.getElementById('safe-input').value = "";
-                document.getElementById('safe-modal').style.display = 'flex';
-                if (document.pointerLockElement) document.exitPointerLock();
-            } 
-            else if (type === 'door') {
-                if (keyFound) {
-                    alert("Вы открыли дверь и перешли на следующий уровень!");
-                    currentLevel++;
-                    coins += 50;
-                    buildRoom();
-                    camera.position.set(0, 1.6, 2.5);
-                } else {
-                    alert("Дверь заперта! Вам нужен ключ из сейфа.");
-                }
-            }
-        }
-
-        // Keypad logic
-        window.pressNum = function(num) {
-            const input = document.getElementById('safe-input');
-            if (input.value.length < 4) input.value += num;
-        };
-        window.clearNum = function() {
-            document.getElementById('safe-input').value = "";
-        };
-        window.checkSafeCode = function() {
-            const val = document.getElementById('safe-input').value;
-            if (val === safeCode) {
-                alert("Код верный! Вы забрали КЛЮЧ.");
-                keyFound = true;
-                document.getElementById('safe-modal').style.display = 'none';
-                updateUI();
-            } else {
-                alert("Неверный код! Проверьте записку еще раз.");
-                document.getElementById('safe-input').value = "";
-            }
-        };
-
-        // --- UI & MODAL EVENT HANDLERS ---
-        document.getElementById('lang-btn').addEventListener('click', () => {
-            currentLang = currentLang === 'RU' ? 'EN' : 'RU';
-            updateUI();
-        });
-
-        document.getElementById('start-btn').addEventListener('click', () => {
-            document.getElementById('main-menu').style.display = 'none';
-            container.requestPointerLock();
-            buildRoom();
-        });
-
-        document.getElementById('paper-close').addEventListener('click', () => {
-            document.getElementById('paper-modal').style.display = 'none';
-            container.requestPointerLock();
-        });
-
-        document.getElementById('safe-close').addEventListener('click', () => {
-            document.getElementById('safe-modal').style.display = 'none';
-            container.requestPointerLock();
-        });
-
-        document.getElementById('journal-btn').addEventListener('click', () => {
-            const body = document.getElementById('journal-body');
-            body.innerText = journalEntries.length > 0 ? journalEntries.join("\n\n------------------\n\n") : i18n[currentLang].journalEmpty;
-            document.getElementById('journal-modal').style.display = 'flex';
-        });
-
-        document.getElementById('journal-close').addEventListener('click', () => {
-            document.getElementById('journal-modal').style.display = 'none';
-        });
-
-        document.getElementById('gear-btn').addEventListener('click', () => {
-            document.getElementById('settings-modal').style.display = 'flex';
-            if (document.pointerLockElement) document.exitPointerLock();
-        });
-        document.getElementById('menu-settings-btn').addEventListener('click', () => {
-            document.getElementById('settings-modal').style.display = 'flex';
-        });
-
-        document.getElementById('settings-close').addEventListener('click', () => {
-            moveType = document.getElementById('setting-move').value;
-            document.getElementById('settings-modal').style.display = 'none';
-        });
-
-        // --- GAME LOOP ---
-        const clock = new THREE.Clock();
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            const delta = clock.getDelta();
-            const moveSpeed = 3.0 * delta;
-
-            // Player Movement
-            if (isLocked) {
-                const dir = new THREE.Vector3();
-                if (moveForward) dir.z -= 1;
-                if (moveBackward) dir.z += 1;
-                if (moveLeft) dir.x -= 1;
-                if (moveRight) dir.x += 1;
-                dir.normalize();
-
-                dir.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-                camera.position.addScaledVector(dir, moveSpeed);
-
-                // Simple Room Bounds Collisions
-                camera.position.x = Math.max(-3.5, Math.min(3.5, camera.position.x));
-                camera.position.z = Math.max(-3.5, Math.min(3.5, camera.position.z));
-            }
-
-            // Sync Flashlight with Camera
-            flashlight.position.copy(camera.position);
-            const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-            flashlight.target.position.copy(camera.position).add(forward);
-
-            updateRaycast();
-            renderer.render(scene, camera);
-        }
-
-        // Window Resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // Start animation loop
-        animate();
-    </script>
+<div id="game"></div><div id="vignette"></div><div id="grain"></div>
+<div id="hud">
+  <div class="topbar"><div><div class="brand">MYSTERY · 100 DOORS</div><div class="chapter" id="chapterLabel">CASE 01 / THE ABANDONED ESTATE</div></div>
+    <div class="topactions"><button class="iconbtn" id="inventoryBtn" title="Inventory">▤</button><button class="iconbtn" id="caseBtn" title="Case file">⌕</button><button class="iconbtn" id="settingsBtn" title="Settings">⚙</button></div>
+  </div>
+  <div class="leftinfo"><div><span class="status"></span><span id="statusText">INVESTIGATION ACTIVE</span></div><div id="objective">FIND THE KEY. READ THE NOTE.</div></div>
+  <div class="crosshair"></div><div id="prompt"></div><div id="toast"></div>
+  <div class="bottomleft"><span id="moveHint">W A S D — MOVE</span><br><span id="interactHint">E — INTERACT</span></div>
+  <div class="bottomright"><span id="coinText">◈ 0 COINS</span><br>PROTOTYPE 01 · BUILD 0.1</div>
+</div>
+<div id="mobileControls"><div class="joy" id="joy"></div><div class="lookarea" id="lookarea"></div><button class="mobileE" id="mobileInteract">E</button></div>
+<div id="startscreen" class="overlay"><div class="startcontent"><div class="eyebrow">A FIRST-PERSON INVESTIGATION HORROR</div><h1>ТАЙНА<br><span>100 ДВЕРЕЙ</span></h1><div class="startgrid"><div><p class="sub" id="introText">Дом заперт изнутри. Хозяева исчезли. В пыли остались следы — и записка, написанная рукой человека, которого здесь не должно быть.</p><div class="btnrow"><button class="btn primary" id="startBtn">Начать расследование</button><button class="btn" id="langStart">EN / RU</button></div></div><div class="startcard">ГЛАВА 01 — ЗАБРОШЕННЫЙ ОСОБНЯК<br><span class="keycap">W A S D</span> движение<br><span class="keycap">МЫШЬ</span> осмотр<br><span class="keycap">E</span> взаимодействие<br><span class="keycap">ESC</span> пауза / настройки</div></div><div class="footnote">Это игровой прототип. Реалистичная атмосфера строится на геометрии сцены, процедурных материалах, освещении и звуке. Для финального качества коммерческого хоррора позднее добавим авторские 3D-модели, PBR-текстуры, анимации и звуковое оформление.</div></div></div>
+<div id="settings" class="overlay hidden"><div class="panel"><div class="eyebrow">MYSTERY / SYSTEM</div><h2 id="settingsTitle">Настройки</h2><div class="field"><label id="graphicsLabel">Качество графики</label><select id="graphics"><option value="low">Низкое</option><option value="medium" selected>Среднее</option><option value="high">Высокое</option></select></div><div class="field"><label id="volumeLabel">Громкость звука</label><input id="volume" type="range" min="0" max="100" value="35"></div><div class="field"><label id="keyLabel">Клавиша взаимодействия</label><select id="interactKey"><option>E</option><option>F</option><option>Q</option><option>Space</option></select></div><div class="field"><label id="movementLabel">Управление движением</label><select id="movement"><option value="wasd">WASD</option><option value="arrows">Стрелки</option></select></div><div class="field"><label id="languageLabel">Язык интерфейса</label><select id="language"><option value="ru">Русский</option><option value="en">English</option></select></div><div class="btnrow"><button class="btn primary" id="saveSettings">Сохранить</button><button class="btn" id="closeSettings">Закрыть</button></div></div></div>
+<div id="documentModal" class="overlay hidden"><div class="panel"><div class="eyebrow" id="docEyebrow">EVIDENCE 01 / FOUND DOCUMENT</div><h2 id="docTitle">Записка смотрителя</h2><div class="docpaper"><div class="stamp">АРХИВ ОСОБНЯКА · 14 ОКТЯБРЯ</div><h3 id="docPaperTitle">ЗАПИСЬ № 9</h3><p id="docBody">Если часы остановились, значит, кто-то снова был в кабинете. Ключ я спрятал там, где время никогда не движется. Не доверяй часам, которые идут правильно.</p><p id="docHint"><b>Подсказка:</b> осмотри часы и найди неподвижное место.</p></div><div class="btnrow"><button class="btn primary" id="closeDoc">Закрыть документ</button></div></div></div>
+<div id="inventory" class="overlay hidden"><div class="panel"><div class="eyebrow">PLAYER / ITEMS</div><h2 id="inventoryTitle">Инвентарь</h2><p class="sub" id="inventoryDesc">Предметы и улики, найденные в этом расследовании.</p><div class="inventorygrid" id="inventoryGrid"></div><div class="btnrow"><button class="btn" id="shopBtn">Магазин монет</button><button class="btn primary" id="closeInventory">Назад в игру</button></div></div></div>
+<div id="shop" class="overlay hidden"><div class="panel"><div class="eyebrow">SUPPLY / COIN STORE</div><h2 id="shopTitle">Магазин</h2><p class="sub" id="shopDesc">Покупки прототипа используют тестовые монеты. Реальные платежи не подключены.</p><div class="inventorygrid" id="shopGrid"></div><div class="btnrow"><button class="btn primary" id="closeShop">Назад</button></div></div></div>
+<div id="caseModal" class="overlay hidden"><div class="panel"><div class="eyebrow">CASE FILE 001</div><h2 id="caseTitle">Дело: исчезновение семьи Вейл</h2><p class="sub" id="caseBody">14 октября. Полиция обнаружила особняк запертым изнутри. В доме нет следов взлома, но в кабинете обнаружена запись о девяти ударах часов. Ваша задача — установить, что случилось, и найти выход.</p><div class="rule"></div><p class="sub" id="caseProgress">Собрано улик: 0 / 2. Найдите записку и ключ от двери.</p><div class="btnrow"><button class="btn primary" id="closeCase">Продолжить</button></div></div></div>
+<div id="ending" class="overlay hidden"><div class="panel"><div class="eyebrow">CHAPTER COMPLETE</div><h1 id="endingTitle">Комната открыта</h1><p class="sub" id="endingBody">Вы открыли первую дверь. За ней слышится скрип — кто-то знает, что вы внутри.</p><div class="btnrow"><button class="btn primary" id="nextRoom">Перейти к следующей комнате</button><button class="btn" id="endingClose">Остаться</button></div></div></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+const $=id=>document.getElementById(id);
+const ui={start:$('startscreen'),settings:$('settings'),doc:$('documentModal'),inv:$('inventory'),shop:$('shop'),case:$('caseModal'),ending:$('ending')};
+let lang='ru', started=false, paused=true, coins=0, hasNote=false, hasKey=false, doorOpen=false, room=1, soundVolume=.35;
+let interactKey='e', movement='wasd', graphics='medium', activeModal=null, target=null;
+let scene,camera,renderer,clock,raycaster,ambient,flashLight,roomGroup,door,doorPivot,keyMesh,noteMesh,clockHands=[],hudMeshes=[],audioCtx,masterGain;
+const held={};let yaw=0,pitch=0,walkTime=0,toastTimer;
+const inventoryItems=[];
+const texts={
+ru:{chapter:'ГЛАВА 01 / ЗАБРОШЕННЫЙ ОСОБНЯК',status:'РАССЛЕДОВАНИЕ АКТИВНО',objective:'НАЙДИ КЛЮЧ. ПРОЧИТАЙ ЗАПИСКУ.',move:'W A S D — ДВИЖЕНИЕ',interact:'E — ВЗАИМОДЕЙСТВИЕ',intro:'Дом заперт изнутри. Хозяева исчезли. В пыли остались следы — и записка, написанная рукой человека, которого здесь не должно быть.',start:'Начать расследование',settings:'Настройки',graphics:'Качество графики',low:'Низкое',medium:'Среднее',high:'Высокое',volume:'Громкость звука',key:'Клавиша взаимодействия',movement:'Управление движением',language:'Язык интерфейса',save:'Сохранить',close:'Закрыть',inventory:'Инвентарь',inventoryDesc:'Предметы и улики, найденные в этом расследовании.',shop:'Магазин монет',back:'Назад в игру',shopDesc:'Покупки прототипа используют тестовые монеты. Реальные платежи не подключены.',caseTitle:'Дело: исчезновение семьи Вейл',caseBody:'14 октября. Полиция обнаружила особняк запертым изнутри. В доме нет следов взлома, но в кабинете обнаружена запись о девяти ударах часов. Ваша задача — установить, что случилось, и найти выход.',caseProgress:'Собрано улик: ',note:'Записка смотрителя',docBody:'Если часы остановились, значит, кто-то снова был в кабинете. Ключ я спрятал там, где время никогда не движется. Не доверяй часам, которые идут правильно.',docHint:'Подсказка: осмотри часы и найди неподвижное место.',read:'Прочитать записку',keyFound:'Вы нашли старый латунный ключ.',noteFound:'Вы нашли записку смотрителя.',needKey:'Дверь заперта. Нужен старый ключ.',needClue:'Сначала найдите записку — она подскажет, где искать ключ.',doorOpen:'Замок щёлкнул. Дверь открыта.',needClock:'Записка говорит о времени. Осмотрите часы на стене.',locked:'Заперто',open:'Открыть дверь',noTarget:'',room:'КОМНАТА ',complete:'Комната открыта',completeBody:'Вы открыли первую дверь. За ней слышится скрип — кто-то знает, что вы внутри.',next:'Перейти к следующей комнате',coins:'МОНЕТ',shopTitle:'Магазин снабжения',buy:'Купить',owned:'Куплено',notEnough:'Недостаточно монет.',buyOk:'Покупка добавлена в инвентарь.',hint:'Нажмите {key}, чтобы взаимодействовать.',found:'Найдено',continue:'Продолжить'},
+en:{chapter:'CHAPTER 01 / THE ABANDONED ESTATE',status:'INVESTIGATION ACTIVE',objective:'FIND THE KEY. READ THE NOTE.',move:'W A S D — MOVE',interact:'E — INTERACT',intro:'The house is locked from the inside. The owners have vanished. Footprints remain in the dust — along with a note written by someone who should not be here.',start:'Begin investigation',settings:'Settings',graphics:'Graphics quality',low:'Low',medium:'Medium',high:'High',volume:'Sound volume',key:'Interaction key',movement:'Movement controls',language:'Interface language',save:'Save settings',close:'Close',inventory:'Inventory',inventoryDesc:'Items and evidence collected in this investigation.',shop:'Coin shop',back:'Back to game',shopDesc:'Prototype purchases use test coins. Real payments are not connected.',caseTitle:'Case: The Vale family disappearance',caseBody:'October 14. Police found the estate locked from the inside. No forced entry, but a note about nine clock chimes was found in the study. Determine what happened and find a way out.',caseProgress:'Evidence collected: ',note:'Caretaker’s note',docBody:'If the clock has stopped, someone has been in the study again. I hid the key where time never moves. Do not trust the clock that runs correctly.',docHint:'Hint: inspect the clock and find the place that does not move.',read:'Read note',keyFound:'You found an old brass key.',noteFound:'You found the caretaker’s note.',needKey:'The door is locked. You need the old key.',needClue:'Find the note first — it hints where the key is hidden.',doorOpen:'The lock clicks. The door is open.',needClock:'The note speaks of time. Inspect the wall clock.',locked:'Locked',open:'Open door',noTarget:'',room:'ROOM ',complete:'Room unlocked',completeBody:'You opened the first door. Something creaks beyond it — someone knows you are inside.',next:'Proceed to the next room',coins:'COINS',shopTitle:'Supply store',buy:'Buy',owned:'Owned',notEnough:'Not enough coins.',buyOk:'Purchase added to inventory.',hint:'Press {key} to interact.',found:'Found',continue:'Continue'}
+};
+function t(k){return texts[lang][k]??texts.en[k]??k}
+function setText(id,key){$(id).textContent=t(key)}
+function showToast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2600)}
+function showModal(which){for(const k in ui)ui[k].classList.add('hidden');if(which){ui[which].classList.remove('hidden');activeModal=which;paused=true;if(document.pointerLockElement)document.exitPointerLock()}else{activeModal=null;paused=false;if(started&&matchMedia('(pointer:fine)').matches)renderer.domElement.requestPointerLock?.()}}
+function applyLanguage(){
+document.documentElement.lang=lang;setText('chapterLabel','chapter');setText('statusText','status');setText('objective','objective');$('moveHint').textContent=movement==='arrows'?'↑ ↓ ← → — '+(lang==='ru'?'ДВИЖЕНИЕ':'MOVE'):t('move');$('interactHint').textContent=interactKey.toUpperCase()+' — '+(lang==='ru'?'ВЗАИМОДЕЙСТВИЕ':'INTERACT');
+setText('introText','intro');setText('startBtn','start');setText('settingsTitle','settings');setText('graphicsLabel','graphics');setText('volumeLabel','volume');setText('keyLabel','key');setText('movementLabel','movement');setText('languageLabel','language');setText('saveSettings','save');setText('closeSettings','close');setText('inventoryTitle','inventory');setText('inventoryDesc','inventoryDesc');setText('shopBtn','shop');setText('closeInventory','back');setText('shopTitle','shopTitle');setText('shopDesc','shopDesc');setText('closeShop','back');setText('docTitle','note');setText('docBody','docBody');setText('docHint','docHint');setText('closeDoc','close');setText('caseTitle','caseTitle');setText('caseBody','caseBody');setText('closeCase','continue');setText('endingTitle','complete');setText('endingBody','completeBody');setText('nextRoom','next');setText('endingClose','close');
+$('coinText').textContent='◈ '+coins+' '+t('coins');$('langStart').textContent=lang==='ru'?'EN / RU':'RU / EN';
+$('graphics').value=graphics;$('volume').value=Math.round(soundVolume*100);$('interactKey').value=interactKey.toUpperCase();$('movement').value=movement;$('language').value=lang;
+renderInventory();renderShop();updateCase();
+}
+function makeTexture(base,kind='wall'){
+const c=document.createElement('canvas');c.width=512;c.height=512;const x=c.getContext('2d');x.fillStyle=base;x.fillRect(0,0,512,512);
+let seed=kind.length*83+base.length*17;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+if(kind==='wall'||kind==='plaster'){for(let i=0;i<12000;i++){let v=Math.floor(rand()*45);x.fillStyle=`rgba(${v},${v},${v},${rand()*.18})`;x.fillRect(rand()*512,rand()*512,1+rand()*4,1+rand()*3)}for(let i=0;i<30;i++){x.strokeStyle='rgba(15,12,9,.22)';x.lineWidth=1+rand()*2;x.beginPath();let px=rand()*512,py=rand()*512;x.moveTo(px,py);for(let j=0;j<4;j++){px+=(rand()-.5)*28;py+=rand()*25;x.lineTo(px,py)}x.stroke()}}
+if(kind==='wood'){for(let i=0;i<512;i+=64){x.fillStyle=i%128?'#493a2c':'#584633';x.fillRect(0,i,512,61);x.strokeStyle='#201a14';x.lineWidth=3;x.beginPath();x.moveTo(0,i+62);x.lineTo(512,i+62);x.stroke();for(let j=0;j<22;j++){x.strokeStyle=`rgba(12,8,4,${rand()*.22})`;x.beginPath();let yy=i+rand()*58;x.moveTo(rand()*512,yy);x.bezierCurveTo(rand()*512,yy-3,rand()*512,yy+4,512,yy+(rand()-.5)*7);x.stroke()}}}
+if(kind==='floor'){for(let i=0;i<8;i++){x.fillStyle=i%2?'#29251f':'#332c23';x.fillRect(0,i*64,512,61);x.strokeStyle='#0e0d0b';x.lineWidth=3;x.strokeRect(0,i*64,512,61);for(let j=0;j<18;j++){x.strokeStyle='rgba(160,125,78,.08)';x.beginPath();x.moveTo(rand()*512,i*64+rand()*60);x.lineTo(rand()*512,i*64+rand()*60);x.stroke()}}}
+if(kind==='metal'){for(let i=0;i<4000;i++){x.fillStyle=rand()>.5?'rgba(110,68,36,.17)':'rgba(0,0,0,.18)';x.fillRect(rand()*512,rand()*512,2+rand()*15,1+rand()*5)}}
+const tex=new THREE.CanvasTexture(c);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.colorSpace=THREE.SRGBColorSpace;return tex;
+}
+function mat(color,rough=.85,metal=0,map=null){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal,map})}
+function box(parent,name,pos,size,material){const m=new THREE.Mesh(new THREE.BoxGeometry(...size),material);m.name=name;m.position.set(...pos);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+function cylinder(parent,name,pos,r1,r2,h,material,segments=16){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,segments),material);m.name=name;m.position.set(...pos);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+function addTextPlaque(parent,txt,pos){const c=document.createElement('canvas');c.width=512;c.height=128;const ctx=c.getContext('2d');ctx.fillStyle='#1b1915';ctx.fillRect(0,0,512,128);ctx.strokeStyle='#9b8152';ctx.lineWidth=5;ctx.strokeRect(7,7,498,114);ctx.fillStyle='#d4c39b';ctx.font='26px Georgia';ctx.textAlign='center';ctx.fillText(txt,256,75);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(2.1,.52),new THREE.MeshBasicMaterial({map:tex,transparent:false}));m.position.set(...pos);parent.add(m);return m}
+function buildRoom(){
+scene=new THREE.Scene();scene.background=new THREE.Color(0x08090b);scene.fog=new THREE.FogExp2(0x08090b,.035);
+camera=new THREE.PerspectiveCamera(74,innerWidth/innerHeight,.05,80);camera.position.set(0,1.68,4.3);yaw=Math.PI;camera.rotation.order='YXZ';camera.rotation.y=yaw;
+renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,graphics==='high'?2:1.35));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;$('game').appendChild(renderer.domElement);
+clock=new THREE.Clock();raycaster=new THREE.Raycaster();roomGroup=new THREE.Group();scene.add(roomGroup);
+const plaster=mat(0x756b5c,.98,0,makeTexture('#62594c','plaster'));const darkwall=mat(0x35302a,.95,0,makeTexture('#39332a','wall'));const wood=mat(0x493522,.9,0,makeTexture('#493a2c','wood'));const floorMat=mat(0x393126,.9,0,makeTexture('#332c23','floor'));const metal=mat(0x51483b,.5,.65,makeTexture('#40372c','metal'));const black=mat(0x111110,.45,.35);const dusty=mat(0x5b5143,.95,0,makeTexture('#554a3a','plaster'));
+box(roomGroup,'floor',[0,-.12,0],[10,.24,12],floorMat);box(roomGroup,'ceiling',[0,4.2,0],[10,.2,12],darkwall);
+box(roomGroup,'backwall',[0,2.05,-6],[10,4.2,.22],plaster);box(roomGroup,'leftwall',[-5,2.05,0],[.22,4.2,12],plaster);box(roomGroup,'rightwall',[5,2.05,0],[.22,4.2,12],plaster);
+box(roomGroup,'frontleft',[-3.9,2.05,6],[2.2,4.2,.22],plaster);box(roomGroup,'frontright',[3.9,2.05,6],[2.2,4.2,.22],plaster);box(roomGroup,'lintel',[0,3.8,6],[5.6,.8,.22],plaster);
+// floor skirting and beams
+for(let z=-5.3;z<=5.3;z+=2.65){box(roomGroup,'wall beam left',[-4.86,1.9,z],[.05,3.5,.08],wood);box(roomGroup,'wall beam right',[4.86,1.9,z],[.05,3.5,.08],wood)}
+for(let x=-4.5;x<=4.5;x+=1.5){box(roomGroup,'ceiling beam',[x,4.02,0],[.12,.18,11.8],wood)}
+// door frame and door pivot
+box(roomGroup,'doorframe left',[-1.28,1.65,5.78],[.18,3.3,.35],wood);box(roomGroup,'doorframe right',[1.28,1.65,5.78],[.18,3.3,.35],wood);box(roomGroup,'doorframe top',[0,3.25,5.78],[2.7,.18,.35],wood);
+doorPivot=new THREE.Group();doorPivot.position.set(-1.17,0,5.63);roomGroup.add(doorPivot);door=box(doorPivot,'exit door',[1.08,1.55,0],[2.15,3.1,.16],mat(0x3b2b1d,.88,0,makeTexture('#493522','wood')));door.userData={type:'door'};for(let y=.45;y<2.9;y+=.6)box(doorPivot,'door inset',[1.08,y,.09],[1.75,.045,.025],wood);cylinder(doorPivot,'handle',[1.82,1.55,.15],.045,.045,.12,metal,12).rotation.x=Math.PI/2;
+addTextPlaque(roomGroup,'EXIT / 01',[0,3.45,5.65]);
+// furniture desk on right
+box(roomGroup,'desk top',[2.5,1.1,-1.7],[2.2,.16,1.15],wood);for(const x of [1.6,3.4])for(const z of [-2.1,-1.3])box(roomGroup,'desk leg',[x,.52,z],[.12,1.05,.12],wood);
+box(roomGroup,'drawer',[2.5,.86,-2.18],[.75,.25,.1],darkwall);cylinder(roomGroup,'drawer knob',[2.5,.86,-2.25],.035,.035,.08,metal,12).rotation.x=Math.PI/2;
+// book piles
+for(let i=0;i<3;i++){const b=box(roomGroup,'old book',[2.25+i*.18,1.23,-1.65],[.55,.1,.45],mat([0x40352a,0x302d29,0x55412c][i],.9));b.rotation.y=.12*i}
+box(roomGroup,'cabinet',[3.9,1.2,-4.6],[1.2,2.4,.65],wood);for(let y=.45;y<2.2;y+=.58)box(roomGroup,'cabinet shelf',[3.9,y,-4.23],[1.12,.06,.05],metal);
+// clock on back wall; frozen hands indicate 9
+cylinder(roomGroup,'clock rim',[-.6,2.75,-5.82],.58,.58,.13,wood,32).rotation.x=Math.PI/2;const clockFace=cylinder(roomGroup,'clock face',[-.6,2.75,-5.73],.49,.49,.025,mat(0xc3b99e,.8),32);clockFace.rotation.x=Math.PI/2;clockFace.userData={type:'clock'};
+for(let i=0;i<12;i++){let a=i*Math.PI/6;const tick=box(roomGroup,'clock mark',[-.6+Math.sin(a)*.4,2.75+Math.cos(a)*.4,-5.70],[.035,.09,.018],black);tick.rotation.z=-a}
+const hour=box(roomGroup,'clock hour hand',[-.6,2.75,-5.68],[.045,.24,.025],black);hour.rotation.z=-Math.PI/3;const minute=box(roomGroup,'clock minute hand',[-.6,2.75,-5.675],[.035,.32,.025],black);minute.rotation.z=0;clockHands=[hour,minute];
+// key hidden near the clock, on cabinet top, glints only when nearby
+keyMesh=new THREE.Group();keyMesh.name='old brass key';keyMesh.position.set(3.85,2.48,-4.55);roomGroup.add(keyMesh);
+const keyMetal=mat(0xc29a4f,.32,.8);cylinder(keyMesh,'key ring',[0,0,0],.105,.105,.035,keyMetal,20);cylinder(keyMesh,'key shaft',[.22,0,0],.025,.025,.38,keyMetal,12).rotation.z=Math.PI/2;box(keyMesh,'key tooth',[.36,-.035,0],[.07,.09,.035],keyMetal);keyMesh.userData={type:'key'};keyMesh.visible=false;
+const keyGlow=new THREE.PointLight(0xb98a42,.55,1.5);keyGlow.position.set(3.85,2.8,-4.55);roomGroup.add(keyGlow);
+// note on desk
+noteMesh=new THREE.Group();noteMesh.position.set(2.55,1.21,-1.75);noteMesh.rotation.x=-.06;roomGroup.add(noteMesh);box(noteMesh,'paper',[0,.015,0],[.58,.025,.42],mat(0xc8b991,.96));for(let i=0;i<4;i++)box(noteMesh,'ink line',[-.02,.031,-.12+i*.065],[.38-i*.035,.006,.009],mat(0x4a3b2b,.99));noteMesh.userData={type:'note'}; 
+// wall cracks and water stains, subtle procedural meshes
+for(let i=0;i<18;i++){const x=-4.5+Math.random()*9,z=-5.6+Math.random()*11;const stain=new THREE.Mesh(new THREE.PlaneGeometry(.1+Math.random()*.55,.15+Math.random()*.65),new THREE.MeshBasicMaterial({color:0x24211c,transparent:true,opacity:.1+Math.random()*.1,depthWrite:false}));stain.position.set(x,.4+Math.random()*3.2,z);if(Math.abs(z)>5.8)stain.rotation.y=Math.PI;else if(Math.abs(x)>4.8)stain.rotation.y=x>0?-Math.PI/2:Math.PI/2;roomGroup.add(stain)}
+// scattered rubble and footprints
+for(let i=0;i<25;i++){const g=new THREE.Mesh(new THREE.BoxGeometry(.08+Math.random()*.2,.015,.06+Math.random()*.14),mat(0x29241d,.99));g.position.set(-4.2+Math.random()*8.4,.01,-5.2+Math.random()*10.4);g.rotation.y=Math.random()*Math.PI;roomGroup.add(g)}
+ambient=new THREE.HemisphereLight(0x6d7780,0x21170e,.48);scene.add(ambient);
+const moon=new THREE.DirectionalLight(0x8d9bab,.5);moon.position.set(-4,7,-3);moon.castShadow=true;moon.shadow.mapSize.set(1024,1024);moon.shadow.camera.left=-10;moon.shadow.camera.right=10;moon.shadow.camera.top=10;moon.shadow.camera.bottom=-10;scene.add(moon);
+const lamp=new THREE.PointLight(0xb87940,8,8,2);lamp.position.set(-2.5,3.4,-1.4);roomGroup.add(lamp);const bulb= new THREE.Mesh(new THREE.SphereGeometry(.07,12,12),new THREE.MeshBasicMaterial({color:0xffc77c}));bulb.position.copy(lamp.position);roomGroup.add(bulb);
+flashLight=new THREE.SpotLight(0xffe7c2,24,16,Math.PI/7,.5,1.5);flashLight.position.set(0,1.65,4.2);flashLight.target.position.set(0,1.2,0);camera.add(flashLight);camera.add(flashLight.target);scene.add(camera); 
+// subtle dust motes
+const dustGeo=new THREE.BufferGeometry(), dustPos=[];for(let i=0;i<160;i++)dustPos.push(-4.8+Math.random()*9.6,.3+Math.random()*3.4,-5.8+Math.random()*11.5);dustGeo.setAttribute('position',new THREE.Float32BufferAttribute(dustPos,3));const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xc5b99d,size:.018,transparent:true,opacity:.45}));roomGroup.add(dust);
+// invisible interaction markers are represented by actual meshes; update raycaster each frame
+applyGraphics();
+window.addEventListener('resize',onResize);
+}
+function applyGraphics(){if(!renderer)return;renderer.setPixelRatio(Math.min(devicePixelRatio,graphics==='high'?2:graphics==='medium'?1.35:1));renderer.shadowMap.enabled=graphics!=='low';renderer.shadowMap.needsUpdate=true;scene.fog.density=graphics==='high'?.042:graphics==='medium'?.035:.025;renderer.setSize(innerWidth,innerHeight)}
+function onResize(){if(!camera||!renderer)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}
+function startGame(){if(!scene)buildRoom();started=true;showModal(null);$('mobileControls').style.display=matchMedia('(pointer:coarse)').matches?'block':'none';if(matchMedia('(pointer:fine)').matches)renderer.domElement.requestPointerLock?.();if(!audioCtx){try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();masterGain=audioCtx.createGain();masterGain.gain.value=soundVolume;masterGain.connect(audioCtx.destination);ambientDrone()}catch(e){}}}
+function ambientDrone(){if(!audioCtx)return;const osc=audioCtx.createOscillator(),gain=audioCtx.createGain(),filter=audioCtx.createBiquadFilter();osc.type='sine';osc.frequency.value=48;filter.type='lowpass';filter.frequency.value=90;gain.gain.value=.025;osc.connect(filter);filter.connect(gain);gain.connect(masterGain);osc.start()}
+function playTone(freq=180,duration=.12,type='sine'){if(!audioCtx||soundVolume<=0)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.0001,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.12,audioCtx.currentTime+.015);g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+duration);o.connect(g);g.connect(masterGain);o.start();o.stop(audioCtx.currentTime+duration+.03)}
+function interact(){
+if(!started||paused)return;if(target){const type=target.userData.type;
+if(type==='note'){if(!hasNote){hasNote=true;keyMesh.visible=true;inventoryItems.push({name:t('note'),symbol:'▤'});showToast(t('noteFound'));playTone(540,.18)}$('docBody').textContent=t('docBody');$('docHint').textContent=t('docHint');$('docPaperTitle').textContent=lang==='ru'?'ЗАПИСЬ № 9':'RECORD No. 9';showModal('doc');renderInventory();updateCase();return}
+if(type==='key'){if(!hasNote){showToast(t('needClue'));playTone(100,.2,'square');return}if(!hasKey){hasKey=true;keyMesh.visible=false;inventoryItems.push({name:lang==='ru'?'Латунный ключ':'Brass key',symbol:'⚿'});showToast(t('keyFound'));playTone(720,.2)}renderInventory();updateCase();return}
+if(type==='door'){if(!hasKey){showToast(t('needKey'));playTone(110,.22,'square');return}if(!doorOpen){doorOpen=true;door.userData.type='doorOpen';showToast(t('doorOpen'));playTone(330,.18);setTimeout(()=>playTone(250,.28,'triangle'),90);doorPivot.userData.opening=true;setTimeout(()=>{if(activeModal===null)showModal('ending')},1100)}return}
+if(type==='clock'){showToast(t('needClock'));return}
+}
+showToast(lang==='ru'?'Здесь нечего использовать.':'Nothing to interact with here.');
+}
+function updateTarget(){raycaster.setFromCamera(new THREE.Vector2(0,0),camera);const objects=[noteMesh,keyMesh,door,roomGroup.getObjectByName('clock face')].filter(Boolean);const hits=raycaster.intersectObjects(objects,true);let found=null;for(const h of hits){let o=h.object;while(o&&!o.userData.type&&o.parent)o=o.parent;if(o?.userData.type){found=o;break}}
+target=found;const p=$('prompt');if(!found||paused){p.style.opacity=0;return}let label='';if(found.userData.type==='note')label=hasNote?(lang==='ru'?'Записка — прочитать':'Note — read'):t('read');else if(found.userData.type==='key')label=hasKey?(lang==='ru'?'Ключ найден':'Key collected'):(lang==='ru'?'Осмотреть предмет':'Inspect item');else if(found.userData.type==='door')label=doorOpen?(lang==='ru'?'Дверь открыта':'Door open'):t('open');else if(found.userData.type==='clock')label=lang==='ru'?'Осмотреть часы':'Inspect clock';p.innerHTML='<b>'+interactKey.toUpperCase()+'</b> — '+label;p.style.opacity=1}
+function animate(){requestAnimationFrame(animate);if(!renderer)return;const dt=Math.min(clock.getDelta(),.05);if(started&&!paused){let forward=0,side=0;if(movement==='wasd'){if(held.w)forward++;if(held.s)forward--;if(held.a)side--;if(held.d)side++}else{if(held.arrowup)forward++;if(held.arrowdown)forward--;if(held.arrowleft)side--;if(held.arrowright)side++}
+const v=new THREE.Vector3(side,0,-forward);if(v.lengthSq()>0){v.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),yaw);camera.position.addScaledVector(v,dt*2.25);walkTime+=dt*8;camera.position.y=1.68+Math.sin(walkTime)*.018}else camera.position.y+=(1.68-camera.position.y)*Math.min(1,dt*8);
+camera.position.x=THREE.MathUtils.clamp(camera.position.x,-4.35,4.35);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-5.35,5.25);
+flashLight.position.copy(camera.position);flashLight.target.position.copy(camera.position).add(new THREE.Vector3(0,0,-1).applyEuler(camera.rotation).multiplyScalar(5));
+if(doorPivot.userData.opening){doorPivot.rotation.y+=( -Math.PI/2-doorPivot.rotation.y)*Math.min(1,dt*2.4);if(Math.abs(doorPivot.rotation.y+Math.PI/2)<.04)doorPivot.userData.opening=false}
+updateTarget()
+}renderer.render(scene,camera)}
+function renderInventory(){const g=$('inventoryGrid');if(!g)return;g.innerHTML='';const items=[...inventoryItems];if(items.length===0)g.innerHTML='<div class="slot"><span class="symbol">—</span>'+(lang==='ru'?'Пока пусто':'Empty')+'</div>';for(const it of items){const d=document.createElement('div');d.className='slot';d.innerHTML='<span class="symbol">'+it.symbol+'</span>'+it.name;g.appendChild(d)}}
+const shopItems=[{id:'battery',nameRu:'Батарея фонарика',nameEn:'Flashlight battery',price:50,symbol:'▰'},{id:'medkit',nameRu:'Аптечка',nameEn:'First-aid kit',price:100,symbol:'✚'},{id:'compass',nameRu:'Компас',nameEn:'Compass',price:200,symbol:'⌖'},{id:'toolkit',nameRu:'Набор инструментов',nameEn:'Tool kit',price:500,symbol:'⚒'}];const owned=new Set();
+function renderShop(){const g=$('shopGrid');if(!g)return;g.innerHTML='';for(const it of shopItems){const d=document.createElement('div');d.className='slot';const name=lang==='ru'?it.nameRu:it.nameEn;d.innerHTML='<span class="symbol">'+it.symbol+'</span>'+name+'<br><br><b>◈ '+it.price+'</b><br><button class="btn" style="padding:7px 9px;margin-top:8px" data-buy="'+it.id+'">'+(owned.has(it.id)?t('owned'):t('buy'))+'</button>';g.appendChild(d)}g.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const it=shopItems.find(x=>x.id===b.dataset.buy);if(owned.has(it.id))return;if(coins<it.price){showToast(t('notEnough'));return}coins-=it.price;owned.add(it.id);inventoryItems.push({name:lang==='ru'?it.nameRu:it.nameEn,symbol:it.symbol});$('coinText').textContent='◈ '+coins+' '+t('coins');renderShop();renderInventory();showToast(t('buyOk'))})}
+function updateCase(){$('caseProgress').textContent=t('caseProgress')+(hasNote?'1':'0')+' / 2. '+(hasKey?(lang==='ru'?'Ключ найден.':'Key found.'):lang==='ru'?'Найдите записку и ключ от двери.':'Find the note and the door key.')}
+function toggleSettings(){if(activeModal==='settings')showModal(null);else showModal('settings')}
+$('startBtn').onclick=startGame;$('settingsBtn').onclick=()=>{if(!started){showModal('settings')}else toggleSettings()};$('langStart').onclick=()=>{lang=lang==='ru'?'en':'ru';applyLanguage()};$('inventoryBtn').onclick=()=>{if(started)showModal('inv')};$('caseBtn').onclick=()=>{if(started){updateCase();showModal('case')}};
+$('closeSettings').onclick=()=>showModal(null);$('saveSettings').onclick=()=>{graphics=$('graphics').value;soundVolume=+$('volume').value/100;interactKey=$('interactKey').value.toLowerCase();movement=$('movement').value;lang=$('language').value;if(masterGain)masterGain.gain.value=soundVolume;applyGraphics();applyLanguage();showToast(lang==='ru'?'Настройки сохранены':'Settings saved');showModal(null)};
+$('closeDoc').onclick=()=>{showModal(null);applyLanguage()};$('closeInventory').onclick=()=>showModal(null);$('shopBtn').onclick=()=>showModal('shop');$('closeShop').onclick=()=>showModal('inv');$('closeCase').onclick=()=>showModal(null);$('endingClose').onclick=()=>showModal(null);$('nextRoom').onclick=()=>{room++;showModal(null);showToast(lang==='ru'?'Прототип: следующая комната будет добавлена в следующей сборке.':'Prototype: the next room will be added in the next build.');$('chapterLabel').textContent=t('room')+String(room).padStart(2,'0')+' / '+t('chapter').split('/')[1].trim();};
+window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();held[k]=true;if(k==='escape'&&started){if(activeModal)showModal(null);else toggleSettings()}if(k===interactKey|| (interactKey==='space'&&k===' ')){if(activeModal==='doc'){showModal(null)}else interact()}});
+window.addEventListener('keyup',e=>held[e.key.toLowerCase()]=false);
+rendererSafePointer();
+function rendererSafePointer(){document.addEventListener('mousemove',e=>{if(!started||paused||!document.pointerLockElement)return;yaw-=e.movementX*.0022;pitch-=e.movementY*.002;pitch=THREE.MathUtils.clamp(pitch,-1.25,1.25);camera.rotation.set(pitch,yaw,0,'YXZ')});document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement&&activeModal===null)paused=false})}
+$('mobileInteract').onclick=()=>interact();
+let joyVec={x:0,y:0},joyEl=$('joy');joyEl.addEventListener('pointerdown',e=>{joyEl.setPointerCapture(e.pointerId);joyMove(e)});joyEl.addEventListener('pointermove',e=>{if(e.buttons)joyMove(e)});joyEl.addEventListener('pointerup',()=>{joyVec={x:0,y:0};['w','a','s','d'].forEach(k=>held[k]=false)});function joyMove(e){const r=joyEl.getBoundingClientRect(),x=(e.clientX-r.left-r.width/2)/(r.width/2),y=(e.clientY-r.top-r.height/2)/(r.height/2);joyVec={x:THREE.MathUtils.clamp(x,-1,1),y:THREE.MathUtils.clamp(y,-1,1)};held.d=x>.25;held.a=x<-.25;held.w=y<-.25;held.s=y>.25}
+let lookLast=null;$('lookarea').addEventListener('pointerdown',e=>{lookLast={x:e.clientX,y:e.clientY};$('lookarea').setPointerCapture(e.pointerId)});$('lookarea').addEventListener('pointermove',e=>{if(!lookLast)return;const dx=e.clientX-lookLast.x,dy=e.clientY-lookLast.y;lookLast={x:e.clientX,y:e.clientY};yaw-=dx*.006;pitch=THREE.MathUtils.clamp(pitch-dy*.005,-1.2,1.2);camera.rotation.set(pitch,yaw,0,'YXZ')});$('lookarea').addEventListener('pointerup',()=>lookLast=null);
+applyLanguage();buildRoom();animate();
+</script>
 </body>
 </html>
