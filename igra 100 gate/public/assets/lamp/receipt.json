@@ -1,0 +1,87 @@
+{
+  "id": "01-L1-0269",
+  "name": "台灯(布艺罩) — Tall Linen Cylinder Lamp",
+  "mode": "original",
+  "revision": "017a10ee03c27162609bb64c7c3c7825cd9bbf01dd763d4f943f00466216f386",
+  "version": "compact-v2+orientation-v1",
+  "sourceSha256": "ed32420b454f316087fe5d7aae3ac86fcd25708194f4691a70ad9b683747d5fe",
+  "sourceModule": null,
+  "sourceBytes": 8853880,
+  "bytes": 1964828,
+  "entryBytes": 8045,
+  "defaultState": "on",
+  "states": [
+    "off",
+    "on"
+  ],
+  "stateBytes": {
+    "off": 1955906,
+    "on": 1955906
+  },
+  "verticesBefore": 162264,
+  "verticesAfter": 28759,
+  "indexedGeometries": 20,
+  "geometryBytesBefore": 5192448,
+  "geometryBytesAfter": 1569344,
+  "textureBytesBefore": 1414529,
+  "textureBytesAfter": 1414529,
+  "exactTextures": 11,
+  "colorTexturesOptimized": [],
+  "geometryReconstructionExact": true,
+  "allStatesPreserved": true,
+  "allMaterialsPreserved": true,
+  "files": {
+    "README.md": {
+      "bytes": 3235,
+      "sha256": "c0195ff71fc87bc856b11f537bef4143a596a2dbbd3ae354c21a89d2f8d2089f"
+    },
+    "THREE-LICENSE.txt": {
+      "bytes": 1081,
+      "sha256": "4c40a1ef62450b857c3b2aaf294936304cd552d965fbcd9d32d4c5bcf4ba4454"
+    },
+    "asset.mjs": {
+      "bytes": 8045,
+      "sha256": "a94441f64b90fd07710b9a82d321086214cd127dbf326f41b53a018707446464"
+    },
+    "data.json.gz": {
+      "bytes": 5636,
+      "sha256": "ef52d85e52b5a6d6865f3b27eb2fce0e29dc81f64a89aec3bc6f34dfce49810a"
+    },
+    "loader.mjs": {
+      "bytes": 3198,
+      "sha256": "c4394edfa2f78b47f55304d7126f1e16fd13667107fa2475cfd08c1b300fc42d"
+    },
+    "pack-3.bin.gz": {
+      "bytes": 1939108,
+      "sha256": "708cebaed1f723b84ac55602deed4f6d87a1fd140f81b8623c09a4e831e81f84"
+    },
+    "orientation.json": {
+      "bytes": 966,
+      "sha256": "e825cecdf79a89213ba664fc8785d621e42c0da293df152806ec1c9769218d98"
+    },
+    "orientation.mjs": {
+      "bytes": 860,
+      "sha256": "6dc7982fdd4dbfd44c890c8f3ce300f12fa6be0d09102c2888fb2565570905dc"
+    }
+  },
+  "relativeDirectory": "01-L1-0269/compact-v2-ed32420b454f",
+  "elapsedSeconds": 0.45,
+  "qualification": "original",
+  "reusedFrom": "01-L1-0269/compact-v1-ed32420b454f",
+  "reusedReceiptSha256": "a4cf4a10daa95e0f36d590c2a830eb84c3988b65422cf8af22ba0fc9c355ef88",
+  "textureEncodings": [],
+  "payloadBytes": 1958373,
+  "orientationRevision": "2026-10-13",
+  "orientationStatus": "unknown",
+  "predecessor": {
+    "batch": "2026-10-12",
+    "zipSha256": "ba740281388f72a33bb7a241f18e5f1b49b10f47dcc9b477f966e96770d0b5d5",
+    "receiptSha256": "72ae7f0b4fd80dd43af3b401ec25dedc0b8f40f377134df019fd90fed4f01c57"
+  },
+  "publicDistributionCleanup": {
+    "version": "public-package-privacy-20261026-v1",
+    "internalPathsOmitted": true,
+    "rightsNoticesPreserved": true,
+    "originalBuildMetricsRetained": true
+  }
+}
