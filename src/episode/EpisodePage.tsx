@@ -72,4 +72,3 @@ export default function EpisodePage(){
     {mobile&&<><button className="ep-fullscreen ep-icon" aria-label={t('Полный экран','Fullscreen')} onClick={()=>void fullscreen()}><Maximize size={17}/></button><div className="ep-rotate"><RotateCw size={46}/><h2>{t('Поверни телефон','Rotate your phone')}</h2><p>{t('Дом лучше исследовать в горизонтальном положении.','Explore the house in landscape orientation.')}</p></div></>}
   </main>;
 }
-

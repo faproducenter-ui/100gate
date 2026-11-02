@@ -180,4 +180,3 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   for(const t of targets){if(t.kind==='door'&&t.open&&t.pivot){t.angle=t.id==='hatch'?Math.PI:Number(t.pivot.userData.openAngle);if(t.id==='hatch')t.pivot.rotation.x=t.angle;else t.pivot.rotation.y=t.angle;}}
   progress(1);return {targets,colliders,roots,dust,lamp,hatch,glow};
 }
-

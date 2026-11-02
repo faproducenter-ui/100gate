@@ -44,4 +44,3 @@ try{
 }catch(e){console.log('FAILED STATE',JSON.stringify(await state()));await page.screenshot({path:resolve(out,'verification-failure.png')});throw e;}finally{writeFileSync(resolve(out,'verification.json'),JSON.stringify({checks:results,errors},null,2));await browser.close();}
 
 await import('./verify-mobile.mjs');
-
