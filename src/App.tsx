@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router'
-import Home from './pages/Home'
+import Home from './episode/EpisodePage'
 
 export default function App() {
   return (

@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import { randomBytes } from 'node:crypto';
+const api='https://save-api-production-abac.up.railway.app';
+const token=randomBytes(32).toString('hex');
+const headers={'Content-Type':'application/json',Authorization:`Bearer ${token}`};
+const save={version:1,flags:['free'],items:['knife'],read:[],doors:[],moved:[],position:[0,3.6,2],yaw:0,pitch:0,room:0};
+assert.equal((await fetch(api+'/health')).status,200);
+assert.equal((await fetch(api+'/api/save')).status,401);
+assert.equal((await fetch(api+'/api/save',{headers})).status,404);
+assert.equal((await fetch(api+'/api/save',{method:'PUT',headers,body:JSON.stringify({version:99})})).status,400);
+assert.equal((await fetch(api+'/api/save',{method:'PUT',headers,body:JSON.stringify(save)})).status,200);
+const result=await (await fetch(api+'/api/save',{headers})).json();assert.deepEqual(result.items,['knife']);assert.deepEqual(result.position,[0,3.6,2]);
+assert.equal((await fetch(api+'/api/save',{headers:{...headers,Authorization:`Bearer ${randomBytes(32).toString('hex')}`}})).status,404);
+assert.equal((await fetch(api+'/api/save',{headers:{...headers,Origin:'https://unrelated.example'}})).status,403);
+console.log('PASS PostgreSQL save roundtrip, payload validation, device isolation and CORS');

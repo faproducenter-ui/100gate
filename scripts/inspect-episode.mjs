@@ -1,0 +1,13 @@
+import { chromium } from 'playwright';
+import { resolve } from 'node:path';
+import { testBrowser } from './browser.mjs';
+const browser=await testBrowser();
+const page=await browser.newPage({viewport:{width:1440,height:900}});
+const errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+await page.goto('http://127.0.0.1:3000/');
+await page.waitForFunction(()=>document.querySelector('.episode')?.dataset.mode==='title',{},{timeout:60000});
+await page.screenshot({path:resolve('../../outputs/100gate-title.png')});
+await page.getByTestId('start').click();await page.waitForTimeout(800);
+console.log(JSON.stringify({errors,state:await page.evaluate(()=>window.__episodeTest?.state())},null,2));
+await page.screenshot({path:resolve('../../outputs/100gate-attic.png')});
+await browser.close();

@@ -8,7 +8,11 @@
     "build": "tsc -b && vite build",
     "check": "tsc -b",
     "preview": "vite preview",
-    "verify": "node scripts/verify-game.mjs"
+    "start": "node server/serve.mjs",
+    "verify:episode": "node scripts/verify-episode.mjs",
+    "verify": "node scripts/verify-episode.mjs",
+    "verify:cloud": "node scripts/verify-cloud.mjs",
+    "publish:pages": "node scripts/publish-pages.mjs"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.17.3",
