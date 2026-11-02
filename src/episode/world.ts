@@ -96,9 +96,11 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   wall(-6,5.2,0,.2,3.4,10,wood);wall(6,5.2,0,.2,3.4,10,wood);wall(0,5.1,5,12,3,.2,wood);
   // Front gable divided around its moonlit window.
   wall(-3.65,5.3,-5,4.7,3.6,.2,wood);wall(3.65,5.3,-5,4.7,3.6,.2,wood);box(scene,0,3.95,-5,2.6,.7,.2,wood);box(scene,0,7.1,-5,2.6,1.8,.2,wood);
-  const blue=new T.MeshBasicMaterial({color:0x779ba5});box(scene,0,5.5,-5.06,2.45,2.3,.025,blue);
+  const skyCanvas=globalThis.document.createElement('canvas');skyCanvas.width=skyCanvas.height=1024;const sky=skyCanvas.getContext('2d')!;const skyGradient=sky.createLinearGradient(0,0,0,1024);skyGradient.addColorStop(0,'#66828d');skyGradient.addColorStop(1,'#b5c3be');sky.fillStyle=skyGradient;sky.fillRect(0,0,1024,1024);
+  function branch(x:number,y:number,length:number,angle:number,width:number,depth:number){const endX=x+Math.cos(angle)*length,endY=y+Math.sin(angle)*length;sky.strokeStyle='#283b40';sky.lineWidth=width;sky.lineCap='round';sky.beginPath();sky.moveTo(x,y);sky.quadraticCurveTo((x+endX)/2+length*.08,(y+endY)/2,endX,endY);sky.stroke();if(depth>0){branch(endX,endY,length*(.62+rnd()*.13),angle-.25-rnd()*.35,width*.65,depth-1);branch(endX,endY,length*(.58+rnd()*.16),angle+.25+rnd()*.4,width*.6,depth-1);}}
+  branch(-80,1100,400,-1.2,19,7);branch(940,1100,310,-1.75,14,7);const skyMap=new T.CanvasTexture(skyCanvas);skyMap.colorSpace=T.SRGBColorSpace;
+  const blue=new T.MeshBasicMaterial({map:skyMap});box(scene,0,5.5,-5.06,2.45,2.3,.025,blue);
   const glass=new T.MeshPhysicalMaterial({color:0xb3ccce,transparent:true,opacity:.13,roughness:.2,metalness:.15});box(scene,0,5.5,-4.94,2.4,2.25,.015,glass);
-  for(let i=0;i<8;i++){const tree=new T.Group();tree.position.set(-1.15+i*.32,4.35,-5.015);box(tree,0,.6,0,.018,1.3,.008,black);for(let j=0;j<5;j++){const twig=box(tree,0,.3+j*.19,0,.28-j*.04,.014,.009,black);twig.rotation.z=(j%2?1:-1)*.4;}scene.add(tree);}
   for(const x of [-1.25,0,1.25])box(scene,x,5.5,-4.96,.055,2.4,.08,dark);box(scene,0,5.5,-4.95,2.6,.06,.1,dark);
   for(const a of [-1,1]){const roof=box(scene,a*3,6.7,0,6.8,.15,10.4,dark);roof.rotation.z=-a*.4;}
   for(let z=-4.8;z<=5;z+=1.6){for(const a of [-1,1]){const beam=box(scene,a*2.8,6.58,z,6.5,.23,.23);beam.rotation.z=-a*.4;}box(scene,0,5.94,z,11.8,.23,.23,dark);}
