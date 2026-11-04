@@ -8,3 +8,4 @@ Original prompt: Refine the existing 100gate Three.js horror game autonomously i
 - Iteration 1 validated: 120 Hz movement, furniture occlusion, dev QA hooks and skill-client wrapper. Full chapter + iPhone/Pixel + new motion regression passed. Evidence: baseline.json, after.json, motion-regression.json, skill-client/.
 - Next: door leaf safety, explicit postprocess cleanup, Blender tangent repair. Do not push/deploy.
 - Iteration 2 verified: swept door safety, composer/pass ownership cleanup, headed Chromium full chapter and mobile emulation. Local-only changes; no publication.
+- Iteration 3 verified: live Blender PBR hand baking, MikkTSpace export, GLB validation, same-scene before/after screenshots, complete regression including weather/pack/episode/mobile. Editable source is art/character-hands.blend. Local revision chapter1-refinement-05. No publication.

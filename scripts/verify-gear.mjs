@@ -25,7 +25,7 @@ try{
     await wait(id=>window.__episodeTest.state().target===id,id);
   };
   await wait(()=>window.__episodeTest.state().rig.authored&&window.__episodeTest.state().rig.body);
-  assert.equal(await page.locator('main').getAttribute('data-release'),'chapter1-foley-04');
+  assert.equal(await page.locator('main').getAttribute('data-release'),'chapter1-refinement-05');
   await wait(()=>window.__episodeTest.foley().ready);
   for(const id of ['gear-flashlight','gear-brass-key','player-boot','player-trouser','player-hand-open','player-hand-grip','player-sleeve','player-torso','player-upper-shadow'])assert(loaded.has(id+'.glb'),id+' was not downloaded');
   assert((await state()).rig.shadowUpper,'full silhouette not active with shadows enabled');

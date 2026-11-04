@@ -9,12 +9,12 @@
 ## Issue register
 | ID | Priority | Evidence / root cause | State |
 |---|---|---|---|
-| Q01 | HIGH | Furniture hold survives a move behind a wall. Baseline browser test starts R in storeroom and stages player in bedroom; storeCabinet still reaches saved.moved. Hold retention checks distance only. | Fix implemented; regression pending |
-| Q02 | HIGH | Sprint covers 8.668 m vs 5.675 m over ~2.22 s under 129 ms rendering frames. tick clamps elapsed time to 85 ms and physics uses variable timestep. | 120 Hz movement substeps implemented; regression pending |
-| Q03 | HIGH | EffectComposer.dispose does not dispose its passes; UnrealBloomPass owns additional targets and OutputPass owns a shader. Source-confirmed resource-lifetime defect, not a measured long-term leak magnitude. | Pending |
-| Q04 | MEDIUM | Diagnostic game client cannot import project Playwright from the skill folder; lacks native render_game_to_text / advanceTime, and explicit 5 s start-click timeout is shorter than actual cold loading. | Game hooks added; wrapper pending |
-| Q05 | MEDIUM | Hand GLB lacks tangents despite normal map. glTF validator warns about runtime-generated tangent space. | Blender repair pending |
-| Q06 | MEDIUM | Open doors can rotate a leaf into the player; current close guard only measures distance to door root. | Source finding; reproducer and fix pending |
+| Q01 | HIGH | Furniture hold survives a move behind a wall. Baseline browser test starts R in storeroom and stages player in bedroom; storeCabinet still reaches saved.moved. Hold retention checks distance only. | Verified in iteration 1 |
+| Q02 | HIGH | Sprint covers 8.668 m vs 5.675 m over ~2.22 s under 129 ms rendering frames. tick clamps elapsed time to 85 ms and physics uses variable timestep. | Verified in iteration 1 |
+| Q03 | HIGH | EffectComposer.dispose does not dispose its passes; UnrealBloomPass owns additional targets and OutputPass owns a shader. Source-confirmed resource-lifetime defect, not a measured long-term leak magnitude. | Ownership fix verified in iteration 2 |
+| Q04 | MEDIUM | Diagnostic game client cannot import project Playwright from the skill folder; lacks native render_game_to_text / advanceTime, and explicit 5 s start-click timeout is shorter than actual cold loading. | Verified game hooks + project wrapper in iteration 1 |
+| Q05 | MEDIUM | Hand GLB lacks tangents despite normal map. glTF validator warns about runtime-generated tangent space. | Verified Blender bake/export and browser import in iteration 3 |
+| Q06 | MEDIUM | Open doors can rotate a leaf into the player; current close guard only measures distance to door root. | Reproduced and verified fixed in iteration 2 |
 | Q07 | MEDIUM | Current crouch/ceiling model is analytic and supports the current house, not arbitrary terrain/rigid-body interaction. No claim of full rigid-body physics. | Deferred; protect current traversal |
 | Q08 | LOW | Some installed skill shared reference documents are absent; not a runtime defect. game-studio is not installed. | Not changed |
 
@@ -44,3 +44,19 @@ No CRITICAL issue has been reproduced in this session. This is not a certificati
 - Test-environment finding: this machine's headless hardware-GL attempt renders at roughly 0.9–2.2 seconds/frame. Transient jump checks time out there even though key input is accepted. A real headed browser passes; deterministic stepping also passes. This is not used to claim production FPS.
 - Registered jump observers before input and made interaction waits tolerate software-rendering latency. Added opt-in TEST_HARDWARE_GL / TEST_HEADED test flags; portable software mode remains default.
 - Next art pass: a licensed CC0 skin atlas has been baked in Blender. Not yet copied into the runtime at this checkpoint.
+
+### Iteration 3 — verified
+- In the connected live Blender, retained both editable anatomical hand meshes and original/default scene. Baked color, normal and roughness from Mindfront's Aksel skin (official MakeHuman Skins 02, CC0) onto a dedicated hand UV atlas.
+- Exported evaluated GLBs with UV and MikkTSpace tangents. The export guard rejects accidental extra scene geometry. Removed unused vertex colors from export to avoid multiplying the skin texture.
+- glTF validator: zero errors and zero warnings for both optimized hands. Final sizes: 689556 / 689604 bytes. Color/normal 1024, roughness 512; exact wrist/object calibration bounds preserved.
+- Editable source committed at art/character-hands.blend (1.59 MB); authoring scripts and provenance are alongside the code. Original external character board remains untouched.
+- Updated local asset revision to chapter1-refinement-05. No deployment.
+- Visually inspected before/after screenshots from the same flashlight scene and key interaction. New color variation and hand details are visible; this is an asset-material refinement, not a claim of a photogrammetric/AAA character.
+- PASS build, hand contract, gear (flashlight/key/stride/full silhouette), intro, inventory and consumption/reload, WebKit landscape inventory, High weather/rain/snow/reflections with no shader errors, full chapter and iPhone/Pixel emulation.
+- Before/after screenshots: before-skin-flashlight.png / after-skin-flashlight.png and before-skin-key.png / after-skin-key.png in the session evidence folder.
+
+## Remaining scope
+- This session validates the implemented first chapter and selected critical paths, not all 100 planned rooms.
+- Arbitrary slopes/dynamic rigid-body props, exhaustive mesh collision coverage, longer heap/GPU-resource soak tests, real mobile hardware profiling and the earlier Spector-instrumentation warnings remain outside the verified results.
+- The headless hardware-GL run is not a usable performance benchmark on this host. Use headed hardware-backed Chromium for live interaction checks, or explicit deterministic stepping for repeatable physics tests.
+- Art script workspace paths are local; portability of the authoring pipeline is a remaining LOW-priority task.
