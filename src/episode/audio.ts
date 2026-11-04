@@ -9,7 +9,9 @@ export class Foley {
   volume = .65;
   start() {
     if (!this.context) {
-      this.context = new AudioContext(); this.master = this.context.createGain(); this.master.connect(this.context.destination);
+      const WebAudio=window.AudioContext??(window as Window&{webkitAudioContext?:typeof AudioContext}).webkitAudioContext;
+      if(!WebAudio)return;
+      this.context = new WebAudio(); this.master = this.context.createGain(); this.master.connect(this.context.destination);
       this.master.gain.value = this.volume;
       this.noise = this.context.createBuffer(1, this.context.sampleRate * 3, this.context.sampleRate);
       const data = this.noise.getChannelData(0); let last = 0;
@@ -25,13 +27,13 @@ export class Foley {
   }
   pause(paused: boolean) { this.active = !paused; if (this.context) void (paused ? this.context.suspend() : this.context.resume()); }
   setVolume(v: number) { this.volume = v; if (this.master && this.context) this.master.gain.setTargetAtTime(v, this.context.currentTime, .08); }
-  play(kind: 'step' | 'key' | 'door' | 'paper' | 'scrape' | 'cut' | 'click' | 'land') {
+  play(kind: 'step' | 'key' | 'door' | 'paper' | 'scrape' | 'cut' | 'click' | 'land' | 'drink' | 'thunder') {
     if (!this.active || !this.context || !this.master || !this.noise) return;
     const c = this.context; const now = c.currentTime;
     const source = c.createBufferSource(); source.buffer = this.noise;
     const filter = c.createBiquadFilter(); filter.type = kind === 'key' ? 'highpass' : 'lowpass';
-    filter.frequency.value = { step: 480, key: 2200, door: 260, paper: 3500, scrape: 650, cut: 1600, click: 1800, land: 160 }[kind];
-    const gain = c.createGain(); const duration = { step: .16, key: .4, door: 1.1, paper: .35, scrape: .7, cut: .5, click: .06, land: .3 }[kind];
+    filter.frequency.value = { step: 480, key: 2200, door: 260, paper: 3500, scrape: 650, cut: 1600, click: 1800, land: 160, drink:410, thunder:125 }[kind];
+    const gain = c.createGain(); const duration = { step: .16, key: .4, door: 1.1, paper: .35, scrape: .7, cut: .5, click: .06, land: .3, drink:.47, thunder:1.65 }[kind];
     gain.gain.setValueAtTime(.001, now); gain.gain.linearRampToValueAtTime(kind === 'scrape' ? .55 : .32, now + .02); gain.gain.exponentialRampToValueAtTime(.001, now + duration);
     source.connect(filter).connect(gain).connect(this.master); source.start(now, Math.random()); source.stop(now + duration);
     if (kind === 'door' || kind === 'key') {

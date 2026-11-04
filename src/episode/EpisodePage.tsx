@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { ArrowUp, BookOpen, ChevronRight, Flashlight, Footprints, Hand, KeyRound, Maximize, Pause, PersonStanding, RotateCw, Settings as Gear, Volume2, X } from 'lucide-react';
+import { ArrowUp, Backpack, BookOpen, BookText, Candy, ChevronRight, Compass, Droplets, FileText, Flashlight, Footprints, Hand, KeyRound, Maximize, NotebookPen, PenLine, PersonStanding, RotateCw, Settings as Gear, Smartphone, Volume2, X } from 'lucide-react';
 import { Episode, type View } from './runtime';
 import { DEFAULT_SETTINGS, DOCUMENTS, ROOMS, newSave, text } from './data';
+import { PACK, PACK_IDS, remaining, type PackItem } from './pack';
 import './episode.css';
 
 const initial:View={mode:'loading',loading:0,room:0,objective:'',prompt:'',progress:0,message:'',save:newSave(),settings:DEFAULT_SETTINGS,cloud:'local'};
+const packIcons={phone:Smartphone,book:BookText,compass:Compass,pen:PenLine,sheet:FileText,notebook:NotebookPen,candy:Candy,water:Droplets};
 function TouchButton({game,code,label,children,className=''}:{game:Episode|null;code:string;label:string;children:React.ReactNode;className?:string}){
   const pressed=useRef<string|null>(null);
   const release=(cancel=false)=>{const active=pressed.current;if(active&&(active!=='ShiftLeft'||cancel))game?.touchButton(active,false);pressed.current=null;};
@@ -13,6 +15,7 @@ function TouchButton({game,code,label,children,className=''}:{game:Episode|null;
 export default function EpisodePage(){
   const canvas=useRef<HTMLCanvasElement>(null);const runtime=useRef<Episode|null>(null);const [view,setView]=useState<View>(initial);
   const [settingsOpen,setSettingsOpen]=useState(false);const [newConfirm,setNewConfirm]=useState(false);
+  const [packSelected,setPackSelected]=useState<PackItem>('phone');
   const [mobile]=useState(()=>matchMedia('(pointer: coarse)').matches||navigator.maxTouchPoints>0);
   const [stick,setStick]=useState({x:0,y:0});const joy=useRef<{id:number;x:number;y:number}|null>(null);const look=useRef<{id:number;x:number;y:number}|null>(null);
   const t=(ru:string,en:string)=>text(view.settings.language,ru,en);const language=view.settings.language==='ru'?0:1;
@@ -48,17 +51,39 @@ export default function EpisodePage(){
         {view.mode==='playing'&&<><div className="ep-reticle"/><div className="ep-objective"><span>{t('ТЕКУЩАЯ ЦЕЛЬ','CURRENT OBJECTIVE')}</span><p>{objective}</p></div>{view.prompt&&<div className="ep-prompt">{mobile?view.prompt.replace(/УДЕРЖИВАЙ R|Зажми R|HOLD R|Hold R/g,t('Удерживай кнопку','Hold the button')).replace(/^[EFG] · /,''):view.prompt}{view.progress>0&&<div className="ep-hold"><i style={{width:`${view.progress*100}%`}}/></div>}</div>}{view.message&&<div className="ep-message" role="status">{view.message}</div>}</>}
       </div>
       <button className="ep-gear ep-icon" aria-label={t('Пауза и настройки','Pause and settings')} onClick={()=>{runtime.current?.pause();setSettingsOpen(true);}}><Gear size={20}/></button>
-      {!mobile&&view.mode==='playing'&&<div className="ep-control-strip">WASD <span>{t('ходьба','move')}</span> Ctrl <span>{t('бег','run')}</span> Shift <span>{t('присесть','crouch')}</span> Space <span>{t('прыжок','jump')}</span> T <span>{t('фонарь','light')}</span> Esc <span>{t('пауза','pause')}</span></div>}
+      {view.mode==='playing'&&view.save.items.includes('bag')&&<button className="ep-bag-toggle ep-icon" data-testid="bag-toggle" aria-label={t('Открыть сумку','Open bag')} onClick={()=>runtime.current?.toggleBag()}><Backpack size={20}/>{!mobile&&<kbd>H</kbd>}</button>}
+      {!mobile&&view.mode==='playing'&&<div className="ep-control-strip">WASD <span>{t('ходьба','move')}</span> Ctrl <span>{t('бег','run')}</span> Shift <span>{t('присесть','crouch')}</span> Space <span>{t('прыжок','jump')}</span> T <span>{t('фонарь','light')}</span> H <span>{t('сумка','bag')}</span> Esc <span>{t('пауза','pause')}</span></div>}
     </>}
+    {view.mode==='bag'&&<div className="ep-pack-overlay">
+      <section className="ep-pack" role="dialog" aria-modal="true" aria-labelledby="ep-pack-title">
+        <header><div><span className="ep-kicker">{t('ЛИЧНЫЕ ВЕЩИ · А. СОКОЛОВ','PERSONAL BELONGINGS · A. SOKOLOV')}</span><h2 id="ep-pack-title">{t('Дорожная сумка','Travel bag')}</h2></div><button className="ep-icon" data-testid="bag-close" aria-label={t('Закрыть сумку','Close bag')} onClick={()=>runtime.current?.toggleBag()}><X size={21}/></button></header>
+        <div className="ep-pack-layout">
+          <div className="ep-pack-items" aria-label={t('Предметы в сумке','Items in the bag')}>{PACK_IDS.map(id=>{
+            const Icon=packIcons[id];const amount=id==='candy'||id==='water'?remaining(view.save.flags,id):null;
+            return <button key={id} data-testid={`pack-${id}`} aria-pressed={packSelected===id} onClick={()=>setPackSelected(id)}><Icon size={21}/><span>{PACK[id].title[language]}</span>{amount!==null&&<small>×{amount}</small>}</button>;
+          })}</div>
+          <article className="ep-pack-detail" aria-live="polite">
+            <span className="ep-kicker">{t('ОСМОТР ПРЕДМЕТА','ITEM INSPECTION')}</span><h3>{PACK[packSelected].title[language]}</h3><p>{PACK[packSelected].detail[language]}</p>
+            {packSelected==='notebook'&&<ul>{view.save.read.length?view.save.read.map(id=>DOCUMENTS[id]&&<li key={id}>{DOCUMENTS[id].title[language]}</li>):<li>{t('Пока нет записей','No entries yet')}</li>}</ul>}
+            <div className="ep-pack-actions">
+              <button className="ep-secondary" data-testid="pack-equip" disabled={(packSelected==='candy'||packSelected==='water')&&!remaining(view.save.flags,packSelected)} onClick={()=>runtime.current?.packEquip(packSelected)}><Hand size={15}/>{t('Взять в руку','Hold in hand')}</button>
+              {(packSelected==='candy'||packSelected==='water')&&<button className="ep-primary" data-testid="pack-consume" disabled={!remaining(view.save.flags,packSelected)} onClick={()=>runtime.current?.consume(packSelected)}>{packSelected==='candy'?t('Съесть','Eat'):t('Выпить','Drink')}</button>}
+            </div>
+          </article>
+        </div>
+        <footer><span>{mobile?t('КОСНИСЬ ПРЕДМЕТА','TAP AN ITEM'):t('H / ESC · ЗАКРЫТЬ','H / ESC · CLOSE')}</span><div>{view.save.items.includes('knife')&&<button onClick={()=>runtime.current?.packEquip('knife')}>{t('Нож','Knife')}</button>}{view.save.items.includes('flashlight')&&<button onClick={()=>runtime.current?.packEquip('flashlight')}><Flashlight size={13}/>{t('Фонарь','Flashlight')}</button>}{view.held&&<button onClick={()=>runtime.current?.packEquip()}>{t('Убрать из рук','Stow held item')}</button>}</div></footer>
+      </section>
+    </div>}
     {view.mode==='document'&&view.document&&<div className="ep-document-overlay"><article className="ep-document"><div className="ep-doc-head"><span>{t('ЛИЧНЫЙ АРХИВ · СОКОЛОВЫ','PERSONAL ARCHIVE · SOKOLOV FAMILY')}</span><button aria-label={t('Положить документ','Put document back')} onClick={()=>runtime.current?.touchButton('KeyF',true)}><X size={18}/></button></div><h2>{DOCUMENTS[view.document]?.title[language]}</h2><div className="ep-document-body">{DOCUMENTS[view.document]?.body[language]}</div><footer><span>№ {String(Object.keys(DOCUMENTS).indexOf(view.document)+1).padStart(3,'0')}</span><button onClick={()=>runtime.current?.touchButton('KeyF',true)}>{mobile?t('Положить обратно','Put back'):t('F · Положить обратно','F · Put back')}</button></footer></article></div>}
     {view.mode==='paused'&&!settingsOpen&&<div className="ep-overlay"><section className="ep-card ep-pause"><span className="ep-kicker">100GATE / {t('ИСТОРИЯ ПРИОСТАНОВЛЕНА','THE STORY IS PAUSED')}</span><h2>{t('Перевести дух.','Take a breath.')}</h2><p>{t('Дом подождёт.','The house will wait.')}</p><button className="ep-primary" onClick={()=>runtime.current?.resume()}>{t('Продолжить','Resume')}<ChevronRight size={17}/></button><button className="ep-secondary" onClick={()=>setSettingsOpen(true)}><Gear size={16}/>{t('Настройки','Settings')}</button><button className="ep-text" onClick={()=>runtime.current?.title()}>{t('В главное меню','Main menu')}</button><small>{cloudText}</small><span className="ep-esc">{!mobile&&t('ESC — вернуться в игру','ESC — return to the game')}</span></section></div>}
     {settingsOpen&&<div className="ep-overlay ep-settings-overlay"><section className="ep-card ep-settings"><header><div><span className="ep-kicker">{t('ПОД СЕБЯ','MAKE IT YOURS')}</span><h2>{t('Настройки','Settings')}</h2></div><button className="ep-icon" aria-label={t('Закрыть настройки','Close settings')} onClick={()=>setSettingsOpen(false)}><X size={20}/></button></header>
       <label><span>{t('Язык','Language')}</span><select value={view.settings.language} onChange={e=>runtime.current?.settingsChange({language:e.target.value as 'ru'|'en'})}><option value="ru">Русский</option><option value="en">English</option></select></label>
       <label><span>{t('Графика','Graphics')}</span><select value={view.settings.quality} onChange={e=>runtime.current?.settingsChange({quality:e.target.value as 'low'|'medium'|'high'})}><option value="high">{t('Высокая · тени и свечение','High · shadows and bloom')}</option><option value="medium">{t('Средняя · мягкие тени','Medium · soft shadows')}</option><option value="low">{t('Низкая · без теней','Low · no shadows')}</option></select></label>
+      <label><span>{t('Погода снаружи','Outdoor weather')}</span><select value={view.settings.weather} onChange={e=>runtime.current?.settingsChange({weather:e.target.value as 'rain'|'snow'})}><option value="rain">{t('Дождь и гроза','Rain and thunder')}</option><option value="snow">{t('Снег','Snow')}</option></select></label>
       <label className="ep-slider"><span><Volume2 size={16}/>{t('Громкость','Volume')}<b>{Math.round(view.settings.volume*100)}%</b></span><input aria-label={t('Громкость','Volume')} type="range" min="0" max="1" step=".05" value={view.settings.volume} onChange={e=>runtime.current?.settingsChange({volume:Number(e.target.value)})}/></label>
       <label className="ep-slider"><span>{t('Чувствительность мыши / обзора','Mouse / look sensitivity')}<b>{view.settings.sensitivity.toFixed(1)}</b></span><input aria-label={t('Чувствительность','Sensitivity')} type="range" min=".2" max="2" step=".1" value={view.settings.sensitivity} onChange={e=>runtime.current?.settingsChange({sensitivity:Number(e.target.value)})}/></label>
       <label className="ep-checkbox"><span>{t('Движение головы при ходьбе','Head movement while walking')}</span><input type="checkbox" checked={view.settings.headBob} onChange={e=>runtime.current?.settingsChange({headBob:e.target.checked})}/></label>
-      <div className="ep-bindings"><span>E — {t('подобрать / отпереть','take / unlock')}</span><span>G — {t('открыть рукой','open by hand')}</span><span>R — {t('удерживать: двигать','hold: move furniture')}</span><span>F — {t('изучить / положить','examine / put back')}</span><span>Ctrl — {t('бежать','run')}</span><span>Shift — {t('присесть','crouch')}</span><span>Space — {t('прыгнуть','jump')}</span><span>T — {t('фонарь','flashlight')}</span></div>
+      <div className="ep-bindings"><span>E — {t('подобрать / отпереть','take / unlock')}</span><span>G — {t('открыть рукой','open by hand')}</span><span>R — {t('удерживать: двигать','hold: move furniture')}</span><span>F — {t('изучить / положить','examine / put back')}</span><span>Ctrl — {t('бежать','run')}</span><span>Shift — {t('присесть','crouch')}</span><span>Space — {t('прыгнуть','jump')}</span><span>T — {t('фонарь','flashlight')}</span><span>H — {t('сумка','bag')}</span></div>
       <footer><small>{cloudText}</small><button className="ep-text" onClick={()=>void runtime.current?.restoreCloud()}>{t('Восстановить серверную копию','Restore server backup')}</button></footer><button className="ep-primary" onClick={()=>{setSettingsOpen(false);if(view.mode==='paused')runtime.current?.resume();}}>{t('Готово','Done')}<ChevronRight size={16}/></button>
     </section></div>}
     {newConfirm&&<div className="ep-overlay"><section className="ep-card"><h2>{t('Начать сначала?','Start again?')}</h2><p>{t('Текущее сохранение этой главы будет заменено.','This chapter’s current save will be replaced.')}</p><button className="ep-primary" onClick={()=>begin(true)}>{t('Новая история','New story')}</button><button className="ep-secondary" onClick={()=>setNewConfirm(false)}>{t('Отмена','Cancel')}</button></section></div>}

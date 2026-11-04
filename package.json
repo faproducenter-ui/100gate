@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "start": "node server/serve.mjs",
     "verify:episode": "node scripts/verify-episode.mjs",
+    "verify:pack": "node scripts/verify-pack.mjs",
+    "verify:weather": "node scripts/verify-weather.mjs",
     "verify": "node scripts/verify-episode.mjs",
     "verify:cloud": "node scripts/verify-cloud.mjs",
     "publish:pages": "node scripts/publish-pages.mjs"
