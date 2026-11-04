@@ -40,7 +40,9 @@ export class Episode {
   private target?:Target;private hold=0;private holdId='';private holdStarted=0;private ray=new T.Raycaster();private flashlight:T.SpotLight;
   private chairBeat=-1;private stepSide=false;
   private player:PlayerRig;private flashOn=false;private held?:PropId;private itemUntil=0;private useUntil=0;private reachUntil=0;private carryAfter?:{id?:PropId;flash:boolean};
-  private movement=new T.Vector2();
+  private movement=new T.Vector2();private motionDebt=0;
+  private manualClock=false;private frameTimes:number[]=[];
+  private holdRay=new T.Raycaster();private holdPoint=new T.Vector3();private holdDirection=new T.Vector3();private holdBounds=new T.Box3();
   private settings:Settings;private save:Save;private mode:Mode='loading';private loading=0;private document?:string;
   private message='';private messageUntil=0;private cloud='local';private cloudTimer:ReturnType<typeof setTimeout>|undefined;
   private savedPosition=new T.Vector3();private saveClock=0;private prePause:'playing'|'document'='playing';
@@ -87,7 +89,8 @@ export class Episode {
       (window as unknown as Record<string,unknown>).__episodeTest={
         state:()=>({mode:this.mode,save:structuredClone(this.save),position:this.position.toArray(),yaw:this.yaw,pitch:this.pitch,grounded:this.grounded,target:this.target?.id,hold:this.hold,settings:{...this.settings},rig:this.player.state(),lamp:this.flashlight.intensity>0,weather:this.house?.weather.snapshot()}),
         foley:()=>this.audio.state(),
-        pose:(x:number,y:number,z:number,yaw=0,pitch=0)=>{this.position.set(x,y,z);this.yaw=yaw;this.pitch=pitch;this.velocity.set(0,0,0);this.movement.set(0,0);},
+        pose:(x:number,y:number,z:number,yaw=0,pitch=0)=>{this.position.set(x,y,z);this.yaw=yaw;this.pitch=pitch;this.velocity.set(0,0,0);this.movement.set(0,0);this.motionDebt=0;this.grounded=true;},
+        diagnostics:()=>({render:{...this.renderer.info.render},memory:{...this.renderer.info.memory},frameTimes:[...this.frameTimes],motionDebt:this.motionDebt}),
         aim:(id:string)=>{const t=this.house?.targets.find(t=>t.id===id);if(t){const point=new T.Box3().setFromObject(t.root).getCenter(new T.Vector3());this.camera.position.copy(this.position).add(new T.Vector3(0,1.68,0));const d=point.sub(this.camera.position);this.yaw=Math.atan2(-d.x,-d.z);this.pitch=Math.atan2(d.y,Math.hypot(d.x,d.z));}},
         targets:()=>this.house?.targets.map(t=>({id:t.id,kind:t.kind,pos:t.root.getWorldPosition(new T.Vector3()).toArray(),open:t.open,unlocked:t.unlocked})),
         introView:()=>{
@@ -110,6 +113,19 @@ export class Episode {
             new T.Raycaster(new T.Vector3(x,y,z),new T.Vector3(dx,dy,dz),0,1.45).intersectObjects(walls,false).length>0;
           return {keys,ceiling:hit(3,2,-6.8,0,1,0),west:hit(-6.45,1.4,-6.7,0,0,1),east:hit(6.45,1.4,-6.7,0,0,1)};
         },
+      };
+      const testWindow=window as unknown as Record<string,unknown>;
+      testWindow.render_game_to_text=()=>JSON.stringify({
+        coordinates:'metres; Y up; yaw=0 faces -Z',mode:this.mode,position:this.position.toArray(),grounded:this.grounded,
+        objective:this.objective(),target:this.target?.id,hold:this.hold,flags:this.save.flags,items:this.save.items,
+      });
+      testWindow.advanceTime=(ms:number)=>{
+        if(!Number.isFinite(ms)||ms<0||ms>10000)throw Error('advanceTime expects 0..10000 ms');
+        this.manualClock=true;
+        let left=ms/1000;
+        while(left>1e-8){const dt=Math.min(left,1/60);if(this.mode==='playing'){this.elapsed+=dt;this.update(dt);}left-=dt;}
+        if(this.settings.quality==='high')this.composer.render();else this.renderer.render(this.scene,this.camera);
+        this.notify();
       };
     }
   }catch(e){if(!this.disposed){this.mode='error';this.message=String(e);this.notify();}}}
@@ -288,13 +304,31 @@ export class Episode {
     if(this.floorAt(x,z)===undefined)return true;
     return this.house!.colliders.some(c=>!c.disabled?.()&&feet<c.top-.08&&feet+height>c.bottom+.12&&x+.22>c.minX&&x-.22<c.maxX&&z+.22>c.minZ&&z-.22<c.maxZ&&(!c.touches||c.touches(x,z,.22)));
   }
+  private interactionHits(ray:T.Raycaster){
+    return ray.intersectObjects(this.scene.children.filter(o=>o!==this.camera&&o.visible&&o.type!=='Points'&&!o.userData.player&&!o.userData.noInteraction),true)
+      .filter(h=>{
+        if(h.object.type==='Points')return false;
+        let o:T.Object3D|null=h.object;
+        while(o){if(!o.visible||o===this.camera||o.userData.player||o.userData.noInteraction)return false;o=o.parent;}
+        return true;
+      });
+  }
+  private canContinueHold(t:Target){
+    this.camera.updateWorldMatrix(true,false);t.root.updateWorldMatrix(true,true);
+    this.holdBounds.setFromObject(t.root,true).getCenter(this.holdPoint);
+    this.holdPoint.y=T.MathUtils.clamp(this.camera.position.y,this.holdBounds.min.y+.02,this.holdBounds.max.y-.02);
+    this.holdDirection.subVectors(this.holdPoint,this.camera.position);
+    const distance=this.holdDirection.length();if(distance>3.8||distance<.01)return false;
+    this.holdRay.set(this.camera.position,this.holdDirection.multiplyScalar(1/distance));this.holdRay.far=distance+.05;
+    return this.interactionHits(this.holdRay)[0]?.object.userData.target===t.id;
+  }
   private findTarget(){
     this.target=undefined;if(!this.house||!this.flag('free'))return;
-    if(this.keys.has('KeyR')&&this.holdId){const held=this.house.targets.find(t=>t.id===this.holdId&&t.kind==='furniture');if(held&&held.root.position.distanceTo(this.position)<3.8){this.target=held;return;}}
+    if(this.keys.has('KeyR')&&this.holdId){const held=this.house.targets.find(t=>t.id===this.holdId&&t.kind==='furniture');if(held&&this.canContinueHold(held)){this.target=held;return;}}
     this.camera.updateWorldMatrix(true,false);
     for(const t of this.house.targets)if(t.kind==='door'||t.kind==='furniture')t.root.updateWorldMatrix(false,true);
     this.ray.setFromCamera(new T.Vector2(0,0),this.camera);this.ray.far=2.7;
-    const hits=this.ray.intersectObjects(this.scene.children.filter(o=>o!==this.camera&&o.visible&&o.type!=='Points'&&!o.userData.player&&!o.userData.noInteraction),true);
+    const hits=this.interactionHits(this.ray);
     for(const h of hits){if(h.object.type==='Points')continue;let obj:T.Object3D|null=h.object;let visible=true, own=false;while(obj){if(!obj.visible)visible=false;if(obj===this.camera||obj.userData.player||obj.userData.noInteraction)own=true;obj=obj.parent;}if(!visible||own)continue;
       const id=h.object.userData.target as string|undefined;
       if(id){const t=this.house.targets.find(t=>t.id===id);if(t&&(!t.blockedBy||this.save.moved.includes(t.blockedBy)))this.target=t;}
@@ -329,8 +363,31 @@ export class Episode {
     if(Math.abs(this.position.x)<1.6)return this.save.room;
     const row=T.MathUtils.clamp(Math.floor((-this.position.z-12)/6),0,3);return 2+row*2+(this.position.x>0?1:0);
   }
+  private stepMotion(dt:number,crouch:boolean,run:boolean){
+    let x=Number(this.keys.has('KeyD'))-Number(this.keys.has('KeyA'))+this.touchAxes.x,z=Number(this.keys.has('KeyW'))-Number(this.keys.has('KeyS'))+this.touchAxes.z;
+    const len=Math.hypot(x,z);if(len>1){x/=len;z/=len;}
+    const speed=crouch?1.25:run?4:2.35,drive=this.grounded?(len>0?17:24):5.5;
+    this.movement.x=T.MathUtils.damp(this.movement.x,(Math.cos(this.yaw)*x-Math.sin(this.yaw)*z)*speed,drive,dt);
+    this.movement.y=T.MathUtils.damp(this.movement.y,(-Math.sin(this.yaw)*x-Math.cos(this.yaw)*z)*speed,drive,dt);
+    const dx=this.movement.x*dt,dz=this.movement.y*dt,height=crouch?1.04:1.68;
+    // 120 Hz collision steps bound travel to 3.4 cm even when the rendered frame is slow.
+    if(!this.blocked(this.position.x+dx,this.position.z,this.position.y,height))this.position.x+=dx;else this.movement.x=0;
+    if(!this.blocked(this.position.x,this.position.z+dz,this.position.y,height))this.position.z+=dz;else this.movement.y=0;
+    const floor=this.floorAt(this.position.x,this.position.z)??this.position.y;
+    if(this.grounded&&floor<=this.position.y+.24&&floor>=this.position.y-.3){this.position.y=floor;this.velocity.y=0;}
+    else{this.grounded=false;this.velocity.y-=12*dt;this.position.y+=this.velocity.y*dt;if(this.position.y<=floor){if(this.velocity.y<-2)this.audio.play('land');this.position.y=floor;this.velocity.y=0;this.grounded=true;}}
+    let ceiling=this.position.y>2.6?7.9-.42*Math.abs(this.position.x):2.9;
+    if(this.position.y>2.6&&Math.abs(this.position.z-(-4.8+Math.round((this.position.z+4.8)/1.6)*1.6))<.24)ceiling=Math.min(ceiling,5.82);
+    if(this.position.y+height>ceiling&&this.velocity.y>0){this.position.y=Math.max(floor,ceiling-height);this.velocity.y=0;this.grounded=false;}
+    if(this.position.y<floor&&floor-this.position.y<.25)this.position.y=floor;
+  }
   private update(dt:number){
-    if(!this.house)return;this.updateHold();
+    if(!this.house)return;
+    if(this.holdId&&this.holdId!=='tip'&&this.holdId!=='cut'){
+      const held=this.house.targets.find(t=>t.id===this.holdId);
+      if(!held||!this.canContinueHold(held)){this.hold=0;this.holdId='';this.target=undefined;}
+    }
+    this.updateHold();
     const chair=this.house.boundChair,tippedChair=this.flag('chairTipped');
     const chairRock=this.holdId==='tip'?Math.sin(this.hold*6.6*Math.PI)*(.03+this.hold*.21):0;
     chair.rotation.z=T.MathUtils.damp(chair.rotation.z,tippedChair?-Math.PI*.46:chairRock,tippedChair?15:32,dt);
@@ -343,24 +400,9 @@ export class Episode {
     let crouch=false,run=false;
     if(this.flag('free')){
       crouch=this.keys.has('ShiftLeft');run=this.keys.has('ControlLeft')&&!crouch;
-      let x=Number(this.keys.has('KeyD'))-Number(this.keys.has('KeyA'))+this.touchAxes.x,z=Number(this.keys.has('KeyW'))-Number(this.keys.has('KeyS'))+this.touchAxes.z;
-      const len=Math.hypot(x,z);if(len>1){x/=len;z/=len;}
-      const speed=crouch?1.25:run?4:2.35;
-      const drive=this.grounded?(len>0?17:24):5.5;
-      this.movement.x=T.MathUtils.damp(this.movement.x,(Math.cos(this.yaw)*x-Math.sin(this.yaw)*z)*speed,drive,dt);
-      this.movement.y=T.MathUtils.damp(this.movement.y,(-Math.sin(this.yaw)*x-Math.cos(this.yaw)*z)*speed,drive,dt);
-      const dx=this.movement.x*dt,dz=this.movement.y*dt;
       const height=crouch?1.04:1.68;
-      // Axes separate for wall sliding; bounded dt prevents tunnelling through thin walls.
-      if(!this.blocked(this.position.x+dx,this.position.z,this.position.y,height))this.position.x+=dx;else this.movement.x=0;
-      if(!this.blocked(this.position.x,this.position.z+dz,this.position.y,height))this.position.z+=dz;else this.movement.y=0;
-      const floor=this.floorAt(this.position.x,this.position.z)??this.position.y;
-      if(this.grounded&&floor<=this.position.y+.24&&floor>=this.position.y-.3){this.position.y=floor;this.velocity.y=0;}
-      else{this.grounded=false;this.velocity.y-=12*dt;this.position.y+=this.velocity.y*dt;if(this.position.y<=floor){if(this.velocity.y<-2)this.audio.play('land');this.position.y=floor;this.velocity.y=0;this.grounded=true;}}
-      let ceiling=this.position.y>2.6?7.9-.42*Math.abs(this.position.x):2.9;
-      if(this.position.y>2.6&&Math.abs(this.position.z-(-4.8+Math.round((this.position.z+4.8)/1.6)*1.6))<.24)ceiling=Math.min(ceiling,5.82);
-      if(this.position.y+height>ceiling&&this.velocity.y>0){this.position.y=Math.max(floor,ceiling-height);this.velocity.y=0;this.grounded=false;}
-      if(this.position.y<floor&&floor-this.position.y<.25)this.position.y=floor;
+      this.motionDebt=Math.min(.25,this.motionDebt+dt);
+      while(this.motionDebt+1e-9>=1/120){this.stepMotion(1/120,crouch,run);this.motionDebt=Math.max(0,this.motionDebt-1/120);}
       const bob=this.settings.headBob&&this.grounded?Math.sin(this.elapsed*(run?19:13))*.018*Math.min(1,Math.hypot(this.position.x-beforeX,this.position.z-beforeZ)/dt):0;
       const targetY=this.position.y+height+bob;this.camera.position.set(this.position.x,T.MathUtils.damp(this.camera.position.y,targetY,14,dt),this.position.z);
       const room=this.roomAt();if(room!==this.save.room){this.save.room=room;this.persist();}
@@ -383,8 +425,8 @@ export class Episode {
     this.findTarget();
   }
   private tick=(now:number)=>{
-    if(this.disposed)return;const dt=Math.min(.085,this.last?(now-this.last)/1000:.016);this.last=now;
-    if(this.mode==='playing'){this.elapsed+=dt;this.update(dt);}else if(this.mode==='title'&&this.house){
+    if(this.disposed)return;const raw=this.last?(now-this.last)/1000:.016,dt=Math.min(.25,Math.max(0,raw));this.last=now;
+    if(this.mode==='playing'&&!this.manualClock){this.frameTimes.push(raw*1000);if(this.frameTimes.length>180)this.frameTimes.shift();this.elapsed+=dt;this.update(dt);}else if(this.mode==='title'&&this.house){
       this.camera.position.set(-2.9,4.9,3.8);this.camera.rotation.set(-.1,.21+Math.sin(now*.00007)*.035,0,'YXZ');this.player.setVisible(false);this.flashlight.intensity=0;
     }
     if(this.house&&(this.mode==='title'||this.mode==='playing'||this.mode==='ending')){
