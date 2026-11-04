@@ -5,6 +5,7 @@ import { DOCUMENTS, type Save } from './data';
 import { art } from './props';
 import { chapterAsset } from './release';
 import { createWeather } from './weather';
+import { Headroom } from './headroom';
 
 export interface Collider { minX: number; maxX: number; minZ: number; maxZ: number; bottom: number; top: number; disabled?: () => boolean; touches?: (x:number,z:number,radius:number)=>boolean; }
 export interface DoorShape { pivotX:number;pivotZ:number;yaw:number;length:number;halfDepth:number; }
@@ -18,12 +19,15 @@ export interface Target {
   title: [string, string]; root: T.Object3D; key?: string; open?: boolean; unlocked?: boolean;
   home?: T.Vector3; move?: T.Vector3; progress?: number; pivot?: T.Object3D; angle?: number; blockedBy?: string;
   doorShape?:DoorShape;
+  focus?:T.Object3D;
 }
 export const PLAYER_MODELS=['gear-flashlight','gear-brass-key','player-hand-open','player-hand-grip','player-boot','player-trouser','player-sleeve','player-torso','player-upper-shadow'] as const;
 export type PlayerModelId=typeof PLAYER_MODELS[number];
-export interface House { targets: Target[]; colliders: Collider[]; roots: T.Object3D[]; dust: T.Points; lamp: T.PointLight; hatch: Target; boundChair:T.Group; seatLocal:T.Box3; seatBounds:T.Box3; glow: T.PointLight; weather:ReturnType<typeof createWeather>; model:(id:PlayerModelId)=>T.Group; }
+export interface House { targets: Target[]; colliders: Collider[]; headroom:Headroom; roots: T.Object3D[]; dust: T.Points; lamp: T.PointLight; hatch: Target; boundChair:T.Group; seatLocal:T.Box3; seatBounds:T.Box3; glow: T.PointLight; weather:ReturnType<typeof createWeather>; model:(id:PlayerModelId)=>T.Group; }
 export async function createHouse(scene: T.Scene, save: Save, progress: (n: number) => void): Promise<House> {
   const roots: T.Object3D[] = []; const targets: Target[] = []; const colliders: Collider[] = [];
+  const overheads:T.Mesh[]=[];
+  const overhead=(mesh:T.Mesh)=>{overheads.push(mesh);return mesh;};
   const loader = new T.TextureLoader();
   const load = async (name: string) => {
     const tex = await loader.loadAsync(chapterAsset(`textures/${name}`));
@@ -142,7 +146,7 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   function bottle(x:number,y:number,z:number) {const g=group(x,y,z);cylinder(g,0,.14,0,.065,.25,ceramic);cylinder(g,0,.3,0,.025,.1,metal);return g;}
   function door(id:string,x:number,z:number,side:number,keyId?:string,exit=false) {
     const g=group(x,0,z);g.rotation.y=side;
-    for(const a of [-1,1])box(g,a*.77,1.28,0,.13,2.56,.25,dark);box(g,0,2.52,0,1.66,.15,.25,dark);
+    for(const a of [-1,1])box(g,a*.77,1.28,0,.13,2.56,.25,dark);overhead(box(g,0,2.52,0,1.66,.15,.25,dark));
     const pivot=new T.Group();pivot.position.set(-.7,0,0);pivot.userData.openAngle=x>0?-1.65:1.65;g.add(pivot);box(pivot,.7,1.2,0,1.4,2.4,.095,dark);
     for(const y of [.55,1.7])box(pivot,.7,y,.055,1.13,.78,.025);
     cylinder(pivot,1.22,1.04,.1,.035,.14,brass).rotation.x=Math.PI/2;box(pivot,1.15,1.04,.16,.18,.025,.035,brass);
@@ -155,7 +159,10 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
     return t;
   }
   // Attic: actual floor opening and a walkable, continuous staircase down to the landing.
-  box(scene,-2,3.51,0,8,.18,10,floor);box(scene,5,3.51,0,2,.18,10,floor);box(scene,3,3.51,2,2,.18,6,floor);box(scene,3,3.51,-4.5,2,.18,1,floor);
+  overhead(box(scene,-2,3.51,0,8,.18,10,floor));overhead(box(scene,5,3.51,0,2,.18,10,floor));
+  overhead(box(scene,3,3.51,2,2,.18,6,floor));
+  // The opening must clear a standing character on the rising stair, including the capsule radius.
+  overhead(box(scene,3,3.51,-4.825,2,.18,.35,floor));
   wall(-6,5.2,0,.2,3.4,10,wood);wall(6,5.2,0,.2,3.4,10,wood);wall(0,5.1,5,12,3,.2,wood);
   // Front gable divided around its moonlit window.
   wall(-3.65,5.3,-5,4.7,3.6,.2,wood);wall(3.65,5.3,-5,4.7,3.6,.2,wood);box(scene,0,3.95,-5,2.6,.7,.2,wood);box(scene,0,7.1,-5,2.6,1.8,.2,wood);
@@ -167,11 +174,12 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   gableCap(-5.02,7.02,2.55);gableCap(5.02,6.57,3.62);
   const glass=new T.MeshPhysicalMaterial({color:0xb3ccce,transparent:true,opacity:.085,roughness:.2,metalness:.15,depthWrite:false});const pane=box(scene,0,5.5,-4.94,2.4,2.25,.015,glass);pane.castShadow=false;
   for(const x of [-1.25,0,1.25])box(scene,x,5.5,-4.96,.055,2.4,.08,dark);box(scene,0,5.5,-4.95,2.6,.06,.1,dark);
-  for(const a of [-1,1]){const roof=box(scene,a*3,6.7,0,6.8,.15,10.4,dark);roof.rotation.z=-a*.4;}
-  for(let z=-4.8;z<=5;z+=1.6){for(const a of [-1,1]){const beam=box(scene,a*2.8,6.58,z,6.5,.23,.23);beam.rotation.z=-a*.4;}box(scene,0,5.94,z,11.8,.23,.23,dark);}
+  for(const a of [-1,1]){const roof=overhead(box(scene,a*3,6.7,0,6.8,.15,10.4,dark));roof.rotation.z=-a*.4;}
+  for(let z=-4.8;z<=5;z+=1.6){for(const a of [-1,1]){const beam=overhead(box(scene,a*2.8,6.58,z,6.5,.23,.23));beam.rotation.z=-a*.4;}overhead(box(scene,0,5.94,z,11.8,.23,.23,dark));}
   for(const x of [-5.2,5.2])for(const z of [-3,2.8]){box(scene,x,4.8,z,.2,2.4,.2,dark);}
-  const hatchRoot=group(2,3.6,-1);const hatchPivot=new T.Group();hatchRoot.add(hatchPivot);box(hatchPivot,1,-.01,-1.5,1.95,.12,3,wood);box(hatchPivot,1,.07,-.4,.25,.03,.14,metal);
-  const hatch=register({id:'hatch',kind:'door',title:['Люк чердака','Attic hatch'],root:hatchRoot,key:'hatchKey',pivot:hatchPivot,open:save.doors.includes('hatch'),unlocked:save.flags.includes('unlock:hatch'),angle:0});
+  const hatchRoot=group(2,3.6,-1);const hatchPivot=new T.Group();hatchRoot.add(hatchPivot);box(hatchPivot,1,-.01,-1.825,1.95,.12,3.65,wood);
+  const hatchHandle=box(hatchPivot,1,.07,-.4,.25,.03,.14,metal);
+  const hatch=register({id:'hatch',kind:'door',title:['Люк чердака','Attic hatch'],root:hatchRoot,key:'hatchKey',pivot:hatchPivot,focus:hatchHandle,open:save.doors.includes('hatch'),unlocked:save.flags.includes('unlock:hatch'),angle:0});
   // The hatch lid is a real floor while shut; staircase becomes the floor when open.
   for(let i=0;i<18;i++){const z=-1-i/3;const y=3.6-i*.2;box(scene,3,y-.12,z,1.98,.2,.35,dark);}
   wall(1.97,1.75,-4,.1,3.6,6.1,wood);wall(4.03,1.75,-4,.1,3.6,6.1,wood);
@@ -209,15 +217,15 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   collider(4.8,2,1.45,1.85,3.6,4.78);
   const clothGeo=new T.PlaneGeometry(1.85,2.25,32,32);clothGeo.rotateX(-Math.PI/2);const clothPos=clothGeo.attributes.position;for(let i=0;i<clothPos.count;i++){const x=clothPos.getX(i),z=clothPos.getZ(i);const drape=Math.max(0,Math.abs(x)-.55,Math.abs(z)-.78);clothPos.setY(i,1.18-drape*1.7+Math.sin(x*24+z*5)*.018+Math.sin(z*19)*.012);}clothGeo.computeVertexNormals();const clothMaterial=fabric.clone();clothMaterial.side=T.DoubleSide;const cloth=new T.Mesh(clothGeo,clothMaterial);cloth.castShadow=cloth.receiveShadow=true;covered.add(cloth);
   // Lower floor: central hall and eight distinct furnished rooms.
-  const lowerFloor=box(scene,0,-.13,-21,14,.25,31,floor);box(scene,0,2.96,-22,14,.12,28,plaster);
-  box(scene,0,2.96,-6.85,14,.12,2.3,plaster);box(scene,0,3.25,-5.7,14,.66,.18,wood);
+  const lowerFloor=box(scene,0,-.13,-21,14,.25,31,floor);overhead(box(scene,0,2.96,-22,14,.12,28,plaster));
+  overhead(box(scene,0,2.96,-6.85,14,.12,2.3,plaster));overhead(box(scene,0,3.25,-5.7,14,.66,.18,wood));
   wall(-7,1.45,-21,.18,3,31);wall(7,1.45,-19,.18,3,26.5);wall(7,1.45,-35,.18,3,2.5);box(scene,7,2.7,-33,.18,.5,1.5);wall(0,1.45,-36,14,3,.18);wall(-2.5,1.45,-5.7,9,3,.18);wall(5.5,1.45,-5.7,3,3,.18);
   // Lower landing joins the staircase; no wall across the stair exit.
   for(let row=0;row<4;row++){
     const z=-15-row*6;
     for(const s of [-1,1]){
       for(const off of [-1.9,1.9])wall(s*1.45,1.45,z+off,.16,3,2.2);
-      box(scene,s*1.45,2.73,z,.16,.48,1.6);
+      overhead(box(scene,s*1.45,2.73,z,.16,.48,1.6));
       const index=2+row*2+(s===1?1:0);
       door(`door${index}`,s*1.45,z,Math.PI/2,index===3?'studyKey':index===4?'bedroomKey':index===5?'veraKey':undefined);
       const plaque=group(s*1.55,2.13,z+.72);plaque.rotation.y=s===1?-Math.PI/2:Math.PI/2;label(plaque,`${String(index+1).padStart(2,'0')}`,0,0,0,.27,.16);
@@ -226,7 +234,7 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   for(const z of [-12,-18,-24,-30])for(const s of [-1,1])wall(s*4.25,1.45,z,5.5,3,.14);
   // Trim, ceiling beams, cracked skirting and wall lamps.
   for(const x of [-6.85,6.85,-1.55,1.55])box(scene,x,.13,-24,.08,.22,24,dark);
-  for(let z=-13;z>-35;z-=5.5){box(scene,0,2.75,z,2.8,.18,.18,dark);const g=group(-1.25,1.9,z);box(g,0,0,0,.12,.3,.15,metal);box(g,.08,0,0,.15,.22,.18,new T.MeshStandardMaterial({color:0xd1a068,emissive:0xba753b,emissiveIntensity:.3}));}
+  for(let z=-13;z>-35;z-=5.5){overhead(box(scene,0,2.75,z,2.8,.18,.18,dark));const g=group(-1.25,1.9,z);box(g,0,0,0,.12,.3,.15,metal);box(g,.08,0,0,.15,.22,.18,new T.MeshStandardMaterial({color:0xd1a068,emissive:0xba753b,emissiveIntensity:.3}));}
   cabinet(-4.8,0,-17.4,'storeCabinet');storyPaper('storeNote',-3.4,.93,-13.5);table(-3.5,0,-13.5,1.6);key('studyKey',-4.8,lowerFloor,-17.35,['Ключ от кабинета','Study key'],'storeCabinet');
   barrel(-6.3,0,-12.88,1.09,.8);barrel(-6.35,0,-14.12,.91,2.2);barrel(-5.43,0,-12.73,.79,4.2);crate(-6.13,0,-15.2,.75,.43,.63,.14);
   const studyDesk=table(4.7,0,-16.6,2.3,1.1);chair(4.6,0,-15.45,.2,true,'studyChair');storyPaper('fatherNote',4.1,.94,-16.4);key('bedroomKey',5.3,studyDesk,-16.45,['Ключ от спальни','Bedroom key']);
@@ -278,6 +286,7 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   for(const t of targets){if(t.kind==='door'&&t.open&&t.pivot){t.angle=t.id==='hatch'?Math.PI:Number(t.pivot.userData.openAngle);if(t.id==='hatch')t.pivot.rotation.x=t.angle;else t.pivot.rotation.y=t.angle;}}
   // Batch only static architectural meshes, by material and room. Targets, moving furniture,
   // transparent glass and authored props retain independent transforms and raycast IDs.
+  const headroom=new Headroom(overheads);
   const batches=new Map<string,T.Mesh<T.BufferGeometry,T.Material>[]>();
   for(const o of [...scene.children]){
     if(!(o instanceof T.Mesh)||Array.isArray(o.material)||o.material.transparent||!o.castShadow||o.name||o.userData.target)continue;
@@ -293,5 +302,5 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
     const mesh=new T.Mesh(combined,batch[0].material);mesh.castShadow=mesh.receiveShadow=true;
     scene.add(mesh);for(const o of batch){o.geometry.dispose();o.removeFromParent();}
   }
-  progress(1);return {targets,colliders,roots,dust,lamp,hatch,boundChair,seatLocal,seatBounds,glow,weather,model};
+  progress(1);return {targets,colliders,headroom,roots,dust,lamp,hatch,boundChair,seatLocal,seatBounds,glow,weather,model};
 }

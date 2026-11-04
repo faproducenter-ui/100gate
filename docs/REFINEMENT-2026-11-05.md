@@ -20,10 +20,10 @@
 | Q04 | MEDIUM | Diagnostic game client cannot import project Playwright from the skill folder; lacks native render_game_to_text / advanceTime, and explicit 5 s start-click timeout is shorter than actual cold loading. | Verified game hooks + project wrapper in iteration 1 |
 | Q05 | MEDIUM | Hand GLB lacks tangents despite normal map. glTF validator warns about runtime-generated tangent space. | Verified Blender bake/export and browser import in iteration 3 |
 | Q06 | MEDIUM | Open doors can rotate a leaf into the player; current close guard only measures distance to door root. | Reproduced and verified fixed in iteration 2 |
-| Q07 | MEDIUM | Current crouch/ceiling model is analytic and supports the current house, not arbitrary terrain/rigid-body interaction. No claim of full rigid-body physics. | Deferred; protect current traversal |
+| Q07 | MEDIUM | Ground support remains analytic and supports the current house, not arbitrary terrain/rigid-body interaction. No claim of full rigid-body physics. | Overhead geometry improved in iteration 5; general support deferred |
 | Q08 | LOW | Some installed skill shared reference documents are absent; not a runtime defect. game-studio is not installed. | Not changed |
-
 | Q09 | MEDIUM | R-hold uses performance.now while gameplay/test stepping uses simulation time; manual clock cannot advance the intro. | Reproduced and verified fixed in iteration 4 |
+| Q10 | HIGH | Height-based ceiling threshold prevents jumping in the open staircase. Releasing crouch under the attic-floor lip puts the eye through solid boards. | Reproduced; real solid headroom verified in iteration 5 |
 
 No CRITICAL issue has been reproduced in this session. This is not a certification that none exists.
 
@@ -75,8 +75,19 @@ No CRITICAL issue has been reproduced in this session. This is not a certificati
 - PASS build, intro-clock, motion regression, original develop-web-game client with text-state evidence, live-clock intro, complete chapter, save reload, iPhone and Pixel emulation; no JavaScript errors.
 - Framed the editable hands in the live Blender viewport. Kept Blender's numbered backup files on disk and excluded those generated backups from Git.
 
+### Iteration 5 — verified
+- Local rollback branch: backup/refinement-2026-11-05-headroom at cc8d80a; original rollback branch retained.
+- Reproduced two failures in a real browser before editing: jumping at (3, 2.34, -3.1) leaves the feet at 2.34 m despite an open shaft; releasing crouch under the attic-floor lip raises the eye to 3.868 m through the 3.42 m underside.
+- Replaced the artificial height threshold with CPU-only snapshots of actual slab, lintel, beam and sloped-roof boxes. Capsule-footprint samples respect rotated geometry and remain valid after render batching/disposal. No new draw calls or physics-library replacement.
+- Horizontal movement checks destination headroom; upward collisions use actual overhead solids. Standing remains crouched while there is no head clearance, then restores automatically. Camera smoothing is capped by the same solid clearance.
+- Extended the actual stair opening and matching lid by 0.65 m so the existing standing capsule can ascend without striking the floor lip. The dev-only aiming helper targets the hatch handle without bypassing the production interaction ray or distance checks.
+- After: the open-shaft jump reaches 3.01 m at 200 ms (+0.67 m); releasing crouch keeps actor height 1.04 m and eye at 3.257 m below the slab. Standing restores after the obstruction clears.
+- PASS TypeScript/Vite build; solid-query unit tests (slab, capsule edge, slope, rotated parent, batching independence); real browser headroom and motion regression including stair ascent/descent; gear; complete chapter, save reload, iPhone 13 and Pixel 7 touch emulation. No JS/console errors in headroom/motion probes.
+- Inspected after-open-shaft.png, after-crouch-clearance.png and the original develop-web-game client's latest scene screenshot and text state. Evidence: ../../outputs/refinement-2026-11-05/headroom/ and skill-client/.
+- This is clearance/traversal work, not a visual-fidelity or FPS claim. Dynamic lid sweep safety is the next collision case to investigate separately.
+
 ## Final local result
-- Four completed local iterations. Remote repository and production site were not updated.
+- Five completed local iterations. Remote repository and production site were not updated.
 - Baseline rollback branch remains backup/refinement-2026-11-05-start.
 - The validated runtime is chapter1-refinement-05. This is a verified refinement increment, not certification of AAA fidelity or a complete commercial release.
 - Current known open scope and limits are listed above; no unmeasured FPS guarantee is made.

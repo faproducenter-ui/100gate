@@ -9,6 +9,7 @@ import { DEFAULT_SETTINGS, DOCUMENTS, ROOMS, newSave, text, validSave, type Save
 import { PACK, PORTIONS, remaining, type Consumable, type PackItem, type PropId } from './pack';
 import { PlayerRig } from './player';
 import { disposeComposer } from './lifetime';
+import { HEAD_MARGIN } from './headroom';
 
 export type Mode = 'loading' | 'title' | 'playing' | 'paused' | 'document' | 'bag' | 'ending' | 'error';
 export interface View { mode: Mode; loading: number; room: number; objective: string; prompt: string; progress: number; message: string; document?: string; save: Save; settings: Settings; cloud: string; held?:PropId; error?: string; }
@@ -41,7 +42,7 @@ export class Episode {
   private target?:Target;private hold=0;private holdId='';private holdElapsed=0;private ray=new T.Raycaster();private flashlight:T.SpotLight;
   private chairBeat=-1;private stepSide=false;
   private player:PlayerRig;private flashOn=false;private held?:PropId;private itemUntil=0;private useUntil=0;private reachUntil=0;private carryAfter?:{id?:PropId;flash:boolean};
-  private movement=new T.Vector2();private motionDebt=0;
+  private movement=new T.Vector2();private motionDebt=0;private actorHeight=1.68;
   private manualClock=false;private frameTimes:number[]=[];
   private holdRay=new T.Raycaster();private holdPoint=new T.Vector3();private holdDirection=new T.Vector3();private holdBounds=new T.Box3();
   private settings:Settings;private save:Save;private mode:Mode='loading';private loading=0;private document?:string;
@@ -88,12 +89,12 @@ export class Episode {
     // Probe is exposed only in local development and explicit automated verification builds.
     if(import.meta.env.DEV||import.meta.env.VITE_VERIFY==='1'){
       (window as unknown as Record<string,unknown>).__episodeTest={
-        state:()=>({mode:this.mode,save:structuredClone(this.save),position:this.position.toArray(),yaw:this.yaw,pitch:this.pitch,grounded:this.grounded,target:this.target?.id,hold:this.hold,settings:{...this.settings},rig:this.player.state(),lamp:this.flashlight.intensity>0,weather:this.house?.weather.snapshot()}),
+        state:()=>({mode:this.mode,save:structuredClone(this.save),position:this.position.toArray(),yaw:this.yaw,pitch:this.pitch,grounded:this.grounded,actorHeight:this.actorHeight,target:this.target?.id,hold:this.hold,settings:{...this.settings},rig:this.player.state(),lamp:this.flashlight.intensity>0,weather:this.house?.weather.snapshot()}),
         foley:()=>this.audio.state(),
         pose:(x:number,y:number,z:number,yaw=0,pitch=0)=>{this.position.set(x,y,z);this.yaw=yaw;this.pitch=pitch;this.velocity.set(0,0,0);this.movement.set(0,0);this.motionDebt=0;this.grounded=true;},
         diagnostics:()=>({render:{...this.renderer.info.render},memory:{...this.renderer.info.memory},frameTimes:[...this.frameTimes],motionDebt:this.motionDebt,manualClock:this.manualClock,elapsed:this.elapsed,verticalVelocity:this.velocity.y,keys:[...this.keys],
           overlappingDoors:this.position.y>=2.4?[]:this.house?.targets.filter(t=>t.doorShape&&doorTouches(t.doorShape,t.angle??0,this.position.x,this.position.z,.22)).map(t=>t.id)}),
-        aim:(id:string)=>{const t=this.house?.targets.find(t=>t.id===id);if(t){const point=new T.Box3().setFromObject(t.root).getCenter(new T.Vector3());this.camera.position.copy(this.position).add(new T.Vector3(0,1.68,0));const d=point.sub(this.camera.position);this.yaw=Math.atan2(-d.x,-d.z);this.pitch=Math.atan2(d.y,Math.hypot(d.x,d.z));}},
+        aim:(id:string)=>{const t=this.house?.targets.find(t=>t.id===id);if(t){t.root.updateWorldMatrix(true,true);const point=t.focus?t.focus.getWorldPosition(new T.Vector3()):new T.Box3().setFromObject(t.root).getCenter(new T.Vector3());this.camera.position.copy(this.position).add(new T.Vector3(0,1.68,0));const d=point.sub(this.camera.position);this.yaw=Math.atan2(-d.x,-d.z);this.pitch=Math.atan2(d.y,Math.hypot(d.x,d.z));}},
         targets:()=>this.house?.targets.map(t=>({id:t.id,kind:t.kind,pos:t.root.getWorldPosition(new T.Vector3()).toArray(),open:t.open,unlocked:t.unlocked})),
         introView:()=>{
           const chair=this.scene.getObjectByName('bound-chair'),ray=new T.Raycaster();
@@ -305,7 +306,9 @@ export class Episode {
     return undefined;
   }
   private blocked(x:number,z:number,feet:number,height:number){
-    if(this.floorAt(x,z)===undefined)return true;
+    const floor=this.floorAt(x,z);if(floor===undefined)return true;
+    const nextFeet=this.grounded&&floor>feet&&floor<=feet+.24?floor:feet;
+    if(nextFeet+height+HEAD_MARGIN>this.house!.headroom.heightAt(x,z,nextFeet)+1e-5)return true;
     return this.house!.colliders.some(c=>!c.disabled?.()&&feet<c.top-.08&&feet+height>c.bottom+.12&&x+.22>c.minX&&x-.22<c.maxX&&z+.22>c.minZ&&z-.22<c.maxZ&&(!c.touches||c.touches(x,z,.22)));
   }
   private interactionHits(ray:T.Raycaster){
@@ -380,9 +383,10 @@ export class Episode {
     const floor=this.floorAt(this.position.x,this.position.z)??this.position.y;
     if(this.grounded&&floor<=this.position.y+.24&&floor>=this.position.y-.3){this.position.y=floor;this.velocity.y=0;}
     else{this.grounded=false;this.velocity.y-=12*dt;this.position.y+=this.velocity.y*dt;if(this.position.y<=floor){if(this.velocity.y<-2)this.audio.play('land');this.position.y=floor;this.velocity.y=0;this.grounded=true;}}
-    let ceiling=this.position.y>2.6?7.9-.42*Math.abs(this.position.x):2.9;
-    if(this.position.y>2.6&&Math.abs(this.position.z-(-4.8+Math.round((this.position.z+4.8)/1.6)*1.6))<.24)ceiling=Math.min(ceiling,5.82);
-    if(this.position.y+height>ceiling&&this.velocity.y>0){this.position.y=Math.max(floor,ceiling-height);this.velocity.y=0;this.grounded=false;}
+    const ceiling=this.house!.headroom.heightAt(this.position.x,this.position.z,this.position.y);
+    if(this.position.y+height+HEAD_MARGIN>ceiling&&this.velocity.y>0){
+      this.position.y=Math.max(floor,ceiling-height-HEAD_MARGIN);this.velocity.y=0;this.grounded=false;
+    }
     if(this.position.y<floor&&floor-this.position.y<.25)this.position.y=floor;
   }
   private doorSweepBlocked(t:Target,desired:number){
@@ -409,12 +413,17 @@ export class Episode {
     const beforeX=this.position.x,beforeZ=this.position.z;
     let crouch=false,run=false;
     if(this.flag('free')){
-      crouch=this.keys.has('ShiftLeft');run=this.keys.has('ControlLeft')&&!crouch;
+      const available=this.house.headroom.heightAt(this.position.x,this.position.z,this.position.y);
+      crouch=this.keys.has('ShiftLeft')||this.position.y+1.68+HEAD_MARGIN>available+1e-5;
+      run=this.keys.has('ControlLeft')&&!crouch;
       const height=crouch?1.04:1.68;
+      this.actorHeight=height;
       this.motionDebt=Math.min(.25,this.motionDebt+dt);
       while(this.motionDebt+1e-9>=1/120){this.stepMotion(1/120,crouch,run);this.motionDebt=Math.max(0,this.motionDebt-1/120);}
       const bob=this.settings.headBob&&this.grounded?Math.sin(this.elapsed*(run?19:13))*.018*Math.min(1,Math.hypot(this.position.x-beforeX,this.position.z-beforeZ)/dt):0;
-      const targetY=this.position.y+height+bob;this.camera.position.set(this.position.x,T.MathUtils.damp(this.camera.position.y,targetY,14,dt),this.position.z);
+      const targetY=this.position.y+height+bob;
+      const safeEye=this.house.headroom.heightAt(this.position.x,this.position.z,this.position.y)-HEAD_MARGIN;
+      this.camera.position.set(this.position.x,Math.min(safeEye,T.MathUtils.damp(this.camera.position.y,targetY,14,dt)),this.position.z);
       const room=this.roomAt();if(room!==this.save.room){this.save.room=room;this.persist();}
       if(this.elapsed-this.saveClock>8&&this.position.distanceToSquared(this.savedPosition)>.2){this.persist();this.saveClock=this.elapsed;}
     }else{
