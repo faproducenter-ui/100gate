@@ -24,6 +24,8 @@ for(const file of [
   'assets/chapter1/gear-flashlight.glb',
   'assets/chapter1/gear-brass-key.glb',
   'assets/chapter1/player-hand-open.glb',
+  'assets/chapter1/player-hand-grip.glb',
+  'assets/chapter1/player-upper-shadow.glb',
   'assets/chapter1/player-boot.glb',
   'assets/chapter1/player-trouser.glb',
   'assets/chapter1/player-torso.glb',

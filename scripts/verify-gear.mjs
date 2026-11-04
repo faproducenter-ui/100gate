@@ -25,8 +25,9 @@ try{
     await wait(id=>window.__episodeTest.state().target===id,id);
   };
   await wait(()=>window.__episodeTest.state().rig.authored&&window.__episodeTest.state().rig.body);
-  assert.equal(await page.locator('main').getAttribute('data-release'),'chapter1-gear-02');
-  for(const id of ['gear-flashlight','gear-brass-key','player-boot','player-trouser','player-hand-open','player-hand-grip','player-sleeve','player-torso'])assert(loaded.has(id+'.glb'),id+' was not downloaded');
+  assert.equal(await page.locator('main').getAttribute('data-release'),'chapter1-character-03');
+  for(const id of ['gear-flashlight','gear-brass-key','player-boot','player-trouser','player-hand-open','player-hand-grip','player-sleeve','player-torso','player-upper-shadow'])assert(loaded.has(id+'.glb'),id+' was not downloaded');
+  assert((await state()).rig.shadowUpper,'full silhouette not active with shadows enabled');
   await aim('flashlight');
   await page.keyboard.press('KeyE');
   await wait(()=>{const s=window.__episodeTest.state();return s.rig.held==='flashlight'&&s.lamp;});
@@ -56,6 +57,9 @@ try{
   await page.keyboard.down('KeyW');
   try{await wait(value=>window.__episodeTest.state().rig.footfall>value,before);}
   finally{await page.keyboard.up('KeyW');}
+  await page.evaluate(()=>window.__episodeTest.pose(-.8,3.6,3.15,Math.PI,-.26));
+  await wait(()=>window.__episodeTest.state().position[2]>3.1);
+  await page.screenshot({path:resolve(out,'100gate-character-shadow.png')});
   assert.deepEqual(errors,[]);
   console.log('PASS Blender GLBs loaded: hands, boots, jacket, trousers; lamp switches, key preview and unlock, flashlight restored, animated stride');
 }finally{await browser.close();}

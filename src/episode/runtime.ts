@@ -88,6 +88,26 @@ export class Episode {
         pose:(x:number,y:number,z:number,yaw=0,pitch=0)=>{this.position.set(x,y,z);this.yaw=yaw;this.pitch=pitch;this.velocity.set(0,0,0);this.movement.set(0,0);},
         aim:(id:string)=>{const t=this.house?.targets.find(t=>t.id===id);if(t){const point=new T.Box3().setFromObject(t.root).getCenter(new T.Vector3());this.camera.position.copy(this.position).add(new T.Vector3(0,1.68,0));const d=point.sub(this.camera.position);this.yaw=Math.atan2(-d.x,-d.z);this.pitch=Math.atan2(d.y,Math.hypot(d.x,d.z));}},
         targets:()=>this.house?.targets.map(t=>({id:t.id,kind:t.kind,pos:t.root.getWorldPosition(new T.Vector3()).toArray(),open:t.open,unlocked:t.unlocked})),
+        introView:()=>{
+          const chair=this.scene.getObjectByName('bound-chair'),ray=new T.Raycaster();
+          this.camera.updateWorldMatrix(true,false);chair?.updateWorldMatrix(true,true);ray.far=.82;
+          let chairHits=0;
+          if(chair)for(const x of [-.7,-.35,0,.35,.7])for(const y of [-.65,-.3,0,.3,.65]){
+            ray.setFromCamera(new T.Vector2(x,y),this.camera);
+            if(ray.intersectObject(chair,true).length)chairHits++;
+          }
+          return {chairHits,eye:this.camera.position.toArray()};
+        },
+        layoutCheck:()=>{
+          this.scene.updateMatrixWorld(true);
+          const keys=this.house?.targets.filter(t=>typeof t.root.userData.supportY==='number').map(t=>({
+            id:t.id,gap:new T.Box3().setFromObject(t.root.children[0],true).min.y-Number(t.root.userData.supportY),
+          }));
+          const walls=this.scene.children.filter(o=>o instanceof T.Mesh&&o.visible&&!o.userData.noInteraction);
+          const hit=(x:number,y:number,z:number,dx:number,dy:number,dz:number)=>
+            new T.Raycaster(new T.Vector3(x,y,z),new T.Vector3(dx,dy,dz),0,1.45).intersectObjects(walls,false).length>0;
+          return {keys,ceiling:hit(3,2,-6.8,0,1,0),west:hit(-6.45,1.4,-6.7,0,0,1),east:hit(6.45,1.4,-6.7,0,0,1)};
+        },
       };
     }
   }catch(e){if(!this.disposed){this.mode='error';this.message=String(e);this.notify();}}}
@@ -288,7 +308,7 @@ export class Episode {
       if(Math.hypot(desired.x-this.position.x,desired.z-this.position.z)>.95){t.progress=next;t.root.position.copy(desired);}else{this.hold=previous;this.toast(this.t('Отойди с пути шкафа.','Step out of the furniture’s path.'));return;}
     }
     if(this.hold>=1){
-      if(id==='tip'){this.addFlag('chairTipped');this.pitch=-.95;this.audio.play('land');this.toast(this.t('Нож рядом с правой рукой. E — подобрать.','The knife is by your right hand. E to take it.'));}
+      if(id==='tip'){this.addFlag('chairTipped');this.pitch=-.76;this.audio.play('land');this.toast(this.t('Нож рядом с правой рукой. E — подобрать.','The knife is by your right hand. E to take it.'));}
       else if(id==='cut'){this.addFlag('free');this.position.set(.5,3.6,2);this.scene.traverse(o=>{if(o.name==='rope')o.visible=false;});this.audio.play('cut');this.equip();this.toast(this.t('Руки свободны. Сумка лежит рядом со стулом.','Your hands are free. Your bag is beside the chair.'));}
       else{this.save.moved.push(id);this.audio.play('scrape');this.toast(this.t('Проход освобождён.','The way is clear.'));}
       this.hold=0;this.holdId='';this.persist();
@@ -330,12 +350,12 @@ export class Episode {
       if(this.elapsed-this.saveClock>8&&this.position.distanceToSquared(this.savedPosition)>.2){this.persist();this.saveClock=this.elapsed;}
     }else{
       const tipped=this.flag('chairTipped');const rock=this.holdId==='tip'?Math.sin(this.elapsed*9)*this.hold*.16:0;
-      this.camera.position.set(tipped?.2:0,tipped?4.25:4.77,tipped?2.15:2.8);this.camera.rotation.z=tipped?-.15:rock;
+      this.camera.position.set(tipped?.2:0,tipped?4.54:4.77,tipped?2.15:2.8);this.camera.rotation.z=tipped?-.12:rock;
     }
     if(this.flag('free'))this.camera.rotation.z=T.MathUtils.damp(this.camera.rotation.z,0,8,dt);
-    this.camera.rotation.y=this.yaw;this.camera.rotation.x=this.pitch;
+    this.camera.rotation.y=this.yaw;this.camera.rotation.x=!this.flag('free')&&this.flag('chairTipped')?Math.max(this.pitch,-.89):this.pitch;
     if(this.itemUntil&&this.elapsed>=this.itemUntil){const before=this.carryAfter;this.equip(before?.id);this.flashOn=before?.id==='flashlight'&&before.flash;}
-    if(this.player.update({position:this.position,yaw:this.yaw,pitch:this.pitch,dt,elapsed:this.elapsed,dx:this.position.x-beforeX,dz:this.position.z-beforeZ,grounded:this.grounded,crouch,free:this.flag('free'),tipped:this.flag('chairTipped'),running:run,hold:this.hold,activity:this.holdId,held:this.held,using:this.useUntil>this.elapsed?1-(this.useUntil-this.elapsed)/.93:0,reach:this.reachUntil>this.elapsed?1-(this.reachUntil-this.elapsed)/.43:0,water:remaining(this.save.flags,'water'),flashOn:this.flashOn}))this.audio.play('step');
+    if(this.player.update({position:this.position,yaw:this.yaw,pitch:this.pitch,dt,elapsed:this.elapsed,dx:this.position.x-beforeX,dz:this.position.z-beforeZ,grounded:this.grounded,crouch,free:this.flag('free'),tipped:this.flag('chairTipped'),running:run,hold:this.hold,activity:this.holdId,held:!this.flag('free')&&this.has('knife')?'knife':this.held,using:this.useUntil>this.elapsed?1-(this.useUntil-this.elapsed)/.93:0,reach:this.reachUntil>this.elapsed?1-(this.reachUntil-this.elapsed)/.43:0,water:remaining(this.save.flags,'water'),flashOn:this.flashOn,shadows:this.settings.quality!=='low'}))this.audio.play('step');
     this.flashlight.position.copy(this.player.lightSource);
     this.flashlight.intensity=this.flashOn&&this.held==='flashlight'?43:0;
     this.house.glow.intensity=this.flag('power')?16:0;

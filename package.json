@@ -13,6 +13,7 @@
     "verify:pack": "node scripts/verify-pack.mjs",
     "verify:weather": "node scripts/verify-weather.mjs",
     "verify:gear": "node scripts/verify-gear.mjs",
+    "verify:intro": "node scripts/verify-intro.mjs",
     "verify:release": "node scripts/verify-release.mjs",
     "verify": "node scripts/verify-episode.mjs",
     "verify:cloud": "node scripts/verify-cloud.mjs",

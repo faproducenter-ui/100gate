@@ -12,7 +12,7 @@ export interface Target {
   title: [string, string]; root: T.Object3D; key?: string; open?: boolean; unlocked?: boolean;
   home?: T.Vector3; move?: T.Vector3; progress?: number; pivot?: T.Object3D; angle?: number; blockedBy?: string;
 }
-export const PLAYER_MODELS=['gear-flashlight','gear-brass-key','player-hand-open','player-hand-grip','player-boot','player-trouser','player-sleeve','player-torso'] as const;
+export const PLAYER_MODELS=['gear-flashlight','gear-brass-key','player-hand-open','player-hand-grip','player-boot','player-trouser','player-sleeve','player-torso','player-upper-shadow'] as const;
 export type PlayerModelId=typeof PLAYER_MODELS[number];
 export interface House { targets: Target[]; colliders: Collider[]; roots: T.Object3D[]; dust: T.Points; lamp: T.PointLight; hatch: Target; glow: T.PointLight; weather:ReturnType<typeof createWeather>; model:(id:PlayerModelId)=>T.Group; }
 export async function createHouse(scene: T.Scene, save: Save, progress: (n: number) => void): Promise<House> {
@@ -120,9 +120,13 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
     }
     register({id,kind:'document',title:['Документ','Document'],root:g});return g;
   }
-  function key(id:string,x:number,y:number,z:number,title:[string,string],blockedBy?:string) {
+  function key(id:string,x:number,support:number|T.Object3D,z:number,title:[string,string],blockedBy?:string) {
+    const y=typeof support==='number'?support:new T.Box3().setFromObject(support).max.y;
     const g=group(x,y,z);g.rotation.y=.66;
     const prop=model('gear-brass-key');prop.rotation.x=-Math.PI/2;prop.scale.setScalar(1.25);g.add(prop);
+    g.updateWorldMatrix(true,true);
+    g.position.y+=y+.0015-new T.Box3().setFromObject(prop,true).min.y;
+    g.userData.supportY=y;
     // A tight invisible target around the small prop keeps aiming possible at normal play distance.
     const hit=new T.Mesh(new T.BoxGeometry(.137,.035,.187),new T.MeshBasicMaterial({visible:false}));
     hit.position.z=.014;g.add(hit);
@@ -151,6 +155,12 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   wall(-6,5.2,0,.2,3.4,10,wood);wall(6,5.2,0,.2,3.4,10,wood);wall(0,5.1,5,12,3,.2,wood);
   // Front gable divided around its moonlit window.
   wall(-3.65,5.3,-5,4.7,3.6,.2,wood);wall(3.65,5.3,-5,4.7,3.6,.2,wood);box(scene,0,3.95,-5,2.6,.7,.2,wood);box(scene,0,7.1,-5,2.6,1.8,.2,wood);
+  function gableCap(z:number,base:number,half:number){
+    const s=new T.Shape();s.moveTo(-half,base);s.lineTo(half,base);s.lineTo(0,8.04);s.closePath();
+    const cap=dark.clone();cap.side=T.DoubleSide;
+    const m=new T.Mesh(new T.ShapeGeometry(s),cap);m.position.z=z;m.receiveShadow=m.castShadow=true;scene.add(m);
+  }
+  gableCap(-5.02,7.02,2.55);gableCap(5.02,6.57,3.62);
   const glass=new T.MeshPhysicalMaterial({color:0xb3ccce,transparent:true,opacity:.085,roughness:.2,metalness:.15,depthWrite:false});const pane=box(scene,0,5.5,-4.94,2.4,2.25,.015,glass);pane.castShadow=false;
   for(const x of [-1.25,0,1.25])box(scene,x,5.5,-4.96,.055,2.4,.08,dark);box(scene,0,5.5,-4.95,2.6,.06,.1,dark);
   for(const a of [-1,1]){const roof=box(scene,a*3,6.7,0,6.8,.15,10.4,dark);roof.rotation.z=-a*.4;}
@@ -159,15 +169,16 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   const hatchRoot=group(2,3.6,-1);const hatchPivot=new T.Group();hatchRoot.add(hatchPivot);box(hatchPivot,1,-.01,-1.5,1.95,.12,3,wood);box(hatchPivot,1,.07,-.4,.25,.03,.14,metal);
   const hatch=register({id:'hatch',kind:'door',title:['Люк чердака','Attic hatch'],root:hatchRoot,key:'hatchKey',pivot:hatchPivot,open:save.doors.includes('hatch'),unlocked:save.flags.includes('unlock:hatch'),angle:0});
   // The hatch lid is a real floor while shut; staircase becomes the floor when open.
-  for(let i=0;i<18;i++){const z=-1-i/3;const y=3.6-i*.2;box(scene,3,y-.12,z,1.9,.2,.35,dark);}
-  wall(1.97,1.6,-4,.1,3.2,6,wood);wall(4.03,1.6,-4,.1,3.2,6,wood);
+  for(let i=0;i<18;i++){const z=-1-i/3;const y=3.6-i*.2;box(scene,3,y-.12,z,1.98,.2,.35,dark);}
+  wall(1.97,1.75,-4,.1,3.6,6.1,wood);wall(4.03,1.75,-4,.1,3.6,6.1,wood);
   table(0,3.6,-3.8,2.6,1);storyPaper('atticNote',-.7,4.51,-3.7);
-  const tin=group(.65,4.51,-3.75);box(tin,0,.04,0,.5,.08,.3,metal);key('hatchKey',.66,4.61,-3.7,['Ключ от люка','Hatch key']);
+  const tin=group(.65,4.51,-3.75);box(tin,0,.04,0,.5,.08,.3,metal);key('hatchKey',.66,tin,-3.7,['Ключ от люка','Hatch key']);
   const flashlight=group(-.05,4.56,-3.62),flashlightMesh=model('gear-flashlight');flashlightMesh.rotation.y=-.24;flashlight.add(flashlightMesh);
   register({id:'flashlight',kind:'item',title:['Фонарь','Flashlight'],root:flashlight});flashlight.visible=!save.items.includes('flashlight');
   const knife=group(.5,3.65,1.2);box(knife,0,0,0,.055,.025,.15,dark);const blade=box(knife,0,0,-.19,.06,.012,.24,metal);blade.rotation.y=.08;
   register({id:'knife',kind:'item',title:['Нож','Knife'],root:knife});knife.visible=!save.items.includes('knife');
-  const boundChair=chair(0,3.6,2.9,Math.PI);boundChair.name='bound-chair';collider(0,2.9,.65,.65,3.6,4.9);
+  // The GLB is already rotated by chair(); keep its backrest behind the player facing -Z.
+  const boundChair=chair(0,3.6,2.9);boundChair.name='bound-chair';collider(0,2.9,.65,.65,3.6,4.9);
   const bag=model('canvas-satchel');bag.position.set(1.37,3.61,1.82);bag.rotation.y=-.64;scene.add(bag);register({id:'bag',kind:'item',title:['Сумка Алексея','Alexei’s bag'],root:bag});bag.visible=!save.items.includes('bag');
   // Rope coils on the chair and a fallen packing cloth.
   const rope=new T.MeshStandardMaterial({color:0x927951,roughness:1});for(let y=4.1;y<4.5;y+=.085){const r=new T.Mesh(new T.TorusGeometry(.35,.02,7,32),rope);r.rotation.x=Math.PI/2;r.position.set(0,y,2.9);scene.add(r);r.name='rope';if(save.flags.includes('free'))r.visible=false;}
@@ -190,8 +201,9 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   collider(4.8,2,1.45,1.85,3.6,4.78);
   const clothGeo=new T.PlaneGeometry(1.85,2.25,32,32);clothGeo.rotateX(-Math.PI/2);const clothPos=clothGeo.attributes.position;for(let i=0;i<clothPos.count;i++){const x=clothPos.getX(i),z=clothPos.getZ(i);const drape=Math.max(0,Math.abs(x)-.55,Math.abs(z)-.78);clothPos.setY(i,1.18-drape*1.7+Math.sin(x*24+z*5)*.018+Math.sin(z*19)*.012);}clothGeo.computeVertexNormals();const clothMaterial=fabric.clone();clothMaterial.side=T.DoubleSide;const cloth=new T.Mesh(clothGeo,clothMaterial);cloth.castShadow=cloth.receiveShadow=true;covered.add(cloth);
   // Lower floor: central hall and eight distinct furnished rooms.
-  box(scene,0,-.13,-21,14,.25,31,floor);box(scene,0,2.96,-22,14,.12,28,plaster);
-  wall(-7,1.45,-21,.18,3,31);wall(7,1.45,-19,.18,3,26.5);wall(7,1.45,-35,.18,3,2.5);box(scene,7,2.7,-33,.18,.5,1.5);wall(0,1.45,-36,14,3,.18);wall(-2,1.45,-5.7,8,3,.18);wall(5,1.45,-5.7,2,3,.18);
+  const lowerFloor=box(scene,0,-.13,-21,14,.25,31,floor);box(scene,0,2.96,-22,14,.12,28,plaster);
+  box(scene,0,2.96,-6.85,14,.12,2.3,plaster);box(scene,0,3.25,-5.7,14,.66,.18,wood);
+  wall(-7,1.45,-21,.18,3,31);wall(7,1.45,-19,.18,3,26.5);wall(7,1.45,-35,.18,3,2.5);box(scene,7,2.7,-33,.18,.5,1.5);wall(0,1.45,-36,14,3,.18);wall(-2.5,1.45,-5.7,9,3,.18);wall(5.5,1.45,-5.7,3,3,.18);
   // Lower landing joins the staircase; no wall across the stair exit.
   for(let row=0;row<4;row++){
     const z=-15-row*6;
@@ -207,9 +219,9 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   // Trim, ceiling beams, cracked skirting and wall lamps.
   for(const x of [-6.85,6.85,-1.55,1.55])box(scene,x,.13,-24,.08,.22,24,dark);
   for(let z=-13;z>-35;z-=5.5){box(scene,0,2.75,z,2.8,.18,.18,dark);const g=group(-1.25,1.9,z);box(g,0,0,0,.12,.3,.15,metal);box(g,.08,0,0,.15,.22,.18,new T.MeshStandardMaterial({color:0xd1a068,emissive:0xba753b,emissiveIntensity:.3}));}
-  cabinet(-4.8,0,-17.4,'storeCabinet');storyPaper('storeNote',-3.4,.93,-13.5);table(-3.5,0,-13.5,1.6);key('studyKey',-4.8,.18,-17.35,['Ключ от кабинета','Study key'],'storeCabinet');
+  cabinet(-4.8,0,-17.4,'storeCabinet');storyPaper('storeNote',-3.4,.93,-13.5);table(-3.5,0,-13.5,1.6);key('studyKey',-4.8,lowerFloor,-17.35,['Ключ от кабинета','Study key'],'storeCabinet');
   barrel(-6.3,0,-12.88,1.09,.8);barrel(-6.35,0,-14.12,.91,2.2);barrel(-5.43,0,-12.73,.79,4.2);crate(-6.13,0,-15.2,.75,.43,.63,.14);
-  table(4.7,0,-16.6,2.3,1.1);chair(4.6,0,-15.45,.2,true,'studyChair');storyPaper('fatherNote',4.1,.94,-16.4);key('bedroomKey',5.3,.94,-16.45,['Ключ от спальни','Bedroom key']);
+  const studyDesk=table(4.7,0,-16.6,2.3,1.1);chair(4.6,0,-15.45,.2,true,'studyChair');storyPaper('fatherNote',4.1,.94,-16.4);key('bedroomKey',5.3,studyDesk,-16.45,['Ключ от спальни','Bedroom key']);
   const spineMats=[0x3f594e,0x553f3a,0x566057,0x625441,0x415566].map(color=>new T.MeshStandardMaterial({color,roughness:.92}));
   const shelf=group(6.49,0,-15.1);shelf.rotation.y=-Math.PI/2;
   for(const x of [-.65,.65])box(shelf,x,.99,0,.065,1.99,.36,dark);
@@ -220,9 +232,9 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   collider(6.49,-15.1,.42,1.4,0,2);
   cabinet(6.1,0,-13.1,'studyWardrobe',0,false);label(scene,'СОКОЛОВ\nСЕКТОР 01',5.3,1.8,-17.9,.8,.5);
   const bed=group(-4.5,0,-21.5);box(bed,0,.38,0,2,.4,2.7,dark);box(bed,0,.67,0,1.95,.2,2.6,fabric);box(bed,0,.88,-.95,1.45,.18,.45,ceramic);box(bed,0,.6,-1.4,2.1,1.2,.12,dark);collider(-4.5,-21.5,2.1,2.9,0,.85);
-  table(-2.6,0,-19,1,.65);storyPaper('bedroomNote',-2.8,.94,-19);key('veraKey',-2.4,.95,-19,['Ключ с красной лентой','Red-ribbon key']);
+  const bedside=table(-2.6,0,-19,1,.65);storyPaper('bedroomNote',-2.8,.94,-19);key('veraKey',-2.4,bedside,-19,['Ключ с красной лентой','Red-ribbon key']);
   const smallBed=group(5.7,0,-21.2);box(smallBed,0,.4,0,1.3,.35,2.4,wood);box(smallBed,0,.65,0,1.25,.2,2.3,fabric);box(smallBed,0,.8,-.8,.8,.16,.4,ceramic);collider(5.7,-21.2,1.4,2.5,0,.8);
-  table(3.2,0,-22.8,1.8);storyPaper('veraNote',2.9,.94,-22.7);key('exitKey',3.65,.95,-22.65,['Ключ от входной двери','Front door key']);
+  const veraDesk=table(3.2,0,-22.8,1.8);storyPaper('veraNote',2.9,.94,-22.7);key('exitKey',3.65,veraDesk,-22.65,['Ключ от входной двери','Front door key']);
   const music=group(3.7,.94,-23);box(music,0,.08,0,.35,.16,.23,dark);box(music,0,.2,-.1,.35,.23,.025,wood);
   for(let i=0;i<6;i++){const p=label(scene,'ДОМ\n100 ДВЕРЕЙ',2+i*.67,1.5+(i%2)*.4,-23.88,.44,.5);p.rotation.z=(rnd()-.5)*.13;}
   // Bathroom with porcelain fixtures, medicine tray and a visibly modelled syringe.
