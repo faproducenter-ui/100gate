@@ -277,7 +277,11 @@ export class Episode {
           this.toast(this.t('Отойди от траектории двери.','Step out of the door’s path.'));return;
         }
         this.reachUntil=this.elapsed+.43;
-        t.open=!t.open;this.save.doors=t.open?[...new Set([...this.save.doors,t.id])]:this.save.doors.filter(id=>id!==t.id);this.audio.play('door');this.persist();
+        t.open=!t.open;
+        // An obstructed closing hatch is still physically open. Persist closed only at rest,
+        // otherwise reload can materialize the shut lid over a player saved on the stairs.
+        if(t.id!=='hatch'||t.open)this.save.doors=t.open?[...new Set([...this.save.doors,t.id])]:this.save.doors.filter(id=>id!==t.id);
+        this.audio.play('door');this.persist();
       }
     }
     if(code==='KeyE'&&t.kind==='switch'){
@@ -306,7 +310,7 @@ export class Episode {
   }
   private floorAt(x:number,z:number):number|undefined{
     // Traversal follows the physical leaf, not its requested state (which can be blocked).
-    if((this.house?.hatch.angle??0)>.03&&x>2&&x<4&&z<=-1&&z>=-7)return Math.max(0,3.6*(z+7)/6);
+    if(x>2&&x<4&&z<=-1&&z>=-7&&((this.house?.hatch.angle??0)>.03||this.position.y<3.36))return Math.max(0,3.6*(z+7)/6);
     if(x>=-5.9&&x<=5.9&&z>=-4.9&&z<=4.9&&this.position.y>2.6)return 3.6;
     if(x>=-6.85&&x<=6.85&&z>=-35.85&&z<=-5.6)return 0;
     return undefined;
@@ -401,8 +405,8 @@ export class Episode {
   }
   private hatchTouches(x:number,feet:number,z:number,height:number){
     const hatch=this.house!.hatch,angle=hatch.angle??0;
-    // Only the fully shut lid is a floor covering; the upright open leaf stays solid.
-    return angle>.03&&Boolean(hatch.hatchPanel?.touches(angle,x,feet,z,height+HEAD_MARGIN));
+    // The shut lid supports a player above, but remains a solid ceiling for one below.
+    return (angle>.03||feet<3.5)&&Boolean(hatch.hatchPanel?.touches(angle,x,feet,z,height+HEAD_MARGIN));
   }
   private doorSweepBlocked(t:Target,desired:number){
     if(t.hatchPanel)return t.hatchPanel.sweepTouches(t.angle??0,desired,this.position.x,this.position.y,this.position.z,Math.max(this.actorHeight,this.camera.position.y-this.position.y)+HEAD_MARGIN);
@@ -461,6 +465,9 @@ export class Episode {
       const next=T.MathUtils.damp(t.angle||0,desired,4,dt);
       // A player can enter the sweep after pressing G; stop the moving leaf before contact.
       if(!this.doorSweepBlocked(t,next))t.angle=next;
+      if(t.id==='hatch'&&!t.open&&(t.angle??0)<.001&&this.save.doors.includes('hatch')){
+        t.angle=0;this.save.doors=this.save.doors.filter(id=>id!=='hatch');this.persist();
+      }
       if(t.id==='hatch')t.pivot.rotation.z=t.angle??0;else t.pivot.rotation.y=t.angle??0;
     }}
     this.house.dust.rotation.y=Math.sin(this.elapsed*.025)*.03;this.house.lamp.intensity=9+Math.sin(this.elapsed*1.4)*.25;

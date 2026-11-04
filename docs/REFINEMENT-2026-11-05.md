@@ -25,6 +25,7 @@
 | Q09 | MEDIUM | R-hold uses performance.now while gameplay/test stepping uses simulation time; manual clock cannot advance the intro. | Reproduced and verified fixed in iteration 4 |
 | Q10 | HIGH | Height-based ceiling threshold prevents jumping in the open staircase. Releasing crouch under the attic-floor lip puts the eye through solid boards. | Reproduced; real solid headroom verified in iteration 5 |
 | Q11 | HIGH | Hatch rotates around its front edge through the normal interaction position. Ordinary door sweep guards explicitly exclude it. | Reproduced; side hinge and capsule/leaf guard verified in iteration 6 |
+| Q12 | HIGH | Interrupted hatch closing persists closed before reaching rest; reload strands a valid saved player on stairs whose support is conditional on the open lid. | Reproduced; targeted fix verified in iteration 7 |
 
 No CRITICAL issue has been reproduced in this session. This is not a certification that none exists.
 
@@ -65,6 +66,7 @@ No CRITICAL issue has been reproduced in this session. This is not a certificati
 
 ## Remaining scope
 - This session validates the implemented first chapter and selected critical paths, not all 100 planned rooms.
+- Chapter progression automation uses development poses between interaction points; movement/collision/stair probes exercise real control input. It is not an exhaustive manual walk through every furnished area.
 - Arbitrary slopes/dynamic rigid-body props, exhaustive mesh collision coverage, longer heap/GPU-resource soak tests, real mobile hardware profiling and the earlier Spector-instrumentation warnings remain outside the verified results.
 - The headless hardware-GL run is not a usable performance benchmark on this host. Use headed hardware-backed Chromium for live interaction checks, or explicit deterministic stepping for repeatable physics tests.
 - Art script workspace paths are local; portability of the authoring pipeline is a remaining LOW-priority task.
@@ -97,10 +99,19 @@ No CRITICAL issue has been reproduced in this session. This is not a certificati
 - Inspected after-open.png and after-intercepted.png; independent evidence in ../../outputs/refinement-2026-11-05/hatch/.
 - PASS fresh build and complete regression: headroom, fixed-step motion, intro-clock, original develop-web-game client, live intro, ordinary doors, full chapter/save reload, iPhone/Pixel touch emulation, gear/body/hand import, desktop/WebKit inventory and consumption, High rain/snow/puddle reflection. No runtime/shader errors reported by those checks. Inspected the latest skill-client scene screenshot and text state again.
 - A CPU-only synthetic distant-capsule query measured 1.23–1.62 microseconds/query in five warmed Node samples. This is not a browser frame-time/FPS result; no speculative renderer optimization was made from it.
-- Additional scenario to cover: save/reload during an interrupted closing animation, not just after fully opening/closing.
+- Interrupted closing/save reload was subsequently reproduced and addressed separately in iteration 7.
+
+### Iteration 7 — verified; separate input race found during regression
+- Reproduced an actual reload softlock: begin closing, place the capsule in a valid position on the open stair (3, 2.1, -3.5), let the closing leaf stop before contact, then allow normal autosave. The saved door was marked closed despite the leaf remaining at 0.358 rad. After reload, a 1 s W input moved 0 m because stair support was unavailable.
+- Closing now persists the hatch as closed only after the leaf actually reaches rest. Reloading an obstructed transition safely restores it open; fully completed closure still persists/reloads closed. Existing save schema, unlock flag and key requirements are unchanged.
+- Stairs continue to support a character underneath a shut hatch. The closed lid is solid from below, while it still supports walking above. Crouch/stand clearance respects the same panel, preventing a shortcut through it.
+- PASS fresh TypeScript/Vite build and real browser interrupted-close/autosave/reload, completed-close reload, ascent against the closed lid, crouch clearance and safe retreat. After reload, the same 1 s W input travels 2.221 m down the staircase; no teleport, JS or console error.
+- Standing ascent stops at feet 1.750 m, crouched ascent at 2.391 m; release remains crouched under the lid, retreat reaches ground level and restores standing. These are fixture-specific measured positions, not general movement/FPS guarantees.
+- Inspected before-reload-stuck.png and after-reload-traversable.png. Evidence: ../../outputs/refinement-2026-11-05/hatch-save/baseline.json and regression.json.
+- Hatch safety and static headroom regressions passed again. Movement, stair ascent/descent and jump passed, but rapid ESC pause/resume intermittently re-paused the scene. A 30-cycle input stress reproduced this at cycle 22; event trace proves focus/visibility remained valid while a delayed unlock event arrived after resume. This is a separate pre-existing input lifecycle bug, not dismissed as test flakiness; next iteration addresses it.
 
 ## Final local result
-- Six completed local iterations. Remote repository and production site were not updated.
+- Seven completed local refinement iterations, with an additional input race under investigation. Remote repository and production site were not updated.
 - Baseline rollback branch remains backup/refinement-2026-11-05-start.
 - The validated runtime is chapter1-refinement-05. This is a verified refinement increment, not certification of AAA fidelity or a complete commercial release.
 - Current known open scope and limits are listed above; no unmeasured FPS guarantee is made.

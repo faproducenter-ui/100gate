@@ -18,6 +18,7 @@
     "verify:motion": "node scripts/verify-motion.mjs",
     "verify:headroom": "node scripts/verify-headroom-math.mjs && node scripts/verify-headroom.mjs",
     "verify:hatch": "node scripts/verify-hinged-panel.mjs && node scripts/verify-hatch.mjs",
+    "verify:hatch-save": "node scripts/verify-hatch-save.mjs",
     "verify:doors": "node scripts/verify-door-safety.mjs",
     "verify:lifetime": "node scripts/verify-lifetime.mjs",
     "verify:hands": "node scripts/verify-hand-assets.mjs",
