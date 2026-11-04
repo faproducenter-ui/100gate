@@ -25,7 +25,8 @@ try{
     await wait(id=>window.__episodeTest.state().target===id,id);
   };
   await wait(()=>window.__episodeTest.state().rig.authored&&window.__episodeTest.state().rig.body);
-  assert.equal(await page.locator('main').getAttribute('data-release'),'chapter1-character-03');
+  assert.equal(await page.locator('main').getAttribute('data-release'),'chapter1-foley-04');
+  await wait(()=>window.__episodeTest.foley().ready);
   for(const id of ['gear-flashlight','gear-brass-key','player-boot','player-trouser','player-hand-open','player-hand-grip','player-sleeve','player-torso','player-upper-shadow'])assert(loaded.has(id+'.glb'),id+' was not downloaded');
   assert((await state()).rig.shadowUpper,'full silhouette not active with shadows enabled');
   await aim('flashlight');
@@ -40,6 +41,7 @@ try{
   await aim('hatchKey');
   await page.keyboard.press('KeyE');
   await wait(()=>{const s=window.__episodeTest.state();return s.rig.held==='key'&&!s.lamp&&s.save.items.includes('hatchKey');});
+  assert.equal(await page.evaluate(()=>window.__episodeTest.foley().recorded.keyPickup),1);
   await page.screenshot({path:resolve(out,'100gate-gear-key-in-hand.png')});
   await wait(()=>{const s=window.__episodeTest.state();return s.rig.held==='flashlight'&&s.lamp;});
   await page.evaluate(()=>window.__episodeTest.pose(3,3.6,-.5));

@@ -1,9 +1,10 @@
 import * as T from 'three';
-import { makeProp, material, piece, weave } from './props';
+import { makeProp, material, weave } from './props';
 import type { PropId } from './pack';
 import type { PlayerModelId } from './world';
 
 const UP=new T.Vector3(0,1,0);
+const RIGHT=new T.Vector3(1,0,0);
 const midpoint=new T.Vector3(), delta=new T.Vector3(), hip=new T.Vector3(), knee=new T.Vector3(), ankle=new T.Vector3(), bend=new T.Vector3();
 function connect(mesh:T.Object3D,a:T.Vector3,b:T.Vector3,overlap=0){
   delta.subVectors(b,a);const length=Math.max(.0001,delta.length());
@@ -25,17 +26,20 @@ export class PlayerRig {
   private shoulder=new T.Vector3();private elbow=new T.Vector3();private wristShadow=new T.Vector3();
   readonly lightSource=new T.Vector3();
   private handA=new T.Vector3();private handB=new T.Vector3();
+  private ropeA=new T.Vector3();private ropeB=new T.Vector3();
   constructor(scene:T.Scene,camera:T.Camera){
     this.body.name='Alexei · physical body';this.body.userData.player=true;
     this.view.name='Alexei · hands and held object';this.view.userData.player=true;
     this.shadowRoot.name='Alexei · full shadow silhouette';this.body.add(this.torso,this.shadowRoot);
     this.legs=[this.leg(-1),this.leg(1)];
-    const rope=material(0x8c7752,1);rope.bumpMap=weave('#8a7451','#b7a47750');rope.bumpScale=.008;
+    const rope=material(0x776449,.97);rope.bumpMap=weave('#806747','#bc9e6966');rope.bumpScale=.003;
     this.arms=[this.arm(-1),this.arm(1)];
-    this.arms.forEach(a=>a.wrist.add(this.rope(rope)));
-    for(let i=0;i<3;i++){
-      const band=piece(this.coils,new T.TorusGeometry(.083,.005,5,28),rope,0,-.35+i*.009,-.37);
-      band.scale.x=1.6;band.rotation.x=1.15;
+    this.arms.forEach(a=>a.wrist.add(this.rope(rope,a.side)));
+    for(const y of [0,.005]){
+      this.coils.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3([
+        new T.Vector3(0,0,0),new T.Vector3(.26,-.012+y,0),new T.Vector3(.51,-.019+y,.006),
+        new T.Vector3(.76,-.012+y,0),new T.Vector3(1,0,0),
+      ]),18,.0032,7,false),rope));
     }
     this.view.add(this.coils,this.propSocket);
     scene.add(this.body);camera.add(this.view);this.setVisible(false);
@@ -94,9 +98,18 @@ export class PlayerRig {
     this.view.traverse(o=>{if(o instanceof T.Mesh)o.castShadow=o.receiveShadow=false;});
     this.authored=true;
   }
-  private rope(mat:T.Material){
+  private rope(mat:T.Material,side:number){
     const g=new T.Group();g.name='wrist-ropes';
-    for(let i=0;i<5;i++)piece(g,new T.TorusGeometry(.044,.005,6,20),mat,0,-.047+i*.01,0).rotation.x=Math.PI/2+i*.018;
+    const fibers:T.Vector3[]=[];
+    for(let i=0;i<=120;i++){
+      const u=i/120,angle=u*3.2*Math.PI*2;
+      fibers.push(new T.Vector3(side*((.027+.009*u)*Math.cos(angle)-.002*u),.001+.022*u+.0012*Math.cos(angle),-.005+(.017+.006*u)*Math.sin(angle)));
+    }
+    const strand=(points:T.Vector3[],segments:number,radius:number)=>g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points),segments,radius,7,false),mat));
+    strand(fibers,144,.00335);
+    const inside=-side;
+    strand([new T.Vector3(inside*.028,.007,-.007),new T.Vector3(inside*.036,.010,-.002),new T.Vector3(inside*.040,.013,-.009),
+      new T.Vector3(inside*.035,.017,-.016),new T.Vector3(inside*.030,.012,-.008)],24,.00355);
     return g;
   }
   private leg(side:number){
@@ -183,6 +196,16 @@ export class PlayerRig {
         this.lightSource.set(0,0,-.165).applyEuler(this.propSocket.rotation).add(this.propSocket.position);
       }
     }
+    if(!p.free){
+      const [left,right]=this.arms;
+      this.ropeA.set(.035,.013,-.007).applyQuaternion(left.wrist.quaternion).add(left.wrist.position);
+      this.ropeB.set(-.035,.013,-.007).applyQuaternion(right.wrist.quaternion).add(right.wrist.position);
+      delta.subVectors(this.ropeB,this.ropeA);const length=Math.max(.003,delta.length());
+      this.coils.position.copy(this.ropeA);this.coils.scale.x=length;
+      this.coils.quaternion.setFromUnitVectors(RIGHT,delta.multiplyScalar(1/length));
+      // The knife progressively severs the connecting strands just before the wrists are free.
+      this.coils.visible=p.activity!=='cut'||p.hold<.90;
+    }
     if(this.shadowRoot.visible)for(const a of this.shadowArms){
       const s=a.side,holding=s>0&&Boolean(id),swing=s*sway*4.4;
       this.shoulder.set(s*.205,.407,.005);
@@ -197,5 +220,5 @@ export class PlayerRig {
     if(stepped)this.footfall=p.elapsed;
     return stepped;
   }
-  state(){return {body:this.body.visible,hands:this.view.visible,authored:this.authored,shadowUpper:this.shadowRoot.visible,feet:this.legs.map(l=>l.shoe.position.toArray()),footfall:this.footfall,held:[...this.gear].find(([,p])=>p.visible)?.[0]??null};}
+  state(){return {body:this.body.visible,hands:this.view.visible,authored:this.authored,shadowUpper:this.shadowRoot.visible,ropeBridge:this.coils.visible,feet:this.legs.map(l=>l.shoe.position.toArray()),footfall:this.footfall,held:[...this.gear].find(([,p])=>p.visible)?.[0]??null};}
 }

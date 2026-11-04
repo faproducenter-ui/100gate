@@ -14,7 +14,7 @@ export interface Target {
 }
 export const PLAYER_MODELS=['gear-flashlight','gear-brass-key','player-hand-open','player-hand-grip','player-boot','player-trouser','player-sleeve','player-torso','player-upper-shadow'] as const;
 export type PlayerModelId=typeof PLAYER_MODELS[number];
-export interface House { targets: Target[]; colliders: Collider[]; roots: T.Object3D[]; dust: T.Points; lamp: T.PointLight; hatch: Target; glow: T.PointLight; weather:ReturnType<typeof createWeather>; model:(id:PlayerModelId)=>T.Group; }
+export interface House { targets: Target[]; colliders: Collider[]; roots: T.Object3D[]; dust: T.Points; lamp: T.PointLight; hatch: Target; boundChair:T.Group; seatLocal:T.Box3; seatBounds:T.Box3; glow: T.PointLight; weather:ReturnType<typeof createWeather>; model:(id:PlayerModelId)=>T.Group; }
 export async function createHouse(scene: T.Scene, save: Save, progress: (n: number) => void): Promise<House> {
   const roots: T.Object3D[] = []; const targets: Target[] = []; const colliders: Collider[] = [];
   const loader = new T.TextureLoader();
@@ -178,10 +178,14 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   const knife=group(.5,3.65,1.2);box(knife,0,0,0,.055,.025,.15,dark);const blade=box(knife,0,0,-.19,.06,.012,.24,metal);blade.rotation.y=.08;
   register({id:'knife',kind:'item',title:['Нож','Knife'],root:knife});knife.visible=!save.items.includes('knife');
   // The GLB is already rotated by chair(); keep its backrest behind the player facing -Z.
-  const boundChair=chair(0,3.6,2.9);boundChair.name='bound-chair';collider(0,2.9,.65,.65,3.6,4.9);
+  const boundChair=chair(0,3.6,2.9);boundChair.name='bound-chair';
+  boundChair.updateWorldMatrix(true,true);
+  const seatBounds=new T.Box3().setFromObject(boundChair,true);
+  const seatLocal=seatBounds.clone().translate(boundChair.position.clone().negate());
+  colliders.push({get minX(){return seatBounds.min.x;},get maxX(){return seatBounds.max.x;},
+    get minZ(){return seatBounds.min.z;},get maxZ(){return seatBounds.max.z;},
+    get bottom(){return seatBounds.min.y;},get top(){return seatBounds.max.y;}});
   const bag=model('canvas-satchel');bag.position.set(1.37,3.61,1.82);bag.rotation.y=-.64;scene.add(bag);register({id:'bag',kind:'item',title:['Сумка Алексея','Alexei’s bag'],root:bag});bag.visible=!save.items.includes('bag');
-  // Rope coils on the chair and a fallen packing cloth.
-  const rope=new T.MeshStandardMaterial({color:0x927951,roughness:1});for(let y=4.1;y<4.5;y+=.085){const r=new T.Mesh(new T.TorusGeometry(.35,.02,7,32),rope);r.rotation.x=Math.PI/2;r.position.set(0,y,2.9);scene.add(r);r.name='rope';if(save.flags.includes('free'))r.visible=false;}
   function crate(x:number,y:number,z:number,w:number,h:number,d:number,rot=0,stamp=false){
     const g=group(x,y,z);g.rotation.y=rot;
     const crateModel=model('wood-crate');crateModel.scale.set(w/.85,h/.48,d/.63);g.add(crateModel);
@@ -285,5 +289,5 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
     const mesh=new T.Mesh(combined,batch[0].material);mesh.castShadow=mesh.receiveShadow=true;
     scene.add(mesh);for(const o of batch){o.geometry.dispose();o.removeFromParent();}
   }
-  progress(1);return {targets,colliders,roots,dust,lamp,hatch,glow,weather,model};
+  progress(1);return {targets,colliders,roots,dust,lamp,hatch,boundChair,seatLocal,seatBounds,glow,weather,model};
 }

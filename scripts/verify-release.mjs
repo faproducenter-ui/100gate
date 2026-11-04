@@ -29,10 +29,11 @@ for(const file of [
   'assets/chapter1/player-boot.glb',
   'assets/chapter1/player-trouser.glb',
   'assets/chapter1/player-torso.glb',
+  'assets/chapter1/foley-bank.wav',
 ]){
   const expected=digest(await readFile(resolve(dist,file)));
   const live=digest(Buffer.from(await (await get(file)).arrayBuffer()));
   assert.equal(live,expected,`${base.host} is serving an outdated copy of ${file}`);
   console.log(`PASS ${file}`);
 }
-console.log(`PASS ${base.origin}: ${bundle} and all checked GLBs match the release build`);
+console.log(`PASS ${base.origin}: ${bundle} and all checked assets match the release build`);

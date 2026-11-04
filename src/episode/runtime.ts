@@ -38,6 +38,7 @@ export class Episode {
   private frame=0;private disposed=false;private last=0;private elapsed=0;private lastUI=0;private atmosphereTime=0;private redraw=true;
   private velocity=new T.Vector3();private position=new T.Vector3();private yaw=0;private pitch=-.23;private grounded=true;
   private target?:Target;private hold=0;private holdId='';private holdStarted=0;private ray=new T.Raycaster();private flashlight:T.SpotLight;
+  private chairBeat=-1;private stepSide=false;
   private player:PlayerRig;private flashOn=false;private held?:PropId;private itemUntil=0;private useUntil=0;private reachUntil=0;private carryAfter?:{id?:PropId;flash:boolean};
   private movement=new T.Vector2();
   private settings:Settings;private save:Save;private mode:Mode='loading';private loading=0;private document?:string;
@@ -85,6 +86,7 @@ export class Episode {
     if(import.meta.env.DEV||import.meta.env.VITE_VERIFY==='1'){
       (window as unknown as Record<string,unknown>).__episodeTest={
         state:()=>({mode:this.mode,save:structuredClone(this.save),position:this.position.toArray(),yaw:this.yaw,pitch:this.pitch,grounded:this.grounded,target:this.target?.id,hold:this.hold,settings:{...this.settings},rig:this.player.state(),lamp:this.flashlight.intensity>0,weather:this.house?.weather.snapshot()}),
+        foley:()=>this.audio.state(),
         pose:(x:number,y:number,z:number,yaw=0,pitch=0)=>{this.position.set(x,y,z);this.yaw=yaw;this.pitch=pitch;this.velocity.set(0,0,0);this.movement.set(0,0);},
         aim:(id:string)=>{const t=this.house?.targets.find(t=>t.id===id);if(t){const point=new T.Box3().setFromObject(t.root).getCenter(new T.Vector3());this.camera.position.copy(this.position).add(new T.Vector3(0,1.68,0));const d=point.sub(this.camera.position);this.yaw=Math.atan2(-d.x,-d.z);this.pitch=Math.atan2(d.y,Math.hypot(d.x,d.z));}},
         targets:()=>this.house?.targets.map(t=>({id:t.id,kind:t.kind,pos:t.root.getWorldPosition(new T.Vector3()).toArray(),open:t.open,unlocked:t.unlocked})),
@@ -143,7 +145,7 @@ export class Episode {
     const left=remaining(this.save.flags,id);if(!left)return;
     this.addFlag(`pack:${id}:${PORTIONS[id]-left+1}`);
     this.equip(id,id==='candy'?1.05:1.35);this.useUntil=this.elapsed+.93;
-    this.audio.play(id==='candy'?'paper':'drink');
+    this.audio.consume(id);
     this.toggleBag();this.persist();
     this.toast(id==='candy'?this.t('Ты съел карамельку.','You ate a caramel.'):this.t('Ты сделал глоток воды.','You took a sip of water.'));
   }
@@ -156,7 +158,7 @@ export class Episode {
       if(e.repeat)return;this.keys.add(e.code);
       if(e.code==='Escape'){if(this.mode==='bag'){this.toggleBag();}else if(this.mode==='document'||this.mode==='playing'){this.pause();}else if(this.mode==='paused'){this.resume();}return;}
       if(e.code==='KeyH'){this.toggleBag();return;}
-      if(this.mode==='document'){if(e.code==='KeyF'){this.document=undefined;this.mode='playing';this.requestLock();this.notify();}return;}
+      if(this.mode==='document'){if(e.code==='KeyF')this.closeDocument();return;}
       if(this.mode!=='playing')return;
       if(e.code==='KeyT')this.toggleLight();
       if(e.code==='Space'&&this.flag('free')&&this.grounded&&!this.keys.has('ShiftLeft')){this.velocity.y=4.6;this.grounded=false;}
@@ -175,7 +177,7 @@ export class Episode {
   touchLook(x:number,y:number){if(this.mode!=='playing')return;this.yaw-=x*.004*this.settings.sensitivity;this.pitch=T.MathUtils.clamp(this.pitch-y*.004*this.settings.sensitivity,-1.42,1.42);}
   touchButton(code:string,down:boolean){
     if(!down){this.keys.delete(code);if(code==='KeyR'){this.hold=0;this.holdId='';}return;}
-    if(this.mode==='document'&&code==='KeyF'){this.document=undefined;this.mode='playing';this.requestLock();this.notify();return;}
+    if(this.mode==='document'&&code==='KeyF'){this.closeDocument();return;}
     if(code==='KeyH'){this.toggleBag();return;}
     if(this.mode!=='playing')return;
     if(code==='ShiftLeft'){if(this.keys.has(code))this.keys.delete(code);else this.keys.add(code);return;}
@@ -231,7 +233,7 @@ export class Episode {
   }
   private act(code:string){
     if(!this.house)return;
-    if(!this.flag('free')){if(code==='KeyE'&&this.flag('chairTipped')&&!this.has('knife')){this.take(this.house.targets.find(t=>t.id==='knife')!);this.audio.play('key');}return;}
+    if(!this.flag('free')){if(code==='KeyE'&&this.flag('chairTipped')&&!this.has('knife'))this.take(this.house.targets.find(t=>t.id==='knife')!);return;}
     const t=this.target;if(!t)return;
     if(code==='KeyE'&&t.kind==='item'){this.take(t);return;}
     if(code==='KeyF'&&t.kind==='document'){
@@ -266,9 +268,12 @@ export class Episode {
     this.camera.position.set(7.24,1.59,-33.13);this.camera.rotation.set(-.088,-Math.PI/2,0,'YXZ');this.flashlight.intensity=0;
     this.audio.play('door');this.audio.pause(true);if(document.pointerLockElement)document.exitPointerLock();this.persist();this.notify();
   }
+  private closeDocument(){
+    this.audio.play('paper');this.document=undefined;this.mode='playing';this.requestLock();this.notify();
+  }
   private take(t:Target){
     if(!this.has(t.id))this.save.items.push(t.id);
-    t.root.visible=false;this.audio.play(t.id==='bag'?'scrape':'key');
+    t.root.visible=false;this.audio.play(t.id==='bag'?'scrape':t.id.endsWith('Key')?'keyPickup':'click');
     if(t.id==='flashlight'){this.equip('flashlight');this.flashOn=true;}else if(t.id==='knife')this.equip('knife');else this.showItem(t.id==='bag'?'bag':t.id==='fuse'?'fuse':'key');
     this.reachUntil=this.elapsed+.36;this.target=undefined;this.persist();
     this.toast(t.id==='bag'?this.t('Сумка Алексея найдена. H — открыть.','Alexei’s bag recovered. H to open.'):this.t('Подобрано: ','Taken: ')+t.title[this.settings.language==='ru'?0:1]);
@@ -296,20 +301,24 @@ export class Episode {
       break;
     }
   }
-  private updateHold(dt:number){
+  private updateHold(){
     let id='';let duration=2.3;
     if(!this.flag('chairTipped'))id='tip';else if(!this.flag('free')&&this.has('knife')){id='cut';duration=2.8;}else if(this.target?.kind==='furniture'&&(this.target.progress||0)<1){id=this.target.id;duration=3;}
     if(!id||!this.keys.has('KeyR')){this.hold=0;this.holdId='';return;}
-    if(this.holdId!==id){this.hold=0;this.holdId=id;this.holdStarted=performance.now();this.audio.play(id==='cut'?'cut':'scrape');}
+    if(this.holdId!==id){this.hold=0;this.holdId=id;this.holdStarted=performance.now();this.chairBeat=-1;if(id!=='tip')this.audio.play(id==='cut'?'cut':'scrape');}
     this.hold=Math.min(1,(performance.now()-this.holdStarted)/1000/duration);
+    if(id==='tip'){
+      const beat=Math.floor(this.hold*6.6+.46);
+      if(beat!==this.chairBeat){this.chairBeat=beat;this.audio.rock(this.hold,beat%2===0?1:-1);}
+    }
     if(id!=='tip'&&id!=='cut'){
       const t=this.target!;const previous=t.progress||0;const next=Math.max(previous,this.hold);const desired=t.home!.clone().addScaledVector(t.move!,next);
       // Never push a solid object into the player capsule.
       if(Math.hypot(desired.x-this.position.x,desired.z-this.position.z)>.95){t.progress=next;t.root.position.copy(desired);}else{this.hold=previous;this.toast(this.t('Отойди с пути шкафа.','Step out of the furniture’s path.'));return;}
     }
     if(this.hold>=1){
-      if(id==='tip'){this.addFlag('chairTipped');this.pitch=-.76;this.audio.play('land');this.toast(this.t('Нож рядом с правой рукой. E — подобрать.','The knife is by your right hand. E to take it.'));}
-      else if(id==='cut'){this.addFlag('free');this.position.set(.5,3.6,2);this.scene.traverse(o=>{if(o.name==='rope')o.visible=false;});this.audio.play('cut');this.equip();this.toast(this.t('Руки свободны. Сумка лежит рядом со стулом.','Your hands are free. Your bag is beside the chair.'));}
+      if(id==='tip'){this.addFlag('chairTipped');this.pitch=-.76;this.audio.play('chairFall');this.toast(this.t('Нож рядом с правой рукой. E — подобрать.','The knife is by your right hand. E to take it.'));}
+      else if(id==='cut'){this.addFlag('free');this.position.set(.5,3.6,2);this.audio.play('cut');this.equip();this.toast(this.t('Руки свободны. Сумка лежит рядом со стулом.','Your hands are free. Your bag is beside the chair.'));}
       else{this.save.moved.push(id);this.audio.play('scrape');this.toast(this.t('Проход освобождён.','The way is clear.'));}
       this.hold=0;this.holdId='';this.persist();
     }
@@ -321,7 +330,15 @@ export class Episode {
     const row=T.MathUtils.clamp(Math.floor((-this.position.z-12)/6),0,3);return 2+row*2+(this.position.x>0?1:0);
   }
   private update(dt:number){
-    if(!this.house)return;this.updateHold(dt);
+    if(!this.house)return;this.updateHold();
+    const chair=this.house.boundChair,tippedChair=this.flag('chairTipped');
+    const chairRock=this.holdId==='tip'?Math.sin(this.hold*6.6*Math.PI)*(.03+this.hold*.21):0;
+    chair.rotation.z=T.MathUtils.damp(chair.rotation.z,tippedChair?-Math.PI*.46:chairRock,tippedChair?15:32,dt);
+    chair.position.x=T.MathUtils.damp(chair.position.x,tippedChair?.43:chairRock*.27,20,dt);
+    chair.position.y=3.6;
+    chair.updateMatrix();
+    const seat=this.house.seatBounds.copy(this.house.seatLocal).applyMatrix4(chair.matrix),seatLift=3.6-seat.min.y;
+    chair.position.y+=seatLift;seat.min.y+=seatLift;seat.max.y+=seatLift;
     const beforeX=this.position.x,beforeZ=this.position.z;
     let crouch=false,run=false;
     if(this.flag('free')){
@@ -349,13 +366,15 @@ export class Episode {
       const room=this.roomAt();if(room!==this.save.room){this.save.room=room;this.persist();}
       if(this.elapsed-this.saveClock>8&&this.position.distanceToSquared(this.savedPosition)>.2){this.persist();this.saveClock=this.elapsed;}
     }else{
-      const tipped=this.flag('chairTipped');const rock=this.holdId==='tip'?Math.sin(this.elapsed*9)*this.hold*.16:0;
+      const tipped=this.flag('chairTipped');const rock=chairRock*.68;
       this.camera.position.set(tipped?.2:0,tipped?4.54:4.77,tipped?2.15:2.8);this.camera.rotation.z=tipped?-.12:rock;
     }
     if(this.flag('free'))this.camera.rotation.z=T.MathUtils.damp(this.camera.rotation.z,0,8,dt);
     this.camera.rotation.y=this.yaw;this.camera.rotation.x=!this.flag('free')&&this.flag('chairTipped')?Math.max(this.pitch,-.89):this.pitch;
     if(this.itemUntil&&this.elapsed>=this.itemUntil){const before=this.carryAfter;this.equip(before?.id);this.flashOn=before?.id==='flashlight'&&before.flash;}
-    if(this.player.update({position:this.position,yaw:this.yaw,pitch:this.pitch,dt,elapsed:this.elapsed,dx:this.position.x-beforeX,dz:this.position.z-beforeZ,grounded:this.grounded,crouch,free:this.flag('free'),tipped:this.flag('chairTipped'),running:run,hold:this.hold,activity:this.holdId,held:!this.flag('free')&&this.has('knife')?'knife':this.held,using:this.useUntil>this.elapsed?1-(this.useUntil-this.elapsed)/.93:0,reach:this.reachUntil>this.elapsed?1-(this.reachUntil-this.elapsed)/.43:0,water:remaining(this.save.flags,'water'),flashOn:this.flashOn,shadows:this.settings.quality!=='low'}))this.audio.play('step');
+    if(this.player.update({position:this.position,yaw:this.yaw,pitch:this.pitch,dt,elapsed:this.elapsed,dx:this.position.x-beforeX,dz:this.position.z-beforeZ,grounded:this.grounded,crouch,free:this.flag('free'),tipped:this.flag('chairTipped'),running:run,hold:this.hold,activity:this.holdId,held:!this.flag('free')&&this.has('knife')?'knife':this.held,using:this.useUntil>this.elapsed?1-(this.useUntil-this.elapsed)/.93:0,reach:this.reachUntil>this.elapsed?1-(this.reachUntil-this.elapsed)/.43:0,water:remaining(this.save.flags,'water'),flashOn:this.flashOn,shadows:this.settings.quality!=='low'})){
+      this.stepSide=!this.stepSide;this.audio.step(run,crouch,this.stepSide);
+    }
     this.flashlight.position.copy(this.player.lightSource);
     this.flashlight.intensity=this.flashOn&&this.held==='flashlight'?43:0;
     this.house.glow.intensity=this.flag('power')?16:0;

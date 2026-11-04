@@ -27,6 +27,7 @@ try{
   const page=await desktop.newPage({viewport:{width:1024,height:620}});
   const errors=await prepare(page);
   const s=()=>page.evaluate(()=>window.__episodeTest.state());
+  await page.waitForFunction(()=>window.__episodeTest.foley().ready);
   await page.screenshot({path:resolve(output,'100gate-first-person-boots.png')});
   const baseline=(await s()).rig.feet;
   await page.keyboard.down('KeyW');
@@ -34,6 +35,10 @@ try{
     await page.waitForFunction(before=>JSON.stringify(window.__episodeTest.state().rig.feet)!==JSON.stringify(before),baseline,{timeout:10000});
     await page.waitForFunction(()=>window.__episodeTest.state().rig.footfall>0,null,{timeout:10000});
   }finally{await page.keyboard.up('KeyW');}
+  assert((await page.evaluate(()=>window.__episodeTest.foley().recorded.walk))>0);
+  await page.keyboard.down('ControlLeft');await page.keyboard.down('KeyW');
+  try{await page.waitForFunction(()=>window.__episodeTest.foley().recorded.run>0,null,{timeout:10000});}
+  finally{await page.keyboard.up('KeyW');await page.keyboard.up('ControlLeft');}
   await page.evaluate(()=>window.__episodeTest.pose(.5,3.6,2,0,-.9));
   await page.evaluate(()=>window.__episodeTest.aim('bag'));
   await page.waitForFunction(()=>window.__episodeTest.state().target==='bag',null,{timeout:10000});
@@ -52,6 +57,8 @@ try{
     await page.getByTestId('pack-consume').click();
     await page.waitForFunction(id=>window.__episodeTest.state().save.flags.includes(`pack:${id}:1`),id);
   }
+  const recorded=await page.evaluate(()=>window.__episodeTest.foley().recorded);
+  for(const action of ['eat','cap','slosh','gulp'])assert.equal(recorded[action],1,action);
   await page.reload();await page.getByTestId('start').click({timeout:65000});
   await page.keyboard.press('KeyH');
   assert.match(await page.getByTestId('pack-candy').innerText(),/×1/);

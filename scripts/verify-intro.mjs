@@ -20,6 +20,8 @@ try{
     finally{await page.keyboard.up('KeyR');}
   };
   await wait(()=>{const t=window.__episodeTest;return t.state().mode==='playing'&&t.introView().eye[1]>4.7;});
+  await wait(()=>window.__episodeTest.foley().ready);
+  assert(await page.evaluate(()=>window.__episodeTest.state().rig.ropeBridge));
   const layout=await page.evaluate(()=>window.__episodeTest.layoutCheck());
   assert(layout.ceiling&&layout.east&&layout.west,'stair and landing enclosure has gaps');
   assert.equal(layout.keys.length,5);
@@ -27,6 +29,9 @@ try{
   assert.equal((await view()).chairHits,0,'the backrest blocks the seated camera');
   await page.screenshot({path:resolve(out,'100gate-intro-seated-fixed.png')});
   await hold('chairTipped');
+  const rocking=await page.evaluate(()=>window.__episodeTest.foley().recorded);
+  assert(rocking.chair>=3,'several rocking motions should have their own creak');
+  assert.equal(rocking.chairFall,1);
   await page.keyboard.press('KeyE');
   await wait(()=>window.__episodeTest.state().rig.held==='knife');
   assert.equal((await view()).chairHits,0,'the chair blocks the tipped camera');
@@ -35,7 +40,8 @@ try{
   await hold('free');
   await wait(()=>window.__episodeTest.introView().eye[1]>5.15);
   assert.equal(await page.evaluate(()=>window.__episodeTest.state().rig.held),null);
+  assert.equal(await page.evaluate(()=>window.__episodeTest.state().rig.ropeBridge),false);
   await page.screenshot({path:resolve(out,'100gate-intro-standing-fixed.png')});
   assert.deepEqual(errors,[]);
-  console.log('PASS unobstructed wide intro, visible knife after tip, cut ropes and stand');
+  console.log('PASS intro camera, all five keys, enclosed landing, recorded chair creaks/fall, connected and cut wrist ropes');
 }finally{await browser.close();}
