@@ -9,3 +9,5 @@ Original prompt: Refine the existing 100gate Three.js horror game autonomously i
 - Next: door leaf safety, explicit postprocess cleanup, Blender tangent repair. Do not push/deploy.
 - Iteration 2 verified: swept door safety, composer/pass ownership cleanup, headed Chromium full chapter and mobile emulation. Local-only changes; no publication.
 - Iteration 3 verified: live Blender PBR hand baking, MikkTSpace export, GLB validation, same-scene before/after screenshots, complete regression including weather/pack/episode/mobile. Editable source is art/character-hands.blend. Local revision chapter1-refinement-05. No publication.
+- Iteration 4 verified: interaction holds use active game time; explicit cancellation and pause regression passes. All first-chapter/mobile regressions passed again. No push/deploy.
+- Final: leave further shader prewarming, authored collision-proxy coverage, long memory soak, real-device performance and broader environment polish for separate measured iterations. Do not claim these are complete.

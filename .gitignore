@@ -8,3 +8,4 @@ verification-shots/
 test-results/
 .railway/
 .pages-publish/
+*.blend[0-9]*

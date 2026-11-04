@@ -14,6 +14,7 @@
     "verify:weather": "node scripts/verify-weather.mjs",
     "verify:gear": "node scripts/verify-gear.mjs",
     "verify:intro": "node scripts/verify-intro.mjs",
+    "verify:intro-clock": "node scripts/verify-intro-clock.mjs",
     "verify:motion": "node scripts/verify-motion.mjs",
     "verify:doors": "node scripts/verify-door-safety.mjs",
     "verify:lifetime": "node scripts/verify-lifetime.mjs",

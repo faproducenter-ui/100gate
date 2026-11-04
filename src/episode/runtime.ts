@@ -38,7 +38,7 @@ export class Episode {
   private house?:House;private audio=new Foley();private keys=new Set<string>();private listeners:(()=>void)[]=[];
   private frame=0;private disposed=false;private last=0;private elapsed=0;private lastUI=0;private atmosphereTime=0;private redraw=true;
   private velocity=new T.Vector3();private position=new T.Vector3();private yaw=0;private pitch=-.23;private grounded=true;
-  private target?:Target;private hold=0;private holdId='';private holdStarted=0;private ray=new T.Raycaster();private flashlight:T.SpotLight;
+  private target?:Target;private hold=0;private holdId='';private holdElapsed=0;private ray=new T.Raycaster();private flashlight:T.SpotLight;
   private chairBeat=-1;private stepSide=false;
   private player:PlayerRig;private flashOn=false;private held?:PropId;private itemUntil=0;private useUntil=0;private reachUntil=0;private carryAfter?:{id?:PropId;flash:boolean};
   private movement=new T.Vector2();private motionDebt=0;
@@ -339,12 +339,12 @@ export class Episode {
       break;
     }
   }
-  private updateHold(){
+  private updateHold(dt:number){
     let id='';let duration=2.3;
     if(!this.flag('chairTipped'))id='tip';else if(!this.flag('free')&&this.has('knife')){id='cut';duration=2.8;}else if(this.target?.kind==='furniture'&&(this.target.progress||0)<1){id=this.target.id;duration=3;}
     if(!id||!this.keys.has('KeyR')){this.hold=0;this.holdId='';return;}
-    if(this.holdId!==id){this.hold=0;this.holdId=id;this.holdStarted=performance.now();this.chairBeat=-1;if(id!=='tip')this.audio.play(id==='cut'?'cut':'scrape');}
-    this.hold=Math.min(1,(performance.now()-this.holdStarted)/1000/duration);
+    if(this.holdId!==id){this.hold=0;this.holdId=id;this.holdElapsed=0;this.chairBeat=-1;if(id!=='tip')this.audio.play(id==='cut'?'cut':'scrape');}
+    this.holdElapsed+=dt;this.hold=Math.min(1,this.holdElapsed/duration);
     if(id==='tip'){
       const beat=Math.floor(this.hold*6.6+.46);
       if(beat!==this.chairBeat){this.chairBeat=beat;this.audio.rock(this.hold,beat%2===0?1:-1);}
@@ -397,7 +397,7 @@ export class Episode {
       const held=this.house.targets.find(t=>t.id===this.holdId);
       if(!held||!this.canContinueHold(held)){this.hold=0;this.holdId='';this.target=undefined;}
     }
-    this.updateHold();
+    this.updateHold(dt);
     const chair=this.house.boundChair,tippedChair=this.flag('chairTipped');
     const chairRock=this.holdId==='tip'?Math.sin(this.hold*6.6*Math.PI)*(.03+this.hold*.21):0;
     chair.rotation.z=T.MathUtils.damp(chair.rotation.z,tippedChair?-Math.PI*.46:chairRock,tippedChair?15:32,dt);

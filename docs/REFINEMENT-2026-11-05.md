@@ -1,5 +1,10 @@
 # Local refinement — 2026-11-05
 
+## Краткий итог
+Четыре проверенные локальные итерации: стабильный шаг движения 120 Гц, запрет удержания мебели через стены, безопасная траектория дверей, освобождение ресурсов постобработки, PBR-материалы кистей из Blender и единое игровое время для удержаний R.
+Сюжет, движок и формат сохранения не заменены. Есть локальная точка отката; push/deploy не выполнялись. Полная глава и мобильная эмуляция проверены повторно. Реальные мобильные устройства и длительный тест памяти не сертифицированы.
+
+
 ## Safety and scope
 - Baseline: 524e2eb, preserved by local branch backup/refinement-2026-11-05-start.
 - No remote push, deployment, production access changes, save-schema replacement, engine change, or asset deletion.
@@ -17,6 +22,8 @@
 | Q06 | MEDIUM | Open doors can rotate a leaf into the player; current close guard only measures distance to door root. | Reproduced and verified fixed in iteration 2 |
 | Q07 | MEDIUM | Current crouch/ceiling model is analytic and supports the current house, not arbitrary terrain/rigid-body interaction. No claim of full rigid-body physics. | Deferred; protect current traversal |
 | Q08 | LOW | Some installed skill shared reference documents are absent; not a runtime defect. game-studio is not installed. | Not changed |
+
+| Q09 | MEDIUM | R-hold uses performance.now while gameplay/test stepping uses simulation time; manual clock cannot advance the intro. | Reproduced and verified fixed in iteration 4 |
 
 No CRITICAL issue has been reproduced in this session. This is not a certification that none exists.
 
@@ -60,3 +67,16 @@ No CRITICAL issue has been reproduced in this session. This is not a certificati
 - Arbitrary slopes/dynamic rigid-body props, exhaustive mesh collision coverage, longer heap/GPU-resource soak tests, real mobile hardware profiling and the earlier Spector-instrumentation warnings remain outside the verified results.
 - The headless hardware-GL run is not a usable performance benchmark on this host. Use headed hardware-backed Chromium for live interaction checks, or explicit deterministic stepping for repeatable physics tests.
 - Art script workspace paths are local; portability of the authoring pipeline is a remaining LOW-priority task.
+
+### Iteration 4 — verified
+- Reproduced the clock mismatch before fixing it: advancing 2400 ms of game time while holding R left the chair untipped (progress ~0.0027) because hold progression read performance.now rather than active game time.
+- Holds now accumulate the same active timestep as gameplay. Pause does not advance them; release/cancel resets the next attempt.
+- New intro-clock test covers chair -> knife -> cut, cancellation partway through cutting, pause mid-hold, and a fresh resumed attempt. No skip of required story flags.
+- PASS build, intro-clock, motion regression, original develop-web-game client with text-state evidence, live-clock intro, complete chapter, save reload, iPhone and Pixel emulation; no JavaScript errors.
+- Framed the editable hands in the live Blender viewport. Kept Blender's numbered backup files on disk and excluded those generated backups from Git.
+
+## Final local result
+- Four completed local iterations. Remote repository and production site were not updated.
+- Baseline rollback branch remains backup/refinement-2026-11-05-start.
+- The validated runtime is chapter1-refinement-05. This is a verified refinement increment, not certification of AAA fidelity or a complete commercial release.
+- Current known open scope and limits are listed above; no unmeasured FPS guarantee is made.
