@@ -3,6 +3,7 @@ import { ArrowUp, Backpack, BookOpen, BookText, Candy, ChevronRight, Compass, Dr
 import { Episode, type View } from './runtime';
 import { DEFAULT_SETTINGS, DOCUMENTS, ROOMS, newSave, text } from './data';
 import { PACK, PACK_IDS, remaining, type PackItem } from './pack';
+import { ASSET_REVISION } from './release';
 import './episode.css';
 
 const initial:View={mode:'loading',loading:0,room:0,objective:'',prompt:'',progress:0,message:'',save:newSave(),settings:DEFAULT_SETTINGS,cloud:'local'};
@@ -32,7 +33,7 @@ export default function EpisodePage(){
   const actionCode=view.mode==='document'?'KeyF':/^(УДЕРЖИВАЙ R|Зажми R|HOLD R|Hold R)/.test(view.prompt)?'KeyR':view.prompt.startsWith('F')?'KeyF':view.prompt.startsWith('G')?'KeyG':'KeyE';
   const objective=mobile?view.objective.replace('Удерживай R','Удерживай кнопку действия').replace('клавишей E','кнопкой действия').replace('клавишей G','повторным нажатием').replace('Hold R','Hold the action button').replace(' with E','').replace(' with G',''):view.objective;
   const cloudText={local:t('Сохранение на устройстве','Saved on this device'),saved:t('Резервная копия на сервере','Server backup saved'),saving:t('Сохранение…','Saving…'),offline:t('Локально · сервер недоступен','Local save · server unavailable'),unavailable:t('Хранилище браузера недоступно','Browser storage unavailable'),restored:t('Копия восстановлена','Backup restored')}[view.cloud]||'';
-  return <main className="episode" data-mode={view.mode}>
+  return <main className="episode" data-mode={view.mode} data-release={ASSET_REVISION}>
     <canvas ref={canvas} id="episode-canvas" aria-label={t('Трёхмерный мир игры','3D game world')}/>
     <div className="ep-vignette"/><div className="ep-grain"/>
     {view.mode==='loading'&&<div className="ep-loading"><div className="ep-seal">100</div><span className="ep-kicker">100GATE / {t('СТО ДВЕРЕЙ','ONE HUNDRED DOORS')}</span><h1>{t('Дом просыпается','The house is waking')}</h1><p>{t('Загрузка окружения и материалов','Loading the environment and materials')}</p><div className="ep-load-track"><i style={{width:`${Math.max(5,view.loading*100)}%`}}/></div></div>}

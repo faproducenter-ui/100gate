@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { DOCUMENTS, type Save } from './data';
 import { art } from './props';
+import { chapterAsset } from './release';
 import { createWeather } from './weather';
 
 export interface Collider { minX: number; maxX: number; minZ: number; maxZ: number; bottom: number; top: number; disabled?: () => boolean; touches?: (x:number,z:number,radius:number)=>boolean; }
@@ -11,26 +12,28 @@ export interface Target {
   title: [string, string]; root: T.Object3D; key?: string; open?: boolean; unlocked?: boolean;
   home?: T.Vector3; move?: T.Vector3; progress?: number; pivot?: T.Object3D; angle?: number; blockedBy?: string;
 }
-export interface House { targets: Target[]; colliders: Collider[]; roots: T.Object3D[]; dust: T.Points; lamp: T.PointLight; hatch: Target; glow: T.PointLight; weather:ReturnType<typeof createWeather>; }
+export const PLAYER_MODELS=['gear-flashlight','gear-brass-key','player-hand-open','player-hand-grip','player-boot','player-trouser','player-sleeve','player-torso'] as const;
+export type PlayerModelId=typeof PLAYER_MODELS[number];
+export interface House { targets: Target[]; colliders: Collider[]; roots: T.Object3D[]; dust: T.Points; lamp: T.PointLight; hatch: Target; glow: T.PointLight; weather:ReturnType<typeof createWeather>; model:(id:PlayerModelId)=>T.Group; }
 export async function createHouse(scene: T.Scene, save: Save, progress: (n: number) => void): Promise<House> {
   const roots: T.Object3D[] = []; const targets: Target[] = []; const colliders: Collider[] = [];
   const loader = new T.TextureLoader();
   const load = async (name: string) => {
-    const tex = await loader.loadAsync(`${import.meta.env.BASE_URL}textures/${name}`);
+    const tex = await loader.loadAsync(chapterAsset(`textures/${name}`));
     tex.wrapS = tex.wrapT = T.RepeatWrapping; tex.anisotropy = 8; return tex;
   };
   const names=['wood-color','wood-normal','wood-rough','plaster-diff','plaster-nor_gl','plaster-rough','linen-diff','linen-nor_gl','mud-diff','mud-nor_gl'];
   let done=0;
-  const modelNames=['old-chair','writing-desk','hall-wardrobe','paper-note','canvas-satchel','yard-bench','yard-fir','yard-pine','wood-crate','workshop-exterior','coopers-barrel'] as const;
+  const modelNames=['old-chair','writing-desk','hall-wardrobe','paper-note','canvas-satchel','yard-bench','yard-fir','yard-pine','wood-crate','workshop-exterior','coopers-barrel',...PLAYER_MODELS] as const;
   const gltf=new GLTFLoader();
   const mark=()=>progress(++done/(names.length+modelNames.length+1));
   const [maps,models] = await Promise.all([
     Promise.all(names.map(async f=>{const texture=await load(f+'.jpg');mark();return texture;})),
-    Promise.all(modelNames.map(async name=>{const dir=name==='coopers-barrel'?'':'chapter1/';const asset=await gltf.loadAsync(`${import.meta.env.BASE_URL}assets/${dir}${name}.glb`);mark();return asset.scene;})),
+    Promise.all(modelNames.map(async name=>{const dir=name==='coopers-barrel'?'':'chapter1/';const asset=await gltf.loadAsync(chapterAsset(`assets/${dir}${name}.glb`));mark();return asset.scene;})),
   ]);
   for(const i of [0,3,6,8])maps[i].colorSpace=T.SRGBColorSpace;
   maps[8].repeat.set(44,44);maps[9].repeat.set(44,44);
-  maps[0].colorSpace = T.SRGBColorSpace; maps.forEach(t => t.repeat.set(2, 4));
+  maps.slice(0,3).forEach(t=>t.repeat.set(2,4));
   const timberMaps = maps.map(t => { const c = t.clone(); c.repeat.set(.4, 1.8); return c; });
   const wood = new T.MeshStandardMaterial({ color: 0x827361, map: timberMaps[0], normalMap: timberMaps[1], roughnessMap: timberMaps[2], roughness: .95, normalScale: new T.Vector2(.45, .45) });
   const dark = wood.clone(); dark.color.set(0x493c30);
@@ -52,6 +55,8 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
     if(!(o instanceof T.Mesh))return;
     o.castShadow=o.receiveShadow=true;
     if(!(o.material instanceof T.MeshStandardMaterial))return;
+    if(/Heavy blue linen/i.test(o.material.name))o.material.color.setRGB(.24,.31,.38);
+    if(/Waxed field jacket/i.test(o.material.name))o.material.color.multiplyScalar(.78);
     if(/Smoked oak|Exposed oak edges|Faded paint/.test(o.material.name)){
       o.material.map=wood.map;o.material.normalMap=wood.normalMap;o.material.roughnessMap=wood.roughnessMap;
       o.material.normalScale.set(.38,.38);o.material.color.lerp(new T.Color(0xd9c3a0),.35);
@@ -116,8 +121,11 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
     register({id,kind:'document',title:['Документ','Document'],root:g});return g;
   }
   function key(id:string,x:number,y:number,z:number,title:[string,string],blockedBy?:string) {
-    const g=group(x,y,z);const ring=new T.Mesh(new T.TorusGeometry(.05,.012,8,20),brass);ring.rotation.x=Math.PI/2;g.add(ring);
-    box(g,.09,0,0,.14,.018,.018,brass);box(g,.14,0,.025,.025,.018,.055,brass);box(g,.1,0,.02,.018,.018,.04,brass);
+    const g=group(x,y,z);g.rotation.y=.66;
+    const prop=model('gear-brass-key');prop.rotation.x=-Math.PI/2;prop.scale.setScalar(1.25);g.add(prop);
+    // A tight invisible target around the small prop keeps aiming possible at normal play distance.
+    const hit=new T.Mesh(new T.BoxGeometry(.137,.035,.187),new T.MeshBasicMaterial({visible:false}));
+    hit.position.z=.014;g.add(hit);
     register({id,kind:'item',title,root:g,blockedBy});g.visible=!save.items.includes(id);return g;
   }
   function bottle(x:number,y:number,z:number) {const g=group(x,y,z);cylinder(g,0,.14,0,.065,.25,ceramic);cylinder(g,0,.3,0,.025,.1,metal);return g;}
@@ -155,7 +163,7 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   wall(1.97,1.6,-4,.1,3.2,6,wood);wall(4.03,1.6,-4,.1,3.2,6,wood);
   table(0,3.6,-3.8,2.6,1);storyPaper('atticNote',-.7,4.51,-3.7);
   const tin=group(.65,4.51,-3.75);box(tin,0,.04,0,.5,.08,.3,metal);key('hatchKey',.66,4.61,-3.7,['Ключ от люка','Hatch key']);
-  const flashlight=group(-.05,4.56,-3.62);cylinder(flashlight,0,0,0,.065,.35,black).rotation.x=Math.PI/2;cylinder(flashlight,0,0,-.2,.11,.09,metal).rotation.x=Math.PI/2;
+  const flashlight=group(-.05,4.56,-3.62),flashlightMesh=model('gear-flashlight');flashlightMesh.rotation.y=-.24;flashlight.add(flashlightMesh);
   register({id:'flashlight',kind:'item',title:['Фонарь','Flashlight'],root:flashlight});flashlight.visible=!save.items.includes('flashlight');
   const knife=group(.5,3.65,1.2);box(knife,0,0,0,.055,.025,.15,dark);const blade=box(knife,0,0,-.19,.06,.012,.24,metal);blade.rotation.y=.08;
   register({id:'knife',kind:'item',title:['Нож','Knife'],root:knife});knife.visible=!save.items.includes('knife');
@@ -265,5 +273,5 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
     const mesh=new T.Mesh(combined,batch[0].material);mesh.castShadow=mesh.receiveShadow=true;
     scene.add(mesh);for(const o of batch){o.geometry.dispose();o.removeFromParent();}
   }
-  progress(1);return {targets,colliders,roots,dust,lamp,hatch,glow,weather};
+  progress(1);return {targets,colliders,roots,dust,lamp,hatch,glow,weather,model};
 }

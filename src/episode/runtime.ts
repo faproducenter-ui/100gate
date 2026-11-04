@@ -15,14 +15,30 @@ const SAVE_KEY='100gate.chapter1.save.v1', SETTINGS_KEY='100gate.settings.v1', T
 function readLocal(key:string):unknown {try{return JSON.parse(localStorage.getItem(key)||'null');}catch{return null;}}
 function writeLocal(key:string,value:unknown) {try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
 const API=(import.meta.env.VITE_SAVE_API as string|undefined)?.replace(/\/$/,'')||'';
+function roomReflections(renderer:T.WebGLRenderer){
+  if(!renderer.extensions.has('EXT_color_buffer_float'))return;
+  const width=128,height=64,data=new Float32Array(width*height*4);
+  // A small linear HDR probe: soft blue window light and a broad warm interior bounce.
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+    const u=x/width,v=y/height;
+    const window=Math.exp(-(((u-.29)/.073)**2+((v-.47)/.126)**2))*2.8;
+    const bounce=Math.exp(-(((u-.79)/.16)**2+((v-.43)/.19)**2))*.42;
+    const i=(y*width+x)*4;
+    data[i]=.042+window*.72+bounce;data[i+1]=.050+window*.87+bounce*.76;data[i+2]=.054+window+bounce*.52;data[i+3]=1;
+  }
+  const source=new T.DataTexture(data,width,height,T.RGBAFormat,T.FloatType);
+  source.mapping=T.EquirectangularReflectionMapping;source.needsUpdate=true;
+  const gen=new T.PMREMGenerator(renderer),target=gen.fromEquirectangular(source);
+  source.dispose();gen.dispose();return target;
+}
 export class Episode {
   private scene=new T.Scene(); private camera=new T.PerspectiveCamera(72,1,.055,100);
-  private renderer:T.WebGLRenderer;private composer:EffectComposer;private bloom:UnrealBloomPass;
+  private renderer:T.WebGLRenderer;private composer:EffectComposer;private bloom:UnrealBloomPass;private reflections?:T.WebGLRenderTarget;
   private house?:House;private audio=new Foley();private keys=new Set<string>();private listeners:(()=>void)[]=[];
   private frame=0;private disposed=false;private last=0;private elapsed=0;private lastUI=0;private atmosphereTime=0;private redraw=true;
   private velocity=new T.Vector3();private position=new T.Vector3();private yaw=0;private pitch=-.23;private grounded=true;
   private target?:Target;private hold=0;private holdId='';private holdStarted=0;private ray=new T.Raycaster();private flashlight:T.SpotLight;
-  private player:PlayerRig;private flashOn=false;private held?:PropId;private itemUntil=0;private useUntil=0;private reachUntil=0;
+  private player:PlayerRig;private flashOn=false;private held?:PropId;private itemUntil=0;private useUntil=0;private reachUntil=0;private carryAfter?:{id?:PropId;flash:boolean};
   private movement=new T.Vector2();
   private settings:Settings;private save:Save;private mode:Mode='loading';private loading=0;private document?:string;
   private message='';private messageUntil=0;private cloud='local';private cloudTimer:ReturnType<typeof setTimeout>|undefined;
@@ -58,13 +74,18 @@ export class Episode {
   private async init(){try{
     this.house=await createHouse(this.scene,this.save,n=>{if(!this.disposed){this.loading=n;this.notify();}});
     if(this.disposed){this.releaseScene();return;}
+    this.reflections=roomReflections(this.renderer);
+    if(this.reflections){this.scene.environment=this.reflections.texture;this.scene.environmentIntensity=.56;}
+    this.player.loadBody(this.house.model);
+    this.player.registerModel('flashlight',this.house.model('gear-flashlight'));
+    this.player.registerModel('key',this.house.model('gear-brass-key'));
     const satchel=this.house.targets.find(t=>t.id==='bag')?.root.clone(true) as T.Group|undefined;
     if(satchel){satchel.position.set(0,-.078,0);satchel.rotation.set(.05,0,0);satchel.scale.setScalar(.60);this.player.registerModel('bag',satchel);}
     this.mode='title';this.loading=1;this.notify();
     // Probe is exposed only in local development and explicit automated verification builds.
     if(import.meta.env.DEV||import.meta.env.VITE_VERIFY==='1'){
       (window as unknown as Record<string,unknown>).__episodeTest={
-        state:()=>({mode:this.mode,save:structuredClone(this.save),position:this.position.toArray(),yaw:this.yaw,pitch:this.pitch,grounded:this.grounded,target:this.target?.id,hold:this.hold,settings:{...this.settings},rig:this.player.state(),weather:this.house?.weather.snapshot()}),
+        state:()=>({mode:this.mode,save:structuredClone(this.save),position:this.position.toArray(),yaw:this.yaw,pitch:this.pitch,grounded:this.grounded,target:this.target?.id,hold:this.hold,settings:{...this.settings},rig:this.player.state(),lamp:this.flashlight.intensity>0,weather:this.house?.weather.snapshot()}),
         pose:(x:number,y:number,z:number,yaw=0,pitch=0)=>{this.position.set(x,y,z);this.yaw=yaw;this.pitch=pitch;this.velocity.set(0,0,0);this.movement.set(0,0);},
         aim:(id:string)=>{const t=this.house?.targets.find(t=>t.id===id);if(t){const point=new T.Box3().setFromObject(t.root).getCenter(new T.Vector3());this.camera.position.copy(this.position).add(new T.Vector3(0,1.68,0));const d=point.sub(this.camera.position);this.yaw=Math.atan2(-d.x,-d.z);this.pitch=Math.atan2(d.y,Math.hypot(d.x,d.z));}},
         targets:()=>this.house?.targets.map(t=>({id:t.id,kind:t.kind,pos:t.root.getWorldPosition(new T.Vector3()).toArray(),open:t.open,unlocked:t.unlocked})),
@@ -76,7 +97,11 @@ export class Episode {
   private flag(id:string){return this.save.flags.includes(id);}
   private addFlag(id:string){if(!this.flag(id))this.save.flags.push(id);}
   private recoverPack(){if(this.save.room>0&&this.flag('free')&&!this.has('bag'))this.save.items.push('bag');}
-  private equip(id?:PropId,seconds=0){this.held=id;this.itemUntil=seconds?this.elapsed+seconds:0;this.useUntil=0;if(id!=='flashlight')this.flashOn=false;}
+  private equip(id?:PropId,seconds=0){this.held=id;this.itemUntil=seconds?this.elapsed+seconds:0;this.useUntil=0;this.carryAfter=undefined;if(id!=='flashlight')this.flashOn=false;}
+  private showItem(id:PropId,seconds=1.48){
+    const before=this.carryAfter??{id:this.itemUntil?undefined:this.held,flash:this.flashOn};
+    this.equip(id,seconds);this.carryAfter=before;
+  }
   private toggleLight(){if(!this.has('flashlight'))return;if(this.held!=='flashlight'){this.equip('flashlight');this.flashOn=true;}else this.flashOn=!this.flashOn;this.audio.play('click');this.notify();}
   toggleBag(){
     if(this.mode==='bag'){this.mode='playing';this.keys.clear();this.requestLock();this.notify();return;}
@@ -146,7 +171,7 @@ export class Episode {
       for(const t of this.house.targets){if(t.kind==='item')t.root.visible=true;if(t.kind==='door'){t.open=false;t.unlocked=!t.key;t.angle=0;t.pivot?.rotation.set(0,0,0);}if(t.kind==='furniture'&&t.home){t.root.position.copy(t.home);t.progress=0;}}
       this.scene.traverse(o=>{if(o.name==='rope')o.visible=true;});
     }
-    if(this.flag('free'))this.camera.position.copy(this.position).add(new T.Vector3(0,1.68,0));
+    if(this.flag('free')){this.camera.position.copy(this.position).add(new T.Vector3(0,1.68,0));if(!this.held&&this.has('flashlight'))this.equip('flashlight');}
     this.mode='playing';this.document=undefined;this.audio.setVolume(this.settings.volume);this.audio.start();this.requestLock();this.persist();this.notify();
   }
   pause(unlock=true){if(this.mode!=='playing'&&this.mode!=='document')return;this.prePause=this.mode;this.mode='paused';this.keys.clear();this.touchAxes={x:0,z:0};this.movement.set(0,0);this.hold=0;this.holdId='';this.audio.pause(true);if(unlock&&document.pointerLockElement)document.exitPointerLock();this.persist();this.notify();}
@@ -193,7 +218,7 @@ export class Episode {
       if(code==='KeyE'&&!t.unlocked){
         if(t.id==='exit'&&!this.flag('alarm')){this.toast(this.t('Дверь удерживает сигнализация. Сначала сними блокировку.','The alarm holds this door. Release it first.'));return;}
         if(t.key&&!this.has(t.key)){this.toast(this.t('Нужен подходящий ключ.','You need the matching key.'));this.audio.play('click');return;}
-        t.unlocked=true;this.addFlag(`unlock:${t.id}`);this.reachUntil=this.elapsed+.35;this.audio.play('key');this.toast(this.t('Замок открыт. G — открыть дверь рукой.','Unlocked. Press G to open the door.'));this.persist();
+        t.unlocked=true;this.addFlag(`unlock:${t.id}`);if(t.key)this.showItem('key',.9);this.reachUntil=this.elapsed+.35;this.audio.play('key');this.toast(this.t('Замок открыт. G — открыть дверь рукой.','Unlocked. Press G to open the door.'));this.persist();
       }else if(code==='KeyG'){
         if(!t.unlocked){this.toast(this.t('Заперто. Используй ключ клавишей E.','Locked. Use the key with E.'));this.audio.play('click');return;}
         if(t.id==='hatch'&&t.open&&this.position.x>1.8&&this.position.x<4.2&&this.position.z<-1&&this.position.z>-7){this.toast(this.t('Нельзя закрыть люк, стоя на лестнице.','Step off the stairs before closing the hatch.'));return;}
@@ -220,9 +245,9 @@ export class Episode {
   private take(t:Target){
     if(!this.has(t.id))this.save.items.push(t.id);
     t.root.visible=false;this.audio.play(t.id==='bag'?'scrape':'key');
-    this.toast(t.id==='bag'?this.t('Сумка Алексея найдена. H — открыть.','Alexei’s bag recovered. H to open.'):this.t('Подобрано: ','Taken: ')+t.title[this.settings.language==='ru'?0:1]);
-    if(t.id==='flashlight'){this.equip('flashlight');this.flashOn=true;}else if(t.id==='knife')this.equip('knife');else if(!this.held||this.itemUntil)this.equip(t.id==='bag'?'bag':t.id==='fuse'?'fuse':'key',1.25);
+    if(t.id==='flashlight'){this.equip('flashlight');this.flashOn=true;}else if(t.id==='knife')this.equip('knife');else this.showItem(t.id==='bag'?'bag':t.id==='fuse'?'fuse':'key');
     this.reachUntil=this.elapsed+.36;this.target=undefined;this.persist();
+    this.toast(t.id==='bag'?this.t('Сумка Алексея найдена. H — открыть.','Alexei’s bag recovered. H to open.'):this.t('Подобрано: ','Taken: ')+t.title[this.settings.language==='ru'?0:1]);
   }
   private floorAt(x:number,z:number):number|undefined{
     if(this.house?.hatch.open&&x>2&&x<4&&z<=-1&&z>=-7)return Math.max(0,3.6*(z+7)/6);
@@ -238,7 +263,7 @@ export class Episode {
     this.target=undefined;if(!this.house||!this.flag('free'))return;
     if(this.keys.has('KeyR')&&this.holdId){const held=this.house.targets.find(t=>t.id===this.holdId&&t.kind==='furniture');if(held&&held.root.position.distanceTo(this.position)<3.8){this.target=held;return;}}
     this.camera.updateMatrixWorld();this.scene.updateMatrixWorld();this.ray.setFromCamera(new T.Vector2(0,0),this.camera);this.ray.far=2.7;
-    const hits=this.ray.intersectObjects(this.scene.children,true);
+    const hits=this.ray.intersectObjects(this.scene.children.filter(o=>o!==this.camera&&o.visible&&o.type!=='Points'&&!o.userData.player&&!o.userData.noInteraction),true);
     for(const h of hits){if(h.object.type==='Points')continue;let obj:T.Object3D|null=h.object;let visible=true, own=false;while(obj){if(!obj.visible)visible=false;if(obj===this.camera||obj.userData.player||obj.userData.noInteraction)own=true;obj=obj.parent;}if(!visible||own)continue;
       const id=h.object.userData.target as string|undefined;
       if(id){const t=this.house.targets.find(t=>t.id===id);if(t&&(!t.blockedBy||this.save.moved.includes(t.blockedBy)))this.target=t;}
@@ -303,8 +328,9 @@ export class Episode {
     }
     if(this.flag('free'))this.camera.rotation.z=T.MathUtils.damp(this.camera.rotation.z,0,8,dt);
     this.camera.rotation.y=this.yaw;this.camera.rotation.x=this.pitch;
-    if(this.itemUntil&&this.elapsed>=this.itemUntil)this.equip();
-    if(this.player.update({position:this.position,yaw:this.yaw,pitch:this.pitch,dt,elapsed:this.elapsed,dx:this.position.x-beforeX,dz:this.position.z-beforeZ,grounded:this.grounded,crouch,free:this.flag('free'),tipped:this.flag('chairTipped'),running:run,hold:this.hold,activity:this.holdId,held:this.held,using:this.useUntil>this.elapsed?1-(this.useUntil-this.elapsed)/.93:0,reach:this.reachUntil>this.elapsed?1-(this.reachUntil-this.elapsed)/.43:0,water:remaining(this.save.flags,'water')}))this.audio.play('step');
+    if(this.itemUntil&&this.elapsed>=this.itemUntil){const before=this.carryAfter;this.equip(before?.id);this.flashOn=before?.id==='flashlight'&&before.flash;}
+    if(this.player.update({position:this.position,yaw:this.yaw,pitch:this.pitch,dt,elapsed:this.elapsed,dx:this.position.x-beforeX,dz:this.position.z-beforeZ,grounded:this.grounded,crouch,free:this.flag('free'),tipped:this.flag('chairTipped'),running:run,hold:this.hold,activity:this.holdId,held:this.held,using:this.useUntil>this.elapsed?1-(this.useUntil-this.elapsed)/.93:0,reach:this.reachUntil>this.elapsed?1-(this.reachUntil-this.elapsed)/.43:0,water:remaining(this.save.flags,'water'),flashOn:this.flashOn}))this.audio.play('step');
+    this.flashlight.position.copy(this.player.lightSource);
     this.flashlight.intensity=this.flashOn&&this.held==='flashlight'?43:0;
     this.house.glow.intensity=this.flag('power')?16:0;
     for(const t of this.house.targets){if(t.kind==='door'&&t.pivot){const desired=t.open?(t.id==='hatch'?Math.PI:Number(t.pivot.userData.openAngle)):0;t.angle=T.MathUtils.damp(t.angle||0,desired,4,dt);if(t.id==='hatch')t.pivot.rotation.x=t.angle;else t.pivot.rotation.y=t.angle;}}
@@ -343,5 +369,5 @@ export class Episode {
   }
   private notify(){if(this.disposed)return;this.emit({mode:this.mode,loading:this.loading,room:this.save.room,objective:this.objective(),prompt:this.mode==='playing'?this.prompt():'',progress:this.hold,message:this.elapsed<this.messageUntil?this.message:'',document:this.document,save:{...this.save,items:[...this.save.items]},settings:{...this.settings},cloud:this.cloud,held:this.held,error:this.mode==='error'?this.message:undefined});}
   private releaseScene(){this.house?.weather.dispose();const materials=new Set<T.Material>();const textures=new Set<T.Texture>();const geometries=new Set<T.BufferGeometry>();this.scene.traverse(o=>{const mesh=o as T.Mesh;if(mesh.geometry)geometries.add(mesh.geometry);if(mesh.material){for(const mat of Array.isArray(mesh.material)?mesh.material:[mesh.material])materials.add(mat);}});for(const g of geometries)g.dispose();for(const mat of materials){for(const value of Object.values(mat))if(value instanceof T.Texture)textures.add(value);mat.dispose();}for(const t of textures)t.dispose();this.scene.clear();}
-  dispose(){this.persist(false);this.disposed=true;cancelAnimationFrame(this.frame);clearTimeout(this.cloudTimer);for(const off of this.listeners)off();this.keys.clear();if(document.pointerLockElement===this.canvas)document.exitPointerLock();this.audio.dispose();this.releaseScene();this.composer.dispose();this.renderer.dispose();delete (window as unknown as Record<string,unknown>).__episodeTest;}
+  dispose(){this.persist(false);this.disposed=true;cancelAnimationFrame(this.frame);clearTimeout(this.cloudTimer);for(const off of this.listeners)off();this.keys.clear();if(document.pointerLockElement===this.canvas)document.exitPointerLock();this.audio.dispose();this.releaseScene();this.reflections?.dispose();this.composer.dispose();this.renderer.dispose();delete (window as unknown as Record<string,unknown>).__episodeTest;}
 }

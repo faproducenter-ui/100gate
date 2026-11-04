@@ -1,6 +1,6 @@
 // Publish only the built, static game. Source code remains on main.
 // No force push: an existing gh-pages branch is fetched and extended normally.
-import { cpSync, existsSync, mkdirSync, mkdtempSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { resolve, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -14,6 +14,8 @@ run(['init','--initial-branch=gh-pages'],stage);run(['remote','add','origin',ori
 const branch=run(['ls-remote','--heads','origin','gh-pages']).stdout.trim();
 if(branch){run(['fetch','--depth','1','origin','gh-pages'],stage);run(['checkout','-B','gh-pages','FETCH_HEAD'],stage);run(['rm','-r','--ignore-unmatch','.'],stage);}
 cpSync(dist,stage,{recursive:true});
+// Vite already produced the site. Let Pages serve it directly, without running Jekyll.
+writeFileSync(join(stage,'.nojekyll'),'');
 run(['config','user.name',run(['config','user.name']).stdout.trim()||'100gate'],stage);
 run(['config','user.email',run(['config','user.email']).stdout.trim()||'faproducenter-ui@users.noreply.github.com'],stage);
 run(['add','-A'],stage);

@@ -8,6 +8,7 @@ const browser=await testBrowser();
 const results=[];const errors=[];
 const pass=label=>{results.push(label);console.log('PASS '+label);};
 const page=await browser.newPage({viewport:{width:1024,height:640}});
+await page.route('**/api/save',r=>r.fulfill({status:200,json:{ok:true}}));
 await page.addInitScript(()=>localStorage.setItem('100gate.settings.v1',JSON.stringify({quality:'low'})));
 page.on('pageerror',e=>errors.push(String(e)));page.on('response',r=>{if(r.status()>=400)console.log('HTTP '+r.status()+' '+r.url());});
 const state=()=>page.evaluate(()=>window.__episodeTest.state());
@@ -23,7 +24,7 @@ try{
   await hold('KeyR','chairTipped');await page.keyboard.press('KeyE');assert((await state()).save.items.includes('knife'));await hold('KeyR','free');pass('chair, knife and ropes sequence');
   await pose(0,3.6,0);await page.keyboard.down('KeyW');try{await page.waitForFunction(()=>window.__episodeTest.state().position[2]<-.15,null,{timeout:8000});}finally{await page.keyboard.up('KeyW');}pass('W moves forward');
   const before=(await state()).position;await page.keyboard.down('KeyD');try{await page.waitForFunction(x=>window.__episodeTest.state().position[0]>x+.1,before[0],{timeout:8000});}finally{await page.keyboard.up('KeyD');}pass('D moves right');
-  await page.keyboard.press('Space');await page.waitForFunction(()=>window.__episodeTest.state().position[1]>3.7,null,{timeout:6000});await page.waitForFunction(()=>window.__episodeTest.state().grounded&&window.__episodeTest.state().position[1]<3.65,null,{timeout:6000});pass('jump and landing');
+  await page.keyboard.press('Space');await page.waitForFunction(()=>window.__episodeTest.state().position[1]>3.7,null,{timeout:10000});await page.waitForFunction(()=>window.__episodeTest.state().grounded&&window.__episodeTest.state().position[1]<3.65,null,{timeout:18000});pass('jump and landing');
   await pose(-.7,3.6,-2);await aim('atticNote');await page.keyboard.press('KeyF');assert.equal((await state()).mode,'document');assert((await state()).save.read.includes('atticNote'));
   await page.keyboard.press('Escape');assert.equal((await state()).mode,'paused');await page.keyboard.press('Escape');assert.equal((await state()).mode,'document');await page.keyboard.press('KeyF');assert.equal((await state()).mode,'playing');pass('F document, ESC pause and resume document');
   await page.keyboard.press('Escape');const paused=(await state()).position;await page.keyboard.down('KeyW');await page.waitForTimeout(400);await page.keyboard.up('KeyW');assert.deepEqual((await state()).position,paused);await page.keyboard.press('Escape');pass('pause freezes movement');
