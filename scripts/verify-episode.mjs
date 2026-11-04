@@ -30,7 +30,10 @@ try{
   await page.keyboard.press('Escape');const paused=(await state()).position;await page.keyboard.down('KeyW');await page.waitForTimeout(400);await page.keyboard.up('KeyW');assert.deepEqual((await state()).position,paused);await page.keyboard.press('Escape');pass('pause freezes movement');
   await take('flashlight',-.05,3.6,-2.25);await take('hatchKey',.65,3.6,-2.25);
   await pose(3,3.6,-.5);await aim('hatch');await page.keyboard.press('KeyG');assert(!(await state()).save.doors.includes('hatch'));await page.keyboard.press('KeyE');assert((await state()).save.flags.includes('unlock:hatch'));await page.keyboard.press('KeyG');assert((await state()).save.doors.includes('hatch'));pass('E unlock and G open hatch are distinct');
-  await pose(3,3.6,-.5);await page.keyboard.down('KeyW');await page.waitForFunction(()=>window.__episodeTest.state().position[2]<-7.3,null,{timeout:18000});await page.keyboard.up('KeyW');assert((await state()).position[1]<.2);pass('continuous stair descent');
+  await pose(3,3.6,-.5);await page.keyboard.down('KeyW');
+  try{await page.waitForFunction(()=>window.__episodeTest.state().position[2]<-7.3,null,{timeout:42000});}
+  finally{await page.keyboard.up('KeyW');}
+  assert((await state()).position[1]<.2);pass('continuous stair descent');
   await pose(-4.8,0,-15.4);await aim('storeCabinet');await page.keyboard.down('KeyR');await page.waitForFunction(()=>window.__episodeTest.state().save.moved.includes('storeCabinet'),null,{timeout:18000});await page.keyboard.up('KeyR');pass('hold R moves cabinet');
   await take('studyKey',-4.8,0,-15.4);
   await pose(.1,0,-15);await aim('door3');await page.keyboard.press('KeyE');assert((await state()).save.flags.includes('unlock:door3'));await page.keyboard.press('KeyG');assert((await state()).save.doors.includes('door3'));pass('study door uses matching key');

@@ -74,8 +74,7 @@ export class Episode {
   private async init(){try{
     this.house=await createHouse(this.scene,this.save,n=>{if(!this.disposed){this.loading=n;this.notify();}});
     if(this.disposed){this.releaseScene();return;}
-    this.reflections=roomReflections(this.renderer);
-    if(this.reflections){this.scene.environment=this.reflections.texture;this.scene.environmentIntensity=.56;}
+    this.applyReflections();
     this.player.loadBody(this.house.model);
     this.player.registerModel('flashlight',this.house.model('gear-flashlight'));
     this.player.registerModel('key',this.house.model('gear-brass-key'));
@@ -178,7 +177,12 @@ export class Episode {
   resume(){if(this.mode!=='paused')return;this.mode=this.prePause;this.keys.clear();this.audio.pause(false);if(this.mode==='playing')this.requestLock();this.notify();}
   title(){this.persist();this.mode='title';this.keys.clear();this.audio.pause(true);if(document.pointerLockElement)document.exitPointerLock();this.notify();}
   settingsChange(next:Partial<Settings>){this.settings={...this.settings,...next};writeLocal(SETTINGS_KEY,this.settings);this.audio.setVolume(this.settings.volume);this.applyQuality();this.resize();this.notify();}
-  private applyQuality(){const q=this.settings.quality;this.renderer.setPixelRatio(Math.min(devicePixelRatio,q==='high'?1.75:q==='medium'?1.2:.8));this.renderer.shadowMap.enabled=q!=='low';this.bloom.enabled=q==='high';this.flashlight.castShadow=q==='high';}
+  private applyReflections(){
+    if(this.settings.quality==='low'){this.scene.environment=null;return;}
+    this.reflections??=roomReflections(this.renderer);
+    if(this.reflections){this.scene.environment=this.reflections.texture;this.scene.environmentIntensity=.56;}
+  }
+  private applyQuality(){const q=this.settings.quality;this.renderer.setPixelRatio(Math.min(devicePixelRatio,q==='high'?1.75:q==='medium'?1.2:.70));this.renderer.shadowMap.enabled=q!=='low';this.bloom.enabled=q==='high';this.flashlight.castShadow=q==='high';if(this.house)this.applyReflections();}
   private resize(){const w=window.innerWidth,h=window.innerHeight;this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.renderer.setSize(w,h,false);this.composer.setSize(w,h);this.redraw=true;}
   private toast(message:string){this.message=message;this.messageUntil=this.elapsed+4.5;this.notify();}
   private objective(){
@@ -262,7 +266,9 @@ export class Episode {
   private findTarget(){
     this.target=undefined;if(!this.house||!this.flag('free'))return;
     if(this.keys.has('KeyR')&&this.holdId){const held=this.house.targets.find(t=>t.id===this.holdId&&t.kind==='furniture');if(held&&held.root.position.distanceTo(this.position)<3.8){this.target=held;return;}}
-    this.camera.updateMatrixWorld();this.scene.updateMatrixWorld();this.ray.setFromCamera(new T.Vector2(0,0),this.camera);this.ray.far=2.7;
+    this.camera.updateWorldMatrix(true,false);
+    for(const t of this.house.targets)if(t.kind==='door'||t.kind==='furniture')t.root.updateWorldMatrix(false,true);
+    this.ray.setFromCamera(new T.Vector2(0,0),this.camera);this.ray.far=2.7;
     const hits=this.ray.intersectObjects(this.scene.children.filter(o=>o!==this.camera&&o.visible&&o.type!=='Points'&&!o.userData.player&&!o.userData.noInteraction),true);
     for(const h of hits){if(h.object.type==='Points')continue;let obj:T.Object3D|null=h.object;let visible=true, own=false;while(obj){if(!obj.visible)visible=false;if(obj===this.camera||obj.userData.player||obj.userData.noInteraction)own=true;obj=obj.parent;}if(!visible||own)continue;
       const id=h.object.userData.target as string|undefined;
