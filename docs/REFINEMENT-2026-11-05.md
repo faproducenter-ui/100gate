@@ -35,3 +35,12 @@ No CRITICAL issue has been reproduced in this session. This is not a certificati
 - Real-frame follow-up: normal 8.864 m / 2.275 s, throttled 8.014 m / 2.227 s. Short samples still include input/frame-boundary effects; not a hardware FPS target.
 - The wall exploit no longer completes or persists movement. The wardrobe stops at its legitimate partial position.
 - Spector's earlier capture timings are NOT used as a performance baseline.
+
+### Iteration 2 — verified
+- Reproduced a door-sweep defect: the open study door could close through the player at (2.2, 0, -15.05). Before/after evidence: door-baseline.json / door-safety.json.
+- Shared the same oriented-leaf shape between movement collision and swept-angle safety. Unsafe requests are rejected; an already moving leaf stops if the player enters its arc and resumes after clearance.
+- Added explicit pass disposal before composer buffer disposal, plus an idempotent episode disposal guard. Unit verifies ownership order; browser regression verifies scene lifecycle does not introduce runtime errors. No claim of a measured long-term heap reduction.
+- PASS build, door safety (blocked close, clear close, interception, resumed opening), motion regression, and full episode + iPhone/Pixel touch emulation in a headed Chromium run.
+- Test-environment finding: this machine's headless hardware-GL attempt renders at roughly 0.9–2.2 seconds/frame. Transient jump checks time out there even though key input is accepted. A real headed browser passes; deterministic stepping also passes. This is not used to claim production FPS.
+- Registered jump observers before input and made interaction waits tolerate software-rendering latency. Added opt-in TEST_HARDWARE_GL / TEST_HEADED test flags; portable software mode remains default.
+- Next art pass: a licensed CC0 skin atlas has been baked in Blender. Not yet copied into the runtime at this checkpoint.

@@ -7,10 +7,17 @@ import { chapterAsset } from './release';
 import { createWeather } from './weather';
 
 export interface Collider { minX: number; maxX: number; minZ: number; maxZ: number; bottom: number; top: number; disabled?: () => boolean; touches?: (x:number,z:number,radius:number)=>boolean; }
+export interface DoorShape { pivotX:number;pivotZ:number;yaw:number;length:number;halfDepth:number; }
+export function doorTouches(shape:DoorShape,angle:number,x:number,z:number,radius:number){
+  const a=shape.yaw+angle,dx=x-shape.pivotX,dz=z-shape.pivotZ;
+  const u=Math.cos(a)*dx-Math.sin(a)*dz,v=Math.sin(a)*dx+Math.cos(a)*dz;
+  return Math.hypot(u-T.MathUtils.clamp(u,0,shape.length),v-T.MathUtils.clamp(v,-shape.halfDepth,shape.halfDepth))<radius;
+}
 export interface Target {
   id: string; kind: 'item' | 'document' | 'door' | 'furniture' | 'switch' | 'inspect';
   title: [string, string]; root: T.Object3D; key?: string; open?: boolean; unlocked?: boolean;
   home?: T.Vector3; move?: T.Vector3; progress?: number; pivot?: T.Object3D; angle?: number; blockedBy?: string;
+  doorShape?:DoorShape;
 }
 export const PLAYER_MODELS=['gear-flashlight','gear-brass-key','player-hand-open','player-hand-grip','player-boot','player-trouser','player-sleeve','player-torso','player-upper-shadow'] as const;
 export type PlayerModelId=typeof PLAYER_MODELS[number];
@@ -142,12 +149,9 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
     const t=register({id,kind:'door',title:exit?['Входная дверь','Front door']:['Дверь','Door'],root:g,key:keyId,pivot,open:save.doors.includes(id),unlocked:!keyId||save.flags.includes(`unlock:${id}`),angle:0});
     // The rotating leaf keeps a thin oriented collider, even after it clears the doorway.
     const pivotX=x-.7*Math.cos(side),pivotZ=z+.7*Math.sin(side);
+    t.doorShape={pivotX,pivotZ,yaw:side,length:1.4,halfDepth:.055};
     colliders.push({minX:x-2,maxX:x+2,minZ:z-2,maxZ:z+2,bottom:0,top:2.4,
-      touches:(px,pz,radius)=>{
-        const a=side+(t.angle||0),dx=px-pivotX,dz=pz-pivotZ;
-        const u=Math.cos(a)*dx-Math.sin(a)*dz,v=Math.sin(a)*dx+Math.cos(a)*dz;
-        return Math.hypot(u-T.MathUtils.clamp(u,0,1.4),v-T.MathUtils.clamp(v,-.055,.055))<radius;
-      }});
+      touches:(px,pz,radius)=>doorTouches(t.doorShape!,t.angle||0,px,pz,radius)});
     return t;
   }
   // Attic: actual floor opening and a walkable, continuous staircase down to the landing.

@@ -7,3 +7,4 @@ Original prompt: Refine the existing 100gate Three.js horror game autonomously i
 - Baselines and fixes will be recorded in docs/REFINEMENT-2026-11-05.md. Evidence belongs in ../../outputs/refinement-2026-11-05/.
 - Iteration 1 validated: 120 Hz movement, furniture occlusion, dev QA hooks and skill-client wrapper. Full chapter + iPhone/Pixel + new motion regression passed. Evidence: baseline.json, after.json, motion-regression.json, skill-client/.
 - Next: door leaf safety, explicit postprocess cleanup, Blender tangent repair. Do not push/deploy.
+- Iteration 2 verified: swept door safety, composer/pass ownership cleanup, headed Chromium full chapter and mobile emulation. Local-only changes; no publication.

@@ -3,11 +3,12 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { createHouse, type House, type Target } from './world';
+import { createHouse, doorTouches, type House, type Target } from './world';
 import { Foley } from './audio';
 import { DEFAULT_SETTINGS, DOCUMENTS, ROOMS, newSave, text, validSave, type Save, type Settings } from './data';
 import { PACK, PORTIONS, remaining, type Consumable, type PackItem, type PropId } from './pack';
 import { PlayerRig } from './player';
+import { disposeComposer } from './lifetime';
 
 export type Mode = 'loading' | 'title' | 'playing' | 'paused' | 'document' | 'bag' | 'ending' | 'error';
 export interface View { mode: Mode; loading: number; room: number; objective: string; prompt: string; progress: number; message: string; document?: string; save: Save; settings: Settings; cloud: string; held?:PropId; error?: string; }
@@ -90,7 +91,8 @@ export class Episode {
         state:()=>({mode:this.mode,save:structuredClone(this.save),position:this.position.toArray(),yaw:this.yaw,pitch:this.pitch,grounded:this.grounded,target:this.target?.id,hold:this.hold,settings:{...this.settings},rig:this.player.state(),lamp:this.flashlight.intensity>0,weather:this.house?.weather.snapshot()}),
         foley:()=>this.audio.state(),
         pose:(x:number,y:number,z:number,yaw=0,pitch=0)=>{this.position.set(x,y,z);this.yaw=yaw;this.pitch=pitch;this.velocity.set(0,0,0);this.movement.set(0,0);this.motionDebt=0;this.grounded=true;},
-        diagnostics:()=>({render:{...this.renderer.info.render},memory:{...this.renderer.info.memory},frameTimes:[...this.frameTimes],motionDebt:this.motionDebt}),
+        diagnostics:()=>({render:{...this.renderer.info.render},memory:{...this.renderer.info.memory},frameTimes:[...this.frameTimes],motionDebt:this.motionDebt,manualClock:this.manualClock,elapsed:this.elapsed,verticalVelocity:this.velocity.y,keys:[...this.keys],
+          overlappingDoors:this.position.y>=2.4?[]:this.house?.targets.filter(t=>t.doorShape&&doorTouches(t.doorShape,t.angle??0,this.position.x,this.position.z,.22)).map(t=>t.id)}),
         aim:(id:string)=>{const t=this.house?.targets.find(t=>t.id===id);if(t){const point=new T.Box3().setFromObject(t.root).getCenter(new T.Vector3());this.camera.position.copy(this.position).add(new T.Vector3(0,1.68,0));const d=point.sub(this.camera.position);this.yaw=Math.atan2(-d.x,-d.z);this.pitch=Math.atan2(d.y,Math.hypot(d.x,d.z));}},
         targets:()=>this.house?.targets.map(t=>({id:t.id,kind:t.kind,pos:t.root.getWorldPosition(new T.Vector3()).toArray(),open:t.open,unlocked:t.unlocked})),
         introView:()=>{
@@ -265,7 +267,9 @@ export class Episode {
         if(!t.unlocked){this.toast(this.t('Заперто. Используй ключ клавишей E.','Locked. Use the key with E.'));this.audio.play('click');return;}
         if(t.id==='hatch'&&t.open&&this.position.x>1.8&&this.position.x<4.2&&this.position.z<-1&&this.position.z>-7){this.toast(this.t('Нельзя закрыть люк, стоя на лестнице.','Step off the stairs before closing the hatch.'));return;}
         if(t.id==='exit'){this.revealExit(t);return;}
-        if(t.open&&t.id!=='hatch'&&Math.hypot(this.position.x-t.root.position.x,this.position.z-t.root.position.z)<.7){this.toast(this.t('Отойди от дверного проёма.','Step away from the doorway.'));return;}
+        if(t.id!=='hatch'&&this.doorSweepBlocked(t,t.open?0:Number(t.pivot?.userData.openAngle))){
+          this.toast(this.t('Отойди от траектории двери.','Step out of the door’s path.'));return;
+        }
         this.reachUntil=this.elapsed+.43;
         t.open=!t.open;this.save.doors=t.open?[...new Set([...this.save.doors,t.id])]:this.save.doors.filter(id=>id!==t.id);this.audio.play('door');this.persist();
       }
@@ -381,6 +385,12 @@ export class Episode {
     if(this.position.y+height>ceiling&&this.velocity.y>0){this.position.y=Math.max(floor,ceiling-height);this.velocity.y=0;this.grounded=false;}
     if(this.position.y<floor&&floor-this.position.y<.25)this.position.y=floor;
   }
+  private doorSweepBlocked(t:Target,desired:number){
+    if(!t.doorShape||this.position.y>=2.4)return false;
+    const current=t.angle??0,steps=Math.max(1,Math.ceil(Math.abs(desired-current)/.06));
+    for(let i=1;i<=steps;i++)if(doorTouches(t.doorShape,current+(desired-current)*i/steps,this.position.x,this.position.z,.245))return true;
+    return false;
+  }
   private update(dt:number){
     if(!this.house)return;
     if(this.holdId&&this.holdId!=='tip'&&this.holdId!=='cut'){
@@ -420,7 +430,13 @@ export class Episode {
     this.flashlight.position.copy(this.player.lightSource);
     this.flashlight.intensity=this.flashOn&&this.held==='flashlight'?43:0;
     this.house.glow.intensity=this.flag('power')?16:0;
-    for(const t of this.house.targets){if(t.kind==='door'&&t.pivot){const desired=t.open?(t.id==='hatch'?Math.PI:Number(t.pivot.userData.openAngle)):0;t.angle=T.MathUtils.damp(t.angle||0,desired,4,dt);if(t.id==='hatch')t.pivot.rotation.x=t.angle;else t.pivot.rotation.y=t.angle;}}
+    for(const t of this.house.targets){if(t.kind==='door'&&t.pivot){
+      const desired=t.open?(t.id==='hatch'?Math.PI:Number(t.pivot.userData.openAngle)):0;
+      const next=T.MathUtils.damp(t.angle||0,desired,4,dt);
+      // A player can enter the sweep after pressing G; stop the moving leaf before contact.
+      if(!this.doorSweepBlocked(t,next))t.angle=next;
+      if(t.id==='hatch')t.pivot.rotation.x=t.angle??0;else t.pivot.rotation.y=t.angle??0;
+    }}
     this.house.dust.rotation.y=Math.sin(this.elapsed*.025)*.03;this.house.lamp.intensity=9+Math.sin(this.elapsed*1.4)*.25;
     this.findTarget();
   }
@@ -456,5 +472,15 @@ export class Episode {
   }
   private notify(){if(this.disposed)return;this.emit({mode:this.mode,loading:this.loading,room:this.save.room,objective:this.objective(),prompt:this.mode==='playing'?this.prompt():'',progress:this.hold,message:this.elapsed<this.messageUntil?this.message:'',document:this.document,save:{...this.save,items:[...this.save.items]},settings:{...this.settings},cloud:this.cloud,held:this.held,error:this.mode==='error'?this.message:undefined});}
   private releaseScene(){this.house?.weather.dispose();const materials=new Set<T.Material>();const textures=new Set<T.Texture>();const geometries=new Set<T.BufferGeometry>();this.scene.traverse(o=>{const mesh=o as T.Mesh;if(mesh.geometry)geometries.add(mesh.geometry);if(mesh.material){for(const mat of Array.isArray(mesh.material)?mesh.material:[mesh.material])materials.add(mat);}});for(const g of geometries)g.dispose();for(const mat of materials){for(const value of Object.values(mat))if(value instanceof T.Texture)textures.add(value);mat.dispose();}for(const t of textures)t.dispose();this.scene.clear();}
-  dispose(){this.persist(false);this.disposed=true;cancelAnimationFrame(this.frame);clearTimeout(this.cloudTimer);for(const off of this.listeners)off();this.keys.clear();if(document.pointerLockElement===this.canvas)document.exitPointerLock();this.audio.dispose();this.releaseScene();this.reflections?.dispose();this.composer.dispose();this.renderer.dispose();delete (window as unknown as Record<string,unknown>).__episodeTest;}
+  dispose(){
+    if(this.disposed)return;
+    this.persist(false);this.disposed=true;cancelAnimationFrame(this.frame);clearTimeout(this.cloudTimer);
+    for(const off of this.listeners)off();this.keys.clear();
+    if(document.pointerLockElement===this.canvas)document.exitPointerLock();
+    this.audio.dispose();this.releaseScene();this.reflections?.dispose();
+    // EffectComposer owns its two buffers, but does not dispose the passes it contains.
+    disposeComposer(this.composer);this.renderer.dispose();
+    const w=window as unknown as Record<string,unknown>;
+    delete w.__episodeTest;delete w.render_game_to_text;delete w.advanceTime;
+  }
 }
