@@ -6,6 +6,7 @@ import { art } from './props';
 import { chapterAsset } from './release';
 import { createWeather } from './weather';
 import { Headroom } from './headroom';
+import { HingedPanel } from './hinged-panel';
 
 export interface Collider { minX: number; maxX: number; minZ: number; maxZ: number; bottom: number; top: number; disabled?: () => boolean; touches?: (x:number,z:number,radius:number)=>boolean; }
 export interface DoorShape { pivotX:number;pivotZ:number;yaw:number;length:number;halfDepth:number; }
@@ -19,6 +20,7 @@ export interface Target {
   title: [string, string]; root: T.Object3D; key?: string; open?: boolean; unlocked?: boolean;
   home?: T.Vector3; move?: T.Vector3; progress?: number; pivot?: T.Object3D; angle?: number; blockedBy?: string;
   doorShape?:DoorShape;
+  hatchPanel?:HingedPanel;
   focus?:T.Object3D;
 }
 export const PLAYER_MODELS=['gear-flashlight','gear-brass-key','player-hand-open','player-hand-grip','player-boot','player-trouser','player-sleeve','player-torso','player-upper-shadow'] as const;
@@ -177,9 +179,14 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   for(const a of [-1,1]){const roof=overhead(box(scene,a*3,6.7,0,6.8,.15,10.4,dark));roof.rotation.z=-a*.4;}
   for(let z=-4.8;z<=5;z+=1.6){for(const a of [-1,1]){const beam=overhead(box(scene,a*2.8,6.58,z,6.5,.23,.23));beam.rotation.z=-a*.4;}overhead(box(scene,0,5.94,z,11.8,.23,.23,dark));}
   for(const x of [-5.2,5.2])for(const z of [-3,2.8]){box(scene,x,4.8,z,.2,2.4,.2,dark);}
-  const hatchRoot=group(2,3.6,-1);const hatchPivot=new T.Group();hatchRoot.add(hatchPivot);box(hatchPivot,1,-.01,-1.825,1.95,.12,3.65,wood);
+  const hatchRoot=group(2,3.6,-1);const hatchPivot=new T.Group();hatchRoot.add(hatchPivot);
+  // Side hinge stops upright: it clears the approach, roof and the nearby desk/posts.
+  hatchPivot.userData.openAngle=Math.PI/2;
+  const hatchLeaf=box(hatchPivot,1,-.01,-1.825,1.95,.12,3.65,wood);
   const hatchHandle=box(hatchPivot,1,.07,-.4,.25,.03,.14,metal);
-  const hatch=register({id:'hatch',kind:'door',title:['Люк чердака','Attic hatch'],root:hatchRoot,key:'hatchKey',pivot:hatchPivot,focus:hatchHandle,open:save.doors.includes('hatch'),unlocked:save.flags.includes('unlock:hatch'),angle:0});
+  hatchRoot.updateWorldMatrix(true,true);hatchLeaf.geometry.computeBoundingBox();
+  const hatchPanel=new HingedPanel(hatchLeaf.geometry.boundingBox!.clone().applyMatrix4(hatchLeaf.matrix),hatchRoot.matrixWorld,'z');
+  const hatch=register({id:'hatch',kind:'door',title:['Люк чердака','Attic hatch'],root:hatchRoot,key:'hatchKey',pivot:hatchPivot,focus:hatchHandle,hatchPanel,open:save.doors.includes('hatch'),unlocked:save.flags.includes('unlock:hatch'),angle:0});
   // The hatch lid is a real floor while shut; staircase becomes the floor when open.
   for(let i=0;i<18;i++){const z=-1-i/3;const y=3.6-i*.2;box(scene,3,y-.12,z,1.98,.2,.35,dark);}
   wall(1.97,1.75,-4,.1,3.6,6.1,wood);wall(4.03,1.75,-4,.1,3.6,6.1,wood);
@@ -283,7 +290,7 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.BufferAttribute(positions,3));
   const dustCanvas=globalThis.document.createElement('canvas');dustCanvas.width=dustCanvas.height=32;const dc=dustCanvas.getContext('2d')!;const dg=dc.createRadialGradient(16,16,0,16,16,16);dg.addColorStop(0,'#ffffff');dg.addColorStop(.3,'#ffffff77');dg.addColorStop(1,'#ffffff00');dc.fillStyle=dg;dc.fillRect(0,0,32,32);
   const dust=new T.Points(geometry,new T.PointsMaterial({color:0xe4d3b2,map:new T.CanvasTexture(dustCanvas),size:.012,transparent:true,opacity:.22,depthWrite:false}));scene.add(dust);
-  for(const t of targets){if(t.kind==='door'&&t.open&&t.pivot){t.angle=t.id==='hatch'?Math.PI:Number(t.pivot.userData.openAngle);if(t.id==='hatch')t.pivot.rotation.x=t.angle;else t.pivot.rotation.y=t.angle;}}
+  for(const t of targets){if(t.kind==='door'&&t.open&&t.pivot){t.angle=Number(t.pivot.userData.openAngle);if(t.id==='hatch')t.pivot.rotation.z=t.angle;else t.pivot.rotation.y=t.angle;}}
   // Batch only static architectural meshes, by material and room. Targets, moving furniture,
   // transparent glass and authored props retain independent transforms and raycast IDs.
   const headroom=new Headroom(overheads);

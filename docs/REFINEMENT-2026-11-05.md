@@ -24,6 +24,7 @@
 | Q08 | LOW | Some installed skill shared reference documents are absent; not a runtime defect. game-studio is not installed. | Not changed |
 | Q09 | MEDIUM | R-hold uses performance.now while gameplay/test stepping uses simulation time; manual clock cannot advance the intro. | Reproduced and verified fixed in iteration 4 |
 | Q10 | HIGH | Height-based ceiling threshold prevents jumping in the open staircase. Releasing crouch under the attic-floor lip puts the eye through solid boards. | Reproduced; real solid headroom verified in iteration 5 |
+| Q11 | HIGH | Hatch rotates around its front edge through the normal interaction position. Ordinary door sweep guards explicitly exclude it. | Reproduced; side hinge and capsule/leaf guard verified in iteration 6 |
 
 No CRITICAL issue has been reproduced in this session. This is not a certification that none exists.
 
@@ -86,8 +87,20 @@ No CRITICAL issue has been reproduced in this session. This is not a certificati
 - Inspected after-open-shaft.png, after-crouch-clearance.png and the original develop-web-game client's latest scene screenshot and text state. Evidence: ../../outputs/refinement-2026-11-05/headroom/ and skill-client/.
 - This is clearance/traversal work, not a visual-fidelity or FPS claim. Dynamic lid sweep safety is the next collision case to investigate separately.
 
+### Iteration 6 — verified
+- Reproduced the original hatch crossing the standing player's capsule: first geometric witness at angle 1.839 rad, at chest height +1.06 m. Independent browser probe reads the actual leaf geometry and transform, rather than trusting the collision implementation. Baseline: hatch/baseline.json and before-leaf-contact.png.
+- Moved the hinge to the side and stopped it upright at 90 degrees. Folding it 180 degrees would sweep the nearby desk; the upright leaf clears that furniture, the roof and the approach. No scene/story/engine replacement.
+- Added exact line-segment/AABB distance for a capsule against the oriented leaf; fixed-angle sweep sampling prevents a moving lid from entering the player. It stops/resumes on interception. Walking and vertical movement also respect the panel; crouch/camera clearance include it.
+- Stair support now follows the actual lid angle instead of its requested open flag, preserving the floor when an opening is obstructed before it begins.
+- PASS 500 seeded independent dense-sampling comparisons for the distance query, hinge/capsule unit cases, real browser safe open/close, rejection while standing on the lid, late interception, blocked movement into the stopped panel, resume after clearance and save/reload of the open side hinge. Zero geometric witnesses at the normal approach after the fix; no JS/console errors in this probe.
+- Fixed a test-fixture error, not a game save error: the initial reload assertion used an init script that overwrote its own save on every navigation. Fixture now seeds only a fresh isolated context; reload tests retain the actual game-written save.
+- Inspected after-open.png and after-intercepted.png; independent evidence in ../../outputs/refinement-2026-11-05/hatch/.
+- PASS fresh build and complete regression: headroom, fixed-step motion, intro-clock, original develop-web-game client, live intro, ordinary doors, full chapter/save reload, iPhone/Pixel touch emulation, gear/body/hand import, desktop/WebKit inventory and consumption, High rain/snow/puddle reflection. No runtime/shader errors reported by those checks. Inspected the latest skill-client scene screenshot and text state again.
+- A CPU-only synthetic distant-capsule query measured 1.23–1.62 microseconds/query in five warmed Node samples. This is not a browser frame-time/FPS result; no speculative renderer optimization was made from it.
+- Additional scenario to cover: save/reload during an interrupted closing animation, not just after fully opening/closing.
+
 ## Final local result
-- Five completed local iterations. Remote repository and production site were not updated.
+- Six completed local iterations. Remote repository and production site were not updated.
 - Baseline rollback branch remains backup/refinement-2026-11-05-start.
 - The validated runtime is chapter1-refinement-05. This is a verified refinement increment, not certification of AAA fidelity or a complete commercial release.
 - Current known open scope and limits are listed above; no unmeasured FPS guarantee is made.

@@ -96,6 +96,11 @@ export class Episode {
           overlappingDoors:this.position.y>=2.4?[]:this.house?.targets.filter(t=>t.doorShape&&doorTouches(t.doorShape,t.angle??0,this.position.x,this.position.z,.22)).map(t=>t.id)}),
         aim:(id:string)=>{const t=this.house?.targets.find(t=>t.id===id);if(t){t.root.updateWorldMatrix(true,true);const point=t.focus?t.focus.getWorldPosition(new T.Vector3()):new T.Box3().setFromObject(t.root).getCenter(new T.Vector3());this.camera.position.copy(this.position).add(new T.Vector3(0,1.68,0));const d=point.sub(this.camera.position);this.yaw=Math.atan2(-d.x,-d.z);this.pitch=Math.atan2(d.y,Math.hypot(d.x,d.z));}},
         targets:()=>this.house?.targets.map(t=>({id:t.id,kind:t.kind,pos:t.root.getWorldPosition(new T.Vector3()).toArray(),open:t.open,unlocked:t.unlocked})),
+        hatchView:()=>{
+          const t=this.house?.hatch,leaf=t?.pivot?.children.find(o=>o instanceof T.Mesh) as T.Mesh|undefined;
+          if(!leaf)return;leaf.updateWorldMatrix(true,false);leaf.geometry.computeBoundingBox();
+          return {angle:t?.angle,open:t?.open,matrix:leaf.matrixWorld.toArray(),min:leaf.geometry.boundingBox!.min.toArray(),max:leaf.geometry.boundingBox!.max.toArray()};
+        },
         introView:()=>{
           const chair=this.scene.getObjectByName('bound-chair'),ray=new T.Raycaster();
           this.camera.updateWorldMatrix(true,false);chair?.updateWorldMatrix(true,true);ray.far=.82;
@@ -268,7 +273,7 @@ export class Episode {
         if(!t.unlocked){this.toast(this.t('Заперто. Используй ключ клавишей E.','Locked. Use the key with E.'));this.audio.play('click');return;}
         if(t.id==='hatch'&&t.open&&this.position.x>1.8&&this.position.x<4.2&&this.position.z<-1&&this.position.z>-7){this.toast(this.t('Нельзя закрыть люк, стоя на лестнице.','Step off the stairs before closing the hatch.'));return;}
         if(t.id==='exit'){this.revealExit(t);return;}
-        if(t.id!=='hatch'&&this.doorSweepBlocked(t,t.open?0:Number(t.pivot?.userData.openAngle))){
+        if(this.doorSweepBlocked(t,t.open?0:Number(t.pivot?.userData.openAngle))){
           this.toast(this.t('Отойди от траектории двери.','Step out of the door’s path.'));return;
         }
         this.reachUntil=this.elapsed+.43;
@@ -300,7 +305,8 @@ export class Episode {
     this.toast(t.id==='bag'?this.t('Сумка Алексея найдена. H — открыть.','Alexei’s bag recovered. H to open.'):this.t('Подобрано: ','Taken: ')+t.title[this.settings.language==='ru'?0:1]);
   }
   private floorAt(x:number,z:number):number|undefined{
-    if(this.house?.hatch.open&&x>2&&x<4&&z<=-1&&z>=-7)return Math.max(0,3.6*(z+7)/6);
+    // Traversal follows the physical leaf, not its requested state (which can be blocked).
+    if((this.house?.hatch.angle??0)>.03&&x>2&&x<4&&z<=-1&&z>=-7)return Math.max(0,3.6*(z+7)/6);
     if(x>=-5.9&&x<=5.9&&z>=-4.9&&z<=4.9&&this.position.y>2.6)return 3.6;
     if(x>=-6.85&&x<=6.85&&z>=-35.85&&z<=-5.6)return 0;
     return undefined;
@@ -309,6 +315,7 @@ export class Episode {
     const floor=this.floorAt(x,z);if(floor===undefined)return true;
     const nextFeet=this.grounded&&floor>feet&&floor<=feet+.24?floor:feet;
     if(nextFeet+height+HEAD_MARGIN>this.house!.headroom.heightAt(x,z,nextFeet)+1e-5)return true;
+    if(this.hatchTouches(x,nextFeet,z,height))return true;
     return this.house!.colliders.some(c=>!c.disabled?.()&&feet<c.top-.08&&feet+height>c.bottom+.12&&x+.22>c.minX&&x-.22<c.maxX&&z+.22>c.minZ&&z-.22<c.maxZ&&(!c.touches||c.touches(x,z,.22)));
   }
   private interactionHits(ray:T.Raycaster){
@@ -380,16 +387,25 @@ export class Episode {
     // 120 Hz collision steps bound travel to 3.4 cm even when the rendered frame is slow.
     if(!this.blocked(this.position.x+dx,this.position.z,this.position.y,height))this.position.x+=dx;else this.movement.x=0;
     if(!this.blocked(this.position.x,this.position.z+dz,this.position.y,height))this.position.z+=dz;else this.movement.y=0;
-    const floor=this.floorAt(this.position.x,this.position.z)??this.position.y;
+    const oldFeet=this.position.y,floor=this.floorAt(this.position.x,this.position.z)??this.position.y;
     if(this.grounded&&floor<=this.position.y+.24&&floor>=this.position.y-.3){this.position.y=floor;this.velocity.y=0;}
     else{this.grounded=false;this.velocity.y-=12*dt;this.position.y+=this.velocity.y*dt;if(this.position.y<=floor){if(this.velocity.y<-2)this.audio.play('land');this.position.y=floor;this.velocity.y=0;this.grounded=true;}}
     const ceiling=this.house!.headroom.heightAt(this.position.x,this.position.z,this.position.y);
     if(this.position.y+height+HEAD_MARGIN>ceiling&&this.velocity.y>0){
       this.position.y=Math.max(floor,ceiling-height-HEAD_MARGIN);this.velocity.y=0;this.grounded=false;
     }
+    if(this.hatchTouches(this.position.x,this.position.y,this.position.z,height)&&!this.hatchTouches(this.position.x,oldFeet,this.position.z,height)){
+      this.position.y=oldFeet;this.velocity.y=0;this.grounded=false;
+    }
     if(this.position.y<floor&&floor-this.position.y<.25)this.position.y=floor;
   }
+  private hatchTouches(x:number,feet:number,z:number,height:number){
+    const hatch=this.house!.hatch,angle=hatch.angle??0;
+    // Only the fully shut lid is a floor covering; the upright open leaf stays solid.
+    return angle>.03&&Boolean(hatch.hatchPanel?.touches(angle,x,feet,z,height+HEAD_MARGIN));
+  }
   private doorSweepBlocked(t:Target,desired:number){
+    if(t.hatchPanel)return t.hatchPanel.sweepTouches(t.angle??0,desired,this.position.x,this.position.y,this.position.z,Math.max(this.actorHeight,this.camera.position.y-this.position.y)+HEAD_MARGIN);
     if(!t.doorShape||this.position.y>=2.4)return false;
     const current=t.angle??0,steps=Math.max(1,Math.ceil(Math.abs(desired-current)/.06));
     for(let i=1;i<=steps;i++)if(doorTouches(t.doorShape,current+(desired-current)*i/steps,this.position.x,this.position.z,.245))return true;
@@ -414,7 +430,7 @@ export class Episode {
     let crouch=false,run=false;
     if(this.flag('free')){
       const available=this.house.headroom.heightAt(this.position.x,this.position.z,this.position.y);
-      crouch=this.keys.has('ShiftLeft')||this.position.y+1.68+HEAD_MARGIN>available+1e-5;
+      crouch=this.keys.has('ShiftLeft')||this.position.y+1.68+HEAD_MARGIN>available+1e-5||this.hatchTouches(this.position.x,this.position.y,this.position.z,1.68);
       run=this.keys.has('ControlLeft')&&!crouch;
       const height=crouch?1.04:1.68;
       this.actorHeight=height;
@@ -424,6 +440,7 @@ export class Episode {
       const targetY=this.position.y+height+bob;
       const safeEye=this.house.headroom.heightAt(this.position.x,this.position.z,this.position.y)-HEAD_MARGIN;
       this.camera.position.set(this.position.x,Math.min(safeEye,T.MathUtils.damp(this.camera.position.y,targetY,14,dt)),this.position.z);
+      if(this.hatchTouches(this.position.x,this.position.y,this.position.z,this.camera.position.y-this.position.y))this.camera.position.y=Math.min(this.camera.position.y,this.position.y+height);
       const room=this.roomAt();if(room!==this.save.room){this.save.room=room;this.persist();}
       if(this.elapsed-this.saveClock>8&&this.position.distanceToSquared(this.savedPosition)>.2){this.persist();this.saveClock=this.elapsed;}
     }else{
@@ -440,11 +457,11 @@ export class Episode {
     this.flashlight.intensity=this.flashOn&&this.held==='flashlight'?43:0;
     this.house.glow.intensity=this.flag('power')?16:0;
     for(const t of this.house.targets){if(t.kind==='door'&&t.pivot){
-      const desired=t.open?(t.id==='hatch'?Math.PI:Number(t.pivot.userData.openAngle)):0;
+      const desired=t.open?Number(t.pivot.userData.openAngle):0;
       const next=T.MathUtils.damp(t.angle||0,desired,4,dt);
       // A player can enter the sweep after pressing G; stop the moving leaf before contact.
       if(!this.doorSweepBlocked(t,next))t.angle=next;
-      if(t.id==='hatch')t.pivot.rotation.x=t.angle??0;else t.pivot.rotation.y=t.angle??0;
+      if(t.id==='hatch')t.pivot.rotation.z=t.angle??0;else t.pivot.rotation.y=t.angle??0;
     }}
     this.house.dust.rotation.y=Math.sin(this.elapsed*.025)*.03;this.house.lamp.intensity=9+Math.sin(this.elapsed*1.4)*.25;
     this.findTarget();
