@@ -26,6 +26,7 @@
 | Q10 | HIGH | Height-based ceiling threshold prevents jumping in the open staircase. Releasing crouch under the attic-floor lip puts the eye through solid boards. | Reproduced; real solid headroom verified in iteration 5 |
 | Q11 | HIGH | Hatch rotates around its front edge through the normal interaction position. Ordinary door sweep guards explicitly exclude it. | Reproduced; side hinge and capsule/leaf guard verified in iteration 6 |
 | Q12 | HIGH | Interrupted hatch closing persists closed before reaching rest; reload strands a valid saved player on stairs whose support is conditional on the open lid. | Reproduced; targeted fix verified in iteration 7 |
+| Q13 | HIGH | Delayed/repeated pointerlockchange notifications re-pause a newly resumed game. The window remains focused and visible. | Reproduced with event trace; targeted fix verified in iteration 8 |
 
 No CRITICAL issue has been reproduced in this session. This is not a certification that none exists.
 
@@ -110,8 +111,17 @@ No CRITICAL issue has been reproduced in this session. This is not a certificati
 - Inspected before-reload-stuck.png and after-reload-traversable.png. Evidence: ../../outputs/refinement-2026-11-05/hatch-save/baseline.json and regression.json.
 - Hatch safety and static headroom regressions passed again. Movement, stair ascent/descent and jump passed, but rapid ESC pause/resume intermittently re-paused the scene. A 30-cycle input stress reproduced this at cycle 22; event trace proves focus/visibility remained valid while a delayed unlock event arrived after resume. This is a separate pre-existing input lifecycle bug, not dismissed as test flakiness; next iteration addresses it.
 
+### Iteration 8 — verified
+- Input event baseline reproduced failure at resume cycle 22. The browser remained focused/visible: an old unlock notification observed mode=playing, locked=false after resume; the subsequent acquisition notification observed mode=paused, locked=true. Evidence: pause-race-baseline.json.
+- A simple expected-unlock flag alone was tested and proved insufficient: several queued notifications can all report the same unlocked current DOM state. The final fix tracks actual observed ownership edges as well as app-requested release intent, not arbitrary timeout/debounce windows.
+- Pausing, documents, bag, title and ending use one owned-canvas release path. A delayed acquisition arriving after a menu opens is released, rather than locking the pointer over paused UI. Real unexpected lock loss and real focus loss still pause the game.
+- PASS fresh TypeScript/Vite build, 30 rapid ESC pause/resume cycles, ordinary motion/collision/stair/jump regression, unexpected pointer release, and actual tab focus loss with focused ESC resume. No JavaScript/console errors.
+- PASS expanded 100-cycle ESC stress, unexpected pointer loss, and actual tab focus loss. Test captures recent keyboard/pointer-lock/focus/visibility events on failure instead of silently retrying or weakening assertions.
+- PASS follow-up browser regression: hatch save/reload, headroom, intro-clock, live intro, ordinary doors, full chapter/save reload, iPhone/Pixel touch emulation, body/hand/gear, desktop and WebKit pack, High rain/snow/puddle reflection. Original develop-web-game client screenshot and state inspected.
+- PASS built production bundle served locally: intro, ESC pause/resume, and chair → knife → ropes with normal keyboard input and no dev hooks, page/console errors or HTTP failures. Screenshots and logs: ../../outputs/refinement-2026-11-05/production-smoke/. No production deployment.
+
 ## Final local result
-- Seven completed local refinement iterations, with an additional input race under investigation. Remote repository and production site were not updated.
+- Eight completed local refinement iterations. Remote repository and production site were not updated.
 - Baseline rollback branch remains backup/refinement-2026-11-05-start.
 - The validated runtime is chapter1-refinement-05. This is a verified refinement increment, not certification of AAA fidelity or a complete commercial release.
 - Current known open scope and limits are listed above; no unmeasured FPS guarantee is made.

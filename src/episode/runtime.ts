@@ -43,7 +43,7 @@ export class Episode {
   private chairBeat=-1;private stepSide=false;
   private player:PlayerRig;private flashOn=false;private held?:PropId;private itemUntil=0;private useUntil=0;private reachUntil=0;private carryAfter?:{id?:PropId;flash:boolean};
   private movement=new T.Vector2();private motionDebt=0;private actorHeight=1.68;
-  private manualClock=false;private frameTimes:number[]=[];
+  private manualClock=false;private frameTimes:number[]=[];private expectedPointerUnlock=false;private pointerWasOwned=false;
   private holdRay=new T.Raycaster();private holdPoint=new T.Vector3();private holdDirection=new T.Vector3();private holdBounds=new T.Box3();
   private settings:Settings;private save:Save;private mode:Mode='loading';private loading=0;private document?:string;
   private message='';private messageUntil=0;private cloud='local';private cloudTimer:ReturnType<typeof setTimeout>|undefined;
@@ -154,7 +154,7 @@ export class Episode {
     if(!this.flag('free')){this.toast(this.t('Сначала освободи руки.','Free your hands first.'));return;}
     if(!this.has('bag')){this.toast(this.t('Твоя сумка лежит на полу чердака рядом со стулом.','Your bag is on the attic floor beside the chair.'));return;}
     this.mode='bag';this.keys.clear();this.touchAxes={x:0,z:0};this.movement.set(0,0);this.hold=0;this.holdId='';
-    if(document.pointerLockElement===this.canvas)document.exitPointerLock();
+    this.releaseLock();
     this.audio.play('scrape');this.notify();
   }
   packEquip(id?:PackItem|'flashlight'|'knife'){
@@ -190,12 +190,27 @@ export class Episode {
     }) as EventListener);
     on(window,'keyup',((e:KeyboardEvent)=>{this.keys.delete(e.code);if(e.code==='KeyR'){this.hold=0;this.holdId='';}}) as EventListener);
     on(window,'mousemove',((e:MouseEvent)=>{if(document.pointerLockElement!==this.canvas||this.mode!=='playing')return;this.yaw-=e.movementX*.0019*this.settings.sensitivity;this.pitch=T.MathUtils.clamp(this.pitch-e.movementY*.0019*this.settings.sensitivity,-1.42,1.42);}) as EventListener);
-    on(document,'pointerlockchange',()=>{if(document.pointerLockElement!==this.canvas&&this.mode==='playing'){this.pause(false);}});
+    on(document,'pointerlockchange',()=>{
+      const owned=document.pointerLockElement===this.canvas,lost=this.pointerWasOwned&&!owned;
+      this.pointerWasOwned=owned;
+      if(owned){
+        this.expectedPointerUnlock=false;
+        // A request can complete after the user has already opened a menu.
+        if(this.mode!=='playing')this.releaseLock();
+      }else{
+        const expected=this.expectedPointerUnlock;this.expectedPointerUnlock=false;
+        // exitPointerLock is asynchronous; a menu's old exit must not undo a newer resume.
+        // Several queued notifications may all observe the same unlocked DOM state.
+        // Only a real owned -> unowned edge is a loss, not each notification.
+        if(lost&&!expected&&this.mode==='playing')this.pause(false);
+      }
+    });
     on(window,'blur',()=>{this.keys.clear();if(this.mode==='playing')this.pause();});
     on(document,'visibilitychange',()=>{if(document.hidden&&this.mode==='playing')this.pause();});
     on(this.canvas,'click',()=>{if(this.mode==='playing')this.requestLock();});
     on(window,'pagehide',()=>this.persist(false));
   }
+  private releaseLock(){if(document.pointerLockElement===this.canvas){this.expectedPointerUnlock=true;document.exitPointerLock();}}
   private requestLock(){if(this.mobile)return;try{const r=this.canvas.requestPointerLock();if(r&&'catch' in r)void r.catch(()=>{this.toast(this.t('Нажми на экран, чтобы управлять взглядом','Click the scene to control the view'));});}catch{/* browser requires an additional user gesture */}}
   touchMove(x:number,z:number){this.touchAxes={x,z};}
   touchLook(x:number,y:number){if(this.mode!=='playing')return;this.yaw-=x*.004*this.settings.sensitivity;this.pitch=T.MathUtils.clamp(this.pitch-y*.004*this.settings.sensitivity,-1.42,1.42);}
@@ -219,9 +234,9 @@ export class Episode {
     if(this.flag('free')){this.camera.position.copy(this.position).add(new T.Vector3(0,1.68,0));if(!this.held&&this.has('flashlight'))this.equip('flashlight');}
     this.mode='playing';this.document=undefined;this.audio.setVolume(this.settings.volume);this.audio.start();this.requestLock();this.persist();this.notify();
   }
-  pause(unlock=true){if(this.mode!=='playing'&&this.mode!=='document')return;this.prePause=this.mode;this.mode='paused';this.keys.clear();this.touchAxes={x:0,z:0};this.movement.set(0,0);this.hold=0;this.holdId='';this.audio.pause(true);if(unlock&&document.pointerLockElement)document.exitPointerLock();this.persist();this.notify();}
+  pause(unlock=true){if(this.mode!=='playing'&&this.mode!=='document')return;this.prePause=this.mode;this.mode='paused';this.keys.clear();this.touchAxes={x:0,z:0};this.movement.set(0,0);this.hold=0;this.holdId='';this.audio.pause(true);if(unlock)this.releaseLock();this.persist();this.notify();}
   resume(){if(this.mode!=='paused')return;this.mode=this.prePause;this.keys.clear();this.audio.pause(false);if(this.mode==='playing')this.requestLock();this.notify();}
-  title(){this.persist();this.mode='title';this.keys.clear();this.audio.pause(true);if(document.pointerLockElement)document.exitPointerLock();this.notify();}
+  title(){this.persist();this.mode='title';this.keys.clear();this.audio.pause(true);this.releaseLock();this.notify();}
   settingsChange(next:Partial<Settings>){this.settings={...this.settings,...next};writeLocal(SETTINGS_KEY,this.settings);this.audio.setVolume(this.settings.volume);this.applyQuality();this.resize();this.notify();}
   private applyReflections(){
     if(this.settings.quality==='low'){this.scene.environment=null;return;}
@@ -261,7 +276,7 @@ export class Episode {
     const t=this.target;if(!t)return;
     if(code==='KeyE'&&t.kind==='item'){this.take(t);return;}
     if(code==='KeyF'&&t.kind==='document'){
-      this.document=t.id;this.mode='document';this.keys.clear();if(!this.save.read.includes(t.id))this.save.read.push(t.id);this.audio.play('paper');if(document.pointerLockElement)document.exitPointerLock();this.persist();this.notify();return;
+      this.document=t.id;this.mode='document';this.keys.clear();if(!this.save.read.includes(t.id))this.save.read.push(t.id);this.audio.play('paper');this.releaseLock();this.persist();this.notify();return;
     }
     if(code==='KeyF'&&t.kind==='inspect'){this.toast(t.title[this.settings.language==='ru'?0:1]);this.audio.play('paper');return;}
     if(t.kind==='door'){
@@ -296,7 +311,7 @@ export class Episode {
     const angle=Number(t.pivot?.userData.openAngle)||-1.65;if(t.pivot)t.pivot.rotation.y=angle;
     t.angle=angle;this.save.doors=[...new Set([...this.save.doors,t.id])];this.mode='ending';this.player.setVisible(false);
     this.camera.position.set(7.24,1.59,-33.13);this.camera.rotation.set(-.088,-Math.PI/2,0,'YXZ');this.flashlight.intensity=0;
-    this.audio.play('door');this.audio.pause(true);if(document.pointerLockElement)document.exitPointerLock();this.persist();this.notify();
+    this.audio.play('door');this.audio.pause(true);this.releaseLock();this.persist();this.notify();
   }
   private closeDocument(){
     this.audio.play('paper');this.document=undefined;this.mode='playing';this.requestLock();this.notify();

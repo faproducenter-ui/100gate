@@ -7,6 +7,15 @@ const browser=await chromium.launch({headless:false});
 const report={checks:[],errors:[],consoleErrors:[]};
 try{
  const page=await browser.newPage({viewport:{width:1280,height:720}});
+ await page.addInitScript(()=>{
+  window.__inputTrace=[];
+  for(const type of ['keydown','keyup','pointerlockchange','blur','visibilitychange']){
+   (type==='pointerlockchange'||type==='visibilitychange'?document:window).addEventListener(type,e=>{
+    window.__inputTrace.push({type,code:e.code,time:performance.now(),mode:window.__episodeTest?.state().mode,locked:Boolean(document.pointerLockElement),focus:document.hasFocus(),hidden:document.hidden});
+    if(window.__inputTrace.length>50)window.__inputTrace.shift();
+   });
+  }
+ });
  page.on('pageerror',e=>report.errors.push(e.message));
  page.on('console',m=>{if(m.type()==='error')report.consoleErrors.push(m.text())});
  await page.route('**/api/save',r=>r.fulfill({status:200,json:{ok:true}}));
@@ -53,13 +62,30 @@ try{
  assert((await state()).position[1]>3.9);await advance(1000);
  assert((await state()).grounded&&Math.abs((await state()).position[1]-3.6)<.001);
  pass('jump rises and lands on the same floor');
- const before=(await state()).position;
- await page.keyboard.press('Escape');await advance(1000);assert.deepEqual((await state()).position,before);
- await page.keyboard.press('Escape');await advance(100);
- assert.equal((await state()).mode,'playing');
+ const cycles=process.argv.includes('--pause-stress')?100:1;
+ for(let i=0;i<cycles;i++){
+  const before=(await state()).position;
+  await page.keyboard.press('Escape');assert.equal((await state()).mode,'paused');
+  await advance(1000);assert.deepEqual((await state()).position,before);
+  await page.keyboard.press('Escape');await advance(100);
+  assert.equal((await state()).mode,'playing',`resume cycle ${i}`);
+ }
+ report.pauseCycles=cycles;
  pass('manual stepping respects pause/resume');
+ if(cycles>1){
+  await page.locator('canvas').click();await page.waitForFunction(()=>Boolean(document.pointerLockElement));
+  await page.evaluate(()=>document.exitPointerLock());
+  await page.waitForFunction(()=>window.__episodeTest.state().mode==='paused');
+  await page.keyboard.press('Escape');await advance(100);assert.equal((await state()).mode,'playing');
+  pass('unexpected pointer loss still pauses, unlike an expected menu release');
+  const other=await browser.newPage();await other.bringToFront();
+  await page.waitForFunction(()=>window.__episodeTest.state().mode==='paused');
+  await page.bringToFront();await other.close();await page.keyboard.press('Escape');await advance(100);
+  assert.equal((await state()).mode,'playing');pass('real tab focus loss pauses and focused ESC resumes');
+ }
  await page.screenshot({path:resolve(out,'motion-regression.png')});
  report.diagnostics=await page.evaluate(()=>window.__episodeTest.diagnostics());
  assert.deepEqual(report.errors,[]);assert.deepEqual(report.consoleErrors,[]);
  pass('no JavaScript or console errors');
+}catch(e){report.failure=String(e);report.inputTrace=await browser.contexts()[0].pages()[0].evaluate(()=>window.__inputTrace);throw e;
 }finally{await browser.close();await writeFile(resolve(out,'motion-regression.json'),JSON.stringify(report,null,2));}
