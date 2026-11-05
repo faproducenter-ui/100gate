@@ -1,0 +1,43 @@
+{
+  "duration": 59.925,
+  "width": 1024,
+  "height": 768,
+  "playback": {
+    "wallSeconds": 60.025599999904635,
+    "playbackRate": 1,
+    "decodedFrames": 3047,
+    "droppedFrames": 27,
+    "error": null,
+    "qualityCountersIncludeDiagnosticSeeks": true
+  },
+  "moments": [
+    0.2,
+    2,
+    3.5,
+    4.875,
+    6.25,
+    7.625,
+    8.5,
+    10,
+    11.5,
+    12.5,
+    15,
+    18,
+    21,
+    24,
+    27,
+    29.5,
+    32,
+    35,
+    38,
+    41,
+    44,
+    47,
+    50,
+    53,
+    56,
+    59
+  ],
+  "errors": [],
+  "qualification": "Decoded stills plus full 1x playback. Artistic acceptance is separate from mesh-test results."
+}

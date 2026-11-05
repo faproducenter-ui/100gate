@@ -30,3 +30,33 @@ Original prompt: Refine the existing 100gate Three.js horror game autonomously i
 - User conditionally authorized push/deploy after the replacement is ready. This isolated study is not that milestone; no push or deploy performed.
 - Additional QA correction: match Blender's modifier order to GLB (subdivision in bind space, then linear skinning). Fixed a separate browser-validator basis error (glTF knife local length +Y vs Blender +Z); its discarded 5.3 mm alert was not an observed visual defect. Refit on the runtime-equivalent surface.
 - Blade containment rejected the fully extended early thumb sweep even after the shaft arc correction. The closure study now starts from a natural opposed pre-grasp; a future pickup MUST reach that pre-shape before contact. All 48 source/runtime frames rechecked: shaft profile penetration about 0.405 mm, sampled source blade containment zero, knife-relative drift zero. Still not an intro/pickup clip. See final JSONs, not superseded diagnostics above.
+## Actual hand-contact rework — 2026-11-06
+
+- User rejected the earlier `grip-close-study.webm`; its approximate shaft
+  test was insufficient. Actual baseline audit found 8.7025 mm palm
+  penetration excluded by dominant-digit-only selection. Do not reuse that
+  video's passing statistics as artistic acceptance.
+- Local rollback branch `backup/grip-penetration-start` preserves b447164.
+  Recalibrated the unchanged knife against the actual palm; used the imported
+  full MPFB actor, original 53-bone rig and individual native finger hinges.
+  Local weight-paint repair changed 141 base vertices in right-hand groups;
+  mesh, UV, shape-key geometry/values, textures and rest skeleton hashes match
+  the original. No hand replacement primitives, shrinking or hidden fingers.
+- New slow, baked skeletal reach/closure/hold. Fixed intermediate tang contact,
+  skin folds and CMC timing. Merged source arm/knife into one zero-based GLB
+  scene clip; knife stays fixed before full grasp and follows the wrist after.
+- Technical gates passed: 434 actual source poses including half frames;
+  22 actual imported-skin poses with all knife components and non-adjacent
+  hand self-crossings; 289 hierarchy samples; six static views and 25 closure
+  checkpoint images. Source/runtime hand-surface error <=0.1444 mm. No viewer
+  console/page errors. These numbers are not artistic acceptance.
+- New 1× close-up movie includes 18-second continuous 360° orbit and five
+  closure views. Actual encoded WebM decoded, sampled and played at 1×.
+  Packed source: art/hand-knife-contact.blend; GLB: art/hand-knife-contact.glb;
+  evidence: art/review-evidence/hand-contact/. See docs/HAND-KNIFE-CONTACT-REVIEW.md.
+- Build, original skill-client game smoke and focused existing-game intro/
+  pause regression passed with local save stubbing. No src/public assets,
+  story logic, production settings or original sources were replaced.
+- Live Blender shows the new 12-second study on the complete original actor.
+  Art review and later story-scene integration remain pending; do not claim
+  the full escape intro or commercial art is finished. No push or deploy.

@@ -1,0 +1,94 @@
+{
+  "thumb": {
+    "minSignedMm": -0.5885,
+    "insideVertices": 9,
+    "ambiguousQueries": 0,
+    "worstComponent": "Peened pin.003",
+    "worstVertex": 14852,
+    "worstPointMm": [
+      -0.73,
+      -10.689,
+      33.119
+    ],
+    "surfaceCrossings": {
+      "Oval walnut scales": 38,
+      "Peened pin.003": 42
+    }
+  },
+  "index": {
+    "minSignedMm": -0.3051,
+    "insideVertices": 4,
+    "ambiguousQueries": 0,
+    "worstComponent": "Oval walnut scales",
+    "worstVertex": 18515,
+    "worstPointMm": [
+      10.178,
+      2.894,
+      48.327
+    ],
+    "surfaceCrossings": {
+      "Oval walnut scales": 36
+    }
+  },
+  "middle": {
+    "minSignedMm": -0.2916,
+    "insideVertices": 2,
+    "ambiguousQueries": 0,
+    "worstComponent": "Oval walnut scales",
+    "worstVertex": 28303,
+    "worstPointMm": [
+      0.506,
+      11.522,
+      14.128
+    ],
+    "surfaceCrossings": {
+      "Oval walnut scales": 20
+    }
+  },
+  "ring": {
+    "minSignedMm": -0.1642,
+    "insideVertices": 3,
+    "ambiguousQueries": 0,
+    "worstComponent": "Oval walnut scales",
+    "worstVertex": 2129,
+    "worstPointMm": [
+      -0.176,
+      11.816,
+      -16.119
+    ],
+    "surfaceCrossings": {
+      "Oval walnut scales": 24
+    }
+  },
+  "pinky": {
+    "minSignedMm": -0.1407,
+    "insideVertices": 5,
+    "ambiguousQueries": 0,
+    "worstComponent": "Oval walnut scales",
+    "worstVertex": 18880,
+    "worstPointMm": [
+      5.971,
+      9.46,
+      -40.445
+    ],
+    "surfaceCrossings": {
+      "Oval walnut scales": 32
+    }
+  },
+  "palm": {
+    "minSignedMm": -8.7025,
+    "insideVertices": 108,
+    "ambiguousQueries": 0,
+    "worstComponent": "Oval walnut scales",
+    "worstVertex": 2955,
+    "worstPointMm": [
+      1.594,
+      -2.177,
+      23.094
+    ],
+    "surfaceCrossings": {
+      "Oval walnut scales": 171,
+      "Peened pin.001": 26
+    }
+  }
+}

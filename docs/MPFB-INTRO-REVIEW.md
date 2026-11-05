@@ -1,5 +1,9 @@
 # 100gate — replacement character, static gate
 
+> Superseded: the user rejected `grip-close-study.webm`. Its shaft-profile test
+> missed actual palm penetration. Use the [actual-mesh rework and new movie](HAND-KNIFE-CONTACT-REVIEW.md),
+> not the historical passing figures below, for further hand-contact work.
+
 ## Scope and rollback
 
 The original intro/runtime assets are untouched. Local rollback ref:

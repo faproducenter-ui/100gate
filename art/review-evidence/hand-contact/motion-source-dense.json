@@ -1,0 +1,6403 @@
+{
+  "complete": true,
+  "frames": [
+    {
+      "frame": 1.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 2.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 3.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 4.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 5.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 6.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 7.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 8.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 9.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 10.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 11.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 12.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 13.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 14.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 15.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 16.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 17.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 18.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 19.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 20.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 21.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 22.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 23.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 24.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 25.0,
+      "minimumSignedMm": {
+        "thumb": 35.4816,
+        "index": 73.129,
+        "middle": 70.8297,
+        "ring": 74.1569,
+        "pinky": 75.4183,
+        "palm": 70.2312,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 26.0,
+      "minimumSignedMm": {
+        "thumb": 35.4721,
+        "index": 73.073,
+        "middle": 70.7726,
+        "ring": 74.0998,
+        "pinky": 75.3608,
+        "palm": 70.1737,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 27.0,
+      "minimumSignedMm": {
+        "thumb": 35.4445,
+        "index": 72.9072,
+        "middle": 70.604,
+        "ring": 73.9311,
+        "pinky": 75.1914,
+        "palm": 70.0042,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 28.0,
+      "minimumSignedMm": {
+        "thumb": 35.3987,
+        "index": 72.6358,
+        "middle": 70.3277,
+        "ring": 73.6545,
+        "pinky": 74.9136,
+        "palm": 69.7264,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 29.0,
+      "minimumSignedMm": {
+        "thumb": 35.3356,
+        "index": 72.2622,
+        "middle": 69.9475,
+        "ring": 73.274,
+        "pinky": 74.5314,
+        "palm": 69.3439,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 30.0,
+      "minimumSignedMm": {
+        "thumb": 35.2565,
+        "index": 71.7907,
+        "middle": 69.4675,
+        "ring": 72.7935,
+        "pinky": 74.0488,
+        "palm": 68.8611,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 31.0,
+      "minimumSignedMm": {
+        "thumb": 35.1623,
+        "index": 71.2247,
+        "middle": 68.8912,
+        "ring": 72.2166,
+        "pinky": 73.4694,
+        "palm": 68.2815,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 32.0,
+      "minimumSignedMm": {
+        "thumb": 35.0547,
+        "index": 70.5687,
+        "middle": 68.223,
+        "ring": 71.5479,
+        "pinky": 72.7975,
+        "palm": 67.6094,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 33.0,
+      "minimumSignedMm": {
+        "thumb": 34.935,
+        "index": 69.8261,
+        "middle": 67.4665,
+        "ring": 70.7905,
+        "pinky": 72.0366,
+        "palm": 66.8481,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 34.0,
+      "minimumSignedMm": {
+        "thumb": 34.7991,
+        "index": 69.0014,
+        "middle": 66.6258,
+        "ring": 69.9488,
+        "pinky": 71.1909,
+        "palm": 66.0021,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 35.0,
+      "minimumSignedMm": {
+        "thumb": 34.6324,
+        "index": 68.0907,
+        "middle": 65.7045,
+        "ring": 69.0266,
+        "pinky": 70.2641,
+        "palm": 65.0748,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 36.0,
+      "minimumSignedMm": {
+        "thumb": 34.4559,
+        "index": 67.0882,
+        "middle": 64.7068,
+        "ring": 68.0279,
+        "pinky": 69.26,
+        "palm": 64.0701,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 37.0,
+      "minimumSignedMm": {
+        "thumb": 34.2715,
+        "index": 66.0127,
+        "middle": 63.6366,
+        "ring": 66.9564,
+        "pinky": 68.1828,
+        "palm": 62.9919,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 38.0,
+      "minimumSignedMm": {
+        "thumb": 34.0804,
+        "index": 64.868,
+        "middle": 62.4979,
+        "ring": 65.8162,
+        "pinky": 67.0359,
+        "palm": 61.8441,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 39.0,
+      "minimumSignedMm": {
+        "thumb": 33.8838,
+        "index": 63.6584,
+        "middle": 61.2947,
+        "ring": 64.6115,
+        "pinky": 65.8237,
+        "palm": 60.6308,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 40.0,
+      "minimumSignedMm": {
+        "thumb": 33.6829,
+        "index": 62.3873,
+        "middle": 60.0307,
+        "ring": 63.3456,
+        "pinky": 64.5492,
+        "palm": 59.3553,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 41.0,
+      "minimumSignedMm": {
+        "thumb": 33.4788,
+        "index": 61.0591,
+        "middle": 58.7102,
+        "ring": 62.0233,
+        "pinky": 63.2171,
+        "palm": 58.022,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 42.0,
+      "minimumSignedMm": {
+        "thumb": 33.2709,
+        "index": 59.6776,
+        "middle": 57.3371,
+        "ring": 60.6479,
+        "pinky": 61.8294,
+        "palm": 56.6345,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 43.0,
+      "minimumSignedMm": {
+        "thumb": 33.0603,
+        "index": 58.2467,
+        "middle": 55.9155,
+        "ring": 59.2238,
+        "pinky": 60.3903,
+        "palm": 55.1967,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 44.0,
+      "minimumSignedMm": {
+        "thumb": 32.813,
+        "index": 56.7703,
+        "middle": 54.4493,
+        "ring": 57.7547,
+        "pinky": 58.9049,
+        "palm": 53.7126,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 45.0,
+      "minimumSignedMm": {
+        "thumb": 32.549,
+        "index": 55.2528,
+        "middle": 52.9427,
+        "ring": 56.2451,
+        "pinky": 57.3769,
+        "palm": 52.1861,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 46.0,
+      "minimumSignedMm": {
+        "thumb": 32.2802,
+        "index": 53.6976,
+        "middle": 51.3994,
+        "ring": 54.6986,
+        "pinky": 55.8102,
+        "palm": 50.6206,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 47.0,
+      "minimumSignedMm": {
+        "thumb": 32.0065,
+        "index": 52.1092,
+        "middle": 49.8242,
+        "ring": 53.1193,
+        "pinky": 54.2092,
+        "palm": 49.0205,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 48.0,
+      "minimumSignedMm": {
+        "thumb": 31.7267,
+        "index": 50.4914,
+        "middle": 48.2207,
+        "ring": 51.5116,
+        "pinky": 52.5775,
+        "palm": 47.3894,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 49.0,
+      "minimumSignedMm": {
+        "thumb": 31.4216,
+        "index": 48.8481,
+        "middle": 46.593,
+        "ring": 49.8791,
+        "pinky": 50.9192,
+        "palm": 45.7273,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 50.0,
+      "minimumSignedMm": {
+        "thumb": 31.0739,
+        "index": 47.184,
+        "middle": 44.9459,
+        "ring": 48.2265,
+        "pinky": 49.2384,
+        "palm": 44.0384,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 51.0,
+      "minimumSignedMm": {
+        "thumb": 30.7166,
+        "index": 45.4959,
+        "middle": 43.2831,
+        "ring": 46.5576,
+        "pinky": 47.5389,
+        "palm": 42.33,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 52.0,
+      "minimumSignedMm": {
+        "thumb": 30.3476,
+        "index": 43.7933,
+        "middle": 41.6093,
+        "ring": 44.8768,
+        "pinky": 45.8247,
+        "palm": 40.6062,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 53.0,
+      "minimumSignedMm": {
+        "thumb": 29.9625,
+        "index": 42.0807,
+        "middle": 39.9285,
+        "ring": 43.188,
+        "pinky": 44.0995,
+        "palm": 38.8708,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 54.0,
+      "minimumSignedMm": {
+        "thumb": 29.5599,
+        "index": 40.363,
+        "middle": 38.2453,
+        "ring": 41.496,
+        "pinky": 42.3678,
+        "palm": 37.1277,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 55.0,
+      "minimumSignedMm": {
+        "thumb": 29.0978,
+        "index": 38.6438,
+        "middle": 36.5643,
+        "ring": 39.8048,
+        "pinky": 40.6331,
+        "palm": 35.3806,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 56.0,
+      "minimumSignedMm": {
+        "thumb": 28.6157,
+        "index": 36.9273,
+        "middle": 34.8897,
+        "ring": 38.1185,
+        "pinky": 38.8995,
+        "palm": 33.6338,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 57.0,
+      "minimumSignedMm": {
+        "thumb": 28.1134,
+        "index": 35.2181,
+        "middle": 33.2271,
+        "ring": 36.4423,
+        "pinky": 37.1712,
+        "palm": 31.8911,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 58.0,
+      "minimumSignedMm": {
+        "thumb": 27.5866,
+        "index": 33.5199,
+        "middle": 31.5771,
+        "ring": 34.78,
+        "pinky": 35.4519,
+        "palm": 30.1559,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 59.0,
+      "minimumSignedMm": {
+        "thumb": 27.0344,
+        "index": 31.8377,
+        "middle": 29.9389,
+        "ring": 33.1369,
+        "pinky": 33.7463,
+        "palm": 28.433,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 60.0,
+      "minimumSignedMm": {
+        "thumb": 26.4543,
+        "index": 30.1754,
+        "middle": 28.3152,
+        "ring": 31.513,
+        "pinky": 32.0579,
+        "palm": 26.7254,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 61.0,
+      "minimumSignedMm": {
+        "thumb": 25.8264,
+        "index": 28.5377,
+        "middle": 26.7103,
+        "ring": 29.9076,
+        "pinky": 30.3911,
+        "palm": 25.0377,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 62.0,
+      "minimumSignedMm": {
+        "thumb": 25.1561,
+        "index": 26.9288,
+        "middle": 25.1304,
+        "ring": 28.3244,
+        "pinky": 28.7496,
+        "palm": 23.3732,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 63.0,
+      "minimumSignedMm": {
+        "thumb": 24.4557,
+        "index": 25.3536,
+        "middle": 23.5878,
+        "ring": 26.7669,
+        "pinky": 27.1379,
+        "palm": 21.7363,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 64.0,
+      "minimumSignedMm": {
+        "thumb": 23.7225,
+        "index": 23.817,
+        "middle": 22.0883,
+        "ring": 25.2425,
+        "pinky": 25.5603,
+        "palm": 20.1309,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 65.0,
+      "minimumSignedMm": {
+        "thumb": 22.9549,
+        "index": 22.3237,
+        "middle": 20.6372,
+        "ring": 23.7617,
+        "pinky": 24.0208,
+        "palm": 18.5608,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 66.0,
+      "minimumSignedMm": {
+        "thumb": 22.1509,
+        "index": 20.8787,
+        "middle": 19.2408,
+        "ring": 22.33,
+        "pinky": 22.5237,
+        "palm": 17.0299,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 67.0,
+      "minimumSignedMm": {
+        "thumb": 21.2999,
+        "index": 19.4873,
+        "middle": 17.9051,
+        "ring": 20.9522,
+        "pinky": 21.0737,
+        "palm": 15.5425,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 68.0,
+      "minimumSignedMm": {
+        "thumb": 20.3998,
+        "index": 18.1545,
+        "middle": 16.6362,
+        "ring": 19.6332,
+        "pinky": 19.6745,
+        "palm": 14.1018,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 69.0,
+      "minimumSignedMm": {
+        "thumb": 19.4631,
+        "index": 16.8865,
+        "middle": 15.4308,
+        "ring": 18.3791,
+        "pinky": 18.3315,
+        "palm": 12.7131,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 70.0,
+      "minimumSignedMm": {
+        "thumb": 18.4879,
+        "index": 15.6878,
+        "middle": 14.2725,
+        "ring": 17.1938,
+        "pinky": 17.0483,
+        "palm": 11.3794,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 71.0,
+      "minimumSignedMm": {
+        "thumb": 17.4731,
+        "index": 14.5649,
+        "middle": 13.165,
+        "ring": 16.0815,
+        "pinky": 15.8293,
+        "palm": 10.1051,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 72.0,
+      "minimumSignedMm": {
+        "thumb": 16.4173,
+        "index": 13.4473,
+        "middle": 12.1129,
+        "ring": 15.0272,
+        "pinky": 14.6715,
+        "palm": 8.8926,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 73.0,
+      "minimumSignedMm": {
+        "thumb": 15.3198,
+        "index": 12.361,
+        "middle": 11.147,
+        "ring": 14.0299,
+        "pinky": 13.5668,
+        "palm": 7.7459,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 73.5,
+      "minimumSignedMm": {
+        "thumb": 14.7781,
+        "index": 11.8556,
+        "middle": 10.7066,
+        "ring": 13.5619,
+        "pinky": 13.045,
+        "palm": 7.2075,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 74.0,
+      "minimumSignedMm": {
+        "thumb": 14.2362,
+        "index": 11.3529,
+        "middle": 10.275,
+        "ring": 13.0931,
+        "pinky": 12.5225,
+        "palm": 6.6685,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 74.5,
+      "minimumSignedMm": {
+        "thumb": 13.7316,
+        "index": 10.8886,
+        "middle": 9.8835,
+        "ring": 12.6571,
+        "pinky": 12.0363,
+        "palm": 6.1668,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 75.0,
+      "minimumSignedMm": {
+        "thumb": 13.227,
+        "index": 10.4274,
+        "middle": 9.5019,
+        "ring": 12.2241,
+        "pinky": 11.5496,
+        "palm": 5.6648,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 75.5,
+      "minimumSignedMm": {
+        "thumb": 12.7616,
+        "index": 10.0061,
+        "middle": 9.1548,
+        "ring": 11.8301,
+        "pinky": 11.1008,
+        "palm": 5.2017,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 76.0,
+      "minimumSignedMm": {
+        "thumb": 12.2956,
+        "index": 9.5882,
+        "middle": 8.807,
+        "ring": 11.4408,
+        "pinky": 10.6518,
+        "palm": 4.7382,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 76.5,
+      "minimumSignedMm": {
+        "thumb": 11.8709,
+        "index": 9.2083,
+        "middle": 8.4904,
+        "ring": 11.0914,
+        "pinky": 10.2439,
+        "palm": 4.3157,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 77.0,
+      "minimumSignedMm": {
+        "thumb": 11.4459,
+        "index": 8.8284,
+        "middle": 8.173,
+        "ring": 10.747,
+        "pinky": 9.8369,
+        "palm": 3.8929,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 77.5,
+      "minimumSignedMm": {
+        "thumb": 11.0637,
+        "index": 8.487,
+        "middle": 7.8881,
+        "ring": 10.4427,
+        "pinky": 9.4726,
+        "palm": 3.5127,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 78.0,
+      "minimumSignedMm": {
+        "thumb": 10.6815,
+        "index": 8.1457,
+        "middle": 7.6028,
+        "ring": 10.1433,
+        "pinky": 9.1094,
+        "palm": 3.1324,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 78.5,
+      "minimumSignedMm": {
+        "thumb": 10.344,
+        "index": 7.8445,
+        "middle": 7.3511,
+        "ring": 9.8837,
+        "pinky": 8.7893,
+        "palm": 2.7966,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 79.0,
+      "minimumSignedMm": {
+        "thumb": 10.0062,
+        "index": 7.5432,
+        "middle": 7.0955,
+        "ring": 9.6285,
+        "pinky": 8.4702,
+        "palm": 2.4607,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 79.5,
+      "minimumSignedMm": {
+        "thumb": 9.7155,
+        "index": 7.2841,
+        "middle": 6.8796,
+        "ring": 9.4108,
+        "pinky": 8.1952,
+        "palm": 2.1716,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 80.0,
+      "minimumSignedMm": {
+        "thumb": 9.4247,
+        "index": 7.025,
+        "middle": 6.669,
+        "ring": 9.1928,
+        "pinky": 7.921,
+        "palm": 1.8821,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 80.5,
+      "minimumSignedMm": {
+        "thumb": 9.1822,
+        "index": 6.8093,
+        "middle": 6.4985,
+        "ring": 9.0087,
+        "pinky": 7.6916,
+        "palm": 1.641,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 81.0,
+      "minimumSignedMm": {
+        "thumb": 8.9398,
+        "index": 6.5936,
+        "middle": 6.3324,
+        "ring": 8.8243,
+        "pinky": 7.4629,
+        "palm": 1.3997,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 81.5,
+      "minimumSignedMm": {
+        "thumb": 8.7478,
+        "index": 6.4231,
+        "middle": 6.2041,
+        "ring": 8.6715,
+        "pinky": 7.2799,
+        "palm": 1.2088,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 82.0,
+      "minimumSignedMm": {
+        "thumb": 8.556,
+        "index": 6.2524,
+        "middle": 6.0791,
+        "ring": 8.5184,
+        "pinky": 7.0972,
+        "palm": 1.0179,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 82.5,
+      "minimumSignedMm": {
+        "thumb": 8.4165,
+        "index": 6.1284,
+        "middle": 5.9895,
+        "ring": 8.3984,
+        "pinky": 6.9616,
+        "palm": 0.8792,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 83.0,
+      "minimumSignedMm": {
+        "thumb": 8.277,
+        "index": 6.0045,
+        "middle": 5.9015,
+        "ring": 8.2781,
+        "pinky": 6.826,
+        "palm": 0.7405,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 83.5,
+      "minimumSignedMm": {
+        "thumb": 8.1919,
+        "index": 5.9289,
+        "middle": 5.8415,
+        "ring": 8.1925,
+        "pinky": 6.7391,
+        "palm": 0.6568,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 84.0,
+      "minimumSignedMm": {
+        "thumb": 8.1068,
+        "index": 5.8532,
+        "middle": 5.7821,
+        "ring": 8.1068,
+        "pinky": 6.652,
+        "palm": 0.573,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 84.5,
+      "minimumSignedMm": {
+        "thumb": 8.078,
+        "index": 5.8274,
+        "middle": 5.7485,
+        "ring": 8.0571,
+        "pinky": 6.6154,
+        "palm": 0.5463,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 85.0,
+      "minimumSignedMm": {
+        "thumb": 8.0492,
+        "index": 5.8018,
+        "middle": 5.7151,
+        "ring": 8.0075,
+        "pinky": 6.579,
+        "palm": 0.5196,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 85.5,
+      "minimumSignedMm": {
+        "thumb": 8.0489,
+        "index": 5.8002,
+        "middle": 5.6912,
+        "ring": 7.9735,
+        "pinky": 6.5677,
+        "palm": 0.5223,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 86.0,
+      "minimumSignedMm": {
+        "thumb": 8.0485,
+        "index": 5.7985,
+        "middle": 5.6675,
+        "ring": 7.9399,
+        "pinky": 6.5569,
+        "palm": 0.525,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 86.5,
+      "minimumSignedMm": {
+        "thumb": 8.0477,
+        "index": 5.7941,
+        "middle": 5.6361,
+        "ring": 7.9005,
+        "pinky": 6.5451,
+        "palm": 0.5283,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 87.0,
+      "minimumSignedMm": {
+        "thumb": 8.0466,
+        "index": 5.7895,
+        "middle": 5.6049,
+        "ring": 7.8615,
+        "pinky": 6.5337,
+        "palm": 0.5316,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 87.5,
+      "minimumSignedMm": {
+        "thumb": 8.0451,
+        "index": 5.7823,
+        "middle": 5.5667,
+        "ring": 7.8173,
+        "pinky": 6.5216,
+        "palm": 0.5356,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 88.0,
+      "minimumSignedMm": {
+        "thumb": 8.0436,
+        "index": 5.7751,
+        "middle": 5.5288,
+        "ring": 7.7733,
+        "pinky": 6.5103,
+        "palm": 0.5395,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 88.5,
+      "minimumSignedMm": {
+        "thumb": 8.0413,
+        "index": 5.7651,
+        "middle": 5.4845,
+        "ring": 7.7247,
+        "pinky": 6.4982,
+        "palm": 0.5439,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 89.0,
+      "minimumSignedMm": {
+        "thumb": 8.0391,
+        "index": 5.7554,
+        "middle": 5.4408,
+        "ring": 7.6763,
+        "pinky": 6.4869,
+        "palm": 0.5483,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 89.5,
+      "minimumSignedMm": {
+        "thumb": 8.0362,
+        "index": 5.743,
+        "middle": 5.3916,
+        "ring": 7.6239,
+        "pinky": 6.4753,
+        "palm": 0.5534,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 90.0,
+      "minimumSignedMm": {
+        "thumb": 8.0335,
+        "index": 5.7309,
+        "middle": 5.3431,
+        "ring": 7.572,
+        "pinky": 6.4649,
+        "palm": 0.5587,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 90.5,
+      "minimumSignedMm": {
+        "thumb": 8.0302,
+        "index": 5.7164,
+        "middle": 5.2896,
+        "ring": 7.5162,
+        "pinky": 6.4544,
+        "palm": 0.5645,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 91.0,
+      "minimumSignedMm": {
+        "thumb": 8.027,
+        "index": 5.7018,
+        "middle": 5.2371,
+        "ring": 7.461,
+        "pinky": 6.4449,
+        "palm": 0.5703,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 91.5,
+      "minimumSignedMm": {
+        "thumb": 8.023,
+        "index": 5.6853,
+        "middle": 5.1806,
+        "ring": 7.4025,
+        "pinky": 6.4357,
+        "palm": 0.5765,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 92.0,
+      "minimumSignedMm": {
+        "thumb": 8.019,
+        "index": 5.6686,
+        "middle": 5.1252,
+        "ring": 7.3446,
+        "pinky": 6.4276,
+        "palm": 0.583,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 92.5,
+      "minimumSignedMm": {
+        "thumb": 8.0148,
+        "index": 5.6505,
+        "middle": 5.0667,
+        "ring": 7.284,
+        "pinky": 6.4204,
+        "palm": 0.5902,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 93.0,
+      "minimumSignedMm": {
+        "thumb": 8.0105,
+        "index": 5.6321,
+        "middle": 5.0098,
+        "ring": 7.2241,
+        "pinky": 6.4142,
+        "palm": 0.5975,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 93.5,
+      "minimumSignedMm": {
+        "thumb": 8.0055,
+        "index": 5.6119,
+        "middle": 4.9504,
+        "ring": 7.1624,
+        "pinky": 6.4085,
+        "palm": 0.6051,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 94.0,
+      "minimumSignedMm": {
+        "thumb": 8.0007,
+        "index": 5.5921,
+        "middle": 4.893,
+        "ring": 7.103,
+        "pinky": 6.4034,
+        "palm": 0.6131,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 94.5,
+      "minimumSignedMm": {
+        "thumb": 7.9954,
+        "index": 5.5706,
+        "middle": 4.8342,
+        "ring": 7.0431,
+        "pinky": 6.3986,
+        "palm": 0.6217,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 95.0,
+      "minimumSignedMm": {
+        "thumb": 7.9901,
+        "index": 5.5493,
+        "middle": 4.7777,
+        "ring": 6.9857,
+        "pinky": 6.3942,
+        "palm": 0.6303,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 95.5,
+      "minimumSignedMm": {
+        "thumb": 7.9843,
+        "index": 5.5267,
+        "middle": 4.7208,
+        "ring": 6.9288,
+        "pinky": 6.3902,
+        "palm": 0.6396,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 96.0,
+      "minimumSignedMm": {
+        "thumb": 7.9785,
+        "index": 5.5042,
+        "middle": 4.6645,
+        "ring": 6.8747,
+        "pinky": 6.3869,
+        "palm": 0.6491,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 96.5,
+      "minimumSignedMm": {
+        "thumb": 7.9724,
+        "index": 5.4805,
+        "middle": 4.605,
+        "ring": 6.8217,
+        "pinky": 6.3838,
+        "palm": 0.659,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 97.0,
+      "minimumSignedMm": {
+        "thumb": 7.9662,
+        "index": 5.457,
+        "middle": 4.5463,
+        "ring": 6.7717,
+        "pinky": 6.3814,
+        "palm": 0.6694,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 97.5,
+      "minimumSignedMm": {
+        "thumb": 7.9595,
+        "index": 5.4324,
+        "middle": 4.486,
+        "ring": 6.7237,
+        "pinky": 6.3793,
+        "palm": 0.6799,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 98.0,
+      "minimumSignedMm": {
+        "thumb": 7.9529,
+        "index": 5.4083,
+        "middle": 4.4267,
+        "ring": 6.6792,
+        "pinky": 6.378,
+        "palm": 0.6909,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 98.5,
+      "minimumSignedMm": {
+        "thumb": 7.946,
+        "index": 5.3834,
+        "middle": 4.3666,
+        "ring": 6.6373,
+        "pinky": 6.3773,
+        "palm": 0.7026,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 99.0,
+      "minimumSignedMm": {
+        "thumb": 7.9391,
+        "index": 5.3587,
+        "middle": 4.3074,
+        "ring": 6.5991,
+        "pinky": 6.3773,
+        "palm": 0.7145,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 99.5,
+      "minimumSignedMm": {
+        "thumb": 7.9318,
+        "index": 5.3333,
+        "middle": 4.2473,
+        "ring": 6.5632,
+        "pinky": 6.3776,
+        "palm": 0.7187,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 100.0,
+      "minimumSignedMm": {
+        "thumb": 7.9245,
+        "index": 5.3084,
+        "middle": 4.1885,
+        "ring": 6.529,
+        "pinky": 6.3788,
+        "palm": 0.7211,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 100.5,
+      "minimumSignedMm": {
+        "thumb": 7.9167,
+        "index": 5.2826,
+        "middle": 4.1291,
+        "ring": 6.4951,
+        "pinky": 6.3777,
+        "palm": 0.7233,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 101.0,
+      "minimumSignedMm": {
+        "thumb": 7.9092,
+        "index": 5.2575,
+        "middle": 4.0709,
+        "ring": 6.463,
+        "pinky": 6.3761,
+        "palm": 0.7259,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 101.5,
+      "minimumSignedMm": {
+        "thumb": 7.9011,
+        "index": 5.2319,
+        "middle": 4.0128,
+        "ring": 6.4317,
+        "pinky": 6.375,
+        "palm": 0.7283,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 102.0,
+      "minimumSignedMm": {
+        "thumb": 7.893,
+        "index": 5.2067,
+        "middle": 3.9559,
+        "ring": 6.402,
+        "pinky": 6.3746,
+        "palm": 0.7306,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 102.5,
+      "minimumSignedMm": {
+        "thumb": 7.8849,
+        "index": 5.1813,
+        "middle": 3.8992,
+        "ring": 6.3735,
+        "pinky": 6.3748,
+        "palm": 0.7331,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 103.0,
+      "minimumSignedMm": {
+        "thumb": 7.8767,
+        "index": 5.1565,
+        "middle": 3.8438,
+        "ring": 6.3465,
+        "pinky": 6.376,
+        "palm": 0.736,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 103.5,
+      "minimumSignedMm": {
+        "thumb": 7.8681,
+        "index": 5.1315,
+        "middle": 3.7891,
+        "ring": 6.3207,
+        "pinky": 6.3773,
+        "palm": 0.7384,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 104.0,
+      "minimumSignedMm": {
+        "thumb": 7.8596,
+        "index": 5.107,
+        "middle": 3.7355,
+        "ring": 6.2966,
+        "pinky": 6.3795,
+        "palm": 0.7411,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 104.5,
+      "minimumSignedMm": {
+        "thumb": 7.8508,
+        "index": 5.0824,
+        "middle": 3.6827,
+        "ring": 6.2736,
+        "pinky": 6.3821,
+        "palm": 0.7436,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 105.0,
+      "minimumSignedMm": {
+        "thumb": 7.842,
+        "index": 5.0584,
+        "middle": 3.6326,
+        "ring": 6.2523,
+        "pinky": 6.3854,
+        "palm": 0.7463,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 105.5,
+      "minimumSignedMm": {
+        "thumb": 7.833,
+        "index": 5.0345,
+        "middle": 3.588,
+        "ring": 6.2326,
+        "pinky": 6.3892,
+        "palm": 0.7491,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 106.0,
+      "minimumSignedMm": {
+        "thumb": 7.8241,
+        "index": 5.0113,
+        "middle": 3.5499,
+        "ring": 6.2145,
+        "pinky": 6.3941,
+        "palm": 0.7522,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 106.5,
+      "minimumSignedMm": {
+        "thumb": 7.8151,
+        "index": 4.9884,
+        "middle": 3.5182,
+        "ring": 6.1978,
+        "pinky": 6.4001,
+        "palm": 0.7552,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 107.0,
+      "minimumSignedMm": {
+        "thumb": 7.8059,
+        "index": 4.9659,
+        "middle": 3.4934,
+        "ring": 6.1825,
+        "pinky": 6.4076,
+        "palm": 0.7545,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 107.5,
+      "minimumSignedMm": {
+        "thumb": 7.7966,
+        "index": 4.9437,
+        "middle": 3.4751,
+        "ring": 6.1697,
+        "pinky": 6.4163,
+        "palm": 0.7497,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 108.0,
+      "minimumSignedMm": {
+        "thumb": 7.7872,
+        "index": 4.9221,
+        "middle": 3.4592,
+        "ring": 6.1612,
+        "pinky": 6.3382,
+        "palm": 0.7448,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 108.5,
+      "minimumSignedMm": {
+        "thumb": 7.7776,
+        "index": 4.9007,
+        "middle": 3.4448,
+        "ring": 6.1571,
+        "pinky": 6.2237,
+        "palm": 0.7397,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 109.0,
+      "minimumSignedMm": {
+        "thumb": 7.7679,
+        "index": 4.8801,
+        "middle": 3.4318,
+        "ring": 6.1574,
+        "pinky": 6.1105,
+        "palm": 0.7348,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 109.5,
+      "minimumSignedMm": {
+        "thumb": 7.7583,
+        "index": 4.8603,
+        "middle": 3.4203,
+        "ring": 6.1619,
+        "pinky": 6.0025,
+        "palm": 0.7298,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 110.0,
+      "minimumSignedMm": {
+        "thumb": 7.7487,
+        "index": 4.8418,
+        "middle": 3.4104,
+        "ring": 6.1706,
+        "pinky": 5.8966,
+        "palm": 0.7246,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 110.5,
+      "minimumSignedMm": {
+        "thumb": 7.7389,
+        "index": 4.8247,
+        "middle": 3.4016,
+        "ring": 6.183,
+        "pinky": 5.7962,
+        "palm": 0.7195,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 111.0,
+      "minimumSignedMm": {
+        "thumb": 7.7291,
+        "index": 4.8087,
+        "middle": 3.3944,
+        "ring": 6.1996,
+        "pinky": 5.6904,
+        "palm": 0.7144,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 111.5,
+      "minimumSignedMm": {
+        "thumb": 7.7192,
+        "index": 4.794,
+        "middle": 3.3885,
+        "ring": 6.2192,
+        "pinky": 5.5783,
+        "palm": 0.7092,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 112.0,
+      "minimumSignedMm": {
+        "thumb": 7.7095,
+        "index": 4.7805,
+        "middle": 3.3839,
+        "ring": 6.2426,
+        "pinky": 5.4674,
+        "palm": 0.704,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 112.5,
+      "minimumSignedMm": {
+        "thumb": 7.6995,
+        "index": 4.7443,
+        "middle": 3.3806,
+        "ring": 6.2675,
+        "pinky": 5.3617,
+        "palm": 0.6987,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 113.0,
+      "minimumSignedMm": {
+        "thumb": 7.6897,
+        "index": 4.6713,
+        "middle": 3.3784,
+        "ring": 6.2935,
+        "pinky": 5.2566,
+        "palm": 0.6933,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 113.5,
+      "minimumSignedMm": {
+        "thumb": 7.6797,
+        "index": 4.6018,
+        "middle": 3.3775,
+        "ring": 6.3196,
+        "pinky": 5.157,
+        "palm": 0.6879,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 114.0,
+      "minimumSignedMm": {
+        "thumb": 7.6697,
+        "index": 4.5343,
+        "middle": 3.3778,
+        "ring": 6.3467,
+        "pinky": 5.0581,
+        "palm": 0.6826,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 114.5,
+      "minimumSignedMm": {
+        "thumb": 7.6598,
+        "index": 4.4705,
+        "middle": 3.3788,
+        "ring": 6.3733,
+        "pinky": 4.9639,
+        "palm": 0.6769,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 115.0,
+      "minimumSignedMm": {
+        "thumb": 7.6499,
+        "index": 4.4091,
+        "middle": 3.3812,
+        "ring": 6.2653,
+        "pinky": 4.8414,
+        "palm": 0.6715,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 115.5,
+      "minimumSignedMm": {
+        "thumb": 7.6398,
+        "index": 4.3512,
+        "middle": 3.3843,
+        "ring": 6.1573,
+        "pinky": 4.7268,
+        "palm": 0.6659,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 116.0,
+      "minimumSignedMm": {
+        "thumb": 7.6299,
+        "index": 4.2959,
+        "middle": 3.3896,
+        "ring": 6.0555,
+        "pinky": 4.613,
+        "palm": 0.6603,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 116.5,
+      "minimumSignedMm": {
+        "thumb": 7.6199,
+        "index": 4.2442,
+        "middle": 3.3992,
+        "ring": 5.9645,
+        "pinky": 4.5081,
+        "palm": 0.6544,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 117.0,
+      "minimumSignedMm": {
+        "thumb": 7.6099,
+        "index": 4.1689,
+        "middle": 3.4138,
+        "ring": 5.865,
+        "pinky": 4.4045,
+        "palm": 0.6488,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 117.5,
+      "minimumSignedMm": {
+        "thumb": 7.6,
+        "index": 4.0906,
+        "middle": 3.4318,
+        "ring": 5.7414,
+        "pinky": 4.3104,
+        "palm": 0.6429,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 118.0,
+      "minimumSignedMm": {
+        "thumb": 7.59,
+        "index": 4.013,
+        "middle": 3.454,
+        "ring": 5.6193,
+        "pinky": 4.2172,
+        "palm": 0.6372,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 118.5,
+      "minimumSignedMm": {
+        "thumb": 7.5802,
+        "index": 3.9385,
+        "middle": 3.4786,
+        "ring": 5.5065,
+        "pinky": 4.1341,
+        "palm": 0.6313,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 119.0,
+      "minimumSignedMm": {
+        "thumb": 7.5704,
+        "index": 3.8645,
+        "middle": 3.5068,
+        "ring": 5.3948,
+        "pinky": 4.0518,
+        "palm": 0.6254,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 119.5,
+      "minimumSignedMm": {
+        "thumb": 7.5606,
+        "index": 3.7939,
+        "middle": 3.5345,
+        "ring": 5.2923,
+        "pinky": 3.9797,
+        "palm": 0.6195,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 120.0,
+      "minimumSignedMm": {
+        "thumb": 7.5508,
+        "index": 3.7169,
+        "middle": 3.548,
+        "ring": 5.1908,
+        "pinky": 3.9086,
+        "palm": 0.6134,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 120.5,
+      "minimumSignedMm": {
+        "thumb": 7.5413,
+        "index": 3.6403,
+        "middle": 3.4868,
+        "ring": 5.0989,
+        "pinky": 3.8477,
+        "palm": 0.6074,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 121.0,
+      "minimumSignedMm": {
+        "thumb": 7.5316,
+        "index": 3.5657,
+        "middle": 3.4329,
+        "ring": 5.0078,
+        "pinky": 3.7875,
+        "palm": 0.6015,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 121.5,
+      "minimumSignedMm": {
+        "thumb": 7.522,
+        "index": 3.4968,
+        "middle": 3.3897,
+        "ring": 4.9244,
+        "pinky": 3.738,
+        "palm": 0.5954,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 122.0,
+      "minimumSignedMm": {
+        "thumb": 7.5126,
+        "index": 3.4299,
+        "middle": 3.3529,
+        "ring": 4.8314,
+        "pinky": 3.6889,
+        "palm": 0.5892,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 122.5,
+      "minimumSignedMm": {
+        "thumb": 7.5033,
+        "index": 3.3678,
+        "middle": 3.3208,
+        "ring": 4.7523,
+        "pinky": 3.6505,
+        "palm": 0.583,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 123.0,
+      "minimumSignedMm": {
+        "thumb": 7.4939,
+        "index": 3.306,
+        "middle": 3.2895,
+        "ring": 4.6756,
+        "pinky": 3.6015,
+        "palm": 0.5767,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 123.5,
+      "minimumSignedMm": {
+        "thumb": 7.4847,
+        "index": 3.2489,
+        "middle": 3.2613,
+        "ring": 4.6114,
+        "pinky": 3.5644,
+        "palm": 0.5705,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 124.0,
+      "minimumSignedMm": {
+        "thumb": 7.4755,
+        "index": 3.192,
+        "middle": 3.2337,
+        "ring": 4.5475,
+        "pinky": 3.5273,
+        "palm": 0.5642,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 124.5,
+      "minimumSignedMm": {
+        "thumb": 7.4665,
+        "index": 3.1338,
+        "middle": 3.2095,
+        "ring": 4.4956,
+        "pinky": 3.506,
+        "palm": 0.5578,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 125.0,
+      "minimumSignedMm": {
+        "thumb": 7.4575,
+        "index": 3.0756,
+        "middle": 3.1853,
+        "ring": 4.4437,
+        "pinky": 3.4849,
+        "palm": 0.5515,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 125.5,
+      "minimumSignedMm": {
+        "thumb": 7.4487,
+        "index": 3.0227,
+        "middle": 3.1643,
+        "ring": 4.4042,
+        "pinky": 3.4794,
+        "palm": 0.5449,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 126.0,
+      "minimumSignedMm": {
+        "thumb": 7.44,
+        "index": 2.9702,
+        "middle": 3.1435,
+        "ring": 4.3647,
+        "pinky": 3.4742,
+        "palm": 0.5385,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 126.5,
+      "minimumSignedMm": {
+        "thumb": 7.4316,
+        "index": 2.9233,
+        "middle": 3.1257,
+        "ring": 4.3379,
+        "pinky": 3.4742,
+        "palm": 0.532,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 127.0,
+      "minimumSignedMm": {
+        "thumb": 7.423,
+        "index": 2.8765,
+        "middle": 3.108,
+        "ring": 4.311,
+        "pinky": 3.4748,
+        "palm": 0.5254,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 127.5,
+      "minimumSignedMm": {
+        "thumb": 7.4147,
+        "index": 2.8358,
+        "middle": 3.093,
+        "ring": 4.2973,
+        "pinky": 3.4757,
+        "palm": 0.5187,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 128.0,
+      "minimumSignedMm": {
+        "thumb": 7.4063,
+        "index": 2.7951,
+        "middle": 3.0781,
+        "ring": 4.2836,
+        "pinky": 3.4769,
+        "palm": 0.512,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 128.5,
+      "minimumSignedMm": {
+        "thumb": 7.3985,
+        "index": 2.7606,
+        "middle": 3.0659,
+        "ring": 4.2791,
+        "pinky": 3.4785,
+        "palm": 0.5053,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 129.0,
+      "minimumSignedMm": {
+        "thumb": 7.3905,
+        "index": 2.7262,
+        "middle": 3.0538,
+        "ring": 4.2745,
+        "pinky": 3.4803,
+        "palm": 0.4986,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 129.5,
+      "minimumSignedMm": {
+        "thumb": 7.3829,
+        "index": 2.6986,
+        "middle": 3.0444,
+        "ring": 4.2707,
+        "pinky": 3.4829,
+        "palm": 0.4921,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 130.0,
+      "minimumSignedMm": {
+        "thumb": 7.3753,
+        "index": 2.6708,
+        "middle": 3.0352,
+        "ring": 4.267,
+        "pinky": 3.4857,
+        "palm": 0.4852,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 130.5,
+      "minimumSignedMm": {
+        "thumb": 7.3678,
+        "index": 2.6495,
+        "middle": 3.0281,
+        "ring": 4.2632,
+        "pinky": 3.4891,
+        "palm": 0.4783,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 131.0,
+      "minimumSignedMm": {
+        "thumb": 7.3605,
+        "index": 2.6284,
+        "middle": 3.0212,
+        "ring": 4.2596,
+        "pinky": 3.4926,
+        "palm": 0.4714,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 131.5,
+      "minimumSignedMm": {
+        "thumb": 7.3537,
+        "index": 2.6143,
+        "middle": 3.0151,
+        "ring": 4.2563,
+        "pinky": 3.4968,
+        "palm": 0.4648,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 132.0,
+      "minimumSignedMm": {
+        "thumb": 7.3468,
+        "index": 2.6003,
+        "middle": 3.0091,
+        "ring": 4.2531,
+        "pinky": 3.5012,
+        "palm": 0.4583,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 132.5,
+      "minimumSignedMm": {
+        "thumb": 7.34,
+        "index": 2.5933,
+        "middle": 3.0034,
+        "ring": 4.2501,
+        "pinky": 3.5062,
+        "palm": 0.4517,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 133.0,
+      "minimumSignedMm": {
+        "thumb": 7.3333,
+        "index": 2.5864,
+        "middle": 2.9976,
+        "ring": 4.2472,
+        "pinky": 3.4821,
+        "palm": 0.4451,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 133.5,
+      "minimumSignedMm": {
+        "thumb": 7.3272,
+        "index": 2.5837,
+        "middle": 2.9923,
+        "ring": 4.2445,
+        "pinky": 3.4168,
+        "palm": 0.439,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 134.0,
+      "minimumSignedMm": {
+        "thumb": 7.3212,
+        "index": 2.5807,
+        "middle": 2.9869,
+        "ring": 4.242,
+        "pinky": 3.3541,
+        "palm": 0.433,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 134.5,
+      "minimumSignedMm": {
+        "thumb": 7.3154,
+        "index": 2.5781,
+        "middle": 2.9819,
+        "ring": 4.2396,
+        "pinky": 3.2938,
+        "palm": 0.4271,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 135.0,
+      "minimumSignedMm": {
+        "thumb": 7.3096,
+        "index": 2.5757,
+        "middle": 2.9769,
+        "ring": 4.2373,
+        "pinky": 3.2368,
+        "palm": 0.4215,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 135.5,
+      "minimumSignedMm": {
+        "thumb": 7.3042,
+        "index": 2.5735,
+        "middle": 2.9723,
+        "ring": 4.2354,
+        "pinky": 3.1828,
+        "palm": 0.4162,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 136.0,
+      "minimumSignedMm": {
+        "thumb": 7.2989,
+        "index": 2.5716,
+        "middle": 2.9677,
+        "ring": 4.2335,
+        "pinky": 3.1323,
+        "palm": 0.4109,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 136.5,
+      "minimumSignedMm": {
+        "thumb": 7.2941,
+        "index": 2.5698,
+        "middle": 2.9634,
+        "ring": 4.2319,
+        "pinky": 3.0853,
+        "palm": 0.406,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 137.0,
+      "minimumSignedMm": {
+        "thumb": 7.2892,
+        "index": 2.5682,
+        "middle": 2.9594,
+        "ring": 4.2304,
+        "pinky": 3.0077,
+        "palm": 0.4011,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 137.5,
+      "minimumSignedMm": {
+        "thumb": 7.2849,
+        "index": 2.567,
+        "middle": 2.9554,
+        "ring": 4.2293,
+        "pinky": 2.903,
+        "palm": 0.3967,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 138.0,
+      "minimumSignedMm": {
+        "thumb": 7.2804,
+        "index": 2.5659,
+        "middle": 2.9517,
+        "ring": 4.2281,
+        "pinky": 2.7994,
+        "palm": 0.3924,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 138.5,
+      "minimumSignedMm": {
+        "thumb": 7.2766,
+        "index": 2.5652,
+        "middle": 2.9484,
+        "ring": 4.2273,
+        "pinky": 2.6992,
+        "palm": 0.3885,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 139.0,
+      "minimumSignedMm": {
+        "thumb": 7.2725,
+        "index": 2.5644,
+        "middle": 2.945,
+        "ring": 4.2265,
+        "pinky": 2.601,
+        "palm": 0.3847,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 139.5,
+      "minimumSignedMm": {
+        "thumb": 7.2694,
+        "index": 2.5643,
+        "middle": 2.9422,
+        "ring": 4.2263,
+        "pinky": 2.507,
+        "palm": 0.3814,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 140.0,
+      "minimumSignedMm": {
+        "thumb": 7.266,
+        "index": 2.564,
+        "middle": 2.9393,
+        "ring": 4.2259,
+        "pinky": 2.4156,
+        "palm": 0.378,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 140.5,
+      "minimumSignedMm": {
+        "thumb": 7.2633,
+        "index": 2.5644,
+        "middle": 2.937,
+        "ring": 4.2243,
+        "pinky": 2.3298,
+        "palm": 0.3754,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 141.0,
+      "minimumSignedMm": {
+        "thumb": 7.2606,
+        "index": 2.5646,
+        "middle": 2.9346,
+        "ring": 4.2222,
+        "pinky": 2.2471,
+        "palm": 0.3726,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 141.5,
+      "minimumSignedMm": {
+        "thumb": 7.2584,
+        "index": 2.5653,
+        "middle": 2.9326,
+        "ring": 4.2206,
+        "pinky": 2.1709,
+        "palm": 0.3703,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 142.0,
+      "minimumSignedMm": {
+        "thumb": 7.2561,
+        "index": 2.566,
+        "middle": 2.9307,
+        "ring": 4.2188,
+        "pinky": 2.0991,
+        "palm": 0.3681,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 142.5,
+      "minimumSignedMm": {
+        "thumb": 7.2546,
+        "index": 2.5672,
+        "middle": 2.9293,
+        "ring": 4.2176,
+        "pinky": 2.0348,
+        "palm": 0.3666,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 143.0,
+      "minimumSignedMm": {
+        "thumb": 7.253,
+        "index": 2.5685,
+        "middle": 2.9281,
+        "ring": 4.2164,
+        "pinky": 1.9756,
+        "palm": 0.3651,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 143.5,
+      "minimumSignedMm": {
+        "thumb": 7.2521,
+        "index": 2.5703,
+        "middle": 2.9272,
+        "ring": 4.2158,
+        "pinky": 1.9249,
+        "palm": 0.3642,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 144.0,
+      "minimumSignedMm": {
+        "thumb": 7.2511,
+        "index": 2.572,
+        "middle": 2.9264,
+        "ring": 4.215,
+        "pinky": 1.8804,
+        "palm": 0.3632,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 144.5,
+      "minimumSignedMm": {
+        "thumb": 7.2507,
+        "index": 2.5744,
+        "middle": 2.9261,
+        "ring": 4.2147,
+        "pinky": 1.8447,
+        "palm": 0.3629,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 145.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.5765,
+        "middle": 2.9257,
+        "ring": 4.2145,
+        "pinky": 1.8158,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 145.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.579,
+        "middle": 2.9257,
+        "ring": 4.2145,
+        "pinky": 1.7826,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 146.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.5815,
+        "middle": 2.9257,
+        "ring": 4.2145,
+        "pinky": 1.749,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 146.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.584,
+        "middle": 2.9257,
+        "ring": 4.2145,
+        "pinky": 1.7228,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 147.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.5866,
+        "middle": 2.9257,
+        "ring": 4.2145,
+        "pinky": 1.7026,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 147.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.5891,
+        "middle": 2.9257,
+        "ring": 4.2145,
+        "pinky": 1.6896,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 148.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.5916,
+        "middle": 2.9257,
+        "ring": 4.2145,
+        "pinky": 1.6673,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 148.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.5942,
+        "middle": 2.9257,
+        "ring": 4.2145,
+        "pinky": 1.5811,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 149.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.5966,
+        "middle": 2.9257,
+        "ring": 4.068,
+        "pinky": 1.4978,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 149.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.5991,
+        "middle": 2.9257,
+        "ring": 3.8907,
+        "pinky": 1.422,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 150.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.6015,
+        "middle": 2.9257,
+        "ring": 3.716,
+        "pinky": 1.3496,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 150.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.6039,
+        "middle": 2.9257,
+        "ring": 3.5517,
+        "pinky": 1.2856,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 151.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.6063,
+        "middle": 2.9257,
+        "ring": 3.391,
+        "pinky": 1.2253,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 151.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.6087,
+        "middle": 2.9257,
+        "ring": 3.2417,
+        "pinky": 1.1737,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 152.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.611,
+        "middle": 2.9257,
+        "ring": 3.0965,
+        "pinky": 1.1263,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 152.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.6133,
+        "middle": 2.9257,
+        "ring": 2.9635,
+        "pinky": 1.0878,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 153.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.6156,
+        "middle": 2.9257,
+        "ring": 2.8352,
+        "pinky": 1.0538,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 153.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.6177,
+        "middle": 2.9257,
+        "ring": 2.7201,
+        "pinky": 1.0278,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 154.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.62,
+        "middle": 2.9257,
+        "ring": 2.6101,
+        "pinky": 1.0063,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 154.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.5453,
+        "middle": 2.9257,
+        "ring": 2.5136,
+        "pinky": 0.9917,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 155.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.3529,
+        "middle": 2.9257,
+        "ring": 2.4229,
+        "pinky": 0.981,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 155.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 2.1714,
+        "middle": 2.9257,
+        "ring": 2.3455,
+        "pinky": 0.9696,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 156.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 1.9928,
+        "middle": 2.9257,
+        "ring": 2.2739,
+        "pinky": 0.9336,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 156.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 1.8265,
+        "middle": 2.9257,
+        "ring": 2.2149,
+        "pinky": 0.8292,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 157.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 1.6646,
+        "middle": 2.9257,
+        "ring": 2.1621,
+        "pinky": 0.7347,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 157.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 1.5171,
+        "middle": 2.9257,
+        "ring": 2.1202,
+        "pinky": 0.6425,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 158.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 1.3753,
+        "middle": 2.9257,
+        "ring": 2.0581,
+        "pinky": 0.5376,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 158.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 1.2505,
+        "middle": 2.9257,
+        "ring": 1.9825,
+        "pinky": 0.4524,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 159.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 1.1345,
+        "middle": 2.9257,
+        "ring": 1.785,
+        "pinky": 0.3656,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 159.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 1.0385,
+        "middle": 2.9257,
+        "ring": 1.4902,
+        "pinky": 0.3036,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 160.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.9554,
+        "middle": 2.9257,
+        "ring": 1.2055,
+        "pinky": 0.242,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 160.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.8943,
+        "middle": 2.9219,
+        "ring": 0.9769,
+        "pinky": 0.206,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 161.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.8498,
+        "middle": 2.4751,
+        "ring": 0.7507,
+        "pinky": 0.1705,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 161.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.8267,
+        "middle": 2.0919,
+        "ring": 0.5811,
+        "pinky": 0.1615,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 162.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.8036,
+        "middle": 1.7133,
+        "ring": 0.4128,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 162.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.7859,
+        "middle": 1.4095,
+        "ring": 0.3042,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 163.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.7832,
+        "middle": 1.1233,
+        "ring": 0.196,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 163.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.7934,
+        "middle": 0.9016,
+        "ring": 0.1503,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 164.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.8143,
+        "middle": 0.6946,
+        "ring": 0.1045,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 164.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.8361,
+        "middle": 0.5515,
+        "ring": 0.1034,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 165.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.8581,
+        "middle": 0.4096,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 165.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.8739,
+        "middle": 0.3338,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 166.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.7225,
+        "middle": 0.2584,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 166.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.5628,
+        "middle": 0.2457,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 167.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.401,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 167.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.296,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 168.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.1919,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 168.5,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.1565,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 169.0,
+      "minimumSignedMm": {
+        "thumb": 7.2502,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 169.5,
+      "minimumSignedMm": {
+        "thumb": 7.2549,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 170.0,
+      "minimumSignedMm": {
+        "thumb": 7.2596,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 170.5,
+      "minimumSignedMm": {
+        "thumb": 7.273,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 171.0,
+      "minimumSignedMm": {
+        "thumb": 7.2863,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 171.5,
+      "minimumSignedMm": {
+        "thumb": 7.3078,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 172.0,
+      "minimumSignedMm": {
+        "thumb": 7.3289,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 172.5,
+      "minimumSignedMm": {
+        "thumb": 7.3573,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 173.0,
+      "minimumSignedMm": {
+        "thumb": 7.3853,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 173.5,
+      "minimumSignedMm": {
+        "thumb": 7.4196,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 174.0,
+      "minimumSignedMm": {
+        "thumb": 7.4534,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 174.5,
+      "minimumSignedMm": {
+        "thumb": 7.4926,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 175.0,
+      "minimumSignedMm": {
+        "thumb": 7.531,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 175.5,
+      "minimumSignedMm": {
+        "thumb": 7.5736,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 176.0,
+      "minimumSignedMm": {
+        "thumb": 7.6096,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 176.5,
+      "minimumSignedMm": {
+        "thumb": 7.6425,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 177.0,
+      "minimumSignedMm": {
+        "thumb": 7.6742,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 177.5,
+      "minimumSignedMm": {
+        "thumb": 7.7065,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 178.0,
+      "minimumSignedMm": {
+        "thumb": 7.7388,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 178.5,
+      "minimumSignedMm": {
+        "thumb": 7.7731,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 179.0,
+      "minimumSignedMm": {
+        "thumb": 7.8038,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 179.5,
+      "minimumSignedMm": {
+        "thumb": 7.8325,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 180.0,
+      "minimumSignedMm": {
+        "thumb": 7.8587,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 180.5,
+      "minimumSignedMm": {
+        "thumb": 7.8837,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 181.0,
+      "minimumSignedMm": {
+        "thumb": 7.8915,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 181.5,
+      "minimumSignedMm": {
+        "thumb": 7.8927,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 182.0,
+      "minimumSignedMm": {
+        "thumb": 7.895,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 182.5,
+      "minimumSignedMm": {
+        "thumb": 7.8953,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 183.0,
+      "minimumSignedMm": {
+        "thumb": 7.8924,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 183.5,
+      "minimumSignedMm": {
+        "thumb": 7.8809,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 184.0,
+      "minimumSignedMm": {
+        "thumb": 7.8661,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 184.5,
+      "minimumSignedMm": {
+        "thumb": 7.8517,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 185.0,
+      "minimumSignedMm": {
+        "thumb": 7.8364,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 185.5,
+      "minimumSignedMm": {
+        "thumb": 7.8177,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 186.0,
+      "minimumSignedMm": {
+        "thumb": 7.7916,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 186.5,
+      "minimumSignedMm": {
+        "thumb": 7.7547,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 187.0,
+      "minimumSignedMm": {
+        "thumb": 7.6959,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 187.5,
+      "minimumSignedMm": {
+        "thumb": 7.6404,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 188.0,
+      "minimumSignedMm": {
+        "thumb": 7.5816,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 188.5,
+      "minimumSignedMm": {
+        "thumb": 7.5203,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 189.0,
+      "minimumSignedMm": {
+        "thumb": 7.454,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 189.5,
+      "minimumSignedMm": {
+        "thumb": 7.3827,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 190.0,
+      "minimumSignedMm": {
+        "thumb": 7.3139,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 190.5,
+      "minimumSignedMm": {
+        "thumb": 7.2441,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 191.0,
+      "minimumSignedMm": {
+        "thumb": 7.1717,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 191.5,
+      "minimumSignedMm": {
+        "thumb": 7.0776,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 192.0,
+      "minimumSignedMm": {
+        "thumb": 6.9761,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 192.5,
+      "minimumSignedMm": {
+        "thumb": 6.8775,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 193.0,
+      "minimumSignedMm": {
+        "thumb": 6.7769,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 193.5,
+      "minimumSignedMm": {
+        "thumb": 6.679,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 194.0,
+      "minimumSignedMm": {
+        "thumb": 6.5795,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 194.5,
+      "minimumSignedMm": {
+        "thumb": 6.0871,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 195.0,
+      "minimumSignedMm": {
+        "thumb": 5.6033,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 195.5,
+      "minimumSignedMm": {
+        "thumb": 5.1873,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 196.0,
+      "minimumSignedMm": {
+        "thumb": 4.809,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 196.5,
+      "minimumSignedMm": {
+        "thumb": 4.4652,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 197.0,
+      "minimumSignedMm": {
+        "thumb": 4.1238,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 197.5,
+      "minimumSignedMm": {
+        "thumb": 3.8143,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 198.0,
+      "minimumSignedMm": {
+        "thumb": 3.4736,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 198.5,
+      "minimumSignedMm": {
+        "thumb": 3.1471,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 199.0,
+      "minimumSignedMm": {
+        "thumb": 2.8218,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 199.5,
+      "minimumSignedMm": {
+        "thumb": 2.5383,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 200.0,
+      "minimumSignedMm": {
+        "thumb": 2.2563,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 200.5,
+      "minimumSignedMm": {
+        "thumb": 2.0186,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 201.0,
+      "minimumSignedMm": {
+        "thumb": 1.7819,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 201.5,
+      "minimumSignedMm": {
+        "thumb": 1.5938,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 202.0,
+      "minimumSignedMm": {
+        "thumb": 1.4148,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 202.5,
+      "minimumSignedMm": {
+        "thumb": 1.2858,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 203.0,
+      "minimumSignedMm": {
+        "thumb": 1.1574,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 203.5,
+      "minimumSignedMm": {
+        "thumb": 1.0784,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 204.0,
+      "minimumSignedMm": {
+        "thumb": 0.9994,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 204.5,
+      "minimumSignedMm": {
+        "thumb": 0.9726,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 205.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 205.5,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 206.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 206.5,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 207.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 207.5,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 208.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 208.5,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 209.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 209.5,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 210.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 210.5,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 211.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 211.5,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 212.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 212.5,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 213.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 213.5,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 214.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 214.5,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 215.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 215.5,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 216.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 216.5,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 217.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 217.5,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 218.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 219.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 220.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 221.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 222.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 223.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 224.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 225.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 226.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 227.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 228.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 229.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 230.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 231.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 232.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 233.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 234.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 235.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 236.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 237.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 238.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 239.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 240.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 241.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 242.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1208,
+        "middle": 0.2332,
+        "ring": 0.102,
+        "pinky": 0.1525,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 243.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.121,
+        "middle": 0.2335,
+        "ring": 0.1021,
+        "pinky": 0.1525,
+        "palm": 0.3623,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 244.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.121,
+        "middle": 0.2332,
+        "ring": 0.1021,
+        "pinky": 0.1525,
+        "palm": 0.3623,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 245.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1207,
+        "middle": 0.2331,
+        "ring": 0.1019,
+        "pinky": 0.1525,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 246.0,
+      "minimumSignedMm": {
+        "thumb": 0.9457,
+        "index": 0.1209,
+        "middle": 0.233,
+        "ring": 0.1019,
+        "pinky": 0.1523,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 247.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1208,
+        "middle": 0.2332,
+        "ring": 0.1021,
+        "pinky": 0.1524,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 248.0,
+      "minimumSignedMm": {
+        "thumb": 0.9457,
+        "index": 0.121,
+        "middle": 0.2332,
+        "ring": 0.102,
+        "pinky": 0.1526,
+        "palm": 0.3623,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 249.0,
+      "minimumSignedMm": {
+        "thumb": 0.9458,
+        "index": 0.1208,
+        "middle": 0.2331,
+        "ring": 0.102,
+        "pinky": 0.1525,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 250.0,
+      "minimumSignedMm": {
+        "thumb": 0.9454,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.1021,
+        "pinky": 0.1524,
+        "palm": 0.3623,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 251.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2331,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 252.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.233,
+        "ring": 0.1019,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 253.0,
+      "minimumSignedMm": {
+        "thumb": 0.9458,
+        "index": 0.1208,
+        "middle": 0.2331,
+        "ring": 0.1019,
+        "pinky": 0.1525,
+        "palm": 0.3626,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 254.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2332,
+        "ring": 0.102,
+        "pinky": 0.1525,
+        "palm": 0.3623,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 255.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.121,
+        "middle": 0.2333,
+        "ring": 0.1021,
+        "pinky": 0.1526,
+        "palm": 0.3623,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 256.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1209,
+        "middle": 0.2333,
+        "ring": 0.1021,
+        "pinky": 0.1526,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 257.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1208,
+        "middle": 0.2331,
+        "ring": 0.102,
+        "pinky": 0.1523,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 258.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1021,
+        "pinky": 0.1524,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 259.0,
+      "minimumSignedMm": {
+        "thumb": 0.9458,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.102,
+        "pinky": 0.1526,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 260.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1021,
+        "pinky": 0.1524,
+        "palm": 0.3623,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 261.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1207,
+        "middle": 0.2331,
+        "ring": 0.102,
+        "pinky": 0.1525,
+        "palm": 0.3623,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 262.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1021,
+        "pinky": 0.1523,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 263.0,
+      "minimumSignedMm": {
+        "thumb": 0.9458,
+        "index": 0.1208,
+        "middle": 0.2332,
+        "ring": 0.102,
+        "pinky": 0.1525,
+        "palm": 0.3623,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 264.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1209,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 265.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 266.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.121,
+        "middle": 0.2331,
+        "ring": 0.1021,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 267.0,
+      "minimumSignedMm": {
+        "thumb": 0.9458,
+        "index": 0.121,
+        "middle": 0.2332,
+        "ring": 0.1021,
+        "pinky": 0.1526,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 268.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2332,
+        "ring": 0.1021,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 269.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.121,
+        "middle": 0.2332,
+        "ring": 0.1021,
+        "pinky": 0.1525,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 270.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1209,
+        "middle": 0.2331,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 271.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1208,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 272.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1211,
+        "middle": 0.2334,
+        "ring": 0.1021,
+        "pinky": 0.1525,
+        "palm": 0.3623,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 273.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1208,
+        "middle": 0.2331,
+        "ring": 0.1019,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 274.0,
+      "minimumSignedMm": {
+        "thumb": 0.9457,
+        "index": 0.1209,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1524,
+        "palm": 0.3626,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 275.0,
+      "minimumSignedMm": {
+        "thumb": 0.9456,
+        "index": 0.1208,
+        "middle": 0.2332,
+        "ring": 0.1019,
+        "pinky": 0.1524,
+        "palm": 0.3624,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 276.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2332,
+        "ring": 0.102,
+        "pinky": 0.1525,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 277.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 278.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 279.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 280.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 281.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 282.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 283.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 284.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 285.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 286.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 287.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 288.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    },
+    {
+      "frame": 289.0,
+      "minimumSignedMm": {
+        "thumb": 0.9455,
+        "index": 0.1208,
+        "middle": 0.2333,
+        "ring": 0.102,
+        "pinky": 0.1524,
+        "palm": 0.3625,
+        "other": null
+      },
+      "contactFailures": {},
+      "selfCrossings": {}
+    }
+  ],
+  "failures": [],
+  "seconds": 2.734999999869615,
+  "meshUVShapeKeysTexturesUnchanged": true,
+  "weightRepair": {
+    "changedBaseVertices": 67,
+    "history": [
+      {
+        "round": 0,
+        "foldPairs": 9,
+        "baseVerticesSmoothed": 0
+      },
+      {
+        "round": 1,
+        "foldPairs": 0,
+        "baseVerticesSmoothed": 71
+      }
+    ]
+  },
+  "weightChanges": [
+    {
+      "vertices": 19158,
+      "original": "63a2f7533f37bc85f749150f96eeee7a81ab1621e7c040a40c65147f1a666610",
+      "current": "75413ac56ab75329c9c8aea94d1aa9cb717f0c29d54cb82d3ab6a5d6a8742cbc"
+    }
+  ],
+  "actualChangedBaseVertices": 141,
+  "unexpectedWeightChanges": [],
+  "originalRestRigUnchanged": true,
+  "boneCount": 53,
+  "original": [
+    {
+      "verts": 96,
+      "polys": 86,
+      "meshSha256": "b9cf40e4f4655735a319646ae66d6e24cba8f004dfe9096ab5d456bba8f6b380",
+      "uvSha256": "2c9bc88037eaa9749913e16fd543d75254ac34ab797bb6c8bfb74f4922c8d058",
+      "shapeKeysSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "weightsSha256": "1ffd72da4dabb234d7d3a960b8547c2a1b875abbc977068280867c5f1a0b11f2",
+      "textureBytesSha256": [
+        "4659691c7295ad6206c78b003e5fd0e5f91dcd53032fa914a229bb48cabe424b"
+      ]
+    },
+    {
+      "verts": 211,
+      "polys": 196,
+      "meshSha256": "8da4e54fae404e735bd36fa2448c56ff02786cba4679d5b573734aef9526918d",
+      "uvSha256": "8fce4330923f04885f3b8c0df1d6cc7023bf251f9495313599c42003f53ecbb2",
+      "shapeKeysSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "weightsSha256": "d08c65cd1da6ce71cd4fa9bf026fac8aa0d9037bb5d84770e5f67b8f6916f200",
+      "textureBytesSha256": [
+        "0851011ad2fd36f6ad2bd1bdd6202bad32fb555b7d6cdb6b474811ba5a5fe7a6",
+        "b091229d558aed8ad41f31235265e98164a2f709158f4113d0ce0e072f680197"
+      ]
+    },
+    {
+      "verts": 2084,
+      "polys": 2060,
+      "meshSha256": "a85031e7bb1f202c6c5abe8cf2572c09afaf371d43146a413250f1104be24005",
+      "uvSha256": "819651911769cc5580d712c99ec4e4808f8a6800f921a049bcdf4b0160c2d764",
+      "shapeKeysSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "weightsSha256": "f8036388b6d7e72d4859b756548d0bc45ff9b19e6433e9631332268a577db58a",
+      "textureBytesSha256": [
+        "0e476df27c5ddebca2c55ce889abd46387ba405f34833de81db466d1a4b1ca5b",
+        "d4bbc26383a8c191be31a645c5ddfdea4c3ba27d56140305271c4553dbaae8a3"
+      ]
+    },
+    {
+      "verts": 2126,
+      "polys": 2082,
+      "meshSha256": "dcdfbc2d618f2ccf08f8eca97178472ef3c3e769b8169a2fbd9d60b0bcfc73c5",
+      "uvSha256": "92d90e6148aee0a8dbef04382273f741082943bfa0434579444e42a755a2c7c1",
+      "shapeKeysSha256": "2710692af57391f352965193b99d9bfcb11c6772b60084d4b35779d50f331f32",
+      "weightsSha256": "50349d793e876e94e3bbc036eb04b9cac58b10c4c25f5549d3028050042a588a",
+      "textureBytesSha256": [
+        "a7d526797da4cdc1a79603a35abebf41e577277267f36db6641cdb6cebe6ffb1"
+      ]
+    },
+    {
+      "verts": 19158,
+      "polys": 18486,
+      "meshSha256": "0ce33be7023a836ffaf3c7915a9c76acfb2c4429466fbe7f8058ce536594159a",
+      "uvSha256": "9422e331f097fe3604df9711b4e8df55c845af3fe9de9bd5ffe6b1019bb3bd9f",
+      "shapeKeysSha256": "e2e80e33cfdffb896eac5979b1bd4477bc7957b565a08d4e0a3fa9b17e99f473",
+      "weightsSha256": "63a2f7533f37bc85f749150f96eeee7a81ab1621e7c040a40c65147f1a666610",
+      "textureBytesSha256": [
+        "268ee6d1ea9665f8050d040c7b47971884428628021418ae52f68912859f5e60",
+        "2bf3632a4bfb1631d9ae15568c7de5c7254c780e5168f1546827f32d50f5212d"
+      ]
+    }
+  ],
+  "current": [
+    {
+      "verts": 96,
+      "polys": 86,
+      "meshSha256": "b9cf40e4f4655735a319646ae66d6e24cba8f004dfe9096ab5d456bba8f6b380",
+      "uvSha256": "2c9bc88037eaa9749913e16fd543d75254ac34ab797bb6c8bfb74f4922c8d058",
+      "shapeKeysSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "weightsSha256": "1ffd72da4dabb234d7d3a960b8547c2a1b875abbc977068280867c5f1a0b11f2",
+      "textureBytesSha256": [
+        "4659691c7295ad6206c78b003e5fd0e5f91dcd53032fa914a229bb48cabe424b"
+      ]
+    },
+    {
+      "verts": 211,
+      "polys": 196,
+      "meshSha256": "8da4e54fae404e735bd36fa2448c56ff02786cba4679d5b573734aef9526918d",
+      "uvSha256": "8fce4330923f04885f3b8c0df1d6cc7023bf251f9495313599c42003f53ecbb2",
+      "shapeKeysSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "weightsSha256": "d08c65cd1da6ce71cd4fa9bf026fac8aa0d9037bb5d84770e5f67b8f6916f200",
+      "textureBytesSha256": [
+        "0851011ad2fd36f6ad2bd1bdd6202bad32fb555b7d6cdb6b474811ba5a5fe7a6",
+        "b091229d558aed8ad41f31235265e98164a2f709158f4113d0ce0e072f680197"
+      ]
+    },
+    {
+      "verts": 2084,
+      "polys": 2060,
+      "meshSha256": "a85031e7bb1f202c6c5abe8cf2572c09afaf371d43146a413250f1104be24005",
+      "uvSha256": "819651911769cc5580d712c99ec4e4808f8a6800f921a049bcdf4b0160c2d764",
+      "shapeKeysSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "weightsSha256": "f8036388b6d7e72d4859b756548d0bc45ff9b19e6433e9631332268a577db58a",
+      "textureBytesSha256": [
+        "0e476df27c5ddebca2c55ce889abd46387ba405f34833de81db466d1a4b1ca5b",
+        "d4bbc26383a8c191be31a645c5ddfdea4c3ba27d56140305271c4553dbaae8a3"
+      ]
+    },
+    {
+      "verts": 2126,
+      "polys": 2082,
+      "meshSha256": "dcdfbc2d618f2ccf08f8eca97178472ef3c3e769b8169a2fbd9d60b0bcfc73c5",
+      "uvSha256": "92d90e6148aee0a8dbef04382273f741082943bfa0434579444e42a755a2c7c1",
+      "shapeKeysSha256": "2710692af57391f352965193b99d9bfcb11c6772b60084d4b35779d50f331f32",
+      "weightsSha256": "50349d793e876e94e3bbc036eb04b9cac58b10c4c25f5549d3028050042a588a",
+      "textureBytesSha256": [
+        "a7d526797da4cdc1a79603a35abebf41e577277267f36db6641cdb6cebe6ffb1"
+      ]
+    },
+    {
+      "verts": 19158,
+      "polys": 18486,
+      "meshSha256": "0ce33be7023a836ffaf3c7915a9c76acfb2c4429466fbe7f8058ce536594159a",
+      "uvSha256": "9422e331f097fe3604df9711b4e8df55c845af3fe9de9bd5ffe6b1019bb3bd9f",
+      "shapeKeysSha256": "e2e80e33cfdffb896eac5979b1bd4477bc7957b565a08d4e0a3fa9b17e99f473",
+      "weightsSha256": "75413ac56ab75329c9c8aea94d1aa9cb717f0c29d54cb82d3ab6a5d6a8742cbc",
+      "textureBytesSha256": [
+        "268ee6d1ea9665f8050d040c7b47971884428628021418ae52f68912859f5e60",
+        "2bf3632a4bfb1631d9ae15568c7de5c7254c780e5168f1546827f32d50f5212d"
+      ]
+    }
+  ],
+  "authoredJointLimits": [
+    {
+      "digit": "index",
+      "bone": "index_01_r",
+      "valueDeg": 24.4,
+      "limitsDeg": [
+        0,
+        70
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "index",
+      "bone": "index_02_r",
+      "valueDeg": 51.0,
+      "limitsDeg": [
+        0,
+        84
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "index",
+      "bone": "index_03_r",
+      "valueDeg": 50.0,
+      "limitsDeg": [
+        0,
+        65
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "middle",
+      "bone": "middle_01_r",
+      "valueDeg": 38.05,
+      "limitsDeg": [
+        0,
+        70
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "middle",
+      "bone": "middle_02_r",
+      "valueDeg": 60.0,
+      "limitsDeg": [
+        0,
+        84
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "middle",
+      "bone": "middle_03_r",
+      "valueDeg": 44.95,
+      "limitsDeg": [
+        0,
+        65
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "ring",
+      "bone": "ring_01_r",
+      "valueDeg": 41.0,
+      "limitsDeg": [
+        0,
+        70
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "ring",
+      "bone": "ring_02_r",
+      "valueDeg": 50.0,
+      "limitsDeg": [
+        0,
+        84
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "ring",
+      "bone": "ring_03_r",
+      "valueDeg": 40.05,
+      "limitsDeg": [
+        0,
+        65
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "pinky",
+      "bone": "pinky_01_r",
+      "valueDeg": 32.0,
+      "limitsDeg": [
+        0,
+        70
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "pinky",
+      "bone": "pinky_02_r",
+      "valueDeg": 32.8,
+      "limitsDeg": [
+        0,
+        84
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "pinky",
+      "bone": "pinky_03_r",
+      "valueDeg": 28.45,
+      "limitsDeg": [
+        0,
+        65
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "thumb",
+      "bone": "thumb_01_r",
+      "valueDeg": -11.2,
+      "limitsDeg": [
+        -35,
+        85
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "thumb",
+      "bone": "thumb_01_r",
+      "valueDeg": 70.0,
+      "limitsDeg": [
+        15,
+        70
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "thumb",
+      "bone": "thumb_01_r",
+      "valueDeg": 5.0,
+      "limitsDeg": [
+        -65,
+        65
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "thumb",
+      "bone": "thumb_02_r",
+      "valueDeg": 35.0,
+      "limitsDeg": [
+        0,
+        60
+      ],
+      "withinAuthoringLimit": true
+    },
+    {
+      "digit": "thumb",
+      "bone": "thumb_03_r",
+      "valueDeg": 39.2,
+      "limitsDeg": [
+        0,
+        65
+      ],
+      "withinAuthoringLimit": true
+    }
+  ],
+  "qualification": "Zero crossings do not establish visual/anatomical acceptance. Review multi-angle 1x video."
+}

@@ -1,0 +1,99 @@
+{
+  "basis": "metres; Blender knife-local Z length; converted from actual glTF geometry",
+  "contact": {
+    "thumb": {
+      "minSignedMm": 0.9454,
+      "insideVertices": 0,
+      "ambiguousQueries": 0,
+      "worstComponent": null,
+      "worstVertex": 4966,
+      "worstPointMm": [
+        1.633,
+        -7.931,
+        53.768
+      ],
+      "surfaceCrossings": {}
+    },
+    "index": {
+      "minSignedMm": 0.1211,
+      "insideVertices": 0,
+      "ambiguousQueries": 0,
+      "worstComponent": null,
+      "worstVertex": 3780,
+      "worstPointMm": [
+        7.278,
+        7.053,
+        45.616
+      ],
+      "surfaceCrossings": {}
+    },
+    "middle": {
+      "minSignedMm": 0.2334,
+      "insideVertices": 0,
+      "ambiguousQueries": 0,
+      "worstComponent": null,
+      "worstVertex": 31087,
+      "worstPointMm": [
+        4.81,
+        10.949,
+        12.973
+      ],
+      "surfaceCrossings": {}
+    },
+    "ring": {
+      "minSignedMm": 0.1022,
+      "insideVertices": 0,
+      "ambiguousQueries": 0,
+      "worstComponent": null,
+      "worstVertex": 4282,
+      "worstPointMm": [
+        4.794,
+        10.864,
+        -14.104
+      ],
+      "surfaceCrossings": {}
+    },
+    "pinky": {
+      "minSignedMm": 0.1527,
+      "insideVertices": 0,
+      "ambiguousQueries": 0,
+      "worstComponent": null,
+      "worstVertex": 44261,
+      "worstPointMm": [
+        10.299,
+        5.529,
+        -39.316
+      ],
+      "surfaceCrossings": {}
+    },
+    "palm": {
+      "minSignedMm": 0.3624,
+      "insideVertices": 0,
+      "ambiguousQueries": 0,
+      "worstComponent": null,
+      "worstVertex": 5723,
+      "worstPointMm": [
+        -2.234,
+        -11.645,
+        22.971
+      ],
+      "surfaceCrossings": {}
+    },
+    "other": {
+      "insideVertices": 0,
+      "surfaceCrossings": {},
+      "inside": []
+    }
+  },
+  "selfCrossings": {},
+  "maxBidirectionalHandSurfaceErrorMm": 0.12635356688406318,
+  "parts": [
+    "Exposed_tang_seam",
+    "Oval_walnut_scales",
+    "Peened_pin",
+    "Peened_pin001",
+    "Peened_pin002",
+    "Peened_pin003",
+    "Satin_blade_\u00b7_convex_grind"
+  ]
+}

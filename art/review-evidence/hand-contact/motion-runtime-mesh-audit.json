@@ -1,0 +1,2004 @@
+[
+  {
+    "time": 0,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 35.4811,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31506,
+        "worstPointMm": [
+          -14.409,
+          -38.357,
+          79.852
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 73.1286,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 3627,
+        "worstPointMm": [
+          17.897,
+          -82.647,
+          39.249
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 70.8293,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44701,
+        "worstPointMm": [
+          12.478,
+          -81.839,
+          11.529
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 74.1566,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5658,
+        "worstPointMm": [
+          12.53,
+          -85.195,
+          -15.733
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 75.4179,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31690,
+        "worstPointMm": [
+          7.346,
+          -86.57,
+          -35.309
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 70.2307,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44719,
+        "worstPointMm": [
+          7.155,
+          -81.865,
+          10.46
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.03699182707350701,
+    "failed": false
+  },
+  {
+    "time": 1,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 35.4811,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31506,
+        "worstPointMm": [
+          -14.409,
+          -38.357,
+          79.852
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 73.1286,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 3627,
+        "worstPointMm": [
+          17.897,
+          -82.647,
+          39.249
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 70.8293,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44701,
+        "worstPointMm": [
+          12.478,
+          -81.839,
+          11.529
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 74.1566,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5658,
+        "worstPointMm": [
+          12.53,
+          -85.195,
+          -15.733
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 75.4179,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31690,
+        "worstPointMm": [
+          7.346,
+          -86.57,
+          -35.309
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 70.2307,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44719,
+        "worstPointMm": [
+          7.155,
+          -81.865,
+          10.46
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.03699182707350701,
+    "failed": false
+  },
+  {
+    "time": 2,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 31.4212,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44277,
+        "worstPointMm": [
+          -11.965,
+          -34.322,
+          86.917
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 48.8479,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 3624,
+        "worstPointMm": [
+          10.667,
+          -59.603,
+          33.999
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 46.5928,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44701,
+        "worstPointMm": [
+          12.478,
+          -57.199,
+          11.529
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 49.8789,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5658,
+        "worstPointMm": [
+          12.53,
+          -60.555,
+          -15.733
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 50.919,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31690,
+        "worstPointMm": [
+          7.346,
+          -61.93,
+          -35.308
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 45.7271,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 38365,
+        "worstPointMm": [
+          1.162,
+          -57.616,
+          14.254
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.030256662284955382,
+    "failed": false
+  },
+  {
+    "time": 3,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 15.3191,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 19025,
+        "worstPointMm": [
+          -12.239,
+          -18.213,
+          88.306
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 12.3607,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44703,
+        "worstPointMm": [
+          8.845,
+          -21.727,
+          35.984
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 11.1468,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44701,
+        "worstPointMm": [
+          12.478,
+          -19.119,
+          11.529
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 14.0297,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5658,
+        "worstPointMm": [
+          12.53,
+          -22.475,
+          -15.732
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 13.5664,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31690,
+        "worstPointMm": [
+          7.346,
+          -23.85,
+          -35.308
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 7.7454,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 38365,
+        "worstPointMm": [
+          1.162,
+          -19.536,
+          14.254
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.019302744476590306,
+    "failed": false
+  },
+  {
+    "time": 3.5,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 8.0489,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 19025,
+        "worstPointMm": [
+          -12.238,
+          -10.933,
+          88.305
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 5.8016,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44703,
+        "worstPointMm": [
+          8.844,
+          -14.447,
+          35.984
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 5.7151,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44701,
+        "worstPointMm": [
+          12.404,
+          -11.848,
+          11.525
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 8.0075,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5658,
+        "worstPointMm": [
+          12.269,
+          -15.213,
+          -15.71
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 6.5787,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31690,
+        "worstPointMm": [
+          7.047,
+          -16.611,
+          -35.255
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.5193,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 38365,
+        "worstPointMm": [
+          1.149,
+          -12.264,
+          14.252
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.017367854525218718,
+    "failed": false
+  },
+  {
+    "time": 4,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 7.9658,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 19025,
+        "worstPointMm": [
+          -12.238,
+          -10.85,
+          88.305
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 5.4568,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44703,
+        "worstPointMm": [
+          8.172,
+          -14.43,
+          35.736
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 4.5462,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44701,
+        "worstPointMm": [
+          10.51,
+          -12.137,
+          11.343
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 6.7717,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5658,
+        "worstPointMm": [
+          9.974,
+          -15.539,
+          -15.544
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 6.3812,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31690,
+        "worstPointMm": [
+          5.564,
+          -16.894,
+          -34.99
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.669,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 38365,
+        "worstPointMm": [
+          0.733,
+          -12.462,
+          14.193
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.03138549072900787,
+    "failed": false
+  },
+  {
+    "time": 4.5,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 7.7676,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 19025,
+        "worstPointMm": [
+          -12.239,
+          -10.652,
+          88.305
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 4.8799,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44703,
+        "worstPointMm": [
+          6.742,
+          -14.54,
+          35.186
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 3.4316,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44701,
+        "worstPointMm": [
+          7.432,
+          -13.18,
+          11.012
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 6.1573,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5658,
+        "worstPointMm": [
+          6.861,
+          -16.644,
+          -15.312
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 6.1104,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4766,
+        "worstPointMm": [
+          10.436,
+          -14.07,
+          -38.779
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.7345,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.158,
+          -12.025,
+          22.998
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.07914156594779342,
+    "failed": false
+  },
+  {
+    "time": 4.875,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 7.5897,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 19025,
+        "worstPointMm": [
+          -12.238,
+          -10.473,
+          88.305
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 4.0156,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 43655,
+        "worstPointMm": [
+          9.389,
+          -11.525,
+          38.769
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 3.4538,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44701,
+        "worstPointMm": [
+          5.464,
+          -14.304,
+          10.778
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 5.6195,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4269,
+        "worstPointMm": [
+          11.356,
+          -12.825,
+          -13.809
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 4.2173,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44187,
+        "worstPointMm": [
+          11.472,
+          -10.735,
+          -37.949
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.6369,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.205,
+          -11.923,
+          22.982
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.11439940135460347,
+    "failed": false
+  },
+  {
+    "time": 5,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 7.5312,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 19025,
+        "worstPointMm": [
+          -12.239,
+          -10.415,
+          88.305
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 3.5655,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 24802,
+        "worstPointMm": [
+          10.241,
+          -10.224,
+          39.612
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 3.4327,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 24941,
+        "worstPointMm": [
+          8.041,
+          -12.816,
+          10.612
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 5.0076,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4269,
+        "worstPointMm": [
+          10.363,
+          -12.893,
+          -13.733
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 3.7874,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44187,
+        "worstPointMm": [
+          10.966,
+          -10.653,
+          -37.863
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.6011,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.216,
+          -11.886,
+          22.979
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.12392127246130258,
+    "failed": false
+  },
+  {
+    "time": 5.5,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 7.3331,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 19025,
+        "worstPointMm": [
+          -12.239,
+          -10.216,
+          88.305
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 2.5863,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 24802,
+        "worstPointMm": [
+          8.917,
+          -10.014,
+          39.12
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 2.9974,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 24941,
+        "worstPointMm": [
+          6.515,
+          -13.212,
+          10.452
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 4.2471,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 25043,
+        "worstPointMm": [
+          10.317,
+          -11.913,
+          -13.793
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 3.4823,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44123,
+        "worstPointMm": [
+          15.502,
+          -1.222,
+          -39.723
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.4449,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.233,
+          -11.728,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.13013789430260658,
+    "failed": false
+  },
+  {
+    "time": 6,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 7.2499,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 19025,
+        "worstPointMm": [
+          -12.238,
+          -10.133,
+          88.305
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 2.5764,
+        "insideVertices": 0,
+        "ambiguousQueries": 1,
+        "worstComponent": null,
+        "worstVertex": 24802,
+        "worstPointMm": [
+          8.932,
+          -9.991,
+          39.118
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 2.9255,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 24941,
+        "worstPointMm": [
+          6.515,
+          -13.129,
+          10.452
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 4.2145,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4269,
+        "worstPointMm": [
+          9.283,
+          -12.795,
+          -13.65
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 1.816,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31375,
+        "worstPointMm": [
+          13.781,
+          -0.956,
+          -39.656
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.362,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.233,
+          -11.645,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.12665997201111168,
+    "failed": false
+  },
+  {
+    "time": 6.25,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 7.2499,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 19025,
+        "worstPointMm": [
+          -12.238,
+          -10.133,
+          88.305
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 2.6062,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 24802,
+        "worstPointMm": [
+          8.945,
+          -10.018,
+          39.118
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 2.9255,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 24941,
+        "worstPointMm": [
+          6.515,
+          -13.129,
+          10.452
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 3.3915,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4264,
+        "worstPointMm": [
+          14.574,
+          1.434,
+          -14.771
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 1.2258,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44198,
+        "worstPointMm": [
+          13.462,
+          0.076,
+          -39.695
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.362,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.233,
+          -11.645,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.13519928324967623,
+    "failed": false
+  },
+  {
+    "time": 6.5,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 7.2499,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 19025,
+        "worstPointMm": [
+          -12.238,
+          -10.133,
+          88.305
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 1.6651,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 3769,
+        "worstPointMm": [
+          13.361,
+          0.75,
+          45.675
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 2.9255,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 24941,
+        "worstPointMm": [
+          6.515,
+          -13.129,
+          10.452
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 2.1625,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4264,
+        "worstPointMm": [
+          13.659,
+          -0.13,
+          -14.815
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 0.7352,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31390,
+        "worstPointMm": [
+          11.524,
+          4.571,
+          -39.467
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.362,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.233,
+          -11.645,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.14437577920034528,
+    "failed": false
+  },
+  {
+    "time": 7,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 7.2499,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 19025,
+        "worstPointMm": [
+          -12.238,
+          -10.133,
+          88.305
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 0.1216,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 3780,
+        "worstPointMm": [
+          7.278,
+          7.053,
+          45.616
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 0.2338,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31087,
+        "worstPointMm": [
+          4.81,
+          10.95,
+          12.973
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 0.1024,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4282,
+        "worstPointMm": [
+          4.794,
+          10.864,
+          -14.105
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 0.153,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44261,
+        "worstPointMm": [
+          10.299,
+          5.529,
+          -39.316
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.362,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.233,
+          -11.645,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.1263070007553324,
+    "failed": false
+  },
+  {
+    "time": 7.5,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 7.8912,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 37702,
+        "worstPointMm": [
+          -3.724,
+          -10.342,
+          83.056
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 0.1216,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 3780,
+        "worstPointMm": [
+          7.278,
+          7.053,
+          45.616
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 0.2338,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31087,
+        "worstPointMm": [
+          4.81,
+          10.95,
+          12.973
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 0.1024,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4282,
+        "worstPointMm": [
+          4.794,
+          10.864,
+          -14.105
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 0.153,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44261,
+        "worstPointMm": [
+          10.299,
+          5.529,
+          -39.316
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.362,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.233,
+          -11.645,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.1263070007553324,
+    "failed": false
+  },
+  {
+    "time": 7.625,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 7.8657,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 37702,
+        "worstPointMm": [
+          -2.198,
+          -10.244,
+          78.728
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 0.1216,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 3780,
+        "worstPointMm": [
+          7.278,
+          7.053,
+          45.616
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 0.2338,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31087,
+        "worstPointMm": [
+          4.81,
+          10.95,
+          12.973
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 0.1024,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4282,
+        "worstPointMm": [
+          4.794,
+          10.864,
+          -14.105
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 0.153,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44261,
+        "worstPointMm": [
+          10.299,
+          5.529,
+          -39.316
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.362,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.233,
+          -11.645,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.1263070007553324,
+    "failed": false
+  },
+  {
+    "time": 8,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 6.7765,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 37701,
+        "worstPointMm": [
+          3.427,
+          -8.804,
+          66.328
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 0.1216,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 3780,
+        "worstPointMm": [
+          7.278,
+          7.053,
+          45.616
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 0.2338,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31087,
+        "worstPointMm": [
+          4.81,
+          10.95,
+          12.973
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 0.1024,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4282,
+        "worstPointMm": [
+          4.794,
+          10.864,
+          -14.105
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 0.153,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44261,
+        "worstPointMm": [
+          10.299,
+          5.529,
+          -39.316
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.362,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.233,
+          -11.645,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.1263070007553324,
+    "failed": false
+  },
+  {
+    "time": 8.5,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 0.9452,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4966,
+        "worstPointMm": [
+          1.633,
+          -7.93,
+          53.768
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 0.1216,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 3780,
+        "worstPointMm": [
+          7.278,
+          7.053,
+          45.616
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 0.2338,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31087,
+        "worstPointMm": [
+          4.81,
+          10.95,
+          12.973
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 0.1024,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4282,
+        "worstPointMm": [
+          4.794,
+          10.864,
+          -14.105
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 0.153,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44261,
+        "worstPointMm": [
+          10.299,
+          5.529,
+          -39.316
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.362,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.233,
+          -11.645,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.1263070007553324,
+    "failed": false
+  },
+  {
+    "time": 9,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 0.9452,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4966,
+        "worstPointMm": [
+          1.633,
+          -7.93,
+          53.768
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 0.1216,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 3780,
+        "worstPointMm": [
+          7.278,
+          7.053,
+          45.616
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 0.2338,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31087,
+        "worstPointMm": [
+          4.81,
+          10.95,
+          12.973
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 0.1024,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4282,
+        "worstPointMm": [
+          4.794,
+          10.864,
+          -14.105
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 0.153,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44261,
+        "worstPointMm": [
+          10.299,
+          5.529,
+          -39.316
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.362,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.233,
+          -11.645,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.1263070007553324,
+    "failed": false
+  },
+  {
+    "time": 10,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 0.9452,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4966,
+        "worstPointMm": [
+          1.633,
+          -7.93,
+          53.768
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 0.1216,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 3780,
+        "worstPointMm": [
+          7.278,
+          7.053,
+          45.616
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 0.2338,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31087,
+        "worstPointMm": [
+          4.81,
+          10.95,
+          12.973
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 0.1024,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4282,
+        "worstPointMm": [
+          4.794,
+          10.864,
+          -14.105
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 0.153,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44261,
+        "worstPointMm": [
+          10.299,
+          5.529,
+          -39.316
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.362,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.233,
+          -11.645,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.1263070007553324,
+    "failed": false
+  },
+  {
+    "time": 11,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 0.9454,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4966,
+        "worstPointMm": [
+          1.633,
+          -7.931,
+          53.768
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 0.1214,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 3780,
+        "worstPointMm": [
+          7.278,
+          7.053,
+          45.617
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 0.2335,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31087,
+        "worstPointMm": [
+          4.81,
+          10.949,
+          12.973
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 0.1021,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4282,
+        "worstPointMm": [
+          4.794,
+          10.864,
+          -14.105
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 0.1528,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44261,
+        "worstPointMm": [
+          10.299,
+          5.529,
+          -39.315
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.3623,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.233,
+          -11.645,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.1263601443497464,
+    "failed": false
+  },
+  {
+    "time": 12,
+    "contact": {
+      "thumb": {
+        "minSignedMm": 0.9452,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4966,
+        "worstPointMm": [
+          1.633,
+          -7.93,
+          53.768
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 0.1214,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 3780,
+        "worstPointMm": [
+          7.278,
+          7.053,
+          45.616
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 0.2335,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 31087,
+        "worstPointMm": [
+          4.81,
+          10.949,
+          12.973
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 0.1023,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 4282,
+        "worstPointMm": [
+          4.794,
+          10.864,
+          -14.105
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 0.1525,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 44261,
+        "worstPointMm": [
+          10.299,
+          5.529,
+          -39.316
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.3622,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 5723,
+        "worstPointMm": [
+          -2.234,
+          -11.645,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "selfCrossings": {},
+    "sourceSurfaceErrorMm": 0.12648657138925046,
+    "failed": false
+  }
+]

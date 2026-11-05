@@ -1,0 +1,207 @@
+{
+  "candidates": [
+    {
+      "preOpposition": 0.55,
+      "failures": []
+    },
+    {
+      "preOpposition": 0.65,
+      "failures": []
+    },
+    {
+      "preOpposition": 0.75,
+      "failures": [
+        {
+          "u": 0.75,
+          "pairs": 1
+        },
+        {
+          "u": 0.8,
+          "pairs": 1
+        }
+      ]
+    },
+    {
+      "preOpposition": 0.85,
+      "failures": [
+        {
+          "u": 0.7,
+          "pairs": 3
+        },
+        {
+          "u": 0.75,
+          "pairs": 3
+        },
+        {
+          "u": 0.8,
+          "pairs": 3
+        },
+        {
+          "u": 0.85,
+          "pairs": 1
+        },
+        {
+          "u": 0.9,
+          "pairs": 1
+        }
+      ]
+    },
+    {
+      "preOpposition": 0.9,
+      "failures": [
+        {
+          "u": 0.65,
+          "pairs": 1
+        },
+        {
+          "u": 0.7,
+          "pairs": 3
+        },
+        {
+          "u": 0.75,
+          "pairs": 3
+        },
+        {
+          "u": 0.8,
+          "pairs": 3
+        },
+        {
+          "u": 0.85,
+          "pairs": 1
+        },
+        {
+          "u": 0.9,
+          "pairs": 1
+        }
+      ]
+    },
+    {
+      "preOpposition": 1,
+      "failures": [
+        {
+          "u": 0.2,
+          "pairs": 1
+        },
+        {
+          "u": 0.6,
+          "pairs": 1
+        },
+        {
+          "u": 0.65,
+          "pairs": 1
+        },
+        {
+          "u": 0.7,
+          "pairs": 3
+        },
+        {
+          "u": 0.75,
+          "pairs": 3
+        },
+        {
+          "u": 0.8,
+          "pairs": 3
+        },
+        {
+          "u": 0.85,
+          "pairs": 3
+        },
+        {
+          "u": 0.9,
+          "pairs": 1
+        },
+        {
+          "u": 0.95,
+          "pairs": 1
+        }
+      ]
+    }
+  ],
+  "selected": 0.65,
+  "contact": [
+    {
+      "u": 0.0,
+      "failures": {}
+    },
+    {
+      "u": 0.05,
+      "failures": {}
+    },
+    {
+      "u": 0.1,
+      "failures": {}
+    },
+    {
+      "u": 0.15,
+      "failures": {}
+    },
+    {
+      "u": 0.2,
+      "failures": {}
+    },
+    {
+      "u": 0.25,
+      "failures": {}
+    },
+    {
+      "u": 0.3,
+      "failures": {}
+    },
+    {
+      "u": 0.35,
+      "failures": {}
+    },
+    {
+      "u": 0.4,
+      "failures": {}
+    },
+    {
+      "u": 0.45,
+      "failures": {}
+    },
+    {
+      "u": 0.5,
+      "failures": {}
+    },
+    {
+      "u": 0.55,
+      "failures": {}
+    },
+    {
+      "u": 0.6,
+      "failures": {}
+    },
+    {
+      "u": 0.65,
+      "failures": {}
+    },
+    {
+      "u": 0.7,
+      "failures": {}
+    },
+    {
+      "u": 0.75,
+      "failures": {}
+    },
+    {
+      "u": 0.8,
+      "failures": {}
+    },
+    {
+      "u": 0.85,
+      "failures": {}
+    },
+    {
+      "u": 0.9,
+      "failures": {}
+    },
+    {
+      "u": 0.95,
+      "failures": {}
+    },
+    {
+      "u": 1.0,
+      "failures": {}
+    }
+  ]
+}

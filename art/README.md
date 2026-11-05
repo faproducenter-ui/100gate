@@ -1,5 +1,9 @@
 # Character-hand source
 
+Current contact study: `hand-knife-contact.blend` / `.glb` and the normal-speed
+360° movie under `review-evidence/hand-contact/`. The older grip-close study
+was rejected; see [current QA](../docs/HAND-KNIFE-CONTACT-REVIEW.md).
+
 ## Replacement character review (not integrated)
 
 `character-mpfb-review.blend` contains the unified MakeHuman/MPFB character:
@@ -36,3 +40,16 @@ Runtime proportions and held-object sockets must remain unchanged; run `npm run 
 - Knife geometry and motion are original. The contoured handle uses [Fine Grained Wood](https://polyhaven.com/a/fine_grained_wood) by Rob Tuytel (Poly Haven, CC0): color, OpenGL normal and roughness, resized to 256² and packed. The blade and pins use authored metallic/roughness materials. No third-party game models or sounds were imported.
 - Authoring script: `scripts/art/author-intro.py`. Load `character-hands.blend` into Blender 4.5 LTS or run the script through MCP with the hand-production scene available. For a texture-identical re-export, place the official 1K JPEG color, `nor_gl`, and roughness maps from the Poly Haven asset under the workspace output folder `outputs/intro-animation/knife-material/` as `col.jpg`, `nor_gl.jpg`, `rough.jpg`. Without the maps, the script exports the base tinted material. The checked-in `.blend` has the resized maps packed and is editable without the downloads.
 - `npm run verify:escape` captures each contact and the full sequence, while `verify:intro` and `verify:episode` check real input at the live frame clock.
+## Actual hand-contact replacement study — 2026-11-06
+
+`hand-knife-contact.blend` and `hand-knife-contact.glb` are the new isolated
+review assets, superseding the rejected two-second grip study. They preserve
+the original full MPFB actor and its native finger skeleton; only local
+right-hand weights and poses were refined. Open frame 241 for the static
+power grip, or play frames 1–289 at 24 fps. All textures are packed.
+
+The new normal-speed, 360° close-up is
+`review-evidence/hand-contact/hand-contact-slow-360.webm`. See
+[contact QA and limitations](../docs/HAND-KNIFE-CONTACT-REVIEW.md).
+This is not yet a replacement for the game's story intro. Existing sources,
+production assets and licences below are preserved.

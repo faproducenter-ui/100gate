@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "existing intro starts",
+    "chair rocking/tipping still works",
+    "existing knife pickup sequence intact",
+    "existing release/standing sequence intact (not visual acceptance)",
+    "pause/resume intact"
+  ],
+  "errors": [],
+  "scope": "Existing game assets/intro are not replaced by the isolated hand study."
+}

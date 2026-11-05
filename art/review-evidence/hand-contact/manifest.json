@@ -1,0 +1,249 @@
+{
+  "date": "2026-11-06",
+  "baseRevision": "b447164",
+  "rollback": "backup/grip-penetration-start",
+  "scope": "Isolated existing-human hand contact study; visual acceptance pending; no src/public change, push or deploy.",
+  "sourceFrames": 434,
+  "sourceFailures": 0,
+  "actualBaseWeightVertices": 141,
+  "meshUVShapeKeysTexturesUnchanged": true,
+  "restRigUnchanged": true,
+  "originalBones": 53,
+  "unexpectedWeightChanges": [],
+  "actualRuntimeMeshSamples": 22,
+  "runtimeFailures": 0,
+  "maxSourceRuntimeSurfaceErrorMm": 0.14437577920034528,
+  "movieDurationSeconds": 59.925,
+  "playedAtSpeed": 1,
+  "files": [
+    {
+      "path": "art/hand-knife-contact.blend",
+      "bytes": 25473046,
+      "sha256": "b33ff446cda5feab25b5e588b6432f787875d41f8c191ca02db2eeb20b46debf",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/hand-knife-contact.glb",
+      "bytes": 28153432,
+      "sha256": "77575014ba8fe1e5414adc941d351e5a965c111b1b7ee8cbac4751f356a840f8",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/baseline-actual-mesh.json",
+      "bytes": 1949,
+      "sha256": "6a7d06fc8406ca951c64104a16ad80e6e1ff35f93e043a2bf5938147c6366357",
+      "hashMode": "utf8-lf"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-0-dorsal.png",
+      "bytes": 528472,
+      "sha256": "61178f56710745d0edadd847affe09351ea46554d6cf589a10eb0efb333808ed",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-0-left.png",
+      "bytes": 221692,
+      "sha256": "cd3b466a373d8cd8585459df19e74f3c27d3543dc64f4176ab93a57799a3bb11",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-0-palm.png",
+      "bytes": 210105,
+      "sha256": "bfc20d134a04d278f3516cd42b1815de7fadbdd016f33be3761465aabd4939ac",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-0-right.png",
+      "bytes": 323669,
+      "sha256": "8f8c8a9786ca2d3bfb93af7cc1697500daea2d859c69a8c9ccd1467992e76239",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-0-top.png",
+      "bytes": 302624,
+      "sha256": "cc3f92696e24710478380cff1bb1a16001d8aafefdaa429b32384d2eb4e1797e",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-100-dorsal.png",
+      "bytes": 503191,
+      "sha256": "496918bb3ac400ecf7ff73fe0ca7ad065c9b15e02a503482086e7c260f0f0864",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-100-left.png",
+      "bytes": 223774,
+      "sha256": "7f6cbf3d3325ce63278d8dad8a699a47cf156c3e6342de0676f6f2671ca84ac1",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-100-palm.png",
+      "bytes": 188283,
+      "sha256": "0172f638464f72a6979fde0fa7eef541a77b772c5668a1bd7f4866f9ac9bd640",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-100-right.png",
+      "bytes": 327158,
+      "sha256": "5d3da3e04d98d716ba9b0a9343a29d7044803d611e6f713093b54123395b80d1",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-100-top.png",
+      "bytes": 296134,
+      "sha256": "46fbbdd16ad278b6abdb4bc16f738a3771c826a01d3f285348db90534f77a81a",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-25-dorsal.png",
+      "bytes": 517859,
+      "sha256": "bfef471615c3b3bf076e121e1f254e24a5bb82bb769f266600008eababf80a18",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-25-left.png",
+      "bytes": 229356,
+      "sha256": "a8eaf3e46d975b3d7a84c1abeed4c17f1c0aecd47df4f837aadb24afd0632415",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-25-palm.png",
+      "bytes": 200075,
+      "sha256": "c88bf8d54b6436c2e8bb58aace51b0bd09141adcc077fe35e25e7786342d4823",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-25-right.png",
+      "bytes": 331550,
+      "sha256": "d0facb3d6c8971574f93755d41401b75480390ad6ca699da11a8b6219baf0d5e",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-25-top.png",
+      "bytes": 302403,
+      "sha256": "ab0e466567bb9c2cbfa81367a91ce2ce251ac28ca12c5ef1d511c1d36d10e19e",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-50-dorsal.png",
+      "bytes": 505787,
+      "sha256": "88099abbea917185330a207721122c4cde7ac5c0bbbf0943b09eb72bd2b9853a",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-50-left.png",
+      "bytes": 231094,
+      "sha256": "b6c9f48a51113f469da4f7d5f1a341892a43fa93416c98bb10fe4976f9438d5c",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-50-palm.png",
+      "bytes": 187654,
+      "sha256": "f848388c85e56b0796b6b7b138f9ef80ae917bb61e98448b8af82c4e65810e87",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-50-right.png",
+      "bytes": 334635,
+      "sha256": "7c35e36b6041fcd28b52af9efb5e1ff5238705608e771e77aaf9d77390c7d280",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-50-top.png",
+      "bytes": 299812,
+      "sha256": "fa8572d859f9ec85317fab976afce68fad4b45438d2d2344d1bd1ca21ad92103",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-75-dorsal.png",
+      "bytes": 504220,
+      "sha256": "870ee6f719d76c93379f48bba35fbaca5d91f2e7442f5a98bc2d02e6427e7eaf",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-75-left.png",
+      "bytes": 224225,
+      "sha256": "776b4a6c3910bc7bb326d2ff9de25b190dc298ab9fb1a3a0905538ab42ce932b",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-75-palm.png",
+      "bytes": 188611,
+      "sha256": "2775ceea60bc8e5a44ab1fa41431be07bde971ea1bb4047375cd3bbfe809f6c9",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-75-right.png",
+      "bytes": 328215,
+      "sha256": "d4c64872874f3793868bd537df9079a78a540a36927ec26e2d262880510ccd41",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/close-75-top.png",
+      "bytes": 297204,
+      "sha256": "64a49bf4c2eecc6719bcd2e959b8d713dd6cbf5164e098dd517bae770fad562a",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/encoded-dorsal.png",
+      "bytes": 482060,
+      "sha256": "cceadb8b1095dbba4b44a4f31d90569ba8f8c7ac0b921306787f49f4b3d92ea9",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/encoded-video-inspection.json",
+      "bytes": 637,
+      "sha256": "c19221d40b6fde71577a43c7641cae9f87d0324b761b09d568d8492855d944b9",
+      "hashMode": "utf8-lf"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/existing-game-regression.json",
+      "bytes": 337,
+      "sha256": "ff157dc1e79696da01b730f62b0e4f47c26d0cd4918ebad2317a50fe54fb05f8",
+      "hashMode": "utf8-lf"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/hand-contact-slow-360.webm",
+      "bytes": 22140014,
+      "sha256": "749e158714bc7b86e7828e6c01e564a56949c068c99aee8fd67ea7e9f67a34ca",
+      "hashMode": "binary"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/motion-browser-console.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "hashMode": "utf8-lf"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/motion-runtime-mesh-audit.json",
+      "bytes": 47042,
+      "sha256": "5fc100f6501a033712e47458346d6e97d12b293067ffbc95eee80ee0381c80cd",
+      "hashMode": "utf8-lf"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/motion-source-dense.json",
+      "bytes": 145083,
+      "sha256": "6f6a64ab0e9fbe5e084444e9ff80406180293e3ead657398ad9e3e76f14aede4",
+      "hashMode": "utf8-lf"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/movie-timing.json",
+      "bytes": 349,
+      "sha256": "189059a77254c03770d6915775c3a4600c9888ecd2a3c69a8acc33910c490c09",
+      "hashMode": "utf8-lf"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/runtime-actual-mesh-audit.json",
+      "bytes": 2212,
+      "sha256": "dbf0437329f360c72d8e31d43941d580e34cccb4b746d7479feee6f73bfd36ef",
+      "hashMode": "utf8-lf"
+    },
+    {
+      "path": "art/review-evidence/hand-contact/thumb-path.json",
+      "bytes": 3101,
+      "sha256": "0294e58be44cc1f3ff5c6e7452cb178132e6cb436534a7ba807886a67e7de193",
+      "hashMode": "utf8-lf"
+    }
+  ],
+  "textHashNote": "JSON hashes normalize CRLF to LF for Git portability; byte sizes describe the captured working copy."
+}

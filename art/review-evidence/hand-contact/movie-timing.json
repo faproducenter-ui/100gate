@@ -1,0 +1,8 @@
+{
+  "wallSeconds": 60.00550000004769,
+  "renderedFrames": 6989,
+  "medianFrameGapMs": 6.999999999997897,
+  "p95FrameGapMs": 20.70000000000438,
+  "maxFrameGapMs": 76.30000000000337,
+  "timeline": "0–12s 1x sequence;12–30s continuous 360 orbit;30–36 dorsal;36–42 top;42–48 left;48–54 right;54–60 palm; each replay 1x, 5.5s finger curl"
+}
