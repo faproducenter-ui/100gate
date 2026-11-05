@@ -1,0 +1,351 @@
+[
+  {
+    "name": "bound",
+    "frame": 1,
+    "actor": [
+      {
+        "mesh": "Alexei | original MakeHuman body",
+        "minimumFloorMm": 570.824146270752,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+        "minimumFloorMm": 576.2932300567627,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.cortu_cargo_pants",
+        "minimumFloorMm": 54.18100953102112,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+        "minimumFloorMm": 0.9998977184295654,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.low-poly",
+        "minimumFloorMm": 1224.6901988983154,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      }
+    ],
+    "chairClosedComponents": 3,
+    "chairOpenComponentTriangleCounts": [
+      58,
+      58,
+      8,
+      8,
+      8,
+      24,
+      24,
+      24,
+      24,
+      24,
+      183,
+      183,
+      24,
+      24
+    ],
+    "containmentScope": "watertight components only; open components get surface intersection tests",
+    "shirtPantsTriangleCrossings": 821
+  },
+  {
+    "name": "ground",
+    "frame": 81,
+    "actor": [
+      {
+        "mesh": "Alexei | original MakeHuman body",
+        "minimumFloorMm": 8.796369656920433,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+        "minimumFloorMm": 6.192390341311693,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.cortu_cargo_pants",
+        "minimumFloorMm": 17.365941777825356,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+        "minimumFloorMm": 2.0000599324703217,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.low-poly",
+        "minimumFloorMm": 46.463459730148315,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      }
+    ],
+    "chairClosedComponents": 3,
+    "chairOpenComponentTriangleCounts": [
+      58,
+      58,
+      8,
+      8,
+      8,
+      24,
+      24,
+      24,
+      24,
+      24,
+      183,
+      183,
+      24,
+      24
+    ],
+    "containmentScope": "watertight components only; open components get surface intersection tests",
+    "shirtPantsTriangleCrossings": 702
+  },
+  {
+    "name": "grip",
+    "frame": 161,
+    "actor": [
+      {
+        "mesh": "Alexei | original MakeHuman body",
+        "minimumFloorMm": 8.796369656920433,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+        "minimumFloorMm": 4.793552216142416,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.cortu_cargo_pants",
+        "minimumFloorMm": 17.365941777825356,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+        "minimumFloorMm": 2.0000599324703217,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.low-poly",
+        "minimumFloorMm": 46.463459730148315,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      }
+    ],
+    "chairClosedComponents": 3,
+    "chairOpenComponentTriangleCounts": [
+      58,
+      58,
+      8,
+      8,
+      8,
+      24,
+      24,
+      24,
+      24,
+      24,
+      183,
+      183,
+      24,
+      24
+    ],
+    "containmentScope": "watertight components only; open components get surface intersection tests",
+    "shirtPantsTriangleCrossings": 703,
+    "knife": {
+      "thumb": {
+        "minSignedMm": 0.9455,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 2540,
+        "worstPointMm": [
+          1.633,
+          -7.931,
+          53.769
+        ],
+        "surfaceCrossings": {}
+      },
+      "index": {
+        "minSignedMm": 0.1211,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 1832,
+        "worstPointMm": [
+          7.278,
+          7.053,
+          45.617
+        ],
+        "surfaceCrossings": {}
+      },
+      "middle": {
+        "minSignedMm": 0.2333,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 18653,
+        "worstPointMm": [
+          4.81,
+          10.949,
+          12.973
+        ],
+        "surfaceCrossings": {}
+      },
+      "ring": {
+        "minSignedMm": 0.1022,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 2129,
+        "worstPointMm": [
+          4.794,
+          10.864,
+          -14.104
+        ],
+        "surfaceCrossings": {}
+      },
+      "pinky": {
+        "minSignedMm": 0.1526,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 28719,
+        "worstPointMm": [
+          10.299,
+          5.529,
+          -39.315
+        ],
+        "surfaceCrossings": {}
+      },
+      "palm": {
+        "minSignedMm": 0.3621,
+        "insideVertices": 0,
+        "ambiguousQueries": 0,
+        "worstComponent": null,
+        "worstVertex": 2929,
+        "worstPointMm": [
+          -2.234,
+          -11.645,
+          22.971
+        ],
+        "surfaceCrossings": {}
+      },
+      "other": {
+        "insideVertices": 0,
+        "surfaceCrossings": {},
+        "inside": []
+      }
+    },
+    "handSelf": {
+      "pairs": 0,
+      "examples": []
+    }
+  },
+  {
+    "name": "stand",
+    "frame": 241,
+    "actor": [
+      {
+        "mesh": "Alexei | original MakeHuman body",
+        "minimumFloorMm": 746.5536594390869,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+        "minimumFloorMm": 897.7522850036621,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.cortu_cargo_pants",
+        "minimumFloorMm": 54.164089262485504,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+        "minimumFloorMm": 1.0000001639127731,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      },
+      {
+        "mesh": "Alexei | original MakeHuman body.low-poly",
+        "minimumFloorMm": 1640.479326248169,
+        "chairCrossings": 0,
+        "chairInsideVertices": 0,
+        "maxChairDepthMm": 0,
+        "worst": []
+      }
+    ],
+    "chairClosedComponents": 3,
+    "chairOpenComponentTriangleCounts": [
+      58,
+      58,
+      8,
+      8,
+      8,
+      24,
+      24,
+      24,
+      24,
+      24,
+      183,
+      183,
+      24,
+      24
+    ],
+    "containmentScope": "watertight components only; open components get surface intersection tests",
+    "shirtPantsTriangleCrossings": 303
+  }
+]

@@ -71,3 +71,33 @@ Original prompt: Refine the existing 100gate Three.js horror game autonomously i
 - Delivery: art/review-evidence/hand-character-full/100gate-full-hand-character-review.webm.
   Source clip is the existing grip study, not an authored full rope escape.
   Added reproducible record/decode scripts only. No gameplay changes or deploy.
+
+## Complete cinematic rebuild request — 2026-11-06, static checkpoint only
+
+- Full pasted request read. New rollback branch backup/cinematic-rebuild-2026-11-06
+  at 47f60c0. Original hand-knife-contact.blend SHA256 matches its safe backup.
+- Authored new native-MPFB-rig seated/left-side ground/ground-grip/standing contact
+  holds, not replacement primitive people. Chair uniformly .88 to match shin/seat
+  contact; body proportions/mesh/UV/materials retained. Local thumb-web weights,
+  sleeve shoulder binding, editable cloth-corrective keys and bind subdivision.
+- New intact independent wrist-to-chair hemp lashings on BOUND-only source.
+  Fixed actual radial-vs-normal tube-clearance bug and wrong slat profile scope;
+  final source body/garment/chair/rope cross-checks zero at these static gates.
+  This does NOT prove motion or knot art quality. Minimum actor/fabric floor
+  distance 1 mm bound/stand, 2 mm ground/grip. Closed grip static self-crossings0.
+- Actual Three/Chromium first-person/full-body/hand close-ups rendered/inspected.
+  Viewer page/console errors empty. Existing-game intro regression and original
+  develop-web-game smoke passed with local save stubs; build passed, old bundle
+  warning remains. No gameplay/public assets changed.
+- IMPORTANT OPEN HIGH gate: new bidirectional actual source/Three mesh comparison
+  FAILS <=1 mm tolerance (max sweater8.580mm/pants5.202mm/body4.457mm). Exporter
+  truncates subdivided >4 weights; installed Three uses four. Do not claim source
+  contact checks prove browser contacts. Resolve runtime-equivalent skin authoring
+  before any full animation. Test deliberately exits1; do not weaken it to pass.
+- Durable sources art/intro-cinematic-blocking.blend, intro-cinematic-bound.blend
+  and static bound review GLB. Report docs/CINEMATIC-INTRO-REBUILD.md; evidence in
+  art/review-evidence/cinematic-blocking. Original assets/rejected scene preserved.
+- NOT DONE: no continuous struggle/fall/reach/cut/peel/drop/stand clips, no new
+  intro integration, no full-intro WebM. Timeline holds must not be sold as a movie.
+  Next: solve skin export mismatch, then missing cutting/removal/support static
+  contacts and art review before animation. No push/deploy.

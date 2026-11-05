@@ -1,0 +1,344 @@
+{
+  "qualityGatePassed": false,
+  "limitMm": 1.0,
+  "failures": [
+    {
+      "pose": "bound",
+      "mesh": "Alexei | original MakeHuman body",
+      "maxMm": 3.1525101512670517
+    },
+    {
+      "pose": "bound",
+      "mesh": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+      "maxMm": 9.317326359450817
+    },
+    {
+      "pose": "bound",
+      "mesh": "Alexei | original MakeHuman body.cortu_cargo_pants",
+      "maxMm": 4.2527844198048115
+    },
+    {
+      "pose": "ground",
+      "mesh": "Alexei | original MakeHuman body",
+      "maxMm": 3.1153662130236626
+    },
+    {
+      "pose": "ground",
+      "mesh": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+      "maxMm": 8.576852269470692
+    },
+    {
+      "pose": "ground",
+      "mesh": "Alexei | original MakeHuman body.cortu_cargo_pants",
+      "maxMm": 5.202001892030239
+    },
+    {
+      "pose": "grip",
+      "mesh": "Alexei | original MakeHuman body",
+      "maxMm": 4.456687718629837
+    },
+    {
+      "pose": "grip",
+      "mesh": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+      "maxMm": 8.579515852034092
+    },
+    {
+      "pose": "grip",
+      "mesh": "Alexei | original MakeHuman body.cortu_cargo_pants",
+      "maxMm": 5.202001892030239
+    },
+    {
+      "pose": "stand",
+      "mesh": "Alexei | original MakeHuman body",
+      "maxMm": 2.9106109868735075
+    },
+    {
+      "pose": "stand",
+      "mesh": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+      "maxMm": 2.750675892457366
+    }
+  ],
+  "poses": [
+    {
+      "pose": "bound",
+      "meshes": [
+        {
+          "mesh": "Alexei | original MakeHuman body",
+          "sourceToRuntime": {
+            "maxMm": 3.1525101512670517,
+            "meanMm": 0.009040861599708705,
+            "p99Mm": 0.1711754157440737
+          },
+          "runtimeToSource": {
+            "maxMm": 2.8057724703103304,
+            "meanMm": 0.008434745837526474,
+            "p99Mm": 0.15887731569819152
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+          "sourceToRuntime": {
+            "maxMm": 8.10137763619423,
+            "meanMm": 0.08646808737167619,
+            "p99Mm": 2.0077507942914963
+          },
+          "runtimeToSource": {
+            "maxMm": 9.317326359450817,
+            "meanMm": 0.09254066693243752,
+            "p99Mm": 2.18209414742887
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.cortu_cargo_pants",
+          "sourceToRuntime": {
+            "maxMm": 4.2527844198048115,
+            "meanMm": 0.04841624465061739,
+            "p99Mm": 1.3595413183793426
+          },
+          "runtimeToSource": {
+            "maxMm": 4.2527844198048115,
+            "meanMm": 0.04080304883603034,
+            "p99Mm": 1.2630189303308725
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+          "sourceToRuntime": {
+            "maxMm": 0.0003921476263712975,
+            "meanMm": 0.0002793599152270958,
+            "p99Mm": 0.0003623311783940153
+          },
+          "runtimeToSource": {
+            "maxMm": 0.0003921476263712975,
+            "meanMm": 0.0002804433124313196,
+            "p99Mm": 0.00036142157000540465
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.low-poly",
+          "sourceToRuntime": {
+            "maxMm": 0.0002799673950448778,
+            "meanMm": 0.0002306117927730611,
+            "p99Mm": 0.0002799673950448778
+          },
+          "runtimeToSource": {
+            "maxMm": 0.0002799673950448778,
+            "meanMm": 0.0002306117927730611,
+            "p99Mm": 0.0002799673950448778
+          }
+        }
+      ]
+    },
+    {
+      "pose": "ground",
+      "meshes": [
+        {
+          "mesh": "Alexei | original MakeHuman body",
+          "sourceToRuntime": {
+            "maxMm": 3.1153662130236626,
+            "meanMm": 0.014061671521785207,
+            "p99Mm": 0.4491569707170129
+          },
+          "runtimeToSource": {
+            "maxMm": 3.089770907536149,
+            "meanMm": 0.01321758023458736,
+            "p99Mm": 0.4205074510537088
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+          "sourceToRuntime": {
+            "maxMm": 8.576852269470692,
+            "meanMm": 0.11208556625362778,
+            "p99Mm": 2.0028429571539164
+          },
+          "runtimeToSource": {
+            "maxMm": 8.576852269470692,
+            "meanMm": 0.11815632335194785,
+            "p99Mm": 2.120896242558956
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.cortu_cargo_pants",
+          "sourceToRuntime": {
+            "maxMm": 5.202001892030239,
+            "meanMm": 0.052919519723017644,
+            "p99Mm": 1.5407565515488386
+          },
+          "runtimeToSource": {
+            "maxMm": 5.202001892030239,
+            "meanMm": 0.04414942516879471,
+            "p99Mm": 1.3353083049878478
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+          "sourceToRuntime": {
+            "maxMm": 0.0005268883001008362,
+            "meanMm": 0.00032823096899351964,
+            "p99Mm": 0.00045626822497979447
+          },
+          "runtimeToSource": {
+            "maxMm": 0.0005268883001008362,
+            "meanMm": 0.0003295794338605115,
+            "p99Mm": 0.00045626822497979447
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.low-poly",
+          "sourceToRuntime": {
+            "maxMm": 0.0007393833243440895,
+            "meanMm": 0.0005951362738917018,
+            "p99Mm": 0.0007391111012111651
+          },
+          "runtimeToSource": {
+            "maxMm": 0.0007393833243440895,
+            "meanMm": 0.0005951362738917018,
+            "p99Mm": 0.0007391111012111651
+          }
+        }
+      ]
+    },
+    {
+      "pose": "grip",
+      "meshes": [
+        {
+          "mesh": "Alexei | original MakeHuman body",
+          "sourceToRuntime": {
+            "maxMm": 4.456687718629837,
+            "meanMm": 0.019120104745744795,
+            "p99Mm": 0.5801519728265703
+          },
+          "runtimeToSource": {
+            "maxMm": 4.456687718629837,
+            "meanMm": 0.01817773180494625,
+            "p99Mm": 0.5390638252720237
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+          "sourceToRuntime": {
+            "maxMm": 8.579515852034092,
+            "meanMm": 0.1179448615270235,
+            "p99Mm": 2.271894132718444
+          },
+          "runtimeToSource": {
+            "maxMm": 8.579515852034092,
+            "meanMm": 0.12586616067629042,
+            "p99Mm": 2.6130194310098886
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.cortu_cargo_pants",
+          "sourceToRuntime": {
+            "maxMm": 5.202001892030239,
+            "meanMm": 0.052919519723017644,
+            "p99Mm": 1.5407565515488386
+          },
+          "runtimeToSource": {
+            "maxMm": 5.202001892030239,
+            "meanMm": 0.04414942516879471,
+            "p99Mm": 1.3353083049878478
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+          "sourceToRuntime": {
+            "maxMm": 0.0005268883001008362,
+            "meanMm": 0.00032823096899351964,
+            "p99Mm": 0.00045626822497979447
+          },
+          "runtimeToSource": {
+            "maxMm": 0.0005268883001008362,
+            "meanMm": 0.0003295794338605115,
+            "p99Mm": 0.00045626822497979447
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.low-poly",
+          "sourceToRuntime": {
+            "maxMm": 0.0007393833243440895,
+            "meanMm": 0.0005951362738917018,
+            "p99Mm": 0.0007391111012111651
+          },
+          "runtimeToSource": {
+            "maxMm": 0.0007393833243440895,
+            "meanMm": 0.0005951362738917018,
+            "p99Mm": 0.0007391111012111651
+          }
+        }
+      ]
+    },
+    {
+      "pose": "stand",
+      "meshes": [
+        {
+          "mesh": "Alexei | original MakeHuman body",
+          "sourceToRuntime": {
+            "maxMm": 2.9106109868735075,
+            "meanMm": 0.009912241795275709,
+            "p99Mm": 0.19263525609858334
+          },
+          "runtimeToSource": {
+            "maxMm": 2.5965459644794464,
+            "meanMm": 0.009364289887590653,
+            "p99Mm": 0.15837547834962606
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+          "sourceToRuntime": {
+            "maxMm": 2.453192137181759,
+            "meanMm": 0.026251981229810133,
+            "p99Mm": 1.0018128668889403
+          },
+          "runtimeToSource": {
+            "maxMm": 2.750675892457366,
+            "meanMm": 0.028172495880658843,
+            "p99Mm": 1.0140835074707866
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.cortu_cargo_pants",
+          "sourceToRuntime": {
+            "maxMm": 0.00037490562476705236,
+            "meanMm": 0.00018670416754985918,
+            "p99Mm": 0.0003129243850708008
+          },
+          "runtimeToSource": {
+            "maxMm": 0.00037490562476705236,
+            "meanMm": 0.00019203749682448907,
+            "p99Mm": 0.00032098083124765253
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+          "sourceToRuntime": {
+            "maxMm": 0.00037831418353562185,
+            "meanMm": 0.0002621890530149458,
+            "p99Mm": 0.0003772672698687529
+          },
+          "runtimeToSource": {
+            "maxMm": 0.00037831418353562185,
+            "meanMm": 0.00026244670323359137,
+            "p99Mm": 0.0003729225852566742
+          }
+        },
+        {
+          "mesh": "Alexei | original MakeHuman body.low-poly",
+          "sourceToRuntime": {
+            "maxMm": 8.429369557916289e-05,
+            "meanMm": 8.429369557916289e-05,
+            "p99Mm": 8.429369557916289e-05
+          },
+          "runtimeToSource": {
+            "maxMm": 8.429369557916289e-05,
+            "meanMm": 8.429369557916289e-05,
+            "p99Mm": 8.429369557916289e-05
+          }
+        }
+      ]
+    }
+  ],
+  "method": "bidirectional nearest actual evaluated vertices; detects export mismatch, not artistic acceptance"
+}
