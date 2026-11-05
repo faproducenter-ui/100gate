@@ -1,0 +1,143 @@
+{
+  "source": "art/hand-knife-contact.glb",
+  "sourceSha256": "77575014ba8fe1e5414adc941d351e5a965c111b1b7ee8cbac4751f356a840f8",
+  "segments": [
+    {
+      "mode": "actor",
+      "view": "Front",
+      "seconds": 12,
+      "label": "Весь персонаж · Спереди · Полный клип 1×",
+      "start": 0,
+      "end": 12
+    },
+    {
+      "mode": "hand",
+      "view": "Palm",
+      "seconds": 12,
+      "label": "Кисть · Ладонь · Полный клип 1×",
+      "start": 12,
+      "end": 24
+    },
+    {
+      "mode": "hand",
+      "view": "Dorsal",
+      "seconds": 12,
+      "label": "Кисть · Тыльная сторона · Полный клип 1×",
+      "start": 24,
+      "end": 36
+    },
+    {
+      "mode": "hand",
+      "view": "Left",
+      "seconds": 12,
+      "label": "Кисть · Слева · Полный клип 1×",
+      "start": 36,
+      "end": 48
+    },
+    {
+      "mode": "hand",
+      "view": "Right",
+      "seconds": 12,
+      "label": "Кисть · Справа · Полный клип 1×",
+      "start": 48,
+      "end": 60
+    },
+    {
+      "mode": "hand",
+      "view": "Top",
+      "seconds": 12,
+      "label": "Кисть · Сверху · Полный клип 1×",
+      "start": 60,
+      "end": 72
+    },
+    {
+      "mode": "hand",
+      "view": "Butt",
+      "seconds": 12,
+      "label": "Кисть · Со стороны основания рукояти · Полный клип 1×",
+      "start": 72,
+      "end": 84
+    },
+    {
+      "mode": "handOrbit",
+      "seconds": 18,
+      "label": "Кисть · Непрерывный оборот камеры 360° · Полный хват",
+      "start": 84,
+      "end": 102
+    },
+    {
+      "mode": "actorOrbit",
+      "seconds": 24,
+      "label": "Весь персонаж · Непрерывный оборот камеры 360°",
+      "start": 102,
+      "end": 126
+    },
+    {
+      "mode": "actor",
+      "view": "Back",
+      "seconds": 12,
+      "label": "Весь персонаж · Сзади · Полный клип 1×",
+      "start": 126,
+      "end": 138
+    },
+    {
+      "mode": "actor",
+      "view": "Left",
+      "seconds": 12,
+      "label": "Весь персонаж · Слева · Полный клип 1×",
+      "start": 138,
+      "end": 150
+    },
+    {
+      "mode": "actor",
+      "view": "Right",
+      "seconds": 12,
+      "label": "Весь персонаж · Справа · Полный клип 1×",
+      "start": 150,
+      "end": 162
+    },
+    {
+      "mode": "actor",
+      "view": "Top",
+      "seconds": 12,
+      "label": "Весь персонаж · Сверху · Полный клип 1×",
+      "start": 162,
+      "end": 174
+    }
+  ],
+  "info": {
+    "clip": "HandContact_SlowPowerGrip",
+    "clipDuration": 12,
+    "actorMeshes": [
+      "Alexei_|_original_MakeHuman_bodycortu_cargo_pants_glb",
+      "Alexei_|_original_MakeHuman_bodylow-poly_glb",
+      "Alexei_|_original_MakeHuman_bodytoigo_ankle_boots_male_glb",
+      "Alexei_|_original_MakeHuman_bodytoigo_fisherman_sweater_glb",
+      "Alexei_|_original_MakeHuman_body_glb"
+    ],
+    "actorBounds": {
+      "min": [
+        -0.366499015959685,
+        -0.015658872297498072,
+        -0.3165013048436594
+      ],
+      "max": [
+        0.2806930591748926,
+        1.3697655441511185,
+        0.665841241555216
+      ]
+    },
+    "actorDistance": 3.09365401394801,
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x000046A3) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+  },
+  "timing": {
+    "wallSeconds": 174.0061,
+    "renderedFrames": 19080,
+    "chunks": 169,
+    "medianFrameGapMs": 6.999999999997897,
+    "p95FrameGapMs": 20.800000000008367,
+    "maxFrameGapMs": 166.4999999999992
+  },
+  "errors": [],
+  "scope": "Entire current 12-second hand study, NOT an escape/rope intro."
+}

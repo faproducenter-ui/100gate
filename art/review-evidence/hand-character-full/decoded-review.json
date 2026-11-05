@@ -1,0 +1,80 @@
+{
+  "duration": 173.942,
+  "width": 1280,
+  "height": 960,
+  "samples": [
+    {
+      "name": "segment-00",
+      "time": 6,
+      "label": "Весь персонаж · Спереди · Полный клип 1×"
+    },
+    {
+      "name": "segment-01",
+      "time": 18,
+      "label": "Кисть · Ладонь · Полный клип 1×"
+    },
+    {
+      "name": "segment-02",
+      "time": 30,
+      "label": "Кисть · Тыльная сторона · Полный клип 1×"
+    },
+    {
+      "name": "segment-03",
+      "time": 42,
+      "label": "Кисть · Слева · Полный клип 1×"
+    },
+    {
+      "name": "segment-04",
+      "time": 54,
+      "label": "Кисть · Справа · Полный клип 1×"
+    },
+    {
+      "name": "segment-05",
+      "time": 66,
+      "label": "Кисть · Сверху · Полный клип 1×"
+    },
+    {
+      "name": "segment-06",
+      "time": 78,
+      "label": "Кисть · Со стороны основания рукояти · Полный клип 1×"
+    },
+    {
+      "name": "segment-07",
+      "time": 93,
+      "label": "Кисть · Непрерывный оборот камеры 360° · Полный хват"
+    },
+    {
+      "name": "segment-08",
+      "time": 114,
+      "label": "Весь персонаж · Непрерывный оборот камеры 360°"
+    },
+    {
+      "name": "segment-09",
+      "time": 132,
+      "label": "Весь персонаж · Сзади · Полный клип 1×"
+    },
+    {
+      "name": "segment-10",
+      "time": 144,
+      "label": "Весь персонаж · Слева · Полный клип 1×"
+    },
+    {
+      "name": "segment-11",
+      "time": 156,
+      "label": "Весь персонаж · Справа · Полный клип 1×"
+    },
+    {
+      "name": "segment-12",
+      "time": 168,
+      "label": "Весь персонаж · Сверху · Полный клип 1×"
+    },
+    {
+      "name": "last-frame",
+      "time": 173.792,
+      "label": "Encoded final view"
+    }
+  ],
+  "errors": [],
+  "recordingClockSeconds": 174.0061,
+  "scope": "Actual encoded file decoded at every section midpoint and the final section; complete current grip study, not an escape intro."
+}

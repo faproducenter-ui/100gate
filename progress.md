@@ -60,3 +60,14 @@ Original prompt: Refine the existing 100gate Three.js horror game autonomously i
 - Live Blender shows the new 12-second study on the complete original actor.
   Art review and later story-scene integration remain pending; do not claim
   the full escape intro or commercial art is finished. No push or deploy.
+
+## Expanded video delivery — 2026-11-06
+
+- User requested one complete WebM including every hand view and the entire
+  actor from all sides, particularly behind. Recorded 173.942 s at 1280×960:
+  six full hand-clip views, hand 360°, full-actor 360°, front/rear/side/overhead
+  full-clip views. Normal speed; unchanged canonical GLB. All 13 sections and
+  the ending decoded successfully; no browser errors.
+- Delivery: art/review-evidence/hand-character-full/100gate-full-hand-character-review.webm.
+  Source clip is the existing grip study, not an authored full rope escape.
+  Added reproducible record/decode scripts only. No gameplay changes or deploy.
