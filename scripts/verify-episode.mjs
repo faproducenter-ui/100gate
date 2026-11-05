@@ -21,7 +21,9 @@ try{
   await page.goto('http://127.0.0.1:3000/');await page.waitForFunction(()=>window.__episodeTest?.state().mode==='title',null,{timeout:60000});
   pass('title renders');
   await page.getByTestId('start').click();await page.waitForTimeout(300);assert.equal((await state()).mode,'playing');
-  await hold('KeyR','chairTipped');await page.keyboard.press('KeyE');assert((await state()).save.items.includes('knife'));await hold('KeyR','free');pass('chair, knife and ropes sequence');
+  await hold('KeyR','chairTipped');await page.waitForFunction(()=>window.__episodeTest.introView().slip>=.8);
+  await page.keyboard.press('KeyE');await page.waitForFunction(()=>window.__episodeTest.state().save.items.includes('knife')&&window.__episodeTest.introView().pickup<0);
+  await hold('KeyR','free');pass('chair, knife and ropes sequence');
   await pose(0,3.6,0);await page.keyboard.down('KeyW');try{await page.waitForFunction(()=>window.__episodeTest.state().position[2]<-.15,null,{timeout:8000});}finally{await page.keyboard.up('KeyW');}pass('W moves forward');
   const before=(await state()).position;await page.keyboard.down('KeyD');try{await page.waitForFunction(x=>window.__episodeTest.state().position[0]>x+.1,before[0],{timeout:8000});}finally{await page.keyboard.up('KeyD');}pass('D moves right');
   const jumped=page.waitForFunction(()=>window.__episodeTest.state().position[1]>3.7,null,{timeout:18000});

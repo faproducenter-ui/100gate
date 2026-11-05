@@ -20,7 +20,7 @@ try{
  report.afterTipTime=await state();
  if(!baseline){
   assert(report.afterTipTime.save.flags.includes('chairTipped'),'hold must use active game time');
-  await p.keyboard.up('KeyR');await p.keyboard.press('KeyE');assert((await state()).save.items.includes('knife'));
+  await p.keyboard.up('KeyR');await step(850);await p.keyboard.press('KeyE');await step(1010);assert((await state()).save.items.includes('knife'));
   await p.keyboard.down('KeyR');await step(800);await p.keyboard.up('KeyR');await step(50);
   assert(!(await state()).save.flags.includes('free'));
   await p.keyboard.down('KeyR');await step(1000);await p.keyboard.press('Escape');await step(5000);
@@ -28,7 +28,8 @@ try{
   await p.keyboard.up('KeyR');await p.keyboard.press('Escape');
   await p.keyboard.down('KeyR');await step(2600);
   assert(!(await state()).save.flags.includes('free'),'cancelled/paused hold must not leak progress');
-  await step(250);await p.keyboard.up('KeyR');
+  await step(250);await p.keyboard.up('KeyR');assert(!(await state()).save.flags.includes('free'));
+  await step(1050);
   assert((await state()).save.flags.includes('free'));
   pass('chair/knife/ropes run on the active game clock; early release and pause reset progress');
   assert.deepEqual(report.errors,[]);pass('no JavaScript errors');

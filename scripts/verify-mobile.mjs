@@ -14,7 +14,9 @@ try{for(const model of ['iPhone 13','Pixel 7']){
   assert.equal(await page.locator('.ep-rotate').isVisible(),false);await page.getByTestId('start').tap();
   const cdp=await context.newCDPSession(page);
   async function holdAction(flag){const rect=await page.locator('.ep-touch-interact').boundingBox();await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{id:1,x:rect.x+rect.width/2,y:rect.y+rect.height/2}]});await page.waitForFunction(flag=>window.__episodeTest.state().save.flags.includes(flag),flag,{timeout:18000});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await page.waitForTimeout(250);}
-  await holdAction('chairTipped');await page.locator('.ep-touch-interact').tap();assert((await state()).save.items.includes('knife'));await page.waitForTimeout(250);await holdAction('free');
+  await holdAction('chairTipped');await page.locator('.ep-prompt').filter({hasText:'Подобрать нож'}).waitFor();await page.locator('.ep-touch-interact').tap();
+  await page.waitForFunction(()=>window.__episodeTest.state().save.items.includes('knife'));
+  await page.locator('.ep-prompt').filter({hasText:'Разрезать верёвки'}).waitFor();await holdAction('free');
   results.push(model+': chair, knife, hold action');
   await page.evaluate(()=>window.__episodeTest.pose(0,3.6,0));
   const rect=await page.getByTestId('joystick').boundingBox(),cx=rect.x+rect.width/2,cy=rect.y+rect.height/2;

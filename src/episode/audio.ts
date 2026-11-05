@@ -68,6 +68,19 @@ export class Foley {
     if(!this.sample(running?'run':'walk',{gain:crouched?.54:1,pan:left?-.11:.11,rate:crouched?.89:1,room:true}))this.procedural('step');
   }
   rock(strength:number,side:number){if(!this.sample('chair',{gain:.48+strength*.66,pan:.12*side,rate:.91+strength*.2,room:true}))this.procedural('scrape');}
+  ropeContact(pan:number,sever:boolean){
+    const c=this.context;if(!this.active||!c||!this.noise||!this.master)return;
+    const time=c.currentTime,len=sever?.19:.13;
+    const source=c.createBufferSource(),band=c.createBiquadFilter(),gain=c.createGain();
+    source.buffer=this.noise;source.playbackRate.value=1.45+Math.random()*.4;
+    band.type='bandpass';band.Q.value=.75;band.frequency.setValueAtTime(sever?1540:2250,time);band.frequency.exponentialRampToValueAtTime(sever?520:940,time+len);
+    gain.gain.setValueAtTime(.001,time);gain.gain.linearRampToValueAtTime(sever?.52:.23,time+.008);
+    gain.gain.exponentialRampToValueAtTime(.001,time+len);
+    source.connect(band).connect(gain);
+    if(typeof c.createStereoPanner==='function'){const p=c.createStereoPanner();p.pan.value=pan;gain.connect(p).connect(this.master);}
+    else gain.connect(this.master);
+    source.start(time,Math.random(),len*2);source.stop(time+len);
+  }
   consume(kind:'candy'|'water'){
     if(kind==='candy'){
       if(this.sample('paper',{gain:.56}))this.sample('eat',{delay:.30});

@@ -15,6 +15,7 @@
     "verify:gear": "node scripts/verify-gear.mjs",
     "verify:intro": "node scripts/verify-intro.mjs",
     "verify:intro-clock": "node scripts/verify-intro-clock.mjs",
+    "verify:escape": "node scripts/verify-escape-animation.mjs",
     "verify:motion": "node scripts/verify-motion.mjs",
     "verify:headroom": "node scripts/verify-headroom-math.mjs && node scripts/verify-headroom.mjs",
     "verify:hatch": "node scripts/verify-hinged-panel.mjs && node scripts/verify-hatch.mjs",

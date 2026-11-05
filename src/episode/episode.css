@@ -30,3 +30,7 @@
 .episode[data-mode=ending] .ep-ending{width:min(385px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:linear-gradient(140deg,#142022ee,#0b1216d9)}
 .episode .ep-pack footer button{background:#1c2424}.episode .ep-pack footer button:hover{background:#343327}
 @media(max-height:480px) and (orientation:landscape){.episode[data-mode=ending] .ep-overlay{padding:12px 20px}.episode[data-mode=ending] .ep-ending{width:min(315px,53vw);padding:14px 18px;gap:5px}.episode[data-mode=ending] .ep-ending h2{font-size:27px}.episode[data-mode=ending] .ep-ending p{font-size:9px;line-height:1.35}.episode[data-mode=ending] .ep-ending blockquote{font-size:17px;margin:2px 0}.episode[data-mode=ending] .ep-ending-count{font-size:27px}.episode[data-mode=ending] .ep-ending .ep-primary{min-height:33px}}
+
+/* Keep introductory action prompts away from the hand/knife contact area. */
+.episode[data-intro=true] .ep-prompt{top:auto;bottom:13%;}
+@media(max-height:450px) and (orientation:landscape){.episode[data-intro=true] .ep-prompt{bottom:4%;}}
