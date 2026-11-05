@@ -1,0 +1,21 @@
+{
+  "meshes": [
+    "Alexei_|_original_MakeHuman_bodycortu_cargo_pants_glb",
+    "Alexei_|_original_MakeHuman_bodylow-poly_glb",
+    "Alexei_|_original_MakeHuman_bodytoigo_ankle_boots_male_glb",
+    "Alexei_|_original_MakeHuman_bodytoigo_fisherman_sweater_glb",
+    "Alexei_|_original_MakeHuman_body_glb"
+  ],
+  "sharedSkeletons": 1,
+  "bones": 53,
+  "fingerBones": 30,
+  "triangles": 85496,
+  "textures": 9,
+  "draws": 5,
+  "clips": 0,
+  "versions": {
+    "three": "180",
+    "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "errors": []
+}

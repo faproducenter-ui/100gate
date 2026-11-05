@@ -20,3 +20,19 @@
 - Настольная лампа `01-L1-0269` — библиотека редактируемых 3D-ресурсов Kimi. Лицензия Three.js: `public/assets/lamp/THREE-LICENSE.txt`.
 - Остальная геометрия, интерьерные материалы, текстуры, интерфейс и синтезированный звук создаются кодом проекта.
 - Изображения заброшенных интерьеров использовались только как визуальные референсы и не включены в игру.
+
+## Isolated replacement-character review
+
+The not-yet-integrated `art/character-mpfb-review.blend` and
+`art/character-mpfb-grip-review.glb` use the CC0 MakeHuman/MPFB base human,
+stock game-engine skeleton and source weights. Skin: Mindfront, Aksel Skin.
+Clothing: Margaret Toigo / MRT, Fisherman Sweater and Ankle Boots Male;
+Cortu Johnstone, Cargo Pants. Eye mesh/texture: MakeHuman core.
+Selected catalog assets are CC0; the MPFB tool code is GPLv3 and is not
+included in the browser runtime. See `art/provenance/MPFB-SOURCES.json`,
+`art/provenance/MPFB-LICENSE.md`, `art/provenance/MPFB-ASSETS-CC0.txt`
+and `art/provenance/MAKEHUMAN-LICENSE.md` for exact sources and terms.
+
+The old chair is the existing credited game prop. Knife geometry/materials
+and grip-study choreography are project-authored. para's CC0 FPS Arms archive
+was inspected as a reference but its meshes and actions were not imported.

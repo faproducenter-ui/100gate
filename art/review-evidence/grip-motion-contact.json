@@ -1,0 +1,578 @@
+[
+  {
+    "frame": 1,
+    "signedClearanceMm": {
+      "thumb": 7.716,
+      "index": 4.888,
+      "middle": 11.506,
+      "ring": 11.833,
+      "pinky": 5.972
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 2,
+    "signedClearanceMm": {
+      "thumb": 7.744,
+      "index": 4.888,
+      "middle": 11.506,
+      "ring": 11.833,
+      "pinky": 5.972
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 3,
+    "signedClearanceMm": {
+      "thumb": 7.759,
+      "index": 4.888,
+      "middle": 11.506,
+      "ring": 11.833,
+      "pinky": 5.972
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 4,
+    "signedClearanceMm": {
+      "thumb": 7.764,
+      "index": 4.888,
+      "middle": 11.506,
+      "ring": 11.833,
+      "pinky": 5.972
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 5,
+    "signedClearanceMm": {
+      "thumb": 7.761,
+      "index": 4.888,
+      "middle": 11.506,
+      "ring": 11.833,
+      "pinky": 5.972
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 6,
+    "signedClearanceMm": {
+      "thumb": 7.752,
+      "index": 4.888,
+      "middle": 11.506,
+      "ring": 11.833,
+      "pinky": 5.972
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 7,
+    "signedClearanceMm": {
+      "thumb": 7.742,
+      "index": 4.888,
+      "middle": 11.506,
+      "ring": 11.825,
+      "pinky": 5.959
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 8,
+    "signedClearanceMm": {
+      "thumb": 7.733,
+      "index": 4.888,
+      "middle": 11.506,
+      "ring": 11.804,
+      "pinky": 5.924
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 9,
+    "signedClearanceMm": {
+      "thumb": 7.726,
+      "index": 4.888,
+      "middle": 11.505,
+      "ring": 11.741,
+      "pinky": 5.867
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 10,
+    "signedClearanceMm": {
+      "thumb": 7.726,
+      "index": 4.888,
+      "middle": 11.501,
+      "ring": 11.613,
+      "pinky": 5.79
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 11,
+    "signedClearanceMm": {
+      "thumb": 7.732,
+      "index": 4.887,
+      "middle": 11.455,
+      "ring": 11.423,
+      "pinky": 5.696
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 12,
+    "signedClearanceMm": {
+      "thumb": 7.747,
+      "index": 4.882,
+      "middle": 11.33,
+      "ring": 11.178,
+      "pinky": 5.587
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 13,
+    "signedClearanceMm": {
+      "thumb": 7.77,
+      "index": 4.847,
+      "middle": 11.127,
+      "ring": 10.883,
+      "pinky": 5.465
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 14,
+    "signedClearanceMm": {
+      "thumb": 7.8,
+      "index": 4.76,
+      "middle": 10.849,
+      "ring": 10.544,
+      "pinky": 5.334
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 15,
+    "signedClearanceMm": {
+      "thumb": 7.838,
+      "index": 4.625,
+      "middle": 10.504,
+      "ring": 10.166,
+      "pinky": 5.197
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 16,
+    "signedClearanceMm": {
+      "thumb": 7.839,
+      "index": 4.452,
+      "middle": 10.101,
+      "ring": 9.756,
+      "pinky": 5.055
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 17,
+    "signedClearanceMm": {
+      "thumb": 7.843,
+      "index": 4.248,
+      "middle": 9.649,
+      "ring": 9.322,
+      "pinky": 4.912
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 18,
+    "signedClearanceMm": {
+      "thumb": 7.851,
+      "index": 4.021,
+      "middle": 9.158,
+      "ring": 8.869,
+      "pinky": 4.772
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 19,
+    "signedClearanceMm": {
+      "thumb": 7.861,
+      "index": 3.781,
+      "middle": 8.636,
+      "ring": 8.406,
+      "pinky": 4.635
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 20,
+    "signedClearanceMm": {
+      "thumb": 7.869,
+      "index": 3.537,
+      "middle": 8.094,
+      "ring": 7.939,
+      "pinky": 4.506
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 21,
+    "signedClearanceMm": {
+      "thumb": 7.871,
+      "index": 3.297,
+      "middle": 7.544,
+      "ring": 7.477,
+      "pinky": 4.386
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 22,
+    "signedClearanceMm": {
+      "thumb": 7.845,
+      "index": 3.071,
+      "middle": 6.996,
+      "ring": 7.026,
+      "pinky": 4.191
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 23,
+    "signedClearanceMm": {
+      "thumb": 7.798,
+      "index": 2.865,
+      "middle": 6.457,
+      "ring": 6.593,
+      "pinky": 4.005
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 24,
+    "signedClearanceMm": {
+      "thumb": 7.656,
+      "index": 2.686,
+      "middle": 5.939,
+      "ring": 6.185,
+      "pinky": 3.838
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 25,
+    "signedClearanceMm": {
+      "thumb": 7.325,
+      "index": 2.282,
+      "middle": 5.453,
+      "ring": 5.808,
+      "pinky": 3.693
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 26,
+    "signedClearanceMm": {
+      "thumb": 7.008,
+      "index": 1.901,
+      "middle": 5.006,
+      "ring": 5.466,
+      "pinky": 3.57
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 27,
+    "signedClearanceMm": {
+      "thumb": 6.681,
+      "index": 1.592,
+      "middle": 4.605,
+      "ring": 5.164,
+      "pinky": 3.471
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 28,
+    "signedClearanceMm": {
+      "thumb": 6.338,
+      "index": 1.356,
+      "middle": 4.256,
+      "ring": 4.903,
+      "pinky": 3.395
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 29,
+    "signedClearanceMm": {
+      "thumb": 5.965,
+      "index": 1.191,
+      "middle": 3.96,
+      "ring": 4.683,
+      "pinky": 3.342
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 30,
+    "signedClearanceMm": {
+      "thumb": 5.582,
+      "index": 0.925,
+      "middle": 3.717,
+      "ring": 4.505,
+      "pinky": 3.311
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 31,
+    "signedClearanceMm": {
+      "thumb": 5.19,
+      "index": 0.639,
+      "middle": 3.525,
+      "ring": 4.368,
+      "pinky": 3.3
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 32,
+    "signedClearanceMm": {
+      "thumb": 4.792,
+      "index": 0.428,
+      "middle": 3.272,
+      "ring": 4.267,
+      "pinky": 3.211
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 33,
+    "signedClearanceMm": {
+      "thumb": 4.357,
+      "index": 0.229,
+      "middle": 3.031,
+      "ring": 4.198,
+      "pinky": 3.02
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 34,
+    "signedClearanceMm": {
+      "thumb": 3.807,
+      "index": 0.107,
+      "middle": 2.709,
+      "ring": 4.157,
+      "pinky": 2.717
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 35,
+    "signedClearanceMm": {
+      "thumb": 3.25,
+      "index": -0.104,
+      "middle": 2.435,
+      "ring": 4.136,
+      "pinky": 2.416
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 36,
+    "signedClearanceMm": {
+      "thumb": 2.689,
+      "index": -0.245,
+      "middle": 2.245,
+      "ring": 4.109,
+      "pinky": 2.159
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 37,
+    "signedClearanceMm": {
+      "thumb": 2.142,
+      "index": -0.288,
+      "middle": 1.96,
+      "ring": 2.878,
+      "pinky": 1.686
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 38,
+    "signedClearanceMm": {
+      "thumb": 1.61,
+      "index": -0.285,
+      "middle": 0.863,
+      "ring": 1.849,
+      "pinky": 1.079
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 39,
+    "signedClearanceMm": {
+      "thumb": 1.089,
+      "index": -0.284,
+      "middle": 0.178,
+      "ring": 0.919,
+      "pinky": 0.591
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 40,
+    "signedClearanceMm": {
+      "thumb": 0.574,
+      "index": -0.284,
+      "middle": -0.157,
+      "ring": 0.312,
+      "pinky": 0.225
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 41,
+    "signedClearanceMm": {
+      "thumb": 0.069,
+      "index": -0.284,
+      "middle": -0.275,
+      "ring": -0.027,
+      "pinky": -0.015
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 42,
+    "signedClearanceMm": {
+      "thumb": -0.405,
+      "index": -0.284,
+      "middle": -0.314,
+      "ring": -0.162,
+      "pinky": -0.125
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 43,
+    "signedClearanceMm": {
+      "thumb": -0.405,
+      "index": -0.284,
+      "middle": -0.314,
+      "ring": -0.183,
+      "pinky": -0.157
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 44,
+    "signedClearanceMm": {
+      "thumb": -0.405,
+      "index": -0.284,
+      "middle": -0.314,
+      "ring": -0.19,
+      "pinky": -0.174
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 45,
+    "signedClearanceMm": {
+      "thumb": -0.405,
+      "index": -0.284,
+      "middle": -0.314,
+      "ring": -0.19,
+      "pinky": -0.184
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 46,
+    "signedClearanceMm": {
+      "thumb": -0.405,
+      "index": -0.284,
+      "middle": -0.314,
+      "ring": -0.19,
+      "pinky": -0.188
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 47,
+    "signedClearanceMm": {
+      "thumb": -0.405,
+      "index": -0.284,
+      "middle": -0.314,
+      "ring": -0.19,
+      "pinky": -0.188
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  },
+  {
+    "frame": 48,
+    "signedClearanceMm": {
+      "thumb": -0.405,
+      "index": -0.284,
+      "middle": -0.314,
+      "ring": -0.19,
+      "pinky": -0.188
+    },
+    "bladePenetrationMm": 0.0,
+    "bladeContact": null
+  }
+]

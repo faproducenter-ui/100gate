@@ -1,0 +1,103 @@
+{
+  "bounds": [
+    {
+      "name": "Alexei_|_original_MakeHuman_bodycortu_cargo_pants_glb",
+      "min": [
+        -0.28069189324644817,
+        0.03903418327228375,
+        -0.1476971290559845
+      ],
+      "max": [
+        0.28069313716465416,
+        0.6673752251054974,
+        0.43813274036561056
+      ]
+    },
+    {
+      "name": "Alexei_|_original_MakeHuman_bodylow-poly_glb",
+      "min": [
+        -0.044469479471445084,
+        1.2536770403430457,
+        0.1432406319340449
+      ],
+      "max": [
+        0.044469479471445084,
+        1.2822747331115203,
+        0.1675388502479091
+      ]
+    },
+    {
+      "name": "Alexei_|_original_MakeHuman_bodytoigo_ankle_boots_male_glb",
+      "min": [
+        -0.26979195309626713,
+        -0.01565879444116769,
+        0.26588243362780806
+      ],
+      "max": [
+        0.26979195309626713,
+        0.18115552384075828,
+        0.5671104660387145
+      ]
+    },
+    {
+      "name": "Alexei_|_original_MakeHuman_bodytoigo_fisherman_sweater_glb",
+      "min": [
+        -0.3174232792882705,
+        0.5696971371974403,
+        -0.27700926134514126
+      ],
+      "max": [
+        0.2385957358216123,
+        1.1380630250802455,
+        0.33094473040174144
+      ]
+    },
+    {
+      "name": "Alexei_|_original_MakeHuman_body_glb",
+      "min": [
+        -0.30636763379957815,
+        0.535442824989648,
+        -0.3165013582243465
+      ],
+      "max": [
+        0.23386584273078806,
+        1.36976595518302,
+        0.4410778998633731
+      ]
+    }
+  ],
+  "deviations": [
+    {
+      "name": "Alexei_|_original_MakeHuman_bodycortu_cargo_pants_glb",
+      "delta": 0.00015667755889128832
+    },
+    {
+      "name": "Alexei_|_original_MakeHuman_bodylow-poly_glb",
+      "delta": 1.2051665598811212e-7
+    },
+    {
+      "name": "Alexei_|_original_MakeHuman_bodytoigo_ankle_boots_male_glb",
+      "delta": 2.1000867667098078e-7
+    },
+    {
+      "name": "Alexei_|_original_MakeHuman_bodytoigo_fisherman_sweater_glb",
+      "delta": 0.00022952596040393125
+    },
+    {
+      "name": "Alexei_|_original_MakeHuman_body_glb",
+      "delta": 1.3999800457797917e-7
+    }
+  ],
+  "cameras": [
+    "01_seated_front",
+    "02_seated_side",
+    "03_seated_rear",
+    "04_first-person_framing",
+    "05_grip_dorsal",
+    "06_grip_palm",
+    "07_grip_thumb_side",
+    "08_grip_little-finger_side"
+  ],
+  "clips": 0,
+  "errors": []
+}

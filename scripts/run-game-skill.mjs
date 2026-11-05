@@ -15,6 +15,8 @@ chromium.launch=async options=>{
  const browser=await launch(options),newPage=browser.newPage.bind(browser);
  browser.newPage=async options=>{
   const page=await newPage({...options,viewport:{width:1280,height:720}});
+  // Isolated local smoke tests must not write to the user's production saves.
+  if(process.env.GAME_TEST_SAVE_STUB==='1')await page.route('**/api/save',r=>r.fulfill({status:200,json:{ok:true}}));
   await page.addInitScript(()=>{
    if(location.hostname==='127.0.0.1')localStorage.setItem('100gate.settings.v1',JSON.stringify({quality:'low'}));
   });

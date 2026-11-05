@@ -1,5 +1,21 @@
 # Character-hand source
 
+## Replacement character review (not integrated)
+
+`character-mpfb-review.blend` contains the unified MakeHuman/MPFB character:
+original body with hands, 53-bone stock game-engine skeleton, full finger
+chains, Mindfront Aksel skin and CC0 source clothing. The two-second
+`KnifePowerGripClose` action is an isolated grip study, not a completed intro.
+`character-mpfb-grip-review.glb` is its working Three.js export.
+`knife-prop-review.blend` contains the standalone original knife prop only.
+The body is not assembled from primitives or separately generated hands.
+
+The source body, original UV and weights remain editable. Clothing-fit shape
+keys and masks are reversible. Provenance and archive hashes are in
+`provenance/MPFB-SOURCES.json`. Reproduction, tests, the failed first motion
+and remaining visual issues are recorded in `../docs/MPFB-INTRO-REVIEW.md`.
+These files do not replace the older gameplay assets below.
+
 `character-hands.blend` contains both editable hand poses, retained source UV layers and packed baked PBR maps. It also preserves the original default scene separately; export only the hand-production scene.
 
 - Geometry: MakeHuman base mesh, CC0.
