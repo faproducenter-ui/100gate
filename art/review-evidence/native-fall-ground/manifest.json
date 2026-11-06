@@ -1,0 +1,23 @@
+{
+  "partial": true,
+  "scope": "Continuous native idle/struggle/fall/ground ONLY; knife/release/stand not implemented or integrated",
+  "files": [
+    {
+      "path": "art/intro-fall-native-wip.blend",
+      "bytes": 48084340,
+      "sha256": "b6f7d0993d21738d7c64a87b651add4559def1eeeb2c738e9946939b6a153156"
+    },
+    {
+      "path": "art/intro-fall-native-wip.glb",
+      "bytes": 48648368,
+      "sha256": "1a1bdabd0e48c2c929ff7f953d270660492133d6dc27d7d5b50d7983e6714f00"
+    },
+    {
+      "path": "art/review-evidence/native-fall-ground/native-fall-ground-PARTIAL.webm",
+      "bytes": 3506162,
+      "sha256": "c380c5acf363e1e654064f667cd36e0ab70c164909b94d5e34d34b552af1abff"
+    }
+  ],
+  "contactsSamples": 217,
+  "runtimeSourceMaxMm": 0.017051032045856118
+}

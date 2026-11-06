@@ -10,7 +10,7 @@ for obj in s.objects:
 bpy.context.view_layer.objects.active=next(o for o in s.objects if o.type=='ARMATURE')
 properties=bpy.ops.export_scene.gltf.get_rna_type().properties
 assert 'SCENE' in {i.identifier for i in properties['export_animation_mode'].enum_items}
-bpy.ops.export_scene.gltf(filepath=str(Path.cwd()/'outputs/cinematic-intro/bound-chair-performance-partial.glb'),
+bpy.ops.export_scene.gltf(filepath=str(Path.cwd()/'outputs/cinematic-intro'/(s.get('cinematic_export_stem','bound-chair-performance-partial')+'.glb')),
     use_selection=True,export_animations=True,export_animation_mode='SCENE',
     export_anim_scene_split_object=False,export_anim_slide_to_zero=True,
     export_force_sampling=True,export_frame_range=True,export_rest_position_armature=True,

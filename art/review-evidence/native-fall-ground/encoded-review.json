@@ -1,0 +1,38 @@
+{
+  "partial": true,
+  "videoSha256": "c380c5acf363e1e654064f667cd36e0ab70c164909b94d5e34d34b552af1abff",
+  "scope": "Native idle/struggle/fall/ground fragment; not full escape or integrated gameplay",
+  "duration": 16.506,
+  "width": 1280,
+  "height": 720,
+  "playback": {
+    "wallSeconds": 16.57970000000298,
+    "decodedFrames": 877,
+    "droppedFrames": 4,
+    "rate": 1
+  },
+  "moments": [
+    1,
+    11.9,
+    12.3,
+    12.8,
+    13.3,
+    13.55,
+    14.5,
+    16.4
+  ],
+  "recordingClock": {
+    "wallSeconds": 16.66389999999851,
+    "postCaptureProcessingMs": 157.89999999850988,
+    "segments": [
+      {
+        "view": "Fall overview",
+        "start": 0,
+        "end": 16.5
+      }
+    ],
+    "renderedFrames": 353,
+    "maxRenderGapSeconds": 0.1422560999999991,
+    "partial": true
+  }
+}

@@ -163,3 +163,36 @@ Original prompt: Refine the existing 100gate Three.js horror game autonomously i
   connected, service console hidden. Left it available for the user's inspection.
 - No src/public changes, no push/deploy. Full fall/pickup/cut/removal/drop/stand,
   native gameplay integration, shipping optimization and final art remain open.
+
+## Continue playable intro request — fall and ground checkpoint
+
+- New request read: prioritize continuous playable sequence over intermediate
+  material perfection. Do NOT re-audit/re-polish BOUND unless a critical issue.
+- Starting rollback branch backup/intro-continuation-72de967. Original first
+  12-second performance retained; new native animation extends to 16.5 seconds:
+  balance loss/fall 12..14.5, ground reaction 14.5..16.5. Native torso/head/ankle
+  reactions, actual evaluated support surfaces, both chair-relative restraints
+  retained. Upper leg settles toward the lower leg after landing.
+- Durable new sources art/intro-fall-native-wip.blend/.glb. Source objects/UV/
+  native skeleton preserved; previous BOUND source untouched. Blender shows
+  an appended fall scene; earlier user scenes retained.
+- Fall/ground actual contact audit: 217 full/half-frame samples, zero tested
+  actor/wood/rope surface crossings, floor min >-1 mm. Six actual imported poses
+  match source in both directions to max 0.017052 mm. Browser errors empty.
+- New continuous 16.506 s 1x WebM includes idle, struggle, fall and ground,
+  NOT the complete escape. Decoded/sought/played real encoded file; hashes
+  and screenshots in art/review-evidence/native-fall-ground/.
+- TypeScript/Vite build passes; original develop-web-game client smoke with
+  save API stubbing passes; screenshot inspected. OLD game regression only,
+  NOT proof of native gameplay integration. Large-bundle warning remains.
+- NEXT UNFINISHED: right chair-hitch must visibly loosen/unwind before the
+  native right hand reaches the floor knife. Both wrist wraps remain. Then
+  pickup with the original tested finger clip/socket, blade cut, cuff removal,
+  rope drop, stand, native runtime adapter, full playtest, safe preview deploy.
+- Do not simply let the right hand detach from the existing chair-parented
+  rope mesh. A rope prop rig/peeling solve is needed for this next phase.
+- Ground source right shoulder ~[1.232,-.008,.446], arm length .515 m; current
+  knife floor [1.18,-.47,.0125] may be out of reach. Solve placement/recovery
+  ergonomically before reach, do not stretch/scale the human arm or teleport.
+- No src/public change or native intro integration yet. No push/deploy: user's
+  condition is to publish only AFTER the ENTIRE sequence is playable.

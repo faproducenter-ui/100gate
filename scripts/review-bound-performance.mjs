@@ -2,7 +2,8 @@
 import {testBrowser} from './browser.mjs';
 import {writeFile,mkdir} from 'node:fs/promises';
 import assert from 'node:assert/strict';
-const base=process.env.GAME_URL??'http://127.0.0.1:5182',out='outputs/cinematic-intro/bound-performance';
+const fall=process.argv.includes('--fall'),duration=fall?16.5:12;
+const base=process.env.GAME_URL??'http://127.0.0.1:5182',out='outputs/cinematic-intro/'+(fall?'fall-performance':'bound-performance');
 async function bounded(promise,ms){let timer;try{return await Promise.race([promise,new Promise((_,no)=>{timer=setTimeout(()=>no(Error('Capture timed out; browser may be occluded or the encoder stalled')),ms);})]);}finally{clearTimeout(timer);}}
 await mkdir(out,{recursive:true});const browser=await testBrowser();
 try{
@@ -10,11 +11,11 @@ try{
  page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  await page.route(base+'/__bound_performance__',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><html><head><link rel="icon" href="data:,"><style>body{margin:0;background:#252831}#label{position:absolute;left:15px;top:12px;color:white;background:#171a20c0;padding:8px;font:16px sans-serif}</style></head><body><div id="label"></div></body></html>'}));
  await page.goto(base+'/__bound_performance__');
- const setup=await page.evaluate(async()=>{
+ const setup=await page.evaluate(async({fall,duration})=>{
   const T=await import('/node_modules/three/build/three.module.js');
   const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
   const {RoomEnvironment}=await import('/node_modules/three/examples/jsm/environments/RoomEnvironment.js');
-  const asset=await new GLTFLoader().loadAsync('/outputs/cinematic-intro/bound-chair-performance-partial.glb');
+  const asset=await new GLTFLoader().loadAsync('/outputs/cinematic-intro/'+(fall?'intro-fall-ground-partial':'bound-chair-performance-partial')+'.glb');
   const renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(1280,720);renderer.toneMapping=T.AgXToneMapping;
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;document.body.appendChild(renderer.domElement);
   const scene=new T.Scene();scene.background=new T.Color(0x343842);
@@ -36,8 +37,8 @@ try{
   const v=new T.Vector3();let recordingCanvas,recordingContext,capture;
   function render(time,view){mixer.setTime(Math.min(clip.duration-1e-6,Math.max(0,time)));asset.scene.updateMatrixWorld(true);for(const o of skins)o.skeleton.update();
    const cam=asset.cameras.find(c=>c.name.startsWith('Cine')&&c.name.endsWith(view.replaceAll(' ','_')));if(!cam)throw Error('No camera '+view);cam.aspect=1280/720;cam.updateProjectionMatrix();renderer.render(scene,cam);
-   document.querySelector('#label').textContent=`NATIVE SKELETAL QA · ONLY idle + struggle · ${view} · ${time.toFixed(2)} s — НЕ полное вступление`;
-   if(recordingContext){recordingContext.drawImage(renderer.domElement,0,0);recordingContext.fillStyle='#171a20dc';recordingContext.fillRect(10,10,1020,40);recordingContext.fillStyle='white';recordingContext.font='17px sans-serif';recordingContext.fillText(`ONLY BoundChairIdle + ChairStruggle | ${view} | ${time.toFixed(2)}s | NOT complete intro`,22,36);if(capture)capture.track.requestFrame();}
+   document.querySelector('#label').textContent=`NATIVE SKELETAL QA · ${fall?"idle + struggle + fall + ground":"idle + struggle"} · ${view} · ${time.toFixed(2)} s — НЕ полное вступление`;
+   if(recordingContext){recordingContext.drawImage(renderer.domElement,0,0);recordingContext.fillStyle='#171a20dc';recordingContext.fillRect(10,10,1020,40);recordingContext.fillStyle='white';recordingContext.font='17px sans-serif';recordingContext.fillText(`PARTIAL ${fall?"Idle + Struggle + Fall + Ground":"Idle + Struggle"} | ${view} | ${time.toFixed(2)}s | NOT complete intro`,22,36);if(capture)capture.track.requestFrame();}
   }
   function sample(time){render(time,'Side');const inverse=chair.matrixWorld.clone().invert();
    const wrists={};for(const side of ['r','l'])wrists[side]=bone('hand_'+side).getWorldPosition(v).applyMatrix4(inverse).toArray();
@@ -68,35 +69,35 @@ try{
   }};
   const gl=renderer.getContext(),debug=gl.getExtension('WEBGL_debug_renderer_info');
   render(0,'Side');return {clip:clip.name,duration:clip.duration,tracks:clip.tracks.length,skinMeshes:skins.length,ropeMeshes:ropeMeshes.length,gpu:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),phases:rig.userData.authoredPhases,missing:rig.userData.missingPhases};
- });
- assert(Math.abs(setup.duration-12)<.1);assert(setup.tracks>30);assert.equal(setup.skinMeshes,5);
+ },{fall,duration});
+ assert(Math.abs(setup.duration-duration)<.1);assert(setup.tracks>30);assert.equal(setup.skinMeshes,5);
  console.log('Native fragment import:',setup);
  if(process.argv.includes('--record')&&/swiftshader/i.test(setup.gpu))throw Error('Software rasterizer is unsuitable for motion review. Use TEST_HARDWARE_GL=1 and TEST_HEADED=1.');
- const samples=[];for(let i=0;i<=48;i++)samples.push(await page.evaluate(t=>window.__boundQA.sample(t),i/4));
+ const samples=[];for(let i=0;i<=48;i++)samples.push(await page.evaluate(t=>window.__boundQA.sample(t),i*duration/48));
  const first=samples[0];let wristDrift=0,headMotion=0,minFloor=Infinity;
  for(const s of samples){for(const side of ['r','l'])wristDrift=Math.max(wristDrift,Math.hypot(...s.wrists[side].map((v,i)=>v-first.wrists[side][i])));headMotion=Math.max(headMotion,Math.hypot(...s.head.map((v,i)=>v-first.head[i])));minFloor=Math.min(minFloor,s.chairMinY);}
  assert(wristDrift<.002,'Bound wrist slipped relative to chair: '+wristDrift);assert(headMotion>.005,'Only a rigid pendulum, no body performance');assert(minFloor>-.0002,'Chair crosses floor');
  const maxWristDeviationDegrees=Math.max(...samples.flatMap(s=>Object.values(s.wristDeviationDegrees)));
  assert(maxWristDeviationDegrees<25,'Extreme native wrist deviation: '+maxWristDeviationDegrees);
- for(const [view,time] of [['Front',0],['Side',6],['Back',8],['Bound wrists',8],['Shoulder back',8],['First person',8],['Wrist right side',8],['Wrist left side',8]]){
-  await page.evaluate(({view,time})=>window.__boundQA.render(time,view),{view,time});await page.screenshot({path:out+'/'+view.toLowerCase().replaceAll(' ','-')+'.png'});
+ for(const [view,time] of (fall?[['Fall overview',12],['Fall overview',13],['Fall overview',13.5],['Fall overview',14.5],['Fall overview',16.5],['Ground wrists',16.5],['First person',16.5]]:[['Front',0],['Side',6],['Back',8],['Bound wrists',8],['Shoulder back',8],['First person',8],['Wrist right side',8],['Wrist left side',8]])){
+  await page.evaluate(({view,time})=>window.__boundQA.render(time,view),{view,time});await page.screenshot({path:out+'/'+view.toLowerCase().replaceAll(' ','-')+(fall?'-'+time:'')+'.png'});
  }
- if(process.argv.includes('--geometry'))for(const time of [0,2,4,6,8,12])await writeFile(out+'/runtime-frame-'+(1+time*24)+'.json',JSON.stringify(await page.evaluate(t=>window.__boundQA.dump(t),time)));
+ if(process.argv.includes('--geometry'))for(const time of (fall?[12,12.5,13,13.5,14.5,16.5]:[0,2,4,6,8,12]))await writeFile(out+'/runtime-frame-'+(1+time*24)+'.json',JSON.stringify(await page.evaluate(t=>window.__boundQA.dump(t),time)));
  if(process.argv.includes('--record')){
   console.log('Starting manually requested, actual 1x capture');
   const video=await bounded((async()=>{
    await page.evaluate(()=>window.__boundQA.startRecord());
-   const start=performance.now(),ticks=[],views=['Front','Side','Back','First person'];
-   while(true){const elapsed=(performance.now()-start)/1000;if(elapsed>=48)break;ticks.push(elapsed);const index=Math.min(3,Math.floor(elapsed/12));
-    await page.evaluate(({time,view})=>window.__boundQA.render(time,view),{time:elapsed-index*12,view:views[index]});
+   const start=performance.now(),ticks=[],views=process.argv.includes('--single')?['Fall overview']:['Front','Side','Back','First person'];
+   while(true){const elapsed=(performance.now()-start)/1000;if(elapsed>=duration*views.length)break;ticks.push(elapsed);const index=Math.min(views.length-1,Math.floor(elapsed/duration));
+    await page.evaluate(({time,view})=>window.__boundQA.render(time,view),{time:elapsed-index*duration,view:views[index]});
     await new Promise(ok=>setTimeout(ok,Math.max(0,1000/24-((performance.now()-start)/1000-elapsed)*1000)));
    }
-   await page.evaluate(()=>window.__boundQA.render(12,'First person'));await new Promise(ok=>setTimeout(ok,150));
+   await page.evaluate(({duration,view})=>window.__boundQA.render(duration,view),{duration,view:views.at(-1)});await new Promise(ok=>setTimeout(ok,150));
    const captured=await page.evaluate(()=>window.__boundQA.stopRecord());
-   return {...captured,segments:views.map((view,i)=>({view,start:i*12,end:(i+1)*12})),renderedFrames:ticks.length,maxRenderGapSeconds:Math.max(...ticks.slice(1).map((t,i)=>t-ticks[i]))};
+   return {...captured,segments:views.map((view,i)=>({view,start:i*duration,end:(i+1)*duration})),renderedFrames:ticks.length,maxRenderGapSeconds:Math.max(...ticks.slice(1).map((t,i)=>t-ticks[i]))};
   })(),90000);
-  await writeFile(out+'/bound-idle-struggle-ONLY.webm',Buffer.from(video.base64,'base64'));await writeFile(out+'/recording-clock.json',JSON.stringify({wallSeconds:video.wallSeconds,postCaptureProcessingMs:video.postCaptureProcessingMs,segments:video.segments,renderedFrames:video.renderedFrames,maxRenderGapSeconds:video.maxRenderGapSeconds,partial:true},null,2));
+  await writeFile(out+(fall?'/native-fall-ground-PARTIAL.webm':'/bound-idle-struggle-ONLY.webm'),Buffer.from(video.base64,'base64'));await writeFile(out+'/recording-clock.json',JSON.stringify({wallSeconds:video.wallSeconds,postCaptureProcessingMs:video.postCaptureProcessingMs,segments:video.segments,renderedFrames:video.renderedFrames,maxRenderGapSeconds:video.maxRenderGapSeconds,partial:true},null,2));
  }
  assert.deepEqual(errors,[]);await writeFile(out+'/report.json',JSON.stringify({partial:true,setup,wristDriftMm:wristDrift*1000,headMotionMm:headMotion*1000,maxWristDeviationDegrees,chairMinFloorMm:minFloor*1000,samples,errors},null,2));
- console.log('PASS native idle/struggle fragment ONLY; NOT full intro or gameplay integration.',JSON.stringify({wristDriftMm:wristDrift*1000,headMotionMm:headMotion*1000}));
+ console.log(fall?'PASS native idle/struggle/fall/ground fragment; NOT full escape or gameplay integration.':'PASS native idle/struggle fragment ONLY; NOT full intro or gameplay integration.',JSON.stringify({wristDriftMm:wristDrift*1000,headMotionMm:headMotion*1000}));
 }finally{await browser.close();}

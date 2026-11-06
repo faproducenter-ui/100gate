@@ -1,0 +1,14 @@
+{
+  "wallSeconds": 16.66389999999851,
+  "postCaptureProcessingMs": 157.89999999850988,
+  "segments": [
+    {
+      "view": "Fall overview",
+      "start": 0,
+      "end": 16.5
+    }
+  ],
+  "renderedFrames": 353,
+  "maxRenderGapSeconds": 0.1422560999999991,
+  "partial": true
+}
