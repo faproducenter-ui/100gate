@@ -225,3 +225,65 @@ Original prompt: Refine the existing 100gate Three.js horror game autonomously i
   new transition at frame561; old scenes retained.
 - No push/deploy. Full technical report, proofs and reproduction steps in
   art/review-evidence/rock-fall-continuity/README.md.
+
+## 2026-11-06 — Torso/wardrobe and LEFT rail escape rework (in progress)
+- Latest ed1b70bc attachment read in full. NEW story overrides old right-hand
+  escape: left rail fails on impact, left stays wrapped and picks up the knife;
+  left cuff first, right restraint second. No push/deploy.
+- Safe rollback: backup/body-postfall-start-538a106. Existing art/game sources
+  preserved; current candidates live in ignored outputs/body-postfall.
+- Native actor already male (MPFB gender=1), not a generated new human. Root
+  garment problem: previous Bound corrective moved lower hem up to 142 mm and
+  carried extra thoracic volume. New editable Tailored seated wool key retains
+  original topology/UV/materials/cuffs; fitted against evaluated complete skin,
+  local thoracic clavicle-to-spine weight correction on 3906 vertices. Skinning
+  remains <=4 influences. New hem no longer has the first rejected central flap.
+- outputs/body-postfall/intro-tailored-fall.blend + exported
+  outputs/cinematic-intro/intro-tailored-fall.glb: coarse + dense1201 native
+  actor/chair/rope/floor gates passed. Exact-source dense report copied to
+  outputs/body-postfall/tailored-contact-dense.json. Three before/after closeups
+  inspected (side/front). Main game source not changed this turn.
+- scripts/art/author_left_chair_break.py is a WIP: original lower rear rail
+  split locally, original surfaces/UVs retained + fresh end cap. Left full rope
+  retained, prop skin links forearm cuff and detached wood hitch. Right unchanged.
+- REJECTED trajectories: hand directly forward went through torso; straight
+  backward crossed middle back rail. Native wrist/forearm relation fixed so the
+  cuff follows forearm rather than a twisted palm. Hand target reach limited
+  without scaling bones. Last unvalidated candidate adds independent 16-degree
+  torso recovery roll while right wrist stays on the chair. Verify its actual
+  audit/hash before promoting; previous partial candidates FAILED and must NOT
+  be mistaken for final. See left-break.log / partial-contact.log.
+- Use Blender --python-exit-code 1 and stop on nonzero: default Blender reports
+  Python exceptions but can still exit0! This previously allowed an OLD failed
+  candidate audit after an authoring exception; no such candidate was promoted.
+- New partial audit checks actor/chair/fragment/ropes/floor, plus right wrist
+  anchor drift. Next: get this gate and visual pose correct, then left knife
+  grip/reach, sequential left/right cuts/removal/drop/stand. None authored yet.
+- Review harness now accepts BEFORE_ASSET, AFTER_ASSET, REVIEW_OUT and --postfall
+  for actual native torso/waist/rear closeups; old defaults preserved.
+- npm run build passed (existing bundle warning). Original skill smoke rerun
+  with save API stub at5182; inspect latest outputs/body-postfall/existing-game-smoke.
+- FINAL THIS ITERATION: partial source passes409 dense samples12.25..16.5 s,
+  zero tested actor/chair/fragment/rope crossings and floor>-1mm. Right wrist
+  anchor max drift0.093780mm. Native torso recovery is independent of chair;
+  right wrap now has rotating-forearm/fixed-hitch skinning. Local right-sleeve
+  pressure key (2722 vertices) removes garment/cord crossing without inflating
+  the cord. Source/runtime nine-mesh correspondence max0.017251mm.
+- Durable verified sources: art/intro-tailored-native-fall.blend/.glb and
+  art/intro-left-rail-partial.blend/.glb. NOT full escape. Rejected old partial
+  trajectories are NOT the promoted source. Knife/grip/cuts/drop/stand/runtime
+  adapter remain unfinished; first-person movie is a diagnostic stage, not house.
+- Four actual WebMs recorded, decoded/sought/played and hash checked, with torso/
+  waist/rear/overall screenshots inspected and decoded FP frame inspected. See
+  art/review-evidence/body-postfall/README.md. Capture has occasional frame gaps
+  (max175ms), not claimed to be game FPS. Fracture edge remains simplified.
+- Live Blender appended new scene "100gate | Tailored LEFT rail · partial review"
+  but preserved user's current active WALK mode and old scene; no forced switch.
+- Found two real EBUSY Vite crashes during large art-copy operations (.blend,
+  then.glb). Fixed authoring/evidence directory watcher scope; HTTP serving and
+  TS transforms remain available. Dedicated verify-art-watch.mjs passes for both
+  file types. Encoder files were valid; initial decode fetch failed because
+  devserver crashed. After fix all four actual WebMs decoded/played successfully.
+- This iteration changed no gameplay FSM/player save, no push/deploy. Continue
+  with actual LEFT knife static grip/ergonomic reach, then left cuff first and
+  right restraint second. Do NOT reuse the older right-hand escape instructions.

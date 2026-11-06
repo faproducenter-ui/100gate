@@ -1,0 +1,34 @@
+{
+  "art/intro-tailored-native-fall.blend": {
+    "bytes": 49361054,
+    "sha256": "f302c6b4f82ed591d9c6897c6b7431f074f49619eeb416cfc0e7518e9c5fe77a"
+  },
+  "art/intro-tailored-native-fall.glb": {
+    "bytes": 49740720,
+    "sha256": "85f7a53f73dda754c590295b64a405d028d8a1664252a0a2eee7655a61681d5a"
+  },
+  "art/intro-left-rail-partial.blend": {
+    "bytes": 50236781,
+    "sha256": "4374ad2836ab5dfd2b0014c431e045aa148ca4a8247663dc20eae03fc177d88c"
+  },
+  "art/intro-left-rail-partial.glb": {
+    "bytes": 51110248,
+    "sha256": "a73596ec4c5e2af6356889d2c16523197133193a7601eac7602b8e3a6b66a331"
+  },
+  "art/review-evidence/body-postfall/before-after-1x.webm": {
+    "bytes": 6753734,
+    "sha256": "06dce6fc2b5e5e89b86de82dd3241ab64e5d099351b0babdfbb10b953ad2bc9a"
+  },
+  "art/review-evidence/body-postfall/first-person-1x.webm": {
+    "bytes": 7858020,
+    "sha256": "81606dc6b0a63318b460a6c98a9d1e7d3a48f4904486f802407062e842e1eeb5"
+  },
+  "art/review-evidence/body-postfall/slow-quarter-first-person.webm": {
+    "bytes": 14252769,
+    "sha256": "e4de93ed4545808c1162324d9390b81d668385417b0f8e59de048a8de49edbaf"
+  },
+  "art/review-evidence/body-postfall/slow-quarter-side.webm": {
+    "bytes": 14365333,
+    "sha256": "33d420298cdc3239bfbfa862862b8dc0233518e52b5ed2edfca5f6ed4063c7b7"
+  }
+}

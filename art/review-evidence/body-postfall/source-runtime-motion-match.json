@@ -1,0 +1,483 @@
+{
+  "maxMm": 0.017250733435503207,
+  "limitMm": 1,
+  "passed": true,
+  "frames": [
+    {
+      "frame": 505,
+      "meshes": [
+        {
+          "name": "Alexei | original MakeHuman body",
+          "maxMm": 0.0016129087043736945,
+          "importToSourceMaxMm": 0.0016129087043736945,
+          "sourceToImportMaxMm": 0.0016129087043736945,
+          "meanMm": 0.0002927176339433324
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+          "maxMm": 0.016987010894808918,
+          "importToSourceMaxMm": 0.016987010894808918,
+          "sourceToImportMaxMm": 0.016987010894808918,
+          "meanMm": 0.00028063801741088983
+        },
+        {
+          "name": "Alexei | original MakeHuman body.cortu_cargo_pants",
+          "maxMm": 0.0030931666969991056,
+          "importToSourceMaxMm": 0.0030931666969991056,
+          "sourceToImportMaxMm": 0.0030931666969991056,
+          "meanMm": 0.0002211643936046285
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+          "maxMm": 0.0006385912456607912,
+          "importToSourceMaxMm": 0.0006385912456607912,
+          "sourceToImportMaxMm": 0.0006385912456607912,
+          "meanMm": 0.00037067165986504795
+        },
+        {
+          "name": "Alexei | original MakeHuman body.low-poly",
+          "maxMm": 0.000254740143645904,
+          "importToSourceMaxMm": 0.000254740143645904,
+          "sourceToImportMaxMm": 0.000254740143645904,
+          "meanMm": 0.00010141073436553683
+        },
+        {
+          "name": "Cine | r intact wrist-to-chair rope",
+          "maxMm": 0.00018371385124282824,
+          "importToSourceMaxMm": 0.00018371385124282824,
+          "sourceToImportMaxMm": 0.00018371385124282824,
+          "meanMm": 9.991039948969562e-05
+        },
+        {
+          "name": "Cine | l intact wrist-to-chair rope",
+          "maxMm": 0.00019082797564351495,
+          "importToSourceMaxMm": 0.00019082797564351495,
+          "sourceToImportMaxMm": 0.00019082797564351495,
+          "meanMm": 0.00011703914892321537
+        },
+        {
+          "name": "old-chair",
+          "maxMm": 0.00014600097131278744,
+          "importToSourceMaxMm": 0.00014600097131278744,
+          "sourceToImportMaxMm": 0.00014600097131278744,
+          "meanMm": 6.0961815129208693e-05
+        },
+        {
+          "name": "Left rail | impact fracture fragment",
+          "maxMm": 6.828570064953965e-05,
+          "importToSourceMaxMm": 6.828570064953965e-05,
+          "sourceToImportMaxMm": 6.828570064953965e-05,
+          "meanMm": 4.06868897092257e-05
+        }
+      ]
+    },
+    {
+      "frame": 553,
+      "meshes": [
+        {
+          "name": "Alexei | original MakeHuman body",
+          "maxMm": 0.001494059688411653,
+          "importToSourceMaxMm": 0.001494059688411653,
+          "sourceToImportMaxMm": 0.001494059688411653,
+          "meanMm": 0.00035530552276875807
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+          "maxMm": 0.017250733435503207,
+          "importToSourceMaxMm": 0.017250733435503207,
+          "sourceToImportMaxMm": 0.017250733435503207,
+          "meanMm": 0.0002895615610754057
+        },
+        {
+          "name": "Alexei | original MakeHuman body.cortu_cargo_pants",
+          "maxMm": 0.003459027766439249,
+          "importToSourceMaxMm": 0.003459027766439249,
+          "sourceToImportMaxMm": 0.003459027766439249,
+          "meanMm": 0.0002790047978370189
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+          "maxMm": 0.0005764488264503598,
+          "importToSourceMaxMm": 0.0005764488264503598,
+          "sourceToImportMaxMm": 0.0005764488264503598,
+          "meanMm": 0.0003820534416690666
+        },
+        {
+          "name": "Alexei | original MakeHuman body.low-poly",
+          "maxMm": 0.0005405651677392598,
+          "importToSourceMaxMm": 0.0005405651677392598,
+          "sourceToImportMaxMm": 0.0005405651677392598,
+          "meanMm": 0.00035969293913732753
+        },
+        {
+          "name": "Cine | r intact wrist-to-chair rope",
+          "maxMm": 0.00016049041562382627,
+          "importToSourceMaxMm": 0.00016049041562382627,
+          "sourceToImportMaxMm": 0.00016049041562382627,
+          "meanMm": 9.873432977584137e-05
+        },
+        {
+          "name": "Cine | l intact wrist-to-chair rope",
+          "maxMm": 0.00014600097131278744,
+          "importToSourceMaxMm": 0.00014600097131278744,
+          "sourceToImportMaxMm": 0.00014600097131278744,
+          "meanMm": 8.242401706679524e-05
+        },
+        {
+          "name": "old-chair",
+          "maxMm": 0.00010323827126512697,
+          "importToSourceMaxMm": 0.00010323827126512697,
+          "sourceToImportMaxMm": 0.00010323827126512697,
+          "meanMm": 4.962824036075138e-05
+        },
+        {
+          "name": "Left rail | impact fracture fragment",
+          "maxMm": 8.429369557916289e-05,
+          "importToSourceMaxMm": 8.429369557916289e-05,
+          "sourceToImportMaxMm": 8.429369557916289e-05,
+          "meanMm": 6.053585543952522e-05
+        }
+      ]
+    },
+    {
+      "frame": 565,
+      "meshes": [
+        {
+          "name": "Alexei | original MakeHuman body",
+          "maxMm": 0.0015199914287222782,
+          "importToSourceMaxMm": 0.0015199914287222782,
+          "sourceToImportMaxMm": 0.0015199914287222782,
+          "meanMm": 0.0002990111376537117
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+          "maxMm": 0.017138008843176067,
+          "importToSourceMaxMm": 0.017138008843176067,
+          "sourceToImportMaxMm": 0.017138008843176067,
+          "meanMm": 0.00019803266745040712
+        },
+        {
+          "name": "Alexei | original MakeHuman body.cortu_cargo_pants",
+          "maxMm": 0.002552930254751118,
+          "importToSourceMaxMm": 0.002552930254751118,
+          "sourceToImportMaxMm": 0.002552930254751118,
+          "meanMm": 0.00015411613230213543
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+          "maxMm": 0.0005066942776466021,
+          "importToSourceMaxMm": 0.0005066942776466021,
+          "sourceToImportMaxMm": 0.0005066942776466021,
+          "meanMm": 0.0002748788503746281
+        },
+        {
+          "name": "Alexei | original MakeHuman body.low-poly",
+          "maxMm": 0.0004267043323125108,
+          "importToSourceMaxMm": 0.0004267043323125108,
+          "sourceToImportMaxMm": 0.0004267043323125108,
+          "meanMm": 0.0002419246333632922
+        },
+        {
+          "name": "Cine | r intact wrist-to-chair rope",
+          "maxMm": 0.00014057727071303816,
+          "importToSourceMaxMm": 0.00014057727071303816,
+          "sourceToImportMaxMm": 0.00014057727071303816,
+          "meanMm": 3.74303818200788e-05
+        },
+        {
+          "name": "Cine | l intact wrist-to-chair rope",
+          "maxMm": 0.00018371385124282824,
+          "importToSourceMaxMm": 0.00018371385124282824,
+          "sourceToImportMaxMm": 0.00018371385124282824,
+          "meanMm": 7.977584749345791e-05
+        },
+        {
+          "name": "old-chair",
+          "maxMm": 8.024520781191313e-05,
+          "importToSourceMaxMm": 8.024520781191313e-05,
+          "sourceToImportMaxMm": 8.024520781191313e-05,
+          "meanMm": 2.2254069229414123e-05
+        },
+        {
+          "name": "Left rail | impact fracture fragment",
+          "maxMm": 5.9604644775390625e-05,
+          "importToSourceMaxMm": 5.9604644775390625e-05,
+          "sourceToImportMaxMm": 5.9604644775390625e-05,
+          "meanMm": 1.8212530348036024e-05
+        }
+      ]
+    },
+    {
+      "frame": 589,
+      "meshes": [
+        {
+          "name": "Alexei | original MakeHuman body",
+          "maxMm": 0.001669994048825174,
+          "importToSourceMaxMm": 0.001669994048825174,
+          "sourceToImportMaxMm": 0.001669994048825174,
+          "meanMm": 0.00036685699946314434
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+          "maxMm": 0.016883928765309975,
+          "importToSourceMaxMm": 0.016883928765309975,
+          "sourceToImportMaxMm": 0.016883928765309975,
+          "meanMm": 0.00020706453100314453
+        },
+        {
+          "name": "Alexei | original MakeHuman body.cortu_cargo_pants",
+          "maxMm": 0.002598447963464423,
+          "importToSourceMaxMm": 0.002598447963464423,
+          "sourceToImportMaxMm": 0.002598447963464423,
+          "meanMm": 0.00020014385268712966
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+          "maxMm": 0.0007579478165098408,
+          "importToSourceMaxMm": 0.0007579478165098408,
+          "sourceToImportMaxMm": 0.0007579478165098408,
+          "meanMm": 0.00038360354447309226
+        },
+        {
+          "name": "Alexei | original MakeHuman body.low-poly",
+          "maxMm": 0.0005497296911016747,
+          "importToSourceMaxMm": 0.0005497296911016747,
+          "sourceToImportMaxMm": 0.0005497296911016747,
+          "meanMm": 0.00037066583728299446
+        },
+        {
+          "name": "Cine | r intact wrist-to-chair rope",
+          "maxMm": 0.0003842650926344504,
+          "importToSourceMaxMm": 0.0003842650926344504,
+          "sourceToImportMaxMm": 0.0003842650926344504,
+          "meanMm": 0.00021587461574358377
+        },
+        {
+          "name": "Cine | l intact wrist-to-chair rope",
+          "maxMm": 0.0002230201658903752,
+          "importToSourceMaxMm": 0.0002230201658903752,
+          "sourceToImportMaxMm": 0.0002230201658903752,
+          "meanMm": 8.532314680654334e-05
+        },
+        {
+          "name": "old-chair",
+          "maxMm": 0.0004235705830524239,
+          "importToSourceMaxMm": 0.0004235705830524239,
+          "sourceToImportMaxMm": 0.0004235705830524239,
+          "meanMm": 0.000161466131483697
+        },
+        {
+          "name": "Left rail | impact fracture fragment",
+          "maxMm": 0.000293518837679585,
+          "importToSourceMaxMm": 0.000293518837679585,
+          "sourceToImportMaxMm": 0.000293518837679585,
+          "meanMm": 0.00024274607015841967
+        }
+      ]
+    },
+    {
+      "frame": 601,
+      "meshes": [
+        {
+          "name": "Alexei | original MakeHuman body",
+          "maxMm": 0.0018239319388158037,
+          "importToSourceMaxMm": 0.0018239319388158037,
+          "sourceToImportMaxMm": 0.0018239319388158037,
+          "meanMm": 0.0003629740156823077
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+          "maxMm": 0.01679912384133786,
+          "importToSourceMaxMm": 0.01679912384133786,
+          "sourceToImportMaxMm": 0.01679912384133786,
+          "meanMm": 0.0003507486434319541
+        },
+        {
+          "name": "Alexei | original MakeHuman body.cortu_cargo_pants",
+          "maxMm": 0.0024666260287631303,
+          "importToSourceMaxMm": 0.0024666260287631303,
+          "sourceToImportMaxMm": 0.0024666260287631303,
+          "meanMm": 0.00017719042149953076
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+          "maxMm": 0.000439078831959705,
+          "importToSourceMaxMm": 0.000439078831959705,
+          "sourceToImportMaxMm": 0.000439078831959705,
+          "meanMm": 0.00021474568092267476
+        },
+        {
+          "name": "Alexei | original MakeHuman body.low-poly",
+          "maxMm": 0.00038743019104003906,
+          "importToSourceMaxMm": 0.00038743019104003906,
+          "sourceToImportMaxMm": 0.00038743019104003906,
+          "meanMm": 0.00018867532232865378
+        },
+        {
+          "name": "Cine | r intact wrist-to-chair rope",
+          "maxMm": 0.00030538294026882795,
+          "importToSourceMaxMm": 0.00030538294026882795,
+          "sourceToImportMaxMm": 0.00030538294026882795,
+          "meanMm": 0.0001251943601983547
+        },
+        {
+          "name": "Cine | l intact wrist-to-chair rope",
+          "maxMm": 0.00027807737978946534,
+          "importToSourceMaxMm": 0.00027807737978946534,
+          "sourceToImportMaxMm": 0.00027807737978946534,
+          "meanMm": 0.0001404575641754229
+        },
+        {
+          "name": "old-chair",
+          "maxMm": 0.0007505512371608347,
+          "importToSourceMaxMm": 0.0007505512371608347,
+          "sourceToImportMaxMm": 0.0007505512371608347,
+          "meanMm": 0.0003147799117679521
+        },
+        {
+          "name": "Left rail | impact fracture fragment",
+          "maxMm": 0.0005146836201674887,
+          "importToSourceMaxMm": 0.0005146836201674887,
+          "sourceToImportMaxMm": 0.0005146836201674887,
+          "meanMm": 0.00042320905101354985
+        }
+      ]
+    },
+    {
+      "frame": 649,
+      "meshes": [
+        {
+          "name": "Alexei | original MakeHuman body",
+          "maxMm": 0.002838778755176463,
+          "importToSourceMaxMm": 0.002838778755176463,
+          "sourceToImportMaxMm": 0.002838778755176463,
+          "meanMm": 0.000552496185628084
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+          "maxMm": 0.01706055445538368,
+          "importToSourceMaxMm": 0.01706055445538368,
+          "sourceToImportMaxMm": 0.01706055445538368,
+          "meanMm": 0.00033810009532020575
+        },
+        {
+          "name": "Alexei | original MakeHuman body.cortu_cargo_pants",
+          "maxMm": 0.0026036661893158453,
+          "importToSourceMaxMm": 0.0026036661893158453,
+          "sourceToImportMaxMm": 0.0026036661893158453,
+          "meanMm": 0.00025220443511538314
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+          "maxMm": 0.0005997601419949206,
+          "importToSourceMaxMm": 0.0005997601419949206,
+          "sourceToImportMaxMm": 0.0005997601419949206,
+          "meanMm": 0.00025139344007820753
+        },
+        {
+          "name": "Alexei | original MakeHuman body.low-poly",
+          "maxMm": 0.0008976635399449151,
+          "importToSourceMaxMm": 0.0008976635399449151,
+          "sourceToImportMaxMm": 0.0008976635399449151,
+          "meanMm": 0.0006855927180045759
+        },
+        {
+          "name": "Cine | r intact wrist-to-chair rope",
+          "maxMm": 0.00043597037802101113,
+          "importToSourceMaxMm": 0.00043597037802101113,
+          "sourceToImportMaxMm": 0.00043597037802101113,
+          "meanMm": 0.00027854563180811873
+        },
+        {
+          "name": "Cine | l intact wrist-to-chair rope",
+          "maxMm": 0.00911093593458645,
+          "importToSourceMaxMm": 0.00911093593458645,
+          "sourceToImportMaxMm": 0.00911093593458645,
+          "meanMm": 0.0001436270030348556
+        },
+        {
+          "name": "old-chair",
+          "maxMm": 0.0007505512371608347,
+          "importToSourceMaxMm": 0.0007505512371608347,
+          "sourceToImportMaxMm": 0.0007505512371608347,
+          "meanMm": 0.0003147799117679521
+        },
+        {
+          "name": "Left rail | impact fracture fragment",
+          "maxMm": 0.0005155457074579317,
+          "importToSourceMaxMm": 0.0005155457074579317,
+          "sourceToImportMaxMm": 0.0005155457074579317,
+          "meanMm": 0.00042274569899013333
+        }
+      ]
+    },
+    {
+      "frame": 793,
+      "meshes": [
+        {
+          "name": "Alexei | original MakeHuman body",
+          "maxMm": 0.0025823760552157182,
+          "importToSourceMaxMm": 0.0025823760552157182,
+          "sourceToImportMaxMm": 0.0025823760552157182,
+          "meanMm": 0.0004081418379979066
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+          "maxMm": 0.016622760085738264,
+          "importToSourceMaxMm": 0.016622760085738264,
+          "sourceToImportMaxMm": 0.016622760085738264,
+          "meanMm": 0.00024363269638830352
+        },
+        {
+          "name": "Alexei | original MakeHuman body.cortu_cargo_pants",
+          "maxMm": 0.002474131406415836,
+          "importToSourceMaxMm": 0.002474131406415836,
+          "sourceToImportMaxMm": 0.002474131406415836,
+          "meanMm": 0.00017652255771023027
+        },
+        {
+          "name": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+          "maxMm": 0.0007662153507226321,
+          "importToSourceMaxMm": 0.0007662153507226321,
+          "sourceToImportMaxMm": 0.0007662153507226321,
+          "meanMm": 0.0003661302130584993
+        },
+        {
+          "name": "Alexei | original MakeHuman body.low-poly",
+          "maxMm": 0.0005274674208521901,
+          "importToSourceMaxMm": 0.0005274674208521901,
+          "sourceToImportMaxMm": 0.0005274674208521901,
+          "meanMm": 0.00032768360765563404
+        },
+        {
+          "name": "Cine | r intact wrist-to-chair rope",
+          "maxMm": 0.006907584520376986,
+          "importToSourceMaxMm": 0.006907584520376986,
+          "sourceToImportMaxMm": 0.006907584520376986,
+          "meanMm": 9.56704385017939e-05
+        },
+        {
+          "name": "Cine | l intact wrist-to-chair rope",
+          "maxMm": 0.008900035936676431,
+          "importToSourceMaxMm": 0.008900035936676431,
+          "sourceToImportMaxMm": 0.008900035936676431,
+          "meanMm": 0.0002657959054984718
+        },
+        {
+          "name": "old-chair",
+          "maxMm": 0.0007505512371608347,
+          "importToSourceMaxMm": 0.0007505512371608347,
+          "sourceToImportMaxMm": 0.0007505512371608347,
+          "meanMm": 0.0003147799117679521
+        },
+        {
+          "name": "Left rail | impact fracture fragment",
+          "maxMm": 0.0005213277063376154,
+          "importToSourceMaxMm": 0.0005213277063376154,
+          "sourceToImportMaxMm": 0.0005213277063376154,
+          "meanMm": 0.0004235353677649477
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "source": "C:\\Users\\libde\\Documents\\Codex\\2026-11-02\\new-chat\\work\\100gate\\art\\intro-rock-fall-continuous.blend",
+  "vertices": 33497,
+  "uvSha256": "19d4909842186b8abce0bef8c9bc43788a3e748eb99094ba51d6fc7c259be04f",
+  "thoracicWeightCorrections": 3906,
+  "materialNames": [
+    "Runtime | Alexei | original MakeHuman body.toigo_fisherman_swea"
+  ],
+  "maxChangeVsOldMm": 44.79085038729962,
+  "correction": "pose-space native male fit; no actor bone/mesh/UV replacement"
+}

@@ -1,0 +1,65 @@
+{
+  "scope": "Tailored sweater and left rail partial release ONLY; knife/cuts NOT authored",
+  "results": [
+    {
+      "name": "before-after-1x",
+      "sourceRate": 1,
+      "sha256": "06dce6fc2b5e5e89b86de82dd3241ab64e5d099351b0babdfbb10b953ad2bc9a",
+      "duration": 12.566,
+      "width": 1280,
+      "height": 1440,
+      "audioPeak": 0.29401981830596924,
+      "audioRms": 0.012837937468148352,
+      "play": {
+        "wallSeconds": 12.64529999999702,
+        "playbackRate": 1,
+        "decodedFrames": 568
+      }
+    },
+    {
+      "name": "first-person-1x",
+      "sourceRate": 1,
+      "sha256": "81606dc6b0a63318b460a6c98a9d1e7d3a48f4904486f802407062e842e1eeb5",
+      "duration": 12.515,
+      "width": 1280,
+      "height": 720,
+      "audioPeak": 0.2927187979221344,
+      "audioRms": 0.014866996077644608,
+      "play": {
+        "wallSeconds": 12.64089999999851,
+        "playbackRate": 1,
+        "decodedFrames": 542
+      }
+    },
+    {
+      "name": "slow-quarter-side",
+      "sourceRate": 0.25,
+      "sha256": "33d420298cdc3239bfbfa862862b8dc0233518e52b5ed2edfca5f6ed4063c7b7",
+      "duration": 24.036,
+      "width": 1280,
+      "height": 720,
+      "audioPeak": null,
+      "audioRms": null,
+      "play": {
+        "wallSeconds": 24.10459999999404,
+        "playbackRate": 1,
+        "decodedFrames": 676
+      }
+    },
+    {
+      "name": "slow-quarter-first-person",
+      "sourceRate": 0.25,
+      "sha256": "e4de93ed4545808c1162324d9390b81d668385417b0f8e59de048a8de49edbaf",
+      "duration": 23.967,
+      "width": 1280,
+      "height": 720,
+      "audioPeak": null,
+      "audioRms": null,
+      "play": {
+        "wallSeconds": 24.03389999999851,
+        "playbackRate": 1,
+        "decodedFrames": 907
+      }
+    }
+  ]
+}
