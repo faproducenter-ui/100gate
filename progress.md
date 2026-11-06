@@ -355,7 +355,8 @@ Original prompt: Refine the existing 100gate Three.js horror game autonomously i
 - Durable source: art/intro-complete-native.blend; actual runtime GLB is in
   public/assets/chapter1/intro-native-v2.glb. Actual full silent page WebM and
   reports/screenshots are in art/review-evidence/complete-intro/. Decoded actual
-  WebM played1x with zero dropped frames in the inspection run; this is NOT an
+  WebM played1x (2 dropped decoded frames out of2080 in the final inspection);
+  this is NOT an
   FPS claim or proof of an audio mix. Foley bank/event checks are separate.
 - Blender GUI now opens the complete editable art source at29s, first pane
   cinematic camera and another overview where available. Previous unsaved GUI
