@@ -2,7 +2,7 @@
 import bpy
 from pathlib import Path
 s=bpy.context.scene;s.frame_set(1)
-assert s.get('bound_performance_partial'),'Wrong source; do not export a static gate as motion'
+assert s.get('bound_performance_partial') or s.get('complete_native_intro'),'Wrong source; do not export a static gate as motion'
 bpy.ops.object.select_all(action='DESELECT')
 for obj in s.objects:
     if obj.type=='LIGHT' or obj.get('authoring_archive'):continue

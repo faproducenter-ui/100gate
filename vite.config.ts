@@ -12,7 +12,7 @@ export default defineConfig({
     // Blender and evidence writers lock large binary files on Windows. These
     // are not source modules: watching them caused an EBUSY dev-server crash.
     // They remain available via HTTP; refresh asset review pages after export.
-    watch: { ignored: ['**/*.blend', '**/*.blend[0-9]*', '**/outputs/**', '**/art/**'] },
+    watch: { ignored: ['**/*.blend', '**/*.blend[0-9]*', '**/*.glb', '**/outputs/**', '**/art/**'] },
   },
   resolve: {
     alias: {

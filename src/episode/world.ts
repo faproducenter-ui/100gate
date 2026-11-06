@@ -25,7 +25,7 @@ export interface Target {
 }
 export const PLAYER_MODELS=['gear-flashlight','gear-brass-key','player-hand-open','player-hand-grip','player-boot','player-trouser','player-sleeve','player-torso','player-upper-shadow'] as const;
 export type PlayerModelId=typeof PLAYER_MODELS[number];
-export interface House { targets: Target[]; colliders: Collider[]; headroom:Headroom; roots: T.Object3D[]; dust: T.Points; lamp: T.PointLight; hatch: Target; boundChair:T.Group; seatLocal:T.Box3; seatBounds:T.Box3; glow: T.PointLight; weather:ReturnType<typeof createWeather>; model:(id:PlayerModelId)=>T.Group; intro:Awaited<ReturnType<GLTFLoader['loadAsync']>>; }
+export interface House { targets: Target[]; colliders: Collider[]; headroom:Headroom; roots: T.Object3D[]; dust: T.Points; lamp: T.PointLight; hatch: Target; boundChair:T.Group; seatLocal:T.Box3; seatBounds:T.Box3; glow: T.PointLight; weather:ReturnType<typeof createWeather>; model:(id:PlayerModelId)=>T.Group; intro:Awaited<ReturnType<GLTFLoader['loadAsync']>>; nativeIntro:Awaited<ReturnType<GLTFLoader['loadAsync']>>; }
 export async function createHouse(scene: T.Scene, save: Save, progress: (n: number) => void): Promise<House> {
   const roots: T.Object3D[] = []; const targets: Target[] = []; const colliders: Collider[] = [];
   const overheads:T.Mesh[]=[];
@@ -39,11 +39,12 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
   let done=0;
   const modelNames=['old-chair','writing-desk','hall-wardrobe','paper-note','canvas-satchel','yard-bench','yard-fir','yard-pine','wood-crate','workshop-exterior','coopers-barrel',...PLAYER_MODELS] as const;
   const gltf=new GLTFLoader();
-  const mark=()=>progress(++done/(names.length+modelNames.length+2));
-  const [maps,models,intro] = await Promise.all([
+  const mark=()=>progress(++done/(names.length+modelNames.length+3));
+  const [maps,models,intro,nativeIntro] = await Promise.all([
     Promise.all(names.map(async f=>{const texture=await load(f+'.jpg');mark();return texture;})),
     Promise.all(modelNames.map(async name=>{const dir=name==='coopers-barrel'?'':'chapter1/';const asset=await gltf.loadAsync(chapterAsset(`assets/${dir}${name}.glb`));mark();return asset.scene;})),
     gltf.loadAsync(chapterAsset('assets/chapter1/intro-escape.glb')).then(asset=>{mark();return asset;}),
+    gltf.loadAsync(chapterAsset('assets/chapter1/intro-native-v2.glb')).then(asset=>{mark();return asset;}),
   ]);
   for(const i of [0,3,6,8])maps[i].colorSpace=T.SRGBColorSpace;
   maps[8].repeat.set(44,44);maps[9].repeat.set(44,44);
@@ -311,5 +312,5 @@ export async function createHouse(scene: T.Scene, save: Save, progress: (n: numb
     const mesh=new T.Mesh(combined,batch[0].material);mesh.castShadow=mesh.receiveShadow=true;
     scene.add(mesh);for(const o of batch){o.geometry.dispose();o.removeFromParent();}
   }
-  progress(1);return {targets,colliders,headroom,roots,dust,lamp,hatch,boundChair,seatLocal,seatBounds,glow,weather,model,intro};
+  progress(1);return {targets,colliders,headroom,roots,dust,lamp,hatch,boundChair,seatLocal,seatBounds,glow,weather,model,intro,nativeIntro};
 }

@@ -1,0 +1,198 @@
+{
+  "desktop": {
+    "checkpoint": {
+      "stage": "LEFT_ROPE_CUT",
+      "time": 23.999999999999886,
+      "waitingForKnife": false,
+      "leftWrapped": true,
+      "rightBound": true,
+      "knifeAttached": true,
+      "ropeDropped": false,
+      "normal": false,
+      "leftDraw": 0.1754075397859967,
+      "rightDraw": 0,
+      "contactLocal": {
+        "left": [
+          0.009999728798209206,
+          0.11500017046389877,
+          7.246829536455834e-8
+        ],
+        "right": [
+          0.20542165893712983,
+          -0.48614503246523766,
+          0.04622350839588485
+        ]
+      }
+    },
+    "restored": {
+      "stage": "LEFT_ROPE_CUT",
+      "time": 23.999999999999886,
+      "waitingForKnife": false,
+      "leftWrapped": true,
+      "rightBound": true,
+      "knifeAttached": true,
+      "ropeDropped": false,
+      "normal": false,
+      "leftDraw": 0.1754075397859967,
+      "rightDraw": 0,
+      "contactLocal": {
+        "left": [
+          0.009999728798209206,
+          0.11500017046389877,
+          7.246829536455834e-8
+        ],
+        "right": [
+          0.20542165893712983,
+          -0.48614503246523766,
+          0.04622350839588485
+        ]
+      }
+    },
+    "final": {
+      "coordinates": "metres; Y up; yaw=0 faces -Z",
+      "mode": "playing",
+      "position": [
+        0.4200000194071894,
+        3.6,
+        3.4328174497603583
+      ],
+      "grounded": true,
+      "objective": "Найди фонарь и ключ. Отопри люк клавишей E и открой клавишей G.",
+      "hold": 0,
+      "flags": [
+        "chairTipped",
+        "intro:knifePickup",
+        "intro:leftCut",
+        "intro:rightCut",
+        "intro:knifeSetDown",
+        "intro:ropeDrop",
+        "free",
+        "introCompleteV2"
+      ],
+      "items": [],
+      "intro": {
+        "stage": "NORMAL_GAMEPLAY",
+        "time": 42,
+        "waitingForKnife": false,
+        "leftWrapped": false,
+        "rightBound": false,
+        "knifeAttached": false,
+        "ropeDropped": true,
+        "normal": true,
+        "leftDraw": 0.5618225344712614,
+        "rightDraw": 0.5122956403174084,
+        "contactLocal": {
+          "left": [
+            0.9320865849626832,
+            -0.5538176581059314,
+            -0.02720026327148161
+          ],
+          "right": [
+            0.609553850427875,
+            -0.5606430204886704,
+            -0.09668844728304113
+          ]
+        }
+      }
+    },
+    "errors": []
+  },
+  "mobile": {
+    "checkpoint": {
+      "stage": "LEFT_ROPE_CUT",
+      "time": 23.999999999999886,
+      "waitingForKnife": false,
+      "leftWrapped": true,
+      "rightBound": true,
+      "knifeAttached": true,
+      "ropeDropped": false,
+      "normal": false,
+      "leftDraw": 0.1754075397859967,
+      "rightDraw": 0,
+      "contactLocal": {
+        "left": [
+          0.009999728798209206,
+          0.11500017046389877,
+          7.246829536455834e-8
+        ],
+        "right": [
+          0.20542165893712983,
+          -0.48614503246523766,
+          0.04622350839588485
+        ]
+      }
+    },
+    "restored": {
+      "stage": "LEFT_ROPE_CUT",
+      "time": 23.999999999999886,
+      "waitingForKnife": false,
+      "leftWrapped": true,
+      "rightBound": true,
+      "knifeAttached": true,
+      "ropeDropped": false,
+      "normal": false,
+      "leftDraw": 0.1754075397859967,
+      "rightDraw": 0,
+      "contactLocal": {
+        "left": [
+          0.009999728798209206,
+          0.11500017046389877,
+          7.246829536455834e-8
+        ],
+        "right": [
+          0.20542165893712983,
+          -0.48614503246523766,
+          0.04622350839588485
+        ]
+      }
+    },
+    "final": {
+      "coordinates": "metres; Y up; yaw=0 faces -Z",
+      "mode": "playing",
+      "position": [
+        0.4200000194071894,
+        3.6,
+        3.4328174497603583
+      ],
+      "grounded": true,
+      "objective": "Найди фонарь и ключ. Отопри люк клавишей E и открой клавишей G.",
+      "hold": 0,
+      "flags": [
+        "chairTipped",
+        "intro:knifePickup",
+        "intro:leftCut",
+        "intro:rightCut",
+        "intro:knifeSetDown",
+        "intro:ropeDrop",
+        "free",
+        "introCompleteV2"
+      ],
+      "items": [],
+      "intro": {
+        "stage": "NORMAL_GAMEPLAY",
+        "time": 42,
+        "waitingForKnife": false,
+        "leftWrapped": false,
+        "rightBound": false,
+        "knifeAttached": false,
+        "ropeDropped": true,
+        "normal": true,
+        "leftDraw": 0.5618225344712614,
+        "rightDraw": 0.5122956403174084,
+        "contactLocal": {
+          "left": [
+            0.9320865849626832,
+            -0.5538176581059314,
+            -0.02720026327148161
+          ],
+          "right": [
+            0.609553850427875,
+            -0.5606430204886704,
+            -0.09668844728304113
+          ]
+        }
+      }
+    },
+    "errors": []
+  }
+}

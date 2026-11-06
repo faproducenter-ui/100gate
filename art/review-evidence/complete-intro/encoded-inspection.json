@@ -1,0 +1,30 @@
+{
+  "sha256": "4b6e6e5b0f60465a4c3d06f366853a00b8dc909e4e45523b6bfe4c2cda861bd9",
+  "bytes": 15087889,
+  "duration": 55.28,
+  "width": 1280,
+  "height": 720,
+  "playback": {
+    "wallSeconds": 55.72230000000074,
+    "playbackRate": 1,
+    "decodedFrames": 2080,
+    "droppedFrames": 2
+  },
+  "moments": [
+    11.280000000000001,
+    21.28,
+    27.28,
+    30.78,
+    35.08,
+    37.08,
+    39.08,
+    40.28,
+    41.88,
+    44.08,
+    46.28,
+    49.28,
+    52.78
+  ],
+  "audioRecorded": false,
+  "note": "Actual Playwright page capture; silent. Sound-event assertions are in report.json. Visual acceptance is separate from geometry tests."
+}

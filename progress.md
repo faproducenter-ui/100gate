@@ -287,3 +287,82 @@ Original prompt: Refine the existing 100gate Three.js horror game autonomously i
 - This iteration changed no gameplay FSM/player save, no push/deploy. Continue
   with actual LEFT knife static grip/ergonomic reach, then left cuff first and
   right restraint second. Do NOT reuse the older right-hand escape instructions.
+
+## 2026-11-07 — COMPLETE INTRO implementation in progress (not deployable yet)
+- Latest 64ea8ec8 request is to FINISH ALL stages and integrate into the game,
+  not polish sweater/fracture. User explicitly permits preview push/deploy ONLY
+  after complete playable/validated scene; no production changes/force push.
+- Rollback branch backup/complete-intro-start-ec9e83d. src/episode/native-intro.ts
+  now provides real 42-second NativeIntro AnimationMixer + independent IntroFlow:
+  R rocking, automatic fall/break, E pickup, R left/right cuts, auto removal/drop/
+  stand, normal controls. World loads public/assets/chapter1/intro-native-v2.glb.
+  Runtime uses native eye camera, dynamic chair/fragment collision boxes, same
+  save API, legacy save migration and version2 active-clock checkpoint. Old
+  EscapeRig remains hidden for inventory-knife compatibility, not played.
+- First real-control browser prototype completed ALL11 stages through walking,
+  pause and final save; actual uninterrupted page WebM in outputs/complete-intro/
+  game-test. Not final visual acceptance: subsequent strict tests found issues.
+- scripts/art/author_complete_intro.py extends original native body/53-bone rig,
+  mirrors repaired native right-hand FK/weights to LEFT (no new human mesh),
+  adds actual duplicated/capped rope cut seams and exported contact markers.
+  External left load-bearing tail is the cut target, not the knife wrist itself.
+- Actual floor/hand audit exposed thumb mid-close penetration, floor crossings
+  of sleeve/rope, and leg/chair contact in supported rise. Source fixes in progress:
+  staged thumb opposition, raised blade-supported floor pose, free-wood Hitch
+  floor support, open fingers only AFTER putting knife down, push chair away with
+  heel before kneeling. No geometry gate was disabled; no publication performed.
+- Strict runtime draw gate initially stalled: Blender knife-local Z is glTF-local
+  Y (not Z). Corrected contact measurement axis using actual debug marker coords.
+  Requires >=10cm working-edge draw before either cut event; saved draw progress.
+- Current author/audit running: inspect outputs/complete-intro/author.log and
+  geometry.log; FIRST UNFINISHED requirement is those actual geometry gates and
+  final full real-control regression. Public GLB may still be previous candidate;
+  compare/re-export exact successful source before any acceptance/deploy.
+- Use --python-exit-code1 and stop on failure; never audit an old file after a
+  failed author. Runtime sources currently pass npm run check. Do not deploy yet.
+- Blender GUI opened via blender-launcher.exe on art/intro-left-rail-partial.blend,
+  MCP running localhost9876, user can see source. Append complete draft safely,
+  preserving user scenes; no overwrite of the old source.
+
+## 2026-11-07 — Complete playable native intro / preview candidate
+- Finished the actual42s sequence: R rocking, fall/left fracture, LEFT reach and
+  native five-finger grip, external left tail cut, upright right standing-part
+  cut, knife putdown, sequential wrap removal/drop, supported rise and existing
+  FPS control. Runtime requires measured blade-edge draw before cut events.
+- Corrected own-forearm/handle and right-thumb path penetration using evaluated
+  native meshes; staged an outboard way point and floor-putdown elbow recovery.
+  Corrected thigh/chair crossings by retracting the heel before the rise.
+  Loose wraps now settle on the floor rather than rotating through it.
+- Dense Blender source gates pass157 poses and79 actual hand/knife samples.
+  Runtime exported contact axes are Y-up; both cuts require>=10cm edge draw.
+- Literal eye coverage of rear wrists exposed own face/collar. Removed a failed
+  head-hiding experiment; retain the complete human mesh. Final camera uses
+  explicit cinematic close-ups with35deg FOV and smooth eye-view bookends.
+  Camera-only pass preserves non-camera geometry/action signatures.
+- Real-control, uninterrupted game video passes all11 states and normal walking,
+  pause and completed save. Desktop/mobile checkpoints restore time/draw, cannot
+  duplicate the knife, and allow pickup of the knife left on the floor. Test
+  aim needs advanceTime(17), not advanceTime(0), which only renders old transforms.
+- Complete house progression and iPhone13/Pixel7 Chromium touch checks pass.
+  Original develop-web-game client rerun and actual screenshot inspected.
+  Production Vite build and UI-only R/E/full intro/pause/reload test pass with no
+  development probes, no JS/HTTP errors or remote save calls. Release hashes,
+  including native GLB, match local served production build at5183.
+- Added async native render prewarming under loading. Cold first-game-frame
+  spikes still measured (~1.77s on this instrumented Intel UHD capture): do NOT
+  claim stable60FPS or that prewarming removed all stalls. Later frame times
+  and draw-call counts are recorded per stage, including camera-orbit spikes.
+- Durable source: art/intro-complete-native.blend; actual runtime GLB is in
+  public/assets/chapter1/intro-native-v2.glb. Actual full silent page WebM and
+  reports/screenshots are in art/review-evidence/complete-intro/. Decoded actual
+  WebM played1x with zero dropped frames in the inspection run; this is NOT an
+  FPS claim or proof of an audio mix. Foley bank/event checks are separate.
+- Blender GUI now opens the complete editable art source at29s, first pane
+  cinematic camera and another overview where available. Previous unsaved GUI
+  state preserved as outputs/complete-intro/ui-review-before-final-source.blend.
+- Known remaining: sweater body poke-through, facial performance, supported-rise
+  weight transfer, cord dynamics and cinematic timing; not artistic final.
+- User's latest attached request explicitly permits push/preview AFTER full
+  playable validation. Production Railway game watches main (verified read-only);
+  feature branch push will not modify it. Use a NEW isolated preview project,
+  no production domain/backend/Postgres changes. Publication pending below.

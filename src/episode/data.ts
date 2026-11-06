@@ -40,6 +40,7 @@ export const DOCUMENTS: Record<string, { title: [string, string]; body: [string,
 export interface Settings { language: Lang; quality: 'low' | 'medium' | 'high'; volume: number; sensitivity: number; headBob: boolean; cameraMotion:number; weather:'rain'|'snow'; }
 export const DEFAULT_SETTINGS: Settings = { language: 'ru', quality: 'high', volume: .65, sensitivity: 1, headBob: false, cameraMotion:1, weather:'rain' };
 export interface Save {
+  intro?: {version:2;time:number;leftDraw?:number;rightDraw?:number};
   version: 1; flags: string[]; items: string[]; read: string[]; doors: string[]; moved: string[];
   position: [number, number, number]; yaw: number; pitch: number; room: number; updatedAt: string;
 }

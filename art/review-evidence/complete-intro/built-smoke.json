@@ -1,0 +1,44 @@
+{
+  "base": "http://127.0.0.1:5183",
+  "errors": [],
+  "http": [],
+  "checks": [
+    "Production guard: no development shortcuts",
+    "Full native intro with real R/E input",
+    "Pause/resume",
+    "Completed intro survives reload"
+  ],
+  "save": {
+    "version": 1,
+    "flags": [
+      "chairTipped",
+      "intro:knifePickup",
+      "intro:leftCut",
+      "intro:rightCut",
+      "intro:knifeSetDown",
+      "intro:ropeDrop",
+      "free",
+      "introCompleteV2"
+    ],
+    "items": [],
+    "read": [],
+    "doors": [],
+    "moved": [],
+    "position": [
+      0.42000001940719217,
+      3.6,
+      4.459589539969947
+    ],
+    "yaw": -3.1415926535897913,
+    "pitch": 2.8806943420930128e-8,
+    "room": 0,
+    "updatedAt": "2026-11-06T23:50:49.387Z",
+    "intro": {
+      "version": 2,
+      "time": 42,
+      "leftDraw": 0.5564526359173205,
+      "rightDraw": 0.5147254972296582
+    }
+  },
+  "passed": true
+}

@@ -12,17 +12,17 @@ await page.route('**/api/save',r=>r.fulfill({status:200,json:{ok:true}}));
 await page.addInitScript(()=>localStorage.setItem('100gate.settings.v1',JSON.stringify({quality:'low'})));
 page.on('pageerror',e=>errors.push(String(e)));page.on('response',r=>{if(r.status()>=400)console.log('HTTP '+r.status()+' '+r.url());});
 const state=()=>page.evaluate(()=>window.__episodeTest.state());
-const waitFlag=flag=>page.waitForFunction(flag=>window.__episodeTest.state().save.flags.includes(flag),flag,{timeout:18000});
+const waitFlag=flag=>page.waitForFunction(flag=>window.__episodeTest.state().save.flags.includes(flag),flag,{timeout:40000});
 async function hold(code,flag){await page.keyboard.down(code);try{await waitFlag(flag);}finally{await page.keyboard.up(code);}}
 async function pose(x,y,z,yaw=0,pitch=0){await page.evaluate(args=>window.__episodeTest.pose(...args),[x,y,z,yaw,pitch]);await page.waitForTimeout(150);}
 async function aim(id){await page.evaluate(id=>window.__episodeTest.aim(id),id);await page.waitForTimeout(250);await page.waitForFunction(id=>window.__episodeTest.state().target===id,id,{timeout:18000});}
 async function take(id,x,y,z){await pose(x,y,z);await aim(id);await page.keyboard.press('KeyE');assert((await state()).save.items.includes(id),'item '+id);pass('take '+id);}
 try{
-  await page.goto('http://127.0.0.1:3000/');await page.waitForFunction(()=>window.__episodeTest?.state().mode==='title',null,{timeout:60000});
+  await page.goto(process.env.GAME_URL??'http://127.0.0.1:3000/');await page.waitForFunction(()=>window.__episodeTest?.state().mode==='title',null,{timeout:180000});
   pass('title renders');
   await page.getByTestId('start').click();await page.waitForTimeout(300);assert.equal((await state()).mode,'playing');
-  await hold('KeyR','chairTipped');await page.waitForFunction(()=>window.__episodeTest.introView().slip>=.8);
-  await page.keyboard.press('KeyE');await page.waitForFunction(()=>window.__episodeTest.state().save.items.includes('knife')&&window.__episodeTest.introView().pickup<0);
+  await hold('KeyR','chairTipped');await page.waitForFunction(()=>window.__episodeTest.introView().waitingForKnife);
+  await page.keyboard.press('KeyE');await page.waitForFunction(()=>window.__episodeTest.state().save.items.includes('knife')&&window.__episodeTest.introView().time>=22);
   await hold('KeyR','free');pass('chair, knife and ropes sequence');
   await pose(0,3.6,0);await page.keyboard.down('KeyW');try{await page.waitForFunction(()=>window.__episodeTest.state().position[2]<-.15,null,{timeout:8000});}finally{await page.keyboard.up('KeyW');}pass('W moves forward');
   const before=(await state()).position;await page.keyboard.down('KeyD');try{await page.waitForFunction(x=>window.__episodeTest.state().position[0]>x+.1,before[0],{timeout:8000});}finally{await page.keyboard.up('KeyD');}pass('D moves right');

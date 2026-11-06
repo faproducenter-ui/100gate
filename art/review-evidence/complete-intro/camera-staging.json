@@ -1,0 +1,8 @@
+{
+  "inputSha256": "8ccf3ecc4720f9d403ecb78e45789e024fda37bdd49b447fc534dad2fec1f262",
+  "outputSha256": "b9ff146b7d30447529491d489b5e78fe79ef13e47cfbfebaa749e0f9a3768c9f",
+  "nonCameraGeometryAndActionsBefore": "6a05a71528f523a613e89ee0bda524a3b13960c9321f0071edc1cdc3623a8887",
+  "nonCameraGeometryAndActionsAfter": "6a05a71528f523a613e89ee0bda524a3b13960c9321f0071edc1cdc3623a8887",
+  "unchanged": true,
+  "cameraStyle": "first-person bookends; explicit cinematic restraint close-ups"
+}

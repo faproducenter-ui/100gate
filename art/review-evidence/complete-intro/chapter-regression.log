@@ -1,0 +1,25 @@
+PASS title renders
+PASS chair, knife and ropes sequence
+PASS W moves forward
+PASS D moves right
+PASS jump and landing
+PASS F document, ESC pause and resume document
+PASS pause freezes movement
+PASS take flashlight
+PASS take hatchKey
+PASS E unlock and G open hatch are distinct
+PASS continuous stair descent
+PASS hold R moves cabinet
+PASS take studyKey
+PASS study door uses matching key
+PASS take bedroomKey
+PASS take veraKey
+PASS take exitKey
+PASS take fuse
+PASS kitchen fuse restores power
+PASS hidden alarm panel releases exit
+PASS chapter ending is reachable
+PASS save survives reload
+PASS no uncaught JavaScript errors
+PASS iPhone 13
+PASS Pixel 7

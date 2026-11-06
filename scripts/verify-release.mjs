@@ -30,6 +30,7 @@ for(const file of [
   'assets/chapter1/player-trouser.glb',
   'assets/chapter1/player-torso.glb',
   'assets/chapter1/foley-bank.wav',
+  'assets/chapter1/intro-native-v2.glb',
 ]){
   const expected=digest(await readFile(resolve(dist,file)));
   const live=digest(Buffer.from(await (await get(file)).arrayBuffer()));

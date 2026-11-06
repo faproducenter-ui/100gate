@@ -12,7 +12,7 @@ from mathutils.bvhtree import BVHTree
 
 DIGITS=('thumb','index','middle','ring','pinky')
 
-def snapshot(body, rig, knife):
+def snapshot(body, rig, knife,side='r'):
     bpy.context.view_layer.update()
     deps=bpy.context.evaluated_depsgraph_get()
     ev=body.evaluated_get(deps)
@@ -25,8 +25,8 @@ def snapshot(body, rig, knife):
     for v in mesh.vertices:
         weights=[(g.weight,groups[g.group]) for g in v.groups if g.group in groups]
         _,name=max(weights,default=(0,''))
-        digit=next((d for d in DIGITS if name.startswith(d+'_') and name.endswith('_r')),None)
-        label=digit or ('palm' if name=='hand_r' else None)
+        digit=next((d for d in DIGITS if name.startswith(d+'_') and name.endswith('_'+side)),None)
+        label=digit or ('palm' if name=='hand_'+side else None)
         labels.append(label)
         if label:members[label].append(v.index)
     tris=[tuple(t.vertices) for t in mesh.loop_triangles]
@@ -89,8 +89,8 @@ class KnifeSurface:
             if inside and -distance<deepest:deepest=-distance;which=name
         return (deepest if deepest<0 else closest),which,ambiguous
 
-def audit(body,rig,knife,intersections=True):
-    points,tris,labels,members=snapshot(body,rig,knife)
+def audit(body,rig,knife,intersections=True,side='r'):
+    points,tris,labels,members=snapshot(body,rig,knife,side)
     surface=KnifeSurface(knife)
     return audit_arrays(points,tris,labels,surface,intersections)
 
