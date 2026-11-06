@@ -1,0 +1,26 @@
+{
+  "art/intro-rock-fall-continuous.blend": {
+    "bytes": 48993606,
+    "sha256": "83197c13c5ae632da77426842fcf78216167770f0c9f6e9279185296188857fd"
+  },
+  "art/intro-rock-fall-continuous.glb": {
+    "bytes": 48790788,
+    "sha256": "3953007dc6444b18a7a6fb5c9bc69e3bf36a73116261366871b72670db2ed78c"
+  },
+  "art/review-evidence/rock-fall-continuity/before-after-1x.webm": {
+    "bytes": 6624509,
+    "sha256": "acb3752bff027284aba4b1775b70097dfc969e1c3303a44d591c0b225275941b"
+  },
+  "art/review-evidence/rock-fall-continuity/first-person-1x.webm": {
+    "bytes": 7452615,
+    "sha256": "ff3f094cfaa2b879356839b0aea32d2359eaac036ffb8d3d4585c1347a2b0087"
+  },
+  "art/review-evidence/rock-fall-continuity/slow-quarter-first-person.webm": {
+    "bytes": 12099194,
+    "sha256": "c44439f5697a541d1a4fce949067ade7fb198f4463c407ab3c3e225b2c1fc07b"
+  },
+  "art/review-evidence/rock-fall-continuity/slow-quarter-side.webm": {
+    "bytes": 5326116,
+    "sha256": "3632bf3225631225b9ef7850a311d8119cfce395646b1e1edbbb37826c738823"
+  }
+}

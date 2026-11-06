@@ -64,6 +64,7 @@ export class Episode {
       if(Number.isFinite(s.volume))this.settings.volume=T.MathUtils.clamp(s.volume!,0,1);
       if(Number.isFinite(s.sensitivity))this.settings.sensitivity=T.MathUtils.clamp(s.sensitivity!,.2,2);
       if(typeof s.headBob==='boolean')this.settings.headBob=s.headBob;
+      if(typeof s.cameraMotion==='number'&&Number.isFinite(s.cameraMotion))this.settings.cameraMotion=T.MathUtils.clamp(s.cameraMotion,0,1);
       if(s.weather==='rain'||s.weather==='snow')this.settings.weather=s.weather;
     }
     this.position.fromArray(this.save.position);this.yaw=this.save.yaw;this.pitch=this.save.pitch;
@@ -530,7 +531,7 @@ export class Episode {
       this.actorHeight=height;
       this.motionDebt=Math.min(.25,this.motionDebt+dt);
       while(this.motionDebt+1e-9>=1/120){this.stepMotion(1/120,crouch,run);this.motionDebt=Math.max(0,this.motionDebt-1/120);}
-      const bob=this.settings.headBob&&this.grounded?Math.sin(this.elapsed*(run?19:13))*.018*Math.min(1,Math.hypot(this.position.x-beforeX,this.position.z-beforeZ)/dt):0;
+      const bob=this.settings.headBob&&this.grounded?Math.sin(this.elapsed*(run?19:13))*.018*this.settings.cameraMotion*Math.min(1,Math.hypot(this.position.x-beforeX,this.position.z-beforeZ)/dt):0;
       const targetY=this.position.y+height+bob;
       const safeEye=this.house.headroom.heightAt(this.position.x,this.position.z,this.position.y)-HEAD_MARGIN;
       this.camera.position.set(this.position.x,Math.min(safeEye,T.MathUtils.damp(this.camera.position.y,targetY,14,dt)),this.position.z);
@@ -540,8 +541,8 @@ export class Episode {
     }else{
       const slide=ease(Math.max(0,this.escapeSlip)/SLIP),rise=ease(Math.max(0,this.escapeRise)/RISE);
       const lean=this.escapePickup>=0?Math.sin(Math.PI*this.escapePickup)**2:0;
-      this.camera.position.set(.20*slide+.30*rise+chairRock*.11+.12*lean,4.77-.23*slide+.74*rise-.16*lean,2.8-.65*slide-.15*rise-.14*lean);
-      this.camera.rotation.z=chairRock*.68-.12*slide*(1-rise);
+      this.camera.position.set(.20*slide+.30*rise+this.settings.cameraMotion*(chairRock*.11+.12*lean),4.77-.23*slide+.74*rise-this.settings.cameraMotion*.16*lean,2.8-.65*slide-.15*rise-this.settings.cameraMotion*.14*lean);
+      this.camera.rotation.z=this.settings.cameraMotion*(chairRock*.68-.12*slide*(1-rise));
     }
     if(this.flag('free'))this.camera.rotation.z=T.MathUtils.damp(this.camera.rotation.z,0,8,dt);
     if(this.flag('free')){this.camera.rotation.y=this.yaw;this.camera.rotation.x=this.pitch;}

@@ -196,3 +196,32 @@ Original prompt: Refine the existing 100gate Three.js horror game autonomously i
   ergonomically before reach, do not stretch/scale the human arm or teleport.
 - No src/public change or native intro integration yet. No push/deploy: user's
   condition is to publish only AFTER the ENTIRE sequence is playable.
+
+## 2026-11-06 — Continuous rocking-to-fall replacement
+- Latest request read from eac7d13b attachment. Rejected old neutral reset before
+  fall; retained old source and rollback branch backup/rock-fall-rework-51d32a1.
+- Authored ONE C2 curve from growing rocking through support loss, impact,
+  rebound and settle, 48 fps native skeleton. No ragdoll/new model/mesh edits.
+- Corrected both-feet-planted knee twist/seat clipping via opt-in knee hinge
+  alignment, unilateral foot unloading/toe-off and <=8 mm pelvis unweighting.
+- Durable art/intro-rock-fall-continuous.blend/.glb. 1201 actual surface samples
+  4..16.5 s pass actor/chair/rope/floor gates. Audit timestamp labels fixed from
+  hardcoded 24 fps to actual 48 fps without changing sampled geometry.
+- Seven actual Three.js imports match native source <=0.017387 mm. This is NOT
+  final anatomical/visual acceptance. Viewed decoded comparison/impact/FP frames.
+- Four real encoded WebMs in art/review-evidence/rock-fall-continuity/: 1x same-
+  angle before/after, 1x FP, actual 0.25x side + FP. All hash checked/decoded/
+  played. Normal movies include measured waveform-aligned CC0 impact Foley;
+  slowed videos silent intentionally. Not a full escape video.
+- Actual game cameraMotion slider/default migration/persistence tested. Existing
+  game active-clock/hold cancellation/pause and original skill smoke passed.
+  npm run build passed; existing large-bundle warning remains.
+- Native film runs in Three.js diagnostic scene, NOT gameplay EscapeRig yet.
+  New native sequence has no pickup/cut/remove/drop/stand. Those phases and
+  native runtime adapter remain next. Do not present partial scene as playable
+  full intro or deploy it. Main game only gained reduced-camera-motion setting.
+- Live Blender: left user's WALK mode using Escape, appended new scene without
+  replacing prior scenes or saving over the user's mixed open file. Camera shows
+  new transition at frame561; old scenes retained.
+- No push/deploy. Full technical report, proofs and reproduction steps in
+  art/review-evidence/rock-fall-continuity/README.md.

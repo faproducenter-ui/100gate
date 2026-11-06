@@ -1,0 +1,75 @@
+{
+  "errors": [],
+  "checks": [
+    "chair/knife/ropes run on the active game clock; early release and pause reset progress",
+    "no JavaScript errors"
+  ],
+  "afterTipTime": {
+    "mode": "playing",
+    "save": {
+      "version": 1,
+      "flags": [
+        "chairTipped"
+      ],
+      "items": [],
+      "read": [],
+      "doors": [],
+      "moved": [],
+      "position": [
+        0,
+        3.6,
+        2.8
+      ],
+      "yaw": 0,
+      "pitch": -0.23,
+      "room": 0,
+      "updatedAt": "2026-11-06T18:22:01.254Z"
+    },
+    "position": [
+      0,
+      3.6,
+      2.8
+    ],
+    "yaw": 0,
+    "pitch": -0.23,
+    "grounded": true,
+    "actorHeight": 1.68,
+    "hold": 0,
+    "settings": {
+      "language": "ru",
+      "quality": "low",
+      "volume": 0.65,
+      "sensitivity": 1,
+      "headBob": false,
+      "cameraMotion": 1,
+      "weather": "rain"
+    },
+    "rig": {
+      "body": true,
+      "hands": false,
+      "authored": true,
+      "shadowUpper": false,
+      "feet": [
+        [
+          -0.1176328125,
+          0.015,
+          -0.34515625
+        ],
+        [
+          0.1176328125,
+          0.015,
+          -0.34515625
+        ]
+      ],
+      "footfall": 0,
+      "held": null
+    },
+    "lamp": false,
+    "weather": {
+      "snow": false,
+      "exterior": false,
+      "reflection": false,
+      "particles": 425
+    }
+  }
+}

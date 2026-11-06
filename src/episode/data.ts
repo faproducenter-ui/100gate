@@ -37,8 +37,8 @@ export const DOCUMENTS: Record<string, { title: [string, string]; body: [string,
     'Kitchen → 10 A fuse → dining-room alarm → front door.\n\nRestore power first. Then release the alarm at its panel. The key only opens the mechanical lock.',
   ] },
 };
-export interface Settings { language: Lang; quality: 'low' | 'medium' | 'high'; volume: number; sensitivity: number; headBob: boolean; weather:'rain'|'snow'; }
-export const DEFAULT_SETTINGS: Settings = { language: 'ru', quality: 'high', volume: .65, sensitivity: 1, headBob: false, weather:'rain' };
+export interface Settings { language: Lang; quality: 'low' | 'medium' | 'high'; volume: number; sensitivity: number; headBob: boolean; cameraMotion:number; weather:'rain'|'snow'; }
+export const DEFAULT_SETTINGS: Settings = { language: 'ru', quality: 'high', volume: .65, sensitivity: 1, headBob: false, cameraMotion:1, weather:'rain' };
 export interface Save {
   version: 1; flags: string[]; items: string[]; read: string[]; doors: string[]; moved: string[];
   position: [number, number, number]; yaw: number; pitch: number; room: number; updatedAt: string;

@@ -14,7 +14,7 @@ def set_pose_matrix(bone,desired,parent_matrix=None):
         kwargs['parent_matrix_local']=bone.parent.bone.matrix_local
     bone.matrix_basis=bone.bone.convert_local_to_pose(desired,bone.bone.matrix_local,**kwargs)
 
-def two_bone_ik(rig,side,target,pole,orientation,kind='arm'):
+def two_bone_ik(rig,side,target,pole,orientation,kind='arm',align_hinge=False):
     a=rig.pose.bones[('upperarm_' if kind=='arm' else 'thigh_')+side]
     b=rig.pose.bones[('lowerarm_' if kind=='arm' else 'calf_')+side]
     end=rig.pose.bones[('hand_' if kind=='arm' else 'foot_')+side]
@@ -27,7 +27,7 @@ def two_bone_ik(rig,side,target,pole,orientation,kind='arm'):
     elbow=h+direction*x+n*math.sqrt(max(0,l1*l1-x*x))
     upper_direction=(elbow-h).normalized()
     ra=(old_a.to_3x3()@Vector((0,1,0))).rotation_difference(upper_direction).to_matrix()@old_a.to_3x3()
-    if kind=='arm':
+    if kind=='arm' or align_hinge:
         u=(a.bone.tail_local-a.bone.head_local).normalized();v=(b.bone.tail_local-b.bone.head_local).normalized()
         native=a.bone.matrix_local.to_3x3().inverted()@u.cross(v).normalized()
         current=ra@native;goal=(elbow-h).cross(p-elbow).normalized()

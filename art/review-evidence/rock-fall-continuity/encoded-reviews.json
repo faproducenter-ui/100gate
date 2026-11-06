@@ -1,0 +1,65 @@
+{
+  "scope": "Rocking-to-fall rework ONLY",
+  "results": [
+    {
+      "name": "before-after-1x",
+      "sourceRate": 1,
+      "sha256": "acb3752bff027284aba4b1775b70097dfc969e1c3303a44d591c0b225275941b",
+      "duration": 12.514,
+      "width": 1280,
+      "height": 1440,
+      "audioPeak": 0.288328617811203,
+      "audioRms": 0.013592447780222066,
+      "play": {
+        "wallSeconds": 12.6465,
+        "playbackRate": 1,
+        "decodedFrames": 612
+      }
+    },
+    {
+      "name": "first-person-1x",
+      "sourceRate": 1,
+      "sha256": "ff3f094cfaa2b879356839b0aea32d2359eaac036ffb8d3d4585c1347a2b0087",
+      "duration": 12.605,
+      "width": 1280,
+      "height": 720,
+      "audioPeak": 0.29411131143569946,
+      "audioRms": 0.0128156707045306,
+      "play": {
+        "wallSeconds": 12.64210000000149,
+        "playbackRate": 1,
+        "decodedFrames": 607
+      }
+    },
+    {
+      "name": "slow-quarter-side",
+      "sourceRate": 0.25,
+      "sha256": "3632bf3225631225b9ef7850a311d8119cfce395646b1e1edbbb37826c738823",
+      "duration": 24.038,
+      "width": 1280,
+      "height": 720,
+      "audioPeak": null,
+      "audioRms": null,
+      "play": {
+        "wallSeconds": 24.09560000000149,
+        "playbackRate": 1,
+        "decodedFrames": 740
+      }
+    },
+    {
+      "name": "slow-quarter-first-person",
+      "sourceRate": 0.25,
+      "sha256": "c44439f5697a541d1a4fce949067ade7fb198f4463c407ab3c3e225b2c1fc07b",
+      "duration": 24.019,
+      "width": 1280,
+      "height": 720,
+      "audioPeak": null,
+      "audioRms": null,
+      "play": {
+        "wallSeconds": 24.0765,
+        "playbackRate": 1,
+        "decodedFrames": 756
+      }
+    }
+  ]
+}
