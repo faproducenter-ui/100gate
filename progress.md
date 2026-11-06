@@ -101,3 +101,65 @@ Original prompt: Refine the existing 100gate Three.js horror game autonomously i
   intro integration, no full-intro WebM. Timeline holds must not be sold as a movie.
   Next: solve skin export mismatch, then missing cutting/removal/support static
   contacts and art review before animation. No push/deploy.
+
+## Production rebuild continuation — 2026-11-06 (work in progress)
+
+- Current branch: intro/production-rebuild; rollback branch
+  backup/production-intro-start-2026-11-06 at 689e561. No source/public gameplay
+  changes or push/deploy in this continuation. Production has not been changed.
+- Reversible four-weight authoring now matches actual Three.js deformed meshes
+  within 0.0171 mm in the previous BOUND motion source. Original native cages,
+  UV/materials, 53-bone rig and canonical hand source preserved (SHA256 unchanged).
+  Re-run this test for the NEW neutral-wrist source before claiming equivalence.
+- Humeral twist root cause corrected in the new authoring copy. Physical native
+  sweater fitting, detailed bevelled/UV/PBR knife and two native skeletal phases
+  (BoundChairIdle 0-4 s / ChairStruggle 4-12 s) authored. NOT a complete intro.
+- IMPORTANT: initial rope mesh audit found real crossings. Rejected independent
+  nearest-normal projection on open cloth, over-wide convex slab envelopes and
+  a weak sleeve-rim pin: numerical passes could still look loose in close-up.
+- Found old BOUND hand direction roughly across the body rather than aligned
+  with the forearm. New native whole-arm static solve aligns wrists to 4.386 /
+  0.635 degrees of deviation, retains real fingers, and has zero body/chair
+  surface crossings. Physical sweater fitting is being re-run for this pose.
+- Empty restraint audits could falsely appear clean after Blender Python errors:
+  added mandatory two-rope/five-skin assertions, failing surface gates, and a
+  safe reproducible PowerShell pipeline with --python-exit-code 1 at every stage.
+- Exact triangle/plane section envelope now replaces the loose slab approach;
+  latest contacts + browser closeups MUST be checked after new pose/cloth build.
+- Headless Chromium still selected SwiftShader even with TEST_HARDWARE_GL=1.
+  Headed mode uses actual Intel UHD Direct3D11. Use TEST_HEADED=1,
+  TEST_HARDWARE_GL=1, TEST_CAPTURE=1 for motion review; old low-cadence movies
+  are rejected as visual acceptance. Added recorder-first-frame priming and
+  a bounded capture timeout; do not leave hung test browsers behind.
+- Existing-game active-clock intro/pause/cancel regression passed in Chromium
+  with save API stubbed; original develop-web-game client smoke also passed
+  with save stubbing and its scene screenshot/state inspected. This tests the
+  OLD gameplay, not integration of the new native actor. TypeScript/Vite build
+  passed; existing >500 kB bundle warning remains.
+- Blender reopened on request; service console hidden, NOT process closed.
+  Previous scenes retained; live window now shows neutral-wrist STATIC WIP.
+- Still CRITICAL: continuous fall/reach/cut/peel/drop/stand, consistent rope
+  release, gameplay integration and full intro video are NOT implemented.
+  Do not publish partial art as a playable finished intro.
+
+## Durable native BOUND checkpoint — continuation result
+
+- Saved art/intro-bound-native-wip.blend and .glb; original art unchanged.
+- Neutral wrists + fully pinned original cuff fitting + finite-radius native
+  triangle-section rope envelope now pass 577 evaluated full/half-frame contact
+  samples. Both actual ropes are present; source hash matches the durable file.
+- Actual bidirectional imported-surface comparison includes all five actor skins
+  AND both ropes, six poses: max 0.0179704 mm with the unchanged 1 mm gate.
+- Actual headed Intel UHD browser screenshots reviewed; max imported wrist
+  deviation 5.412 degrees, no console/page errors. Residual near-camera skin
+  patch in POV and garment hem/material art are still NOT visually accepted.
+- New 48.006-second 1x WebM decoded, sought, inspected and played to completion.
+  Four views of ONLY the same two native phases. Report SHA256 matches the
+  delivered movie. Post-capture encoding time is measured separately, not
+  incorrectly counted as video duration. Old stale pass markers removed first.
+- Durable evidence: art/review-evidence/intro-bound-native/; full scope and open
+  priorities: docs/NATIVE-BOUND-WIP.md. Build and existing game regressions pass.
+- Blender reopened using blender-launcher.exe on the durable .blend, MCP
+  connected, service console hidden. Left it available for the user's inspection.
+- No src/public changes, no push/deploy. Full fall/pickup/cut/removal/drop/stand,
+  native gameplay integration, shipping optimization and final art remain open.

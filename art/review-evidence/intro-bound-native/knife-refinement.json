@@ -1,0 +1,121 @@
+{
+  "parts": [
+    {
+      "part": "Exposed tang seam",
+      "beforeVertices": 256,
+      "afterVertices": 628,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "uvLayers": [
+        "HandleUV"
+      ]
+    },
+    {
+      "part": "Oval walnut scales",
+      "beforeVertices": 256,
+      "afterVertices": 478,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "uvLayers": [
+        "HandleUV"
+      ]
+    },
+    {
+      "part": "Peened pin",
+      "beforeVertices": 32,
+      "afterVertices": 128,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "uvLayers": [
+        "HandleUV"
+      ]
+    },
+    {
+      "part": "Peened pin.001",
+      "beforeVertices": 32,
+      "afterVertices": 128,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "uvLayers": [
+        "HandleUV"
+      ]
+    },
+    {
+      "part": "Peened pin.002",
+      "beforeVertices": 32,
+      "afterVertices": 128,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "uvLayers": [
+        "HandleUV"
+      ]
+    },
+    {
+      "part": "Peened pin.003",
+      "beforeVertices": 32,
+      "afterVertices": 128,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "uvLayers": [
+        "HandleUV"
+      ]
+    },
+    {
+      "part": "Satin blade \u00b7 convex grind",
+      "beforeVertices": 264,
+      "afterVertices": 778,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "uvLayers": [
+        "Blade machining UV"
+      ]
+    }
+  ],
+  "floorHolds": [
+    {
+      "frame": 1,
+      "oldMinimumMm": 2.999999560415745,
+      "newMinimumMm": 0.5
+    },
+    {
+      "frame": 81,
+      "oldMinimumMm": 4.0000006556510925,
+      "newMinimumMm": 0.5
+    },
+    {
+      "frame": 241,
+      "oldMinimumMm": 4.0000006556510925,
+      "newMinimumMm": 0.5
+    }
+  ],
+  "heldPoseTransformChanged": false,
+  "images": [
+    "Knife | satin machining \u00b7 sRGB",
+    "Knife | machining roughness",
+    "Knife | microscopic transverse grind \u00b7 tangent normal",
+    "Knife | walnut end-to-end grain \u00b7 sRGB",
+    "Knife | worn oiled walnut roughness",
+    "Knife | walnut pores \u00b7 tangent normal"
+  ]
+}

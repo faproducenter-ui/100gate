@@ -1,0 +1,54 @@
+{
+  "partial": true,
+  "videoSha256": "70e152c136724f7891bef7af03971f1fb4eda3ea690ff92c9a635babd2f69a25",
+  "scope": "Only native BoundChairIdle/ChairStruggle; no full escape or gameplay integration",
+  "duration": 48.006,
+  "width": 1280,
+  "height": 720,
+  "playback": {
+    "wallSeconds": 48.07139999999851,
+    "decodedFrames": 1501,
+    "droppedFrames": 2,
+    "rate": 1
+  },
+  "moments": [
+    1,
+    8,
+    13,
+    20,
+    25,
+    32,
+    37,
+    44,
+    47.5
+  ],
+  "recordingClock": {
+    "wallSeconds": 48.15860000000056,
+    "postCaptureProcessingMs": 756.3999999994412,
+    "segments": [
+      {
+        "view": "Front",
+        "start": 0,
+        "end": 12
+      },
+      {
+        "view": "Side",
+        "start": 12,
+        "end": 24
+      },
+      {
+        "view": "Back",
+        "start": 24,
+        "end": 36
+      },
+      {
+        "view": "First person",
+        "start": 36,
+        "end": 48
+      }
+    ],
+    "renderedFrames": 1031,
+    "maxRenderGapSeconds": 0.056477000000001,
+    "partial": true
+  }
+}

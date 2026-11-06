@@ -1,0 +1,79 @@
+[
+  {
+    "mesh": "Alexei | original MakeHuman body",
+    "originalCageVertices": 19158,
+    "runtimeBindVertices": 35613,
+    "sourceMaxInfluences": 6,
+    "runtimeMaxInfluences": 4,
+    "reweightedVertices": 1537,
+    "maxDiscardedWeight": 0.027900001034140587,
+    "correctives": [],
+    "originalMeshRetained": true,
+    "uvLayers": [
+      "UVMap"
+    ]
+  },
+  {
+    "mesh": "Alexei | original MakeHuman body.toigo_fisherman_sweater",
+    "originalCageVertices": 2126,
+    "runtimeBindVertices": 33497,
+    "sourceMaxInfluences": 7,
+    "runtimeMaxInfluences": 4,
+    "reweightedVertices": 7967,
+    "maxDiscardedWeight": 0.049486346542835236,
+    "correctives": [
+      "Cine \u00b7 Seated waist cloth clearance",
+      "Cine \u00b7 Ground cloth contact",
+      "Cine \u00b7 Bound skin clearance",
+      "Cine \u00b7 Ground skin clearance",
+      "Cine \u00b7 Grip skin clearance",
+      "Cine \u00b7 Stand skin clearance"
+    ],
+    "originalMeshRetained": true,
+    "uvLayers": [
+      "UVMap"
+    ]
+  },
+  {
+    "mesh": "Alexei | original MakeHuman body.cortu_cargo_pants",
+    "originalCageVertices": 211,
+    "runtimeBindVertices": 3199,
+    "sourceMaxInfluences": 6,
+    "runtimeMaxInfluences": 4,
+    "reweightedVertices": 264,
+    "maxDiscardedWeight": 0.028232846409082413,
+    "correctives": [],
+    "originalMeshRetained": true,
+    "uvLayers": [
+      "UVMap"
+    ]
+  },
+  {
+    "mesh": "Alexei | original MakeHuman body.toigo_ankle_boots_male",
+    "originalCageVertices": 2084,
+    "runtimeBindVertices": 2084,
+    "sourceMaxInfluences": 3,
+    "runtimeMaxInfluences": 3,
+    "reweightedVertices": 0,
+    "maxDiscardedWeight": 0,
+    "correctives": [],
+    "originalMeshRetained": true,
+    "uvLayers": [
+      "UVMap"
+    ]
+  },
+  {
+    "mesh": "Alexei | original MakeHuman body.low-poly",
+    "originalCageVertices": 96,
+    "runtimeBindVertices": 96,
+    "sourceMaxInfluences": 1,
+    "runtimeMaxInfluences": 1,
+    "reweightedVertices": 0,
+    "maxDiscardedWeight": 0,
+    "correctives": [],
+    "originalMeshRetained": true,
+    "uvLayers": [
+      "UVMap"
+    ]
+  }
+]

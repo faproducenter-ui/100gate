@@ -1,0 +1,42 @@
+[
+  {
+    "side": "r",
+    "lengthM": 1.1918135815850663,
+    "vertices": 20496,
+    "cuffProfileMisses": [],
+    "wrist": [
+      -0.15999992191791534,
+      0.19500011205673218,
+      0.704999566078186
+    ],
+    "woodHitchCenter": [
+      -0.10499999672174454,
+      0.2831357419490814,
+      0.5633135437965393
+    ],
+    "maxCenterlineProjectionMm": 0,
+    "clothPressureVertices": 0,
+    "actualSectionVertices": 3746,
+    "convexSectionVertices": 72
+  },
+  {
+    "side": "l",
+    "lengthM": 1.171620660499153,
+    "vertices": 20160,
+    "cuffProfileMisses": [],
+    "wrist": [
+      0.16000008583068848,
+      0.19499999284744263,
+      0.7150000333786011
+    ],
+    "woodHitchCenter": [
+      0.10499999672174454,
+      0.2831357419490814,
+      0.5633135437965393
+    ],
+    "maxCenterlineProjectionMm": 0,
+    "clothPressureVertices": 0,
+    "actualSectionVertices": 3471,
+    "convexSectionVertices": 88
+  }
+]

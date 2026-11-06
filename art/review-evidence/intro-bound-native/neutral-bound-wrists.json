@@ -1,0 +1,23 @@
+{
+  "wrists": [
+    {
+      "side": "r",
+      "wristDeviationDegrees": 4.386106720813946,
+      "wristPosition": [
+        -0.1599999964237213,
+        0.19499999284744263,
+        0.7049999833106995
+      ]
+    },
+    {
+      "side": "l",
+      "wristDeviationDegrees": 0.6345817767284834,
+      "wristPosition": [
+        0.1599999964237213,
+        0.19499999284744263,
+        0.7149999737739563
+      ]
+    }
+  ],
+  "bodyChairCrossings": 0
+}

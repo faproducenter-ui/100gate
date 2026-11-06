@@ -1,0 +1,29 @@
+{
+  "wallSeconds": 48.15860000000056,
+  "postCaptureProcessingMs": 756.3999999994412,
+  "segments": [
+    {
+      "view": "Front",
+      "start": 0,
+      "end": 12
+    },
+    {
+      "view": "Side",
+      "start": 12,
+      "end": 24
+    },
+    {
+      "view": "Back",
+      "start": 24,
+      "end": 36
+    },
+    {
+      "view": "First person",
+      "start": 36,
+      "end": 48
+    }
+  ],
+  "renderedFrames": 1031,
+  "maxRenderGapSeconds": 0.056477000000001,
+  "partial": true
+}

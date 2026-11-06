@@ -17,7 +17,7 @@ try{
   const key=new T.DirectionalLight(0xffe5ca,2);key.position.set(-2,3,3);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-3,right:3,top:3,bottom:-3,near:.1,far:12});key.shadow.bias=-.0001;scene.add(key);
   const fill=new T.DirectionalLight(0xdce5f3,.6);fill.position.set(2,2,-3);scene.add(fill);
   let asset;
-  window.__blocking={async load(name){if(asset)scene.remove(asset.scene);asset=await new GLTFLoader().loadAsync('/outputs/cinematic-intro/blocking-'+name+'.glb');assertStatic();scene.add(asset.scene);asset.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});scene.updateMatrixWorld(true);return dump();},render(name){const cam=asset.cameras.find(c=>c.name.startsWith('Cine')&&c.name.endsWith(name.replaceAll(' ','_')));if(!cam)throw Error('Camera missing '+name+'; '+asset.cameras.map(c=>c.name));cam.aspect=4/3;cam.updateProjectionMatrix();renderer.render(scene,cam);}};
+  window.__blocking={async load(name){if(asset)scene.remove(asset.scene);asset=await new GLTFLoader().loadAsync('/outputs/cinematic-intro/blocking-'+name+'.glb');assertStatic();scene.add(asset.scene);asset.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.userData.reviewMaterial=o.material;}});scene.updateMatrixWorld(true);return dump();},material(mode){asset.scene.traverse(o=>{if(!o.isMesh)return;if(mode==='clay'){o.userData.clayMaterial??=new T.MeshStandardMaterial({color:0xbcbcbc,roughness:.8});o.material=o.userData.clayMaterial;}else{o.material=o.userData.reviewMaterial;}});},render(name){const cam=asset.cameras.find(c=>c.name.startsWith('Cine')&&c.name.endsWith(name.replaceAll(' ','_')));if(!cam)throw Error('Camera missing '+name+'; '+asset.cameras.map(c=>c.name));cam.aspect=4/3;cam.updateProjectionMatrix();renderer.render(scene,cam);}};
   function assertStatic(){if(asset.animations.length)throw Error('Static blocking must not masquerade as motion');}
   function dump(){
    const meshes=[],p=new T.Vector3();
@@ -32,7 +32,9 @@ try{
  const pairs=JSON.parse(process.env.CINEMATIC_VIEWS??'null')??{bound:['Front','Side','Back','Bound wrists','First person'],ground:['Ground','Ground side','Top','Back','First person'],grip:['Ground','Ground side','Top','Grip close','Grip reverse','First person'],stand:['Front','Side','Back','First person']};
  for(const [pose,views] of Object.entries(pairs)){
   const data=await page.evaluate(pose=>window.__blocking.load(pose),pose);await writeFile(out+'/runtime-'+pose+'-meshes.json',JSON.stringify(data));
-  for(const view of views){await page.evaluate(({pose,view})=>{window.__blocking.render(view);document.querySelector('#label').textContent=`STATIC BLOCKING · ${pose} · ${view} — не готовая анимация`;},{pose,view});await page.screenshot({path:out+'/'+pose+'-'+view.toLowerCase().replaceAll(' ','-')+'.png'});}
+  for(const view of views){await page.evaluate(({pose,view})=>{window.__blocking.render(view);document.querySelector('#label').textContent=`STATIC BLOCKING · ${pose} · ${view} — не готовая анимация`;},{pose,view});await page.screenshot({path:out+'/'+pose+'-'+view.toLowerCase().replaceAll(' ','-')+'.png'});
+   if(process.env.CINEMATIC_CLAY==='1'){await page.evaluate(view=>{window.__blocking.material('clay');window.__blocking.render(view);},view);await page.screenshot({path:out+'/'+pose+'-'+view.toLowerCase().replaceAll(' ','-')+'-clay.png'});await page.evaluate(()=>window.__blocking.material('original'));}
+  }
  }
  assert.deepEqual(errors,[]);await writeFile(out+'/blocking-browser-errors.json',JSON.stringify(errors));console.log('Four static gates rendered. Inspect screenshots and actual contact geometry before motion.');
 }finally{await browser.close();}

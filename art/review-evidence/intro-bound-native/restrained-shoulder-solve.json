@@ -1,0 +1,40 @@
+[
+  {
+    "pole": [
+      -0.26,
+      0.42,
+      0.96
+    ],
+    "upperTwist": 46.867747216630335,
+    "forearmTwist": 71.13413209231085,
+    "elbow": [
+      -0.2016894817352295,
+      0.21050524711608887,
+      0.8920447826385498
+    ],
+    "score": 10246.593300688157,
+    "bodyChairCrossings": 0,
+    "side": "r",
+    "wristFrameErrorMm": 2.1073424255447017e-05,
+    "candidatesWithinJointLimits": 105
+  },
+  {
+    "pole": [
+      0.26,
+      0.47,
+      0.96
+    ],
+    "upperTwist": 52.81951258767692,
+    "forearmTwist": 69.46344733075821,
+    "elbow": [
+      0.20958924293518066,
+      0.23090775310993195,
+      0.9370474815368652
+    ],
+    "score": 11394.794715056767,
+    "bodyChairCrossings": 0,
+    "side": "l",
+    "wristFrameErrorMm": 0.0001341104507446289,
+    "candidatesWithinJointLimits": 92
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "partial": true,
+  "scope": "Native BOUND idle + struggle ONLY; not a full escape or integrated game",
+  "files": [
+    {
+      "path": "art/intro-bound-native-wip.blend",
+      "bytes": 47843673,
+      "sha256": "294be70f8105f6e6889dc0b0ac6d35af35860e8a923dfe49e535319b36ce1de8"
+    },
+    {
+      "path": "art/intro-bound-native-wip.glb",
+      "bytes": 48606480,
+      "sha256": "d0b6d2bb56af1703a6620bad2c367b117a393fdfe8cff1b0c950db089368f2a5"
+    },
+    {
+      "path": "art/review-evidence/intro-bound-native/bound-idle-struggle-ONLY.webm",
+      "bytes": 16221560,
+      "sha256": "70e152c136724f7891bef7af03971f1fb4eda3ea690ff92c9a635babd2f69a25"
+    }
+  ],
+  "contacts": {
+    "sampleCount": 577,
+    "triangleCrossings": 0
+  },
+  "sourceImportMaxMm": 0.017970432963920757,
+  "videoDurationSeconds": 48.006,
+  "push": false,
+  "deploy": false
+}
