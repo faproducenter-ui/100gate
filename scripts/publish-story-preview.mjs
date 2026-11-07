@@ -1,0 +1,40 @@
+/** Add the already verified story preview subtree. Never touch the live root. */
+import {cpSync,existsSync,mkdirSync,mkdtempSync,writeFileSync} from 'node:fs';
+import {join,resolve,relative,sep} from 'node:path';
+import {spawnSync} from 'node:child_process';
+const root=resolve('.');
+const base=resolve(root,'.pages-publish');
+const build=resolve(base,'story-preview-build');
+const run=(args,cwd=root)=>{
+  const p=spawnSync('git',args,{cwd,encoding:'utf8'});
+  if(p.status!==0)throw Error(p.stderr||p.error?.message||args.join(' '));
+  return p.stdout.trim();
+};
+run(['diff','--exit-code','HEAD','--']);
+if(!existsSync(join(build,'index.html')))throw Error('Build and verify the story preview first');
+const source=run(['rev-parse','HEAD']);
+const origin=run(['remote','get-url','origin']);
+if(origin!=='https://github.com/faproducenter-ui/100gate.git')throw Error('Unexpected Pages repository');
+mkdirSync(base,{recursive:true});
+const stage=mkdtempSync(join(base,'story-publish-'));
+run(['init','--initial-branch=gh-pages'],stage);
+run(['remote','add','origin',origin],stage);
+run(['fetch','--depth=1','origin','gh-pages'],stage);
+run(['checkout','-B','gh-pages','FETCH_HEAD'],stage);
+const previous=run(['rev-parse','HEAD'],stage);
+if(!existsSync(join(stage,'CNAME'))||!existsSync(join(stage,'.nojekyll')))throw Error('Existing Pages root is not the expected static deployment');
+const target=join(stage,'story-preview');
+if(existsSync(target))throw Error('A story-preview subtree already exists; do not overwrite it');
+const omit=new Set(['CNAME','.nojekyll','assets/chapter1/intro-native-v2.glb','assets/chapter1/intro-escape.glb']);
+cpSync(build,target,{recursive:true,filter:src=>!omit.has(relative(build,src).split(sep).join('/'))});
+writeFileSync(join(target,'release.json'),JSON.stringify({source,previousPagesCommit:previous,kind:'story-preview'},null,2)+'\n');
+run(['config','user.name',run(['config','user.name'])],stage);
+run(['config','user.email',run(['config','user.email'])],stage);
+run(['add','--','story-preview'],stage);
+const paths=run(['diff','--cached','--name-only'],stage).split(/\r?\n/);
+if(!paths.length||paths.some(path=>!path.startsWith('story-preview/')))throw Error('Pages scope changed; refusing to publish');
+run(['commit','-m',`Publish story review from ${source.slice(0,7)}`],stage);
+const commit=run(['rev-parse','HEAD'],stage);
+// First publish is append-only and rejects a concurrent change to gh-pages.
+run(['push','origin','HEAD:refs/heads/gh-pages'],stage);
+console.log(JSON.stringify({source,previousPagesCommit:previous,pagesCommit:commit,files:paths.length,stage}));

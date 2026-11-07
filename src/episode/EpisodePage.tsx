@@ -3,7 +3,7 @@ import { ArrowUp, Backpack, BookOpen, BookText, Candy, ChevronRight, Compass, Dr
 import { Episode, type View } from './runtime';
 import { DEFAULT_SETTINGS, DOCUMENTS, ROOMS, newSave, text } from './data';
 import { PACK, PACK_IDS, remaining, type PackItem } from './pack';
-import { ASSET_REVISION } from './release';
+import { ASSET_REVISION, STORY_RELEASE } from './release';
 import './episode.css';
 
 const initial:View={mode:'loading',loading:0,room:0,objective:'',prompt:'',progress:0,message:'',save:newSave(),settings:DEFAULT_SETTINGS,cloud:'local'};
@@ -36,7 +36,7 @@ export default function EpisodePage(){
   const cloudText={local:t('Сохранение на устройстве','Saved on this device'),saved:t('Резервная копия на сервере','Server backup saved'),saving:t('Сохранение…','Saving…'),offline:t('Локально · сервер недоступен','Local save · server unavailable'),unavailable:t('Хранилище браузера недоступно','Browser storage unavailable'),restored:t('Копия восстановлена','Backup restored')}[view.cloud]||'';
   return <main className="episode" data-mode={view.mode} data-release={ASSET_REVISION} data-intro={!view.save.flags.includes('free')}>
     <canvas ref={canvas} id="episode-canvas" aria-label={t('Трёхмерный мир игры','3D game world')}/>
-    {import.meta.env.DEV&&view.storyHome ? <section className="ep-story-home" data-testid="story-home-shot">
+    {(import.meta.env.DEV||STORY_RELEASE)&&view.storyHome ? <section className="ep-story-home" data-testid="story-home-shot">
       <header><span>100GATE / {t('СЮЖЕТНОЕ ВСТУПЛЕНИЕ · В РАБОТЕ','STORY OPENING · IN PROGRESS')}</span>
         <span>{view.storyHome==='seated'?t('Незнакомая комната','Unknown room'):
           `${view.storyClock??'22:42'} · ${view.storyHome==='street'?t('Вечерняя улица','Evening street'):t('Квартира','Apartment')}`}</span></header>

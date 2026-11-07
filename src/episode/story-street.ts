@@ -5,6 +5,7 @@ import { StoryActor } from './story-actor';
 import type { StoryBeat } from './story-intro-flow';
 import { streetBlocking } from './story-street-motion';
 import { disposeSet } from './story-home-preview';
+import { storyAsset } from './release';
 
 /** One compact authored set, original hero mesh, shared skinned actor geometry. */
 export class StoryStreet {
@@ -64,8 +65,8 @@ export class StoryStreet {
     this.sample('WALK_TO_SHOP',0);
   }
   static async load(){
-    const paths=['/outputs/story-intro/street/story-street.glb','/outputs/story-intro/hero/story-hero-walk.glb','/outputs/story-intro/grocery/story-grocery-bag.glb'];
-    const results=await Promise.allSettled(paths.map(p=>new GLTFLoader().loadAsync(p)));
+    const paths=['street/story-street.glb','hero/story-hero-walk.glb','grocery/story-grocery-bag.glb'];
+    const results=await Promise.allSettled(paths.map(p=>new GLTFLoader().loadAsync(storyAsset(p))));
     if(results.some(r=>r.status==='rejected')){
       for(const r of results)if(r.status==='fulfilled')disposeSet(r.value.scene);
       throw Error('Street asset load failed, cannot show an empty fallback');

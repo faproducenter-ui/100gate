@@ -14,13 +14,14 @@ import { EscapeRig, SLIP, PICKUP, CUT, RISE, GRIP_TIME, SAW_START, MIN_SAW_TRAVE
 import { NativeIntro, INTRO_END } from './native-intro';
 import type { StoryHomePreview } from './story-home-preview';
 import type { StorySeated } from './story-seated';
+import {STORY_RELEASE} from './release';
 
 export type Mode = 'loading' | 'title' | 'playing' | 'paused' | 'document' | 'bag' | 'ending' | 'error';
 export interface View { mode: Mode; loading: number; room: number; objective: string; prompt: string; progress: number; message: string; document?: string; save: Save; settings: Settings; cloud: string; held?:PropId; error?: string; storyHome?: 'dialogue' | 'exit' | 'street' | 'seated' | 'end'; storySubtitle?:string; storyClock?:string; storyBlack?:number; storyWait?:boolean; storyCanSkip?:boolean; }
 const SAVE_KEY='100gate.chapter1.save.v1', SETTINGS_KEY='100gate.settings.v1', TOKEN_KEY='100gate.save-token.v1';
 function readLocal(key:string):unknown {try{return JSON.parse(localStorage.getItem(key)||'null');}catch{return null;}}
 function writeLocal(key:string,value:unknown) {try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
-const API=(import.meta.env.VITE_SAVE_API as string|undefined)?.replace(/\/$/,'')||'';
+const API=STORY_RELEASE?'':(import.meta.env.VITE_SAVE_API as string|undefined)?.replace(/\/$/,'')||'';
 function roomReflections(renderer:T.WebGLRenderer){
   if(!renderer.extensions.has('EXT_color_buffer_float'))return;
   const width=128,height=64,data=new Float32Array(width*height*4);
@@ -38,7 +39,7 @@ function roomReflections(renderer:T.WebGLRenderer){
   source.dispose();gen.dispose();return target;
 }
 export class Episode {
-  private readonly storyFullRequested=import.meta.env.DEV&&new URLSearchParams(location.search).get('story-intro')==='1';
+  private readonly storyFullRequested=STORY_RELEASE||(import.meta.env.DEV&&new URLSearchParams(location.search).get('story-intro')==='1');
   private readonly storyHomeRequested=this.storyFullRequested||(import.meta.env.DEV&&new URLSearchParams(location.search).get('story-home')==='1');
   private scene=new T.Scene(); private camera=new T.PerspectiveCamera(72,1,.055,100);
   private renderer:T.WebGLRenderer;private composer:EffectComposer;private bloom:UnrealBloomPass;private reflections?:T.WebGLRenderTarget;
@@ -91,16 +92,17 @@ export class Episode {
     this.bloom=new UnrealBloomPass(new T.Vector2(1280,720),.16,.5,.9);this.composer.addPass(this.bloom);this.composer.addPass(new OutputPass());
     this.player=new PlayerRig(this.scene,this.camera);this.applyQuality();this.resize();this.bind();this.notify();
     this.frame=requestAnimationFrame(this.tick);
-    if(import.meta.env.DEV&&this.storyHomeRequested)void this.initStoryHome();else void this.init();
+    if((import.meta.env.DEV||STORY_RELEASE)&&this.storyHomeRequested)void this.initStoryHome();else void this.init();
   }
   private async initStoryHome(){
-    if(!import.meta.env.DEV)return;
+    if(!import.meta.env.DEV&&!STORY_RELEASE)return;
     try {
       const {StoryHomePreview}=await import('./story-home-preview');
       if(this.disposed)return;
       const preview=await StoryHomePreview.load();
       if(this.disposed){preview.dispose();return;}
       this.storyHome=preview;
+      if(import.meta.env.DEV){
       const w=window as unknown as Record<string,unknown>;
       const snapshot=()=>({...preview.snapshot(),flow:preview.flow.snapshot(),escape:this.storyEscaping?this.storyEscape?.snapshot():undefined,
         free:this.storyFree,position:this.position.toArray(),items:[...this.save.items],mode:this.mode});
@@ -115,13 +117,14 @@ export class Episode {
         }else this.stepStory(ms/1000,true);
         this.notify();
       };
+      }
       this.mode='title';this.loading=1;this.notify();
     } catch(e) {
       if(!this.disposed){this.mode='error';this.message=String(e);this.notify();}
     }
   }
   private async prepareStoryEscape(){
-    if(!import.meta.env.DEV||!this.storyFullRequested||!this.storyHome)return;
+    if((!import.meta.env.DEV&&!STORY_RELEASE)||!this.storyFullRequested||!this.storyHome)return;
     try{
       const {StorySeated}=await import('./story-seated');
       if(this.disposed)return;
@@ -887,8 +890,10 @@ export class Episode {
     this.audio.dispose();this.storyHome?.dispose();this.storyEscape?.dispose();this.releaseScene();this.reflections?.dispose();
     // EffectComposer owns its two buffers, but does not dispose the passes it contains.
     disposeComposer(this.composer);this.renderer.dispose();
-    const w=window as unknown as Record<string,unknown>;
-    delete w.__episodeTest;delete w.render_game_to_text;delete w.advanceTime;
-    if(import.meta.env.DEV&&this.storyHomeRequested)delete w.__storyHomeTest;
+    if(import.meta.env.DEV||import.meta.env.VITE_VERIFY==='1'){
+      const w=window as unknown as Record<string,unknown>;
+      delete w.__episodeTest;delete w.render_game_to_text;delete w.advanceTime;
+      if(import.meta.env.DEV&&this.storyHomeRequested)delete w.__storyHomeTest;
+    }
   }
 }

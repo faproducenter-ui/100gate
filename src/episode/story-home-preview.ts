@@ -5,9 +5,10 @@ import { StoryActor } from './story-actor';
 import type { StoryStreet } from './story-street';
 import {StoryAudio} from './story-audio';
 import type {Foley} from './audio';
+import {storyAsset} from './release';
 
 // The apartment set is editable and still in outputs, not in the release.
-const setUrl = '/outputs/story-intro/home/story-home.glb';
+const setUrl = storyAsset('home/story-home.glb');
 const ease = T.MathUtils.smoothstep;
 
 export function disposeSet(root: T.Object3D) {
@@ -57,8 +58,8 @@ export class StoryHomePreview {
   static async load() {
     const loader=new GLTFLoader();
     const results=await Promise.allSettled([setUrl,
-      '/outputs/story-intro/hero/story-hero-home.glb',
-      '/outputs/story-intro/partner/story-partner-home.glb',
+      storyAsset('hero/story-hero-home.glb'),
+      storyAsset('partner/story-partner-home.glb'),
     ].map(url=>loader.loadAsync(url)));
     if(results.some(r=>r.status==='rejected')){
       for(const r of results)if(r.status==='fulfilled')disposeSet(r.value.scene);

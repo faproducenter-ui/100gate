@@ -1,5 +1,6 @@
 import type {Foley} from './audio';
 import type {StoryBeat} from './story-intro-flow';
+import {storyAsset} from './release';
 
 /** Keep decoded ambience in the existing game audio context and volume bus. */
 export class StoryAudio {
@@ -14,7 +15,7 @@ export class StoryAudio {
   async load(){
     const {context,master}=this.foley;if(!context||!master)return;
     try{
-      const r=await fetch('/outputs/story-intro/audio/night-city-223093.mp3',{signal:this.abort.signal});
+      const r=await fetch(storyAsset('audio/night-city-223093.mp3'),{signal:this.abort.signal});
       if(!r.ok)throw Error('City ambience unavailable');
       const buffer=await context.decodeAudioData(await r.arrayBuffer());
       if(this.abort.signal.aborted||context.state==='closed')return;

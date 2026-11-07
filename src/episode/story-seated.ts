@@ -2,6 +2,7 @@ import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {STORY_BEATS, STORY_SECONDS, type StoryBeat, type StoryIntroFlow} from './story-intro-flow';
 import {disposeSet} from './story-home-preview';
+import {storyAsset} from './release';
 
 const awake=STORY_BEATS.indexOf('AWAKE_BOUND');
 export function seatedSeconds(beat:StoryBeat, seconds:number){
@@ -42,7 +43,7 @@ export class StorySeated {
   private seconds=0;
 
   static async load(){
-    const asset=await new GLTFLoader().loadAsync('/outputs/story-intro/escape/story-upright-escape.glb');
+    const asset=await new GLTFLoader().loadAsync(storyAsset('escape/story-upright-escape.glb'));
     try{return new StorySeated(asset.scene,asset.animations);}
     catch(e){disposeSet(asset.scene);throw e;}
   }
