@@ -38,3 +38,8 @@
 .ep-story-home header{position:absolute;inset:0 0 auto;display:flex;justify-content:space-between;gap:1rem;padding:1.2rem max(1.3rem,env(safe-area-inset-left));background:linear-gradient(#08090cc9,transparent);color:#eee3cf;font-size:.75rem;letter-spacing:.08em}
 .ep-story-home .ep-overlay,.ep-story-home .ep-story-pause{pointer-events:auto}
 .ep-story-pause{position:absolute;bottom:max(1rem,env(safe-area-inset-bottom));right:max(1.3rem,env(safe-area-inset-right))}
+.ep-story-subtitle{position:absolute;bottom:max(2.2rem,env(safe-area-inset-bottom));left:15%;right:15%;margin:0;text-align:center;font-size:clamp(.95rem,1.35vw,1.2rem);line-height:1.6;color:#f4eee2;text-shadow:0 1px 3px #000,0 2px 10px #000;background:#0a0a0a9c;padding:.35rem .65rem;border-radius:3px}
+.ep-story-fade{position:absolute;inset:0;background:#000;pointer-events:none}
+.ep-story-skip{position:absolute;bottom:max(1rem,env(safe-area-inset-bottom));left:max(1.3rem,env(safe-area-inset-left));pointer-events:auto}
+.ep-story-hold{position:absolute;bottom:12%;left:50%;transform:translateX(-50%);width:min(85vw,380px);padding:.6rem 1rem;text-align:center;color:#eee3cf;background:#14110ed9;pointer-events:auto;border:1px solid #7a67436b}
+.ep-story-hold .touch-button{width:100%;height:auto;min-height:2.6rem;flex-direction:row}

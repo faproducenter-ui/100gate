@@ -11,7 +11,8 @@ const packIcons={phone:Smartphone,book:BookText,compass:Compass,pen:PenLine,shee
 function TouchButton({game,code,label,children,className=''}:{game:Episode|null;code:string;label:string;children:React.ReactNode;className?:string}){
   const pressed=useRef<string|null>(null);
   const release=(cancel=false)=>{const active=pressed.current;if(active&&(active!=='ShiftLeft'||cancel))game?.touchButton(active,false);pressed.current=null;};
-  return <button className={`touch-button ${className}`} aria-label={label} onContextMenu={e=>e.preventDefault()} onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);pressed.current=code;game?.touchButton(code,true);}} onPointerUp={()=>release()} onPointerCancel={()=>release(true)}>{children}<small>{label}</small></button>;
+  useEffect(()=>()=>{if(pressed.current)game?.touchButton(pressed.current,false);pressed.current=null;},[game]);
+  return <button className={`touch-button ${className}`} aria-label={label} onContextMenu={e=>e.preventDefault()} onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);pressed.current=code;game?.touchButton(code,true);}} onPointerUp={()=>release()} onPointerCancel={()=>release(true)} onLostPointerCapture={()=>release(true)}>{children}<small>{label}</small></button>;
 }
 export default function EpisodePage(){
   const canvas=useRef<HTMLCanvasElement>(null);const runtime=useRef<Episode|null>(null);const [view,setView]=useState<View>(initial);
@@ -36,22 +37,31 @@ export default function EpisodePage(){
   return <main className="episode" data-mode={view.mode} data-release={ASSET_REVISION} data-intro={!view.save.flags.includes('free')}>
     <canvas ref={canvas} id="episode-canvas" aria-label={t('Трёхмерный мир игры','3D game world')}/>
     {import.meta.env.DEV&&view.storyHome ? <section className="ep-story-home" data-testid="story-home-shot">
-      <header><span>100GATE / {t('ПРЕДПРОСМОТР ДЕКОРАЦИИ','SET PREVIEW')}</span>
-        <span>22:42 · {t('Квартира','Apartment')}</span></header>
+      <header><span>100GATE / {t('СЮЖЕТНОЕ ВСТУПЛЕНИЕ · В РАБОТЕ','STORY OPENING · IN PROGRESS')}</span>
+        <span>{view.storyHome==='seated'?t('Незнакомая комната','Unknown room'):
+          `${view.storyClock??'22:42'} · ${view.storyHome==='street'?t('Вечерняя улица','Evening street'):t('Квартира','Apartment')}`}</span></header>
+      {view.storyBlack!==undefined&&view.storyBlack>0&&<div className="ep-story-fade" style={{opacity:view.storyBlack}}/>}
       {(view.mode==='title'||view.mode==='loading'||view.mode==='error'||view.storyHome==='end')&&
         <div className="ep-overlay"><section className="ep-card">
           <h2>{t('Квартира · 22:42','Apartment · 22:42')}</h2>
           {view.mode==='loading'&&<p role="status">{t('Загрузка декорации Blender…','Loading the Blender set…')}</p>}
           {view.mode==='error'&&<p role="alert">{view.error}</p>}
-          {view.mode==='title'&&<><p>{t('Проверка света, камеры и двери. Актёры и диалог ещё не подключены.','Lighting, camera and door check. Cast and dialogue are not wired in yet.')}</p>
-            <button className="ep-primary" data-testid="start-story-home" onClick={()=>begin()}>{t('Смотреть постановку','Watch blocking')}</button></>}
-          {view.storyHome==='end'&&<><p data-testid="story-home-end">{t('Конец проверки декорации. Дальнейшие сцены в работе.','End of the set check. Later scenes are in progress.')}</p>
+          {view.mode==='title'&&<><p>{t('Алексей и его девушка. Вечер перед выходом.','Alexei and his partner. An evening before going out.')}</p>
+            <button className="ep-primary" data-testid="start-story-home" onClick={()=>begin()}>{t('Новая игра','New Game')}</button></>}
+          {view.storyHome==='end'&&<><p data-testid="story-home-end">{t('Конец текущей постановки. Следующий эпизод ещё не подключён.','End of the current performance. The next episode is not wired in yet.')}</p>
             <button className="ep-secondary" data-testid="story-home-back" onClick={()=>runtime.current?.title()}>{t('Назад','Back')}</button></>}
         </section></div>}
       {(view.mode==='playing'||view.mode==='paused')&&view.storyHome!=='end'&&
         <button className="ep-secondary ep-story-pause" data-testid="story-home-pause" onClick={()=>{
           if(view.mode==='paused')runtime.current?.resume();else runtime.current?.pause();
         }}>{view.mode==='paused'?t('Продолжить','Resume'):t('Пауза','Pause')}</button>}
+      {view.mode==='playing'&&view.storySubtitle&&<p className="ep-story-subtitle" data-testid="story-subtitle">{view.storySubtitle}</p>}
+      {view.mode==='playing'&&view.storyCanSkip&&<button className="ep-secondary ep-story-skip" data-testid="story-skip" onClick={()=>runtime.current?.skipStory()}>{t('Пропустить сцену','Skip cinematic')}</button>}
+      {view.mode==='playing'&&view.storyWait&&<p className="ep-story-subtitle" role="status">{t('Загрузка чердака','Loading the attic')} · {Math.round(view.loading*100)}%</p>}
+      {view.mode==='playing'&&view.storyHome==='seated'&&view.prompt&&<div className="ep-story-hold" data-testid="story-hold">
+        {mobile?<TouchButton game={runtime.current} code="KeyR" label={view.prompt.replace(' R','').replace('Hold R','Hold')}><Hand size={21}/></TouchButton>:<span>{view.prompt}</span>}
+        <div className="ep-hold"><i style={{width:`${view.progress*100}%`}}/></div>
+      </div>}
     </section> : <>
     <div className="ep-vignette"/><div className="ep-grain"/>
     {view.mode==='loading'&&<div className="ep-loading"><div className="ep-seal">100</div><span className="ep-kicker">100GATE / {t('СТО ДВЕРЕЙ','ONE HUNDRED DOORS')}</span><h1>{t('Дом просыпается','The house is waking')}</h1><p>{t('Загрузка окружения и материалов','Loading the environment and materials')}</p><div className="ep-load-track"><i style={{width:`${Math.max(5,view.loading*100)}%`}}/></div></div>}

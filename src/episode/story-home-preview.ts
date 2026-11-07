@@ -1,18 +1,22 @@
 import * as T from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { STORY_SECONDS, StoryIntroFlow } from './story-intro-flow';
+import { STORY_BEATS, STORY_SECONDS, StoryIntroFlow } from './story-intro-flow';
+import { StoryActor } from './story-actor';
+import type { StoryStreet } from './story-street';
+import {StoryAudio} from './story-audio';
+import type {Foley} from './audio';
 
 // The apartment set is editable and still in outputs, not in the release.
 const setUrl = '/outputs/story-intro/home/story-home.glb';
 const ease = T.MathUtils.smoothstep;
-const eye = (x: number, z: number) => new T.Vector3(x, 1.64, z);
-const mid = eye(.5, -1.14), threshold = eye(1.79, -1.17), outside = eye(3.58, -1.18);
 
-function disposeSet(root: T.Object3D) {
+export function disposeSet(root: T.Object3D) {
   const geometries = new Set<T.BufferGeometry>(), materials = new Set<T.Material>();
   const textures = new Set<T.Texture>(), bitmaps = new Set<ImageBitmap>();
+  const skeletons = new Set<T.Skeleton>();
   root.traverse(o => {
     if (!(o instanceof T.Mesh)) return;
+    if(o instanceof T.SkinnedMesh)skeletons.add(o.skeleton);
     geometries.add(o.geometry);
     for (const m of Array.isArray(o.material) ? o.material : [o.material]) materials.add(m);
   });
@@ -26,24 +30,52 @@ function disposeSet(root: T.Object3D) {
     t.dispose();
   }
   for (const bitmap of bitmaps) bitmap.close();
+  for(const skeleton of skeletons)skeleton.dispose();
 }
 
-/** A development-only view of the real Blender set, not a replacement intro. */
+/** Native cast/scene performance. Runtime activation stays gated until escape passes. */
 export class StoryHomePreview {
   private readonly scene = new T.Scene();
   private readonly camera = new T.PerspectiveCamera(61, 1, .045, 28);
-  private readonly flow = new StoryIntroFlow();
+  readonly flow = new StoryIntroFlow();
   private readonly door: T.Object3D;
   private readonly opening: number;
   private readonly restRotation: number;
   private readonly dialogue: T.PerspectiveCamera;
-  private readonly alexei: T.Vector3;
+  private readonly exitCamera: T.PerspectiveCamera;
   private readonly light: T.SpotLight;
+  private readonly actors: StoryActor[] = [];
+  private street?:StoryStreet;
+  private audio?:StoryAudio;
+  private homeFinished=false;
+  startAudio(foley:Foley){this.audio?.dispose();this.audio=new StoryAudio(foley);void this.audio.load();}
+  syncAudio(){
+    const {beat,seconds}=this.flow.checkpoint();
+    this.audio?.sample(beat,seconds,beat==='BLACKOUT'?1:beat==='ABDUCTION'?ease(seconds,5.1,6):0);
+  }
 
   static async load() {
-    const asset = await new GLTFLoader().loadAsync(setUrl);
-    try { return new StoryHomePreview(asset.scene); }
-    catch (error) { disposeSet(asset.scene); throw error; }
+    const loader=new GLTFLoader();
+    const results=await Promise.allSettled([setUrl,
+      '/outputs/story-intro/hero/story-hero-home.glb',
+      '/outputs/story-intro/partner/story-partner-home.glb',
+    ].map(url=>loader.loadAsync(url)));
+    if(results.some(r=>r.status==='rejected')){
+      for(const r of results)if(r.status==='fulfilled')disposeSet(r.value.scene);
+      throw new Error('Story cast failed to load; no empty-scene fallback. '+results.filter(r=>r.status==='rejected').map(r=>r.reason).join('; '));
+    }
+    const assets=results.map(r=>{if(r.status!=='fulfilled')throw Error('Unreachable asset state');return r.value;});
+    try {
+      const view=new StoryHomePreview(assets[0]!.scene);
+      for(let i=1;i<assets.length;i++){
+        const actor=new StoryActor(assets[i]!,i===1?'Alexei':'Partner');
+        view.actors.push(actor);view.scene.add(assets[i]!.scene);
+      }
+      const {StoryStreet}=await import('./story-street');
+      view.street=await StoryStreet.load();
+      view.sample();
+      return view;
+    } catch (error) { for(const asset of assets)disposeSet(asset.scene); throw error; }
   }
 
   private constructor(private readonly set: T.Group) {
@@ -63,8 +95,9 @@ export class StoryHomePreview {
     const dialogue = find('Dialogue');
     if (!(dialogue instanceof T.PerspectiveCamera)) throw new Error('Story apartment needs its authored dialogue camera');
     this.dialogue = dialogue;
-    this.alexei = find('Alexei').getWorldPosition(new T.Vector3());
-    this.alexei.y += 1.64;
+    const exit=find('ExitView');
+    if(!(exit instanceof T.PerspectiveCamera))throw new Error('Missing authored door shot');
+    this.exitCamera=exit;
     find('Partner'); find('Entry');
     set.traverse(o => {
       if (o instanceof T.Mesh) {
@@ -93,40 +126,68 @@ export class StoryHomePreview {
     point(0xdce6ff, 3, [3.7, 2.32, -1.16]);
   }
 
-  restart() { this.flow.restore(undefined); }
+  restart() { this.homeFinished=false;this.flow.restore(undefined);this.sample(); }
   snapshot() {
     const { beat, seconds } = this.flow.snapshot();
-    return { beat, seconds, ended: beat === 'STORE_TRANSIT', door: this.door.rotation.y - this.restRotation };
+    const t=beat==='DIALOGUE'?seconds:STORY_SECONDS.DIALOGUE+seconds;
+    const subtitle=beat!=='DIALOGUE'?'': t<.7?'':t<3.5?'Алексей: Схожу в магазин. Скоро вернусь.':t<6.1?'Девушка: Хорошо. До скорого.':t<8.1?'Алексей: До скорого.':'';
+    const street=STORY_BEATS.indexOf(beat)>=STORY_BEATS.indexOf('WALK_TO_SHOP');
+    return { beat, seconds, ended: beat === 'AWAKE_BOUND', door: this.door.rotation.y - this.restRotation,
+      subtitle,actors:this.actors.map(a=>a.snapshot()),street:street?this.street?.snapshot():undefined,
+      clock:STORY_BEATS.indexOf(beat)>=STORY_BEATS.indexOf('RETURN_2316')?'23:16':'22:42',
+      black:street?this.street?.snapshot().black??0:0 };
   }
   advance(dt: number) {
     const { beat, seconds } = this.flow.checkpoint();
-    // Stop at the boundary of the content that's actually authored here.
-    if (beat === 'DIALOGUE') this.flow.advance(Math.min(dt, STORY_SECONDS.DIALOGUE - seconds + STORY_SECONDS.HOME_EXIT));
-    if (beat === 'HOME_EXIT') this.flow.advance(Math.min(dt, STORY_SECONDS.HOME_EXIT - seconds));
+    if(beat==='AWAKE_BOUND')return;
+    const untilBound=STORY_BEATS.slice(STORY_BEATS.indexOf(beat),STORY_BEATS.indexOf('AWAKE_BOUND'))
+      .reduce((sum,b)=>sum+STORY_SECONDS[b],0)-seconds;
+    this.flow.advance(Math.min(dt,untilBound));
+    this.sample();
+  }
+  private sample(){
+    const {beat,seconds}=this.flow.snapshot();
+    const onStreet=STORY_BEATS.indexOf(beat)>=STORY_BEATS.indexOf('WALK_TO_SHOP');
+    const t=beat==='DIALOGUE'?seconds:beat==='HOME_EXIT'?STORY_SECONDS.DIALOGUE+seconds:19;
+    if(!this.homeFinished){
+      for(const actor of this.actors)actor.sample(t);
+      this.door.rotation.y=this.restRotation+this.opening*ease(t,14.3,16.35)*(1-ease(t,18.4,19));
+      this.scene.updateMatrixWorld(true);
+      this.homeFinished=onStreet;
+    }
+    if(onStreet)this.street?.sample(beat==='AWAKE_BOUND'?'BLACKOUT':beat,seconds);
   }
   render(renderer: T.WebGLRenderer, aspect: number) {
-    const { beat, seconds, ended } = this.snapshot();
-    const time = ended ? STORY_SECONDS.HOME_EXIT : seconds;
+    const { beat,seconds } = this.flow.checkpoint();
+    if(STORY_BEATS.indexOf(beat)>=STORY_BEATS.indexOf('WALK_TO_SHOP')){
+      this.street?.render(renderer,aspect);return;
+    }
     const dialogue = beat === 'DIALOGUE';
-    this.door.rotation.y = this.restRotation + (dialogue ? 0 : this.opening * ease(time, 2.5, 3.65));
     this.camera.aspect = aspect;
-    this.camera.fov = dialogue ? this.dialogue.fov : 61;
+    this.camera.fov = dialogue ? this.dialogue.fov : this.exitCamera.fov;
     this.camera.updateProjectionMatrix();
     if (dialogue) {
-      this.dialogue.getWorldPosition(this.camera.position);
-      this.dialogue.getWorldQuaternion(this.camera.quaternion);
-    } else {
-      const approach = ease(time, 0, 2.5);
-      if (approach < .54) this.camera.position.lerpVectors(this.alexei, mid, approach / .54);
-      else if (time < 2.5) this.camera.position.lerpVectors(mid, threshold, (approach - .54) / .46);
-      else this.camera.position.lerpVectors(threshold, outside, ease(time, 3.65, 5));
-      this.camera.lookAt(this.camera.position.x + 1, this.camera.position.y - .33, -1.18);
-    }
+      if(seconds>3.5&&seconds<6.2){
+        this.camera.fov=45;this.camera.position.set(-1.65,1.52,1.10);this.camera.lookAt(.45,1.32,-.56);
+      }else if(seconds>6.2&&seconds<8.2){
+        this.camera.fov=45;this.camera.position.set(1.53,1.54,1.23);this.camera.lookAt(-.88,1.38,-.49);
+      }else{
+        this.dialogue.getWorldPosition(this.camera.position);this.dialogue.getWorldQuaternion(this.camera.quaternion);
+      }
+    } else if(seconds<4.15) {
+      const p=this.actors[0]!.snapshot().hips;
+      this.camera.position.set(.04,1.51,2.05);this.camera.fov=57;
+      this.camera.lookAt(p[0]!,1.18,p[2]!);
+    }else{this.exitCamera.getWorldPosition(this.camera.position);this.exitCamera.getWorldQuaternion(this.camera.quaternion);}
+    this.camera.updateProjectionMatrix();
     renderer.render(this.scene, this.camera);
   }
   dispose() {
     this.light.shadow.dispose();
-    disposeSet(this.set);
+    this.audio?.dispose();
+    this.street?.dispose();
+    for(const actor of this.actors)actor.dispose();
+    disposeSet(this.scene);
     this.scene.clear();
   }
 }

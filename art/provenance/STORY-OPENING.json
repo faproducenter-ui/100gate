@@ -1,0 +1,162 @@
+{
+  "purpose": "Local opening review only; generated files not shipped",
+  "assets": [
+    {
+      "path": "outputs/story-intro/home/story-home.glb",
+      "bytes": 4728876,
+      "sha256": "a9cadf900c96f971432bc700add759e17ee64d9e3a8bba9cabacc3891187db41"
+    },
+    {
+      "path": "outputs/story-intro/cast/story-home-performance.blend",
+      "bytes": 83206926,
+      "sha256": "4a4e3724b0e9139b1ae8462ba2c84347c3720d38be5e53cf11f155fc7e740f1b"
+    },
+    {
+      "path": "outputs/story-intro/hero/story-hero-home.glb",
+      "bytes": 5693060,
+      "sha256": "a4b667913d8ab30476a8904aca6d07dbd8375b8b6a1cdda3a121c4d3ce5f17d5"
+    },
+    {
+      "path": "outputs/story-intro/hero/story-hero-walk.glb",
+      "bytes": 5393972,
+      "sha256": "2c40c87f9aa53f18955817f1b449a065a9ee51d4a2d1636ab31c387fc7f0641b"
+    },
+    {
+      "path": "outputs/story-intro/partner/story-partner-home.glb",
+      "bytes": 3695044,
+      "sha256": "2113eceaf93d584bea8ae5faf7c7773a959d0700041fe7fef75380e02bf385b9"
+    },
+    {
+      "path": "outputs/story-intro/street/story-street.glb",
+      "bytes": 10326644,
+      "sha256": "4d95df43190c7b23e5d46ddff5fd54e854bbbcd95657256d0db74eb864b9e156"
+    },
+    {
+      "path": "outputs/story-intro/grocery/story-grocery-bag.glb",
+      "bytes": 129812,
+      "sha256": "c55613d582435d7ce30c16a5f42eb271ccbd0a590320b22b2e60fc0dc56cb3c2"
+    },
+    {
+      "path": "outputs/story-intro/escape/story-upright-escape.glb",
+      "bytes": 18585036,
+      "sha256": "899107078596e105efa896ee03e1ca38319df7c88cb636d1db4e35763cd522c6"
+    },
+    {
+      "path": "outputs/story-intro/escape/story-upright-escape.blend",
+      "bytes": 49118052,
+      "sha256": "31e4a55877b890f108713981a50fd88e3597565718aa2d4ed9d435e0c846e14f"
+    },
+    {
+      "path": "outputs/story-intro/audio/night-city-223093.mp3",
+      "bytes": 687648,
+      "sha256": "f2ac02efee5250abf15b5bbff7ad7aae7a56c29d8b966f07281995b92c34a371"
+    }
+  ],
+  "partner": {
+    "sources": [
+      {
+        "url": "https://files.makehumancommunity.org/asset_packs/makehuman_system_assets/makehuman_system_assets_cc0.zip",
+        "sha256": "b542127a8e25547c7c29c19f2d1d2adb9a664c80396ecd694095dbc8028a0107",
+        "license": "CC0-1.0"
+      },
+      {
+        "url": "https://codeload.github.com/makehumancommunity/mpfb2/zip/d0a32e57a7f915cb2f2b95410e2117648c7bbb7e",
+        "sha256": "b50c69cea33cce250ca49d838079904da7fb84a21943f3cb7fc5a9bb3e0165f8",
+        "commit": "d0a32e57a7f915cb2f2b95410e2117648c7bbb7e",
+        "license": "GPL-3.0 for tool code, CC0-1.0 for core graphics data"
+      }
+    ],
+    "licensePage": "https://static.makehumancommunity.org/about/license.html",
+    "catalog": "https://static.makehumancommunity.org/assets/assetpacks/makehuman_system_assets.html",
+    "selectedAssets": [
+      "clothes/female_casualsuit01/female_casualsuit01.mhclo",
+      "clothes/shoes04/shoes04.mhclo",
+      "eyes/low-poly/low-poly.mhclo",
+      "hair/ponytail01/ponytail01.mhclo",
+      "eyebrows/eyebrow001/eyebrow001.mhclo",
+      "eyelashes/eyelashes01/eyelashes01.mhclo",
+      "skins/young_caucasian_female/young_caucasian_female.mhmat"
+    ],
+    "rig": "StoryPartner_Rig",
+    "bones": [
+      "Root",
+      "pelvis",
+      "spine_01",
+      "spine_02",
+      "spine_03",
+      "clavicle_l",
+      "upperarm_l",
+      "lowerarm_l",
+      "hand_l",
+      "index_01_l",
+      "index_02_l",
+      "index_03_l",
+      "middle_01_l",
+      "middle_02_l",
+      "middle_03_l",
+      "pinky_01_l",
+      "pinky_02_l",
+      "pinky_03_l",
+      "ring_01_l",
+      "ring_02_l",
+      "ring_03_l",
+      "thumb_01_l",
+      "thumb_02_l",
+      "thumb_03_l",
+      "clavicle_r",
+      "upperarm_r",
+      "lowerarm_r",
+      "hand_r",
+      "index_01_r",
+      "index_02_r",
+      "index_03_r",
+      "middle_01_r",
+      "middle_02_r",
+      "middle_03_r",
+      "pinky_01_r",
+      "pinky_02_r",
+      "pinky_03_r",
+      "ring_01_r",
+      "ring_02_r",
+      "ring_03_r",
+      "thumb_01_r",
+      "thumb_02_r",
+      "thumb_03_r",
+      "neck_01",
+      "head",
+      "thigh_l",
+      "calf_l",
+      "foot_l",
+      "ball_l",
+      "thigh_r",
+      "calf_r",
+      "foot_r",
+      "ball_r"
+    ]
+  },
+  "street": [
+    {
+      "asset": "Asphalt 02",
+      "url": "https://polyhaven.com/a/asphalt_02",
+      "license": "CC0-1.0"
+    },
+    {
+      "asset": "Worn Plaster Wall",
+      "url": "https://polyhaven.com/a/worn_plaster_wall",
+      "license": "CC0-1.0"
+    },
+    {
+      "asset": "Red Brick Plaster Patch 02",
+      "url": "https://polyhaven.com/a/red_brick_plaster_patch_02",
+      "license": "CC0-1.0"
+    },
+    {
+      "asset": "Rigged Car",
+      "author": "Racoon Media / eracoon / www.racoon-media.nl",
+      "url": "https://lpc.opengameart.org/content/rigged-car",
+      "license": "CC-BY-3.0 on source page; CC-BY-4.0 attribution notice included in archive",
+      "archiveSha256": "ba39c8602a6410524f6e43b3ebeb708b78f91496192114dd6ca14b11f8b2388d",
+      "modifications": "Rescaled to 4.25m length; PBR panel, tyre, metal, window materials replaced; bevel edge glints; original meshes and opening-door hierarchy preserved"
+    }
+  ]
+}

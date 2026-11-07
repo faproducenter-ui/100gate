@@ -13,9 +13,10 @@ import { HEAD_MARGIN } from './headroom';
 import { EscapeRig, SLIP, PICKUP, CUT, RISE, GRIP_TIME, SAW_START, MIN_SAW_TRAVEL, ease } from './intro';
 import { NativeIntro, INTRO_END } from './native-intro';
 import type { StoryHomePreview } from './story-home-preview';
+import type { StorySeated } from './story-seated';
 
 export type Mode = 'loading' | 'title' | 'playing' | 'paused' | 'document' | 'bag' | 'ending' | 'error';
-export interface View { mode: Mode; loading: number; room: number; objective: string; prompt: string; progress: number; message: string; document?: string; save: Save; settings: Settings; cloud: string; held?:PropId; error?: string; storyHome?: 'dialogue' | 'exit' | 'end'; }
+export interface View { mode: Mode; loading: number; room: number; objective: string; prompt: string; progress: number; message: string; document?: string; save: Save; settings: Settings; cloud: string; held?:PropId; error?: string; storyHome?: 'dialogue' | 'exit' | 'street' | 'seated' | 'end'; storySubtitle?:string; storyClock?:string; storyBlack?:number; storyWait?:boolean; storyCanSkip?:boolean; }
 const SAVE_KEY='100gate.chapter1.save.v1', SETTINGS_KEY='100gate.settings.v1', TOKEN_KEY='100gate.save-token.v1';
 function readLocal(key:string):unknown {try{return JSON.parse(localStorage.getItem(key)||'null');}catch{return null;}}
 function writeLocal(key:string,value:unknown) {try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
@@ -37,7 +38,8 @@ function roomReflections(renderer:T.WebGLRenderer){
   source.dispose();gen.dispose();return target;
 }
 export class Episode {
-  private readonly storyHomeRequested=import.meta.env.DEV&&new URLSearchParams(location.search).get('story-home')==='1';
+  private readonly storyFullRequested=import.meta.env.DEV&&new URLSearchParams(location.search).get('story-intro')==='1';
+  private readonly storyHomeRequested=this.storyFullRequested||(import.meta.env.DEV&&new URLSearchParams(location.search).get('story-home')==='1');
   private scene=new T.Scene(); private camera=new T.PerspectiveCamera(72,1,.055,100);
   private renderer:T.WebGLRenderer;private composer:EffectComposer;private bloom:UnrealBloomPass;private reflections?:T.WebGLRenderTarget;
   private house?:House;private audio=new Foley(!this.storyHomeRequested);private keys=new Set<string>();private listeners:(()=>void)[]=[];
@@ -60,6 +62,10 @@ export class Episode {
   private mobile=matchMedia('(pointer: coarse)').matches||navigator.maxTouchPoints>0;
   private touchAxes={x:0,z:0};
   private storyHome?: StoryHomePreview;
+  private storyEscape?: StorySeated;
+  private storyEscaping=false;
+  private storyFree=false;
+  private storySkipPending=false;
   constructor(private canvas:HTMLCanvasElement,private emit:(s:View)=>void){
     const raw=readLocal(SAVE_KEY);this.save=validSave(raw)?raw:newSave();this.recoverPack();
     const stored=readLocal(SETTINGS_KEY);this.settings={...DEFAULT_SETTINGS};
@@ -96,15 +102,105 @@ export class Episode {
       if(this.disposed){preview.dispose();return;}
       this.storyHome=preview;
       const w=window as unknown as Record<string,unknown>;
-      w.__storyHomeTest=()=>preview.snapshot();
+      const snapshot=()=>({...preview.snapshot(),flow:preview.flow.snapshot(),escape:this.storyEscaping?this.storyEscape?.snapshot():undefined,
+        free:this.storyFree,position:this.position.toArray(),items:[...this.save.items],mode:this.mode});
+      w.__storyHomeTest=snapshot;
+      w.render_game_to_text=()=>JSON.stringify(snapshot());
+      w.advanceTime=(ms:number)=>{
+        if(!Number.isFinite(ms)||ms<0||ms>10000)throw Error('advanceTime expects 0..10000ms');
+        this.manualClock=true;
+        if(this.storyFree){
+          for(let dt=ms/1000;dt>1e-8;dt-=1/60)if(this.mode==='playing'){this.elapsed+=Math.min(dt,1/60);this.update(Math.min(dt,1/60));}
+          this.renderer.render(this.scene,this.camera);
+        }else this.stepStory(ms/1000,true);
+        this.notify();
+      };
       this.mode='title';this.loading=1;this.notify();
     } catch(e) {
       if(!this.disposed){this.mode='error';this.message=String(e);this.notify();}
     }
   }
+  private async prepareStoryEscape(){
+    if(!import.meta.env.DEV||!this.storyFullRequested||!this.storyHome)return;
+    try{
+      const {StorySeated}=await import('./story-seated');
+      if(this.disposed)return;
+      const escape=await StorySeated.load();
+      if(this.disposed){escape.dispose();return;}
+      this.storyEscape=escape;
+      this.house=await createHouse(this.scene,this.save,n=>{if(!this.disposed)this.loading=n;},{legacyIntro:false});
+      if(this.disposed){this.releaseScene();return;}
+      this.scene.add(escape.root);
+      this.applyReflections();this.player.loadBody(this.house.model);this.player.setVisible(false);
+      this.house.boundChair.visible=false;
+      this.house.seatBounds.setFromObject(escape.chair,true);
+      this.player.registerModel('flashlight',this.house.model('gear-flashlight'));
+      this.player.registerModel('key',this.house.model('gear-brass-key'));
+      const knifeTarget=this.house.targets.find(t=>t.id==='knife');
+      if(knifeTarget){
+        knifeTarget.root.visible=false;knifeTarget.root=escape.knife;
+        knifeTarget.root.traverse(o=>{o.userData.target='knife';});
+        knifeTarget.focus=knifeTarget.root.getObjectByName('Oval_walnut_scales');
+      }
+      const bag=this.house.targets.find(t=>t.id==='bag')?.root.clone(true) as T.Group|undefined;
+      if(bag){bag.position.set(0,-.078,0);bag.rotation.set(.05,0,0);bag.scale.setScalar(.60);this.player.registerModel('bag',bag);}
+      escape.follow(this.camera,this.settings.cameraMotion);
+      await this.renderer.compileAsync(this.scene,this.camera);
+      if(this.disposed)return;
+      this.storyEscapeReady=true;this.notify();
+    }catch(e){if(!this.disposed){this.mode='error';this.message=String(e);this.notify();}}
+  }
+  private storyEscapeReady=false;
+  private storyEscapeStarted=false;
+  skipStory(){
+    if(!this.storyFullRequested||this.mode!=='playing'||!this.storyHome||this.storyFree)return;
+    const f=this.storyHome.flow;
+    if(f.snapshot().control!=='cinematic')return;
+    f.skip(this.keys.has('KeyR'));
+    if(f.checkpoint().beat!=='REACH')return;
+    this.storySkipPending=true;this.redraw=true;this.notify();
+  }
+  private stepStory(dt:number,forceDraw=false){
+    const preview=this.storyHome;if(!preview)return;
+    const active=this.mode==='playing'&&(!this.manualClock||forceDraw);
+    const escape=this.storyEscape,flow=preview.flow;
+    if(active&&this.storyEscapeReady&&escape&&(this.storySkipPending||flow.checkpoint().beat==='AWAKE_BOUND')){
+      if(!this.storyEscaping||this.storySkipPending){
+        escape.begin(flow);this.storyEscaping=true;this.storySkipPending=false;
+      }
+    }
+    if(this.storyEscaping&&escape){
+      if(active){
+        const prior=flow.checkpoint().beat;
+        escape.advance(flow,dt,this.keys.has('KeyR'));
+        preview.syncAudio();
+        escape.follow(this.camera,this.settings.cameraMotion);
+        const beat=flow.checkpoint().beat;
+        if(prior!==beat){
+          if(beat==='RIGHT_CUT')this.audio.play('keyPickup');
+          if(beat==='SET_KNIFE_DOWN')this.audio.ropeContact(.15,true);
+          if(beat==='STAND')this.audio.play('land');
+        }
+        if(beat==='FREE'){
+          const pose=new T.Euler().setFromQuaternion(this.camera.quaternion,'YXZ');
+          this.position.set(this.camera.position.x,3.6,this.camera.position.z);
+          this.pitch=pose.x;this.yaw=pose.y;this.grounded=true;
+          this.keys.clear();this.movement.set(0,0);this.velocity.set(0,0,0);this.motionDebt=0;
+          this.addFlag('free');this.addFlag('introCompleteV3');
+          escape.setBodyVisible(false);this.storyFree=true;
+          this.player.setVisible(true);this.toast(this.t('Руки свободны. Найди фонарь и ключ от люка.','Your hands are free. Find the flashlight and hatch key.'));
+        }
+      }
+      if(active||forceDraw||this.redraw){this.renderer.render(this.scene,this.camera);this.redraw=false;}
+      return;
+    }
+    if(active&&!this.storySkipPending){preview.advance(dt);preview.syncAudio();}
+    if(active||forceDraw||this.redraw){preview.render(this.renderer,this.camera.aspect);this.redraw=false;}
+  }
   private async init(){try{
     this.house=await createHouse(this.scene,this.save,n=>{if(!this.disposed){this.loading=n;this.notify();}});
     if(this.disposed){this.releaseScene();return;}
+    if(!this.house.intro||!this.house.nativeIntro)throw Error('Missing legacy introduction assets');
     this.applyReflections();
     this.player.loadBody(this.house.model);
     this.escape=new EscapeRig(this.scene,this.house.intro,this.house.model);
@@ -254,7 +350,8 @@ export class Episode {
     on(window,'resize',()=>this.resize());
     on(window,'keydown',((e:KeyboardEvent)=>{
       if((e.target as HTMLElement)?.matches('input,select,textarea'))return;
-      if(this.storyHomeRequested){
+      if(this.storyHomeRequested&&!this.storyFree){
+        if(e.code==='KeyR'&&this.mode==='playing'){e.preventDefault();if(!e.repeat)this.keys.add(e.code);return;}
         if(!e.repeat&&e.code==='Escape'){
           if(this.mode==='playing')this.pause();else if(this.mode==='paused')this.resume();
         }
@@ -270,7 +367,7 @@ export class Episode {
       if(e.code==='Space'&&this.flag('free')&&this.grounded&&!this.keys.has('ShiftLeft')){this.velocity.y=4.6;this.grounded=false;}
       if(e.code==='KeyE'||e.code==='KeyG'||e.code==='KeyF')this.act(e.code);
     }) as EventListener);
-    on(window,'keyup',((e:KeyboardEvent)=>{this.keys.delete(e.code);if(e.code==='KeyR'){this.hold=0;this.holdId='';}}) as EventListener);
+    on(window,'keyup',((e:KeyboardEvent)=>{if(e.code==='KeyR')this.releaseHold();else this.keys.delete(e.code);}) as EventListener);
     on(window,'mousemove',((e:MouseEvent)=>{if(document.pointerLockElement!==this.canvas||this.mode!=='playing')return;this.yaw-=e.movementX*.0019*this.settings.sensitivity;this.pitch=T.MathUtils.clamp(this.pitch-e.movementY*.0019*this.settings.sensitivity,-1.42,1.42);}) as EventListener);
     on(document,'pointerlockchange',()=>{
       const owned=document.pointerLockElement===this.canvas,lost=this.pointerWasOwned&&!owned;
@@ -289,15 +386,22 @@ export class Episode {
     });
     on(window,'blur',()=>{this.keys.clear();if(this.mode==='playing')this.pause();});
     on(document,'visibilitychange',()=>{if(document.hidden&&this.mode==='playing')this.pause();});
-    on(this.canvas,'click',()=>{if(!this.storyHomeRequested&&this.mode==='playing')this.requestLock();});
+    on(this.canvas,'click',()=>{if((!this.storyHomeRequested||this.storyFree)&&this.mode==='playing')this.requestLock();});
     on(window,'pagehide',()=>this.persist(false));
   }
   private releaseLock(){if(document.pointerLockElement===this.canvas){this.expectedPointerUnlock=true;document.exitPointerLock();}}
   private requestLock(){if(this.mobile)return;try{const r=this.canvas.requestPointerLock();if(r&&'catch' in r)void r.catch(()=>{this.toast(this.t('Нажми на экран, чтобы управлять взглядом','Click the scene to control the view'));});}catch{/* browser requires an additional user gesture */}}
   touchMove(x:number,z:number){this.touchAxes={x,z};}
   touchLook(x:number,y:number){if(this.mode!=='playing')return;this.yaw-=x*.004*this.settings.sensitivity;this.pitch=T.MathUtils.clamp(this.pitch-y*.004*this.settings.sensitivity,-1.42,1.42);}
+  private releaseHold(){
+    this.keys.delete('KeyR');this.hold=0;this.holdId='';
+    // A real release can occur between two animation frames. A fresh
+    // press after it must work even if the renderer never sampled key-up.
+    if(this.storyHomeRequested&&!this.storyFree)this.storyHome?.flow.advance(0,{hold:false});
+  }
   touchButton(code:string,down:boolean){
-    if(!down){this.keys.delete(code);if(code==='KeyR'){this.hold=0;this.holdId='';}return;}
+    if(!down){if(code==='KeyR')this.releaseHold();else this.keys.delete(code);return;}
+    if(this.storyHomeRequested&&!this.storyFree){if(this.mode==='playing'&&code==='KeyR')this.keys.add(code);return;}
     if(this.mode==='document'&&code==='KeyF'){this.closeDocument();return;}
     if(code==='KeyH'){this.toggleBag();return;}
     if(this.mode!=='playing')return;
@@ -310,7 +414,20 @@ export class Episode {
   start(fresh=false){
     if(this.storyHomeRequested){
       if(this.mode!=='title'||!this.storyHome)return;
-      this.storyHome.restart();this.mode='playing';this.redraw=true;this.notify();return;
+      this.storyHome.restart();this.storyEscaping=this.storyFree=this.storySkipPending=false;
+      this.save=newSave();this.position.fromArray(this.save.position);this.yaw=0;this.pitch=-.23;
+      this.keys.clear();this.equip();this.player.setVisible(false);
+      if(this.house)for(const t of this.house.targets){
+        if(t.kind==='item')t.root.visible=true;
+        if(t.kind==='door'){t.open=false;t.unlocked=!t.key;t.angle=0;t.pivot?.rotation.set(0,0,0);}
+        if(t.kind==='furniture'&&t.home){t.root.position.copy(t.home);t.progress=0;}
+      }
+      if(this.storyFullRequested){
+        if(!this.storyEscapeStarted){this.storyEscapeStarted=true;void this.prepareStoryEscape();}
+        this.audio.setVolume(this.settings.volume);this.audio.start();
+        this.storyHome.startAudio(this.audio);
+      }
+      this.mode='playing';this.redraw=true;this.notify();return;
     }
     if(!this.house||this.mode==='error')return;
     if(fresh){this.save=newSave();this.position.fromArray(this.save.position);this.yaw=0;this.pitch=-.23;this.velocity.set(0,0,0);this.movement.set(0,0);this.grounded=true;this.equip();
@@ -322,8 +439,8 @@ export class Episode {
     this.mode='playing';this.document=undefined;this.audio.setVolume(this.settings.volume);this.audio.start();this.requestLock();this.persist();this.notify();
   }
   pause(unlock=true){if(this.mode!=='playing'&&this.mode!=='document')return;this.prePause=this.mode;this.mode='paused';this.keys.clear();this.touchAxes={x:0,z:0};this.movement.set(0,0);this.hold=0;this.holdId='';this.audio.pause(true);if(unlock)this.releaseLock();this.persist();this.notify();}
-  resume(){if(this.mode!=='paused')return;this.mode=this.prePause;this.keys.clear();this.audio.pause(false);if(!this.storyHomeRequested&&this.mode==='playing')this.requestLock();this.notify();}
-  title(){this.persist();this.mode='title';this.storyHome?.restart();this.redraw=true;this.keys.clear();this.audio.pause(true);this.releaseLock();this.notify();}
+  resume(){if(this.mode!=='paused')return;this.mode=this.prePause;this.keys.clear();this.audio.pause(false);if((!this.storyHomeRequested||this.storyFree)&&this.mode==='playing')this.requestLock();this.notify();}
+  title(){this.persist();this.mode='title';this.storyHome?.restart();this.storyEscaping=this.storyFree=this.storySkipPending=false;this.redraw=true;this.keys.clear();this.audio.pause(true);this.releaseLock();this.notify();}
   settingsChange(next:Partial<Settings>){this.settings={...this.settings,...next};writeLocal(SETTINGS_KEY,this.settings);this.audio.setVolume(this.settings.volume);this.applyQuality();this.resize();this.notify();}
   private applyReflections(){
     if(this.settings.quality==='low'){this.scene.environment=null;return;}
@@ -477,7 +594,7 @@ export class Episode {
   }
   private updateHold(dt:number){
     let id='';let duration=2.3;
-    if(!this.flag('chairTipped'))id='tip';else if(!this.flag('free')&&this.has('knife')&&this.escapePickup<0&&this.escapeRise<0){id='cut';duration=CUT;}else if(this.target?.kind==='furniture'&&(this.target.progress||0)<1){id=this.target.id;duration=3;}
+    if(!this.flag('free')&&!this.flag('chairTipped'))id='tip';else if(!this.flag('free')&&this.has('knife')&&this.escapePickup<0&&this.escapeRise<0){id='cut';duration=CUT;}else if(this.target?.kind==='furniture'&&(this.target.progress||0)<1){id=this.target.id;duration=3;}
     if(!id||!this.keys.has('KeyR')){this.hold=0;this.holdId='';return;}
     if(this.holdId!==id){this.hold=0;this.holdId=id;this.holdElapsed=0;this.chairBeat=-1;if(id==='cut'){this.escapeContacts=[];this.sawTravel=this.sawContactTime=0;}else if(id!=='tip')this.audio.play('scrape');}
     const previousTime=this.holdElapsed;
@@ -652,8 +769,9 @@ export class Episode {
     chair.updateMatrix();
     const seat=this.house.seatBounds.copy(this.house.seatLocal).applyMatrix4(chair.matrix),seatLift=3.6-seat.min.y;
     chair.position.y+=seatLift;seat.min.y+=seatLift;seat.max.y+=seatLift;
-    if(!this.nativeIntro&&(!this.flag('free')||!this.escape!.root.visible))this.updateEscape(dt,chairRock*.75);
+    if(!this.nativeIntro&&this.escape&&(!this.flag('free')||!this.escape.root.visible))this.updateEscape(dt,chairRock*.75);
     if(this.nativeIntro)this.refreshNativeColliders();
+    if(this.storyFree&&this.storyEscape)this.house.seatBounds.setFromObject(this.storyEscape.chair,true);
     const beforeX=this.position.x,beforeZ=this.position.z;
     let crouch=false,run=false;
     if(this.flag('free')){
@@ -710,11 +828,9 @@ export class Episode {
   }
   private tick=(now:number)=>{
     if(this.disposed)return;const raw=this.last?(now-this.last)/1000:.016,dt=Math.min(.25,Math.max(0,raw));this.last=now;
-    if(this.storyHomeRequested){
+    if(this.storyHomeRequested&&!this.storyFree){
       if(this.storyHome){
-        const active=this.mode==='playing'&&!this.storyHome.snapshot().ended;
-        if(active)this.storyHome.advance(dt);
-        if(active||this.redraw){this.storyHome.render(this.renderer,this.camera.aspect);this.redraw=false;}
+        this.stepStory(dt);
         if(now-this.lastUI>100){this.lastUI=now;this.notify();}
       }
       this.frame=requestAnimationFrame(this.tick);return;
@@ -734,14 +850,14 @@ export class Episode {
   };
   private token(){try{let token=localStorage.getItem(TOKEN_KEY);if(!token){token=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');localStorage.setItem(TOKEN_KEY,token);}return token;}catch{return null;}}
   private persist(remote=true){
-    if(!this.house)return;
+    if(!this.house||this.storyHomeRequested)return;
     if(this.nativeIntro)this.save.intro=this.nativeIntro.flow.checkpoint();
     this.save.position=this.position.toArray() as [number,number,number];this.save.yaw=this.yaw;this.save.pitch=this.pitch;this.save.updatedAt=new Date().toISOString();this.savedPosition.copy(this.position);
     if(!writeLocal(SAVE_KEY,this.save)){this.cloud='unavailable';return;}if(!remote||!API)return;
     clearTimeout(this.cloudTimer);this.cloudTimer=setTimeout(()=>{void this.cloudSave();},800);
   }
   private async cloudSave(){const token=this.token();if(!token||!API)return;this.cloud='saving';this.notify();try{const response=await fetch(`${API}/api/save`,{method:'PUT',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(this.save),signal:AbortSignal.timeout(10000)});if(!response.ok)throw Error('save');this.cloud='saved';}catch{this.cloud='offline';}if(!this.disposed)this.notify();}
-  async restoreCloud(){if(!API){this.cloud='local';this.notify();return;}const token=this.token();if(!token)return;
+  async restoreCloud(){if(!API||this.storyHomeRequested){this.cloud='local';this.notify();return;}const token=this.token();if(!token)return;
     try{const r=await fetch(`${API}/api/save`,{headers:{Authorization:`Bearer ${token}`},signal:AbortSignal.timeout(10000)});if(r.status===404){this.toast(this.t('Серверной копии пока нет.','No server backup yet.'));return;}if(!r.ok)throw Error();const s:unknown=await r.json();if(!validSave(s))throw Error();
       this.save=s;this.restoreEscape();this.escape?.setVisible(false);this.recoverPack();writeLocal(SAVE_KEY,s);this.position.fromArray(s.position);this.yaw=s.yaw;this.pitch=s.pitch;this.equip();this.movement.set(0,0);this.velocity.set(0,0,0);
       for(const t of this.house!.targets){if(t.kind==='item')t.root.visible=!s.items.includes(t.id);if(t.kind==='door'){t.open=s.doors.includes(t.id);t.unlocked=!t.key||s.flags.includes(`unlock:${t.id}`);}if(t.home){t.root.position.copy(t.home);if(s.moved.includes(t.id))t.root.position.add(t.move!);t.progress=s.moved.includes(t.id)?1:0;}}
@@ -750,15 +866,25 @@ export class Episode {
   }
   private notify(){if(this.disposed)return;
     const story=this.storyHome?.snapshot();
-    const storyHome=this.storyHomeRequested?(story?.ended?'end':story?.beat==='HOME_EXIT'?'exit':'dialogue'):undefined;
-    this.emit({mode:this.mode,loading:this.loading,room:this.save.room,objective:storyHome?'':this.objective(),prompt:!storyHome&&this.mode==='playing'?this.prompt():'',progress:this.hold,message:this.elapsed<this.messageUntil?this.message:'',document:this.document,save:{...this.save,items:[...this.save.items]},settings:{...this.settings},cloud:this.cloud,held:this.held,error:this.mode==='error'?this.message:undefined,storyHome});}
+    const storyHome=this.storyHomeRequested&&!this.storyFree?(this.storyEscaping?'seated':story?.ended&&!this.storyFullRequested?'end':story?.street?'street':story?.beat==='HOME_EXIT'?'exit':'dialogue'):undefined;
+    const beat=story?.beat;
+    const holdText=beat==='REACH'?this.t('Удерживайте R, чтобы дотянуться','Hold R to reach the knife'):
+      beat==='RIGHT_CUT'?this.t('Удерживайте R, чтобы разрезать верёвку','Hold R to cut the rope'):'';
+    const storyWait=this.storyFullRequested&&!this.storyEscaping&&(this.storySkipPending||!!story?.ended);
+    this.emit({mode:this.mode,loading:this.loading,room:this.save.room,objective:storyHome?'':this.objective(),
+      prompt:this.mode!=='playing'?'':this.storyEscaping&&!this.storyFree?holdText:storyHome?'':this.prompt(),
+      progress:holdText&&this.storyEscaping?(story?.seconds??0)/(beat==='REACH'?1.8:4):this.hold,
+      message:this.elapsed<this.messageUntil?this.message:'',document:this.document,save:{...this.save,items:[...this.save.items]},settings:{...this.settings},cloud:this.cloud,held:this.held,error:this.mode==='error'?this.message:undefined,
+      storyHome,storyWait,storyCanSkip:this.storyFullRequested&&!this.storyEscaping&&!storyWait,
+      storySubtitle:beat==='KNIFE_SPOTTED'?this.t('Попробуйте дотянуться до ножа','Try reaching for the knife'):story?.subtitle,
+      storyClock:story?.clock,storyBlack:storyWait?1:this.storyEscaping?beat==='AWAKE_BOUND'?Math.max(0,1-(story?.seconds??0)/1.1):0:story?.black});}
   private releaseScene(){this.house?.weather.dispose();const materials=new Set<T.Material>();const textures=new Set<T.Texture>();const geometries=new Set<T.BufferGeometry>();this.scene.traverse(o=>{const mesh=o as T.Mesh;if(mesh.geometry)geometries.add(mesh.geometry);if(mesh.material){for(const mat of Array.isArray(mesh.material)?mesh.material:[mesh.material])materials.add(mat);}});for(const g of geometries)g.dispose();for(const mat of materials){for(const value of Object.values(mat))if(value instanceof T.Texture)textures.add(value);mat.dispose();}for(const t of textures)t.dispose();this.scene.clear();}
   dispose(){
     if(this.disposed)return;
     this.persist(false);this.disposed=true;cancelAnimationFrame(this.frame);clearTimeout(this.cloudTimer);
     for(const off of this.listeners)off();this.keys.clear();
     if(document.pointerLockElement===this.canvas)document.exitPointerLock();
-    this.audio.dispose();this.storyHome?.dispose();this.releaseScene();this.reflections?.dispose();
+    this.audio.dispose();this.storyHome?.dispose();this.storyEscape?.dispose();this.releaseScene();this.reflections?.dispose();
     // EffectComposer owns its two buffers, but does not dispose the passes it contains.
     disposeComposer(this.composer);this.renderer.dispose();
     const w=window as unknown as Record<string,unknown>;

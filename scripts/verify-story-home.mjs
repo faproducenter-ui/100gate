@@ -55,6 +55,9 @@ try {
       }, undefined, { timeout: 35000 });
       report.door = await diagnostics();
       await page.screenshot({ path: `${out}/${name}-door.png` });
+      // This smoke ends at the home door. The continuous street/escape run
+      // has its own real-time capture; don't wait through it in every smoke.
+      for(let i=0;i<5&&!(await diagnostics()).ended;i++)await page.evaluate(()=>window.advanceTime(10000));
       await page.getByTestId('story-home-end').waitFor({ timeout: 15000 });
       assert.equal(await page.evaluate(() => localStorage.getItem('100gate.chapter1.save.v1')), 'untouched-story-smoke-marker');
       assert.deepEqual(report.errors, []);

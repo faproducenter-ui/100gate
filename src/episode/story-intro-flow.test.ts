@@ -7,6 +7,13 @@ const through = (beat: keyof typeof STORY_SECONDS) => {
 };
 
 describe('new seated story introduction', () => {
+  it('reserves a complete physical exit, a visible shop entrance and an unchanged return outfit', () => {
+    expect(STORY_SECONDS.HOME_EXIT).toBe(10);
+    expect(STORY_BEATS.indexOf('WALK_TO_SHOP')).toBeGreaterThan(STORY_BEATS.indexOf('HOME_EXIT'));
+    expect(STORY_BEATS.indexOf('SHOP_ENTER')).toBeLessThan(STORY_BEATS.indexOf('STORE_TRANSIT'));
+    expect(STORY_BEATS.indexOf('SHOP_EXIT')).toBeGreaterThan(STORY_BEATS.indexOf('RETURN_2316'));
+    expect(STORY_BEATS.indexOf('WALK_HOME')).toBeLessThan(STORY_BEATS.indexOf('ABDUCTION'));
+  });
   it('follows every story beat and arrives at the same reach pose as skipping', () => {
     const natural = new StoryIntroFlow();
     for (const beat of STORY_BEATS.slice(0, STORY_BEATS.indexOf('REACH'))) {

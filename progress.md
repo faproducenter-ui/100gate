@@ -367,3 +367,9 @@ Original prompt: Refine the existing 100gate Three.js horror game autonomously i
   playable validation. Production Railway game watches main (verified read-only);
   feature branch push will not modify it. Use a NEW isolated preview project,
   no production domain/backend/Postgres changes. Publication pending below.
+
+## 2026-11-07 complete opening correction
+- Original updated request recorded in docs/specs/2026-11-07-complete-opening.md.
+- Empty apartment/camera preview rejected. Work now: actual MPFB human performance and cast, then store/street, then new upright seated escape. No additional storyboard substitution; no push/deploy.
+- Local development route `?story-intro=1` now includes the real cast, walking/store/return, stopped car, blackout, native chair escape and transfer to existing FPS. Read docs/2026-11-07-OPENING-REVIEW.md for commands and remaining visual gates.
+- Latest chair Blender audit shows zero crossings at 20 sampled poses after native cloth corrective and staged anatomical grip. Browser desktop/touch passes; keyboard repeat regression reproduced and fixed. Blender opened on the new seated scene for review. Do not promote as release yet.

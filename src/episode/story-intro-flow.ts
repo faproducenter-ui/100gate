@@ -1,7 +1,8 @@
 // Authoring windows in seconds. The renderer samples the current beat, rather
 // than allowing AnimationMixer or wall time to drive gameplay progression.
 export const STORY_SECONDS = {
-  DIALOGUE: 9, HOME_EXIT: 5, STORE_TRANSIT: 2, RETURN_2316: 5,
+  DIALOGUE: 9, HOME_EXIT: 10, WALK_TO_SHOP: 8, SHOP_ENTER: 3,
+  STORE_TRANSIT: 2, RETURN_2316: 2, SHOP_EXIT: 3, WALK_HOME: 8,
   ABDUCTION: 6, BLACKOUT: 2, AWAKE_BOUND: 3, STRAIN: 3,
   LEFT_HITCH_RELEASE: 2, KNIFE_SPOTTED: 2, REACH: 1.8, GRIP: 1.2,
   RIGHT_CUT: 4, SET_KNIFE_DOWN: 1.2, UNWRAP: 3, STAND: 2, FREE: 0,

@@ -102,7 +102,7 @@ export class EscapeRig {
   private knifeAttached=false;private frame=1;private contactDistance=Infinity;private closure=0;
   private shoulder=new T.Vector3();private elbow=new T.Vector3();private line=new T.Vector3();private bend=new T.Vector3();
 
-  constructor(scene:T.Scene,asset:House['intro'],model:(id:PlayerModelId)=>T.Group){
+  constructor(scene:T.Scene,asset:NonNullable<House['intro']>,model:(id:PlayerModelId)=>T.Group){
     this.root=asset.scene;this.root.position.copy(INTRO_ORIGIN);this.root.userData.player=true;
     const nodes=new Map<string,T.Object3D>();this.root.traverse(o=>{if(o.userData.escapeRole)nodes.set(o.userData.escapeRole,o);});
     const node=(role:string)=>{const o=nodes.get(role);if(!o)throw Error('Escape GLB missing '+role);return o;};

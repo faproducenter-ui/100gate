@@ -8,7 +8,7 @@
 
 **Tech Stack:** Three.js, TypeScript, Vite, Blender4.5 LTS, Playwright, FFmpeg.
 
-**Spec:** `docs/specs/2026-11-07-cinematic-intro.md`.
+**Spec:** `docs/specs/2026-11-07-complete-opening.md` (supersedes the earlier camera-set scope).
 
 ## Global Constraints
 
