@@ -7,8 +7,10 @@ import {StoryAudio} from './story-audio';
 import type {Foley} from './audio';
 import {storyAsset} from './release';
 
-// The apartment set is editable and still in outputs, not in the release.
-const setUrl = storyAsset('home/story-home.glb');
+const apartmentCandidate = import.meta.env.DEV && new URLSearchParams(location.search).get('quality-pass')==='1';
+const setUrl = apartmentCandidate
+  ? `${import.meta.env.BASE_URL}outputs/quality-overhaul/home/story-home.glb?v=city-depth-1`
+  : storyAsset('home/story-home.glb');
 const ease = T.MathUtils.smoothstep;
 
 export function disposeSet(root: T.Object3D) {
@@ -102,9 +104,10 @@ export class StoryHomePreview {
     find('Partner'); find('Entry');
     set.traverse(o => {
       if (o instanceof T.Mesh) {
-        o.receiveShadow = true;
         const materials = Array.isArray(o.material) ? o.material : [o.material];
-        o.castShadow = materials.every(m => !m.transparent);
+        const remoteCity=apartmentCandidate&&materials.every(m=>m.name.startsWith('City | '));
+        o.receiveShadow = !remoteCity;
+        o.castShadow = !remoteCity && materials.every(m => !m.transparent);
       }
     });
     this.scene.background = new T.Color(0x151927);

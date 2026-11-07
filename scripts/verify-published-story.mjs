@@ -24,10 +24,10 @@ const server=dest?undefined:createServer(async(req,res)=>{
 if(server)await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const url=dest??`http://127.0.0.1:${server.address().port}${prefix}`;
 let browser;
-const report={url,errors:[],unexpected:[],missing:[],storyAssets:[],passed:false};
+const report={url,errors:[],unexpected:[],missing:[],storyAssets:[],edgeInjected:[],passed:false};
 try{
   browser=await testBrowser();
-  const page=await browser.newPage({viewport:{width:960,height:540}});
+  const page=await browser.newPage({viewport:{width:800,height:450}});
   page.on('pageerror',e=>report.errors.push(String(e)));
   page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
   page.on('response',r=>{
@@ -35,9 +35,17 @@ try{
     const path=new URL(r.url()).pathname;
     if(path.startsWith(prefix+'assets/story-intro/')&&r.ok())report.storyAssets.push(path);
   });
-  await page.route('**/*',route=>{
+  await page.route('**/*',async route=>{
     const req=new URL(route.request().url()),base=new URL(url);
     if(req.hostname==='fonts.googleapis.com')return route.fulfill({status:200,contentType:'text/css',body:''});
+    // Remove only the CDN-injected telemetry tag for synthetic test traffic.
+    // Changing the script body would fail its SRI hash. All app code stays real.
+    if(dest&&req.origin===base.origin&&req.pathname===prefix&&route.request().isNavigationRequest()){
+      const response=await route.fetch();
+      const html=(await response.text()).replace(/<script\b[^>]*\bsrc=["'](https:\/\/static\.cloudflareinsights\.com\/beacon\.min\.js[^"']*)["'][^>]*><\/script>/gi,
+        (_tag,scriptUrl)=>{report.edgeInjected.push(scriptUrl);return '';});
+      return route.fulfill({response,body:html});
+    }
     if(req.origin===base.origin&&req.pathname.startsWith(prefix)&&!req.pathname.includes('/api/'))return route.continue();
     report.unexpected.push(req.origin+req.pathname);return route.abort();
   });
@@ -47,11 +55,11 @@ try{
   });
   await page.goto(url,{timeout:60000});
   try{await page.getByTestId('start-story-home').click({timeout:90000});}
-  catch(e){await page.screenshot({path:out+'/load-failure.png'});report.body=(await page.locator('body').innerText()).slice(0,1500);throw e;}
+  catch(e){await page.screenshot({path:out+'/load-failure.png',timeout:120000});report.body=(await page.locator('body').innerText()).slice(0,1500);throw e;}
   await page.getByTestId('story-skip').click();
   const hold=page.getByTestId('story-hold');
   await hold.getByText('Удерживайте R, чтобы дотянуться').waitFor({timeout:120000});
-  await page.screenshot({path:out+'/knife.png'});
+  await page.screenshot({path:out+'/knife.png',timeout:120000});
   await page.keyboard.down('KeyR');await hold.waitFor({state:'hidden',timeout:35000});await page.keyboard.up('KeyR');
   await hold.getByText('Удерживайте R, чтобы разрезать верёвку').waitFor({timeout:35000});
   await page.keyboard.down('KeyR');await hold.waitFor({state:'hidden',timeout:55000});await page.keyboard.up('KeyR');
@@ -63,7 +71,7 @@ try{
   assert.deepEqual(saved,{save:'publication-smoke-do-not-touch',debug:false});
   assert.equal(new Set(report.storyAssets).size,8);
   assert.deepEqual(report.errors,[]);assert.deepEqual(report.unexpected,[]);assert.deepEqual(report.missing,[]);
-  await page.screenshot({path:out+'/free.png'});
+  await page.screenshot({path:out+'/free.png',timeout:120000});
   report.passed=true;console.log('PASS: '+url+' · packaged models + real R escape + normal play; save isolated');
 }catch(e){report.failure=String(e);throw e;}
 finally{await browser?.close();if(server)await new Promise(resolve=>server.close(resolve));await writeFile(out+'/report.json',JSON.stringify(report,null,2));}

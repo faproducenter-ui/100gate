@@ -16,8 +16,14 @@ from mathutils import Vector
 ROOT = Path(__file__).resolve().parents[2]
 TEX = ROOT / "public" / "textures"
 SOURCE = ROOT.parent / "100gate-art-sources"
-OUT = ROOT / "outputs" / "story-intro" / "home"
+QUALITY = "--quality-overhaul" in sys.argv
+OUT = ROOT / "outputs" / ("quality-overhaul" if QUALITY else "story-intro") / "home"
 PREFIX = "StoryHome_"
+if QUALITY:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from story_apartment_quality import residential_view, table_reading
+
+city_contract = None
 
 
 def material(name, color, roughness=.62, metallic=0, emit=None):
@@ -122,6 +128,18 @@ def box(name, position, size, mat, edge=0, segments=2, tile=None, yaw=0, parent=
     return obj
 
 
+def facade_box(name, position, size, mat, tile=None):
+    """Add a static box without forcing a scene evaluation for each window part."""
+    x, y, z = (axis*.5 for axis in size)
+    obj = mesh(name, [(-x,-y,-z), (x,-y,-z), (x,y,-z), (-x,y,-z),
+                      (-x,-y,z), (x,-y,z), (x,y,z), (-x,y,z)],
+               [(3,2,1,0), (0,1,5,4), (1,2,6,5), (2,3,7,6), (3,0,4,7), (4,5,6,7)], mat)
+    obj.location = position
+    if tile:
+        project_uv(obj, tile)
+    return obj
+
+
 def lathe(name, pos, profile, mat, count=28, cap=True):
     verts = [(r * math.cos(i * math.tau / count), r * math.sin(i * math.tau / count), z)
              for r, z in profile for i in range(count)]
@@ -211,6 +229,7 @@ def curtain(name, x0, width, linen):
 
 
 def room():
+    global city_contract
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.context.preferences.filepaths.save_version = 0
     scene = bpy.context.scene
@@ -239,11 +258,19 @@ def room():
     rug_stripe = material("Rug stitched slate threads", (.061, .094, .081), .9)
     fabric = material("Textured olive upholstery", (.106, .139, .113), .89)
     fabric_node = fabric.node_tree.nodes.new("ShaderNodeTexImage")
-    fabric_node.image = bpy.data.images.load(str(TEX / "linen-nor_gl.jpg"), check_existing=True)
+    upholstery_maps = SOURCE / "hessian_380"
+    fabric_node.image = bpy.data.images.load(
+        str(upholstery_maps / "nor_gl.jpg" if QUALITY else TEX / "linen-nor_gl.jpg"), check_existing=True)
+    fabric_node.image.colorspace_settings.name = "Non-Color"
     fabric_normal = fabric.node_tree.nodes.new("ShaderNodeNormalMap")
     fabric_normal.inputs["Strength"].default_value = .23
     fabric.node_tree.links.new(fabric_node.outputs["Color"], fabric_normal.inputs["Color"])
     fabric.node_tree.links.new(fabric_normal.outputs["Normal"], fabric.node_tree.nodes.get("Principled BSDF").inputs["Normal"])
+    if QUALITY:
+        rough = fabric.node_tree.nodes.new("ShaderNodeTexImage")
+        rough.image = bpy.data.images.load(str(upholstery_maps / "Rough.jpg"), check_existing=True)
+        rough.image.colorspace_settings.name = "Non-Color"
+        fabric.node_tree.links.new(rough.outputs["Color"], fabric.node_tree.nodes.get("Principled BSDF").inputs["Roughness"])
     rust = material("Ochre woven cushion", (.286, .106, .04), .86)
     blue = material("Indigo ceramic glaze", (.07, .125, .16), .34)
     ceramics = material("Unglazed cream ceramics", (.52, .415, .27), .52)
@@ -283,19 +310,22 @@ def room():
         ("Door casing head", (2.805, 1.08, 2.117), (.22, 1.14, .10)),
     ]:
         box(name, pos, size, white, .004)
-    # A shallow background instead of an expensive refractive glass shader.
-    night = material("Evening sky through window", (.026, .048, .087), .92, emit=.40)
-    exterior = material("Window exterior silhouette", (.008, .014, .025), .9, emit=.30)
-    window_light = material("Remote warm apartment lights", (.39, .22, .085), .52, emit=1.10)
-    box("Distant blue hour", (-.15, 3.2, 1.68), (3.10, .03, 2.30), night)
-    for i, (x, height, width) in enumerate([(-1.17, 1.25, .43), (-.72, 1.52, .36), (-.31, 1.17, .39), (.12, 1.44, .45), (.59, 1.37, .37), (.96, 1.20, .29)]):
-        box(f"City block {i}", (x, 3.12, height / 2), (width, .06, height), exterior)
-        box(f"City roof parapet {i}", (x, 3.112, height+.006), (width+.025, .08, .018), exterior)
-        for row in range(4):
-            for col in range(3):
-                if (3*i + 13*row + 7*col) % 9 in (1, 2, 4, 8):
-                    box(f"City lit window {i}-{row}-{col}", (x-.10+.096*col, 3.083, .92+.104*row),
-                        (.028, .015, .043), window_light)
+    if QUALITY:
+        city_contract = residential_view(facade_box, material, scanned, SOURCE / "red_brick_plaster_patch_02")
+    else:
+        # The old reviewed city is retained only for reproducing that release.
+        night = material("Evening sky through window", (.026, .048, .087), .92, emit=.40)
+        exterior = material("Window exterior silhouette", (.008, .014, .025), .9, emit=.30)
+        window_light = material("Remote warm apartment lights", (.39, .22, .085), .52, emit=1.10)
+        box("Distant blue hour", (-.15, 3.2, 1.68), (3.10, .03, 2.30), night)
+        for i, (x, height, width) in enumerate([(-1.17, 1.25, .43), (-.72, 1.52, .36), (-.31, 1.17, .39), (.12, 1.44, .45), (.59, 1.37, .37), (.96, 1.20, .29)]):
+            box(f"City block {i}", (x, 3.12, height / 2), (width, .06, height), exterior)
+            box(f"City roof parapet {i}", (x, 3.112, height+.006), (width+.025, .08, .018), exterior)
+            for row in range(4):
+                for col in range(3):
+                    if (3*i + 13*row + 7*col) % 9 in (1, 2, 4, 8):
+                        box(f"City lit window {i}-{row}-{col}", (x-.10+.096*col, 3.083, .92+.104*row),
+                            (.028, .015, .043), window_light)
     curtain("Left linen curtain", -1.42, .43, linen)
     curtain("Right linen curtain", .68, .44, linen)
     rod = lathe("Curtain rail", (-1.46, 2.205, 2.361), [(.015, 0), (.015, 2.65)], graphite)
@@ -370,8 +400,11 @@ def room():
         bpy.ops.mesh.primitive_torus_add(major_segments=20, minor_segments=8, location=(x+.06, y, table_h+.055), major_radius=.028, minor_radius=.008, rotation=(math.pi/2, 0, 0))
         bpy.context.object.name = f"Mug handle {i+1}"
         bpy.context.object.data.materials.append(mat)
-    box("Closed paperback cover", (1.81, -.52, table_h+.017), (.175, .235, .025), rust, .003, yaw=-.23)
-    box("Closed paperback pages", (1.81, -.52, table_h+.017), (.167, .222, .020), paper, .002, yaw=-.23)
+    if QUALITY:
+        table_reading(box, material, (1.81, -.52, table_h), paper)
+    else:
+        box("Closed paperback cover", (1.81, -.52, table_h+.017), (.175, .235, .025), rust, .003, yaw=-.23)
+        box("Closed paperback pages", (1.81, -.52, table_h+.017), (.167, .222, .020), paper, .002, yaw=-.23)
     lathe("Stoneware dish", (1.84, -.87, table_h+.006), [(.107, 0), (.12, .012), (.142, .038), (.141, .046), (.131, .043), (.114, .023), (.094, .012)], ceramics)
     # Ribbed radiator below the window.
     for n in range(12):
@@ -459,6 +492,10 @@ def export(scene):
             continue
         w, h = img.size
         cap = 768 if img.name.startswith(("plaster-", "linen-", "painted_wooden_chair")) else 1024
+        if QUALITY and "red_brick_plaster_patch_02" in img.filepath:
+            cap = 384  # This facade is at least 6 m beyond the window.
+        elif QUALITY and "hessian_380" in img.filepath:
+            cap = 512  # Fine detail is maintained by repeating the UV tile.
         if max(w, h) > cap:
             img.scale(max(1, round(w*cap/max(w, h))), max(1, round(h*cap/max(w, h))))
             # Blender does not mark a resized packed image dirty automatically.
@@ -500,6 +537,12 @@ def export(scene):
             {"name": "Grey Oak Veneer 02", "source": "https://polyhaven.com/a/grey_oak_veneer_02", "license": "CC0-1.0"},
         ],
     }
+    if QUALITY:
+        contract["city"] = city_contract
+        contract["license"] += [
+            {"name": "Red Brick Plaster Patch 02", "source": "https://polyhaven.com/a/red_brick_plaster_patch_02", "license": "CC0-1.0"},
+            {"name": "Hessian 380", "source": "https://polyhaven.com/a/hessian_380", "license": "CC0-1.0"},
+        ]
     (OUT / "story-home.json").write_text(json.dumps(contract, indent=2) + "\n", encoding="utf-8")
 
 

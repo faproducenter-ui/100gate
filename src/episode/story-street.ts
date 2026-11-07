@@ -6,6 +6,12 @@ import type { StoryBeat } from './story-intro-flow';
 import { streetBlocking } from './story-street-motion';
 import { disposeSet } from './story-home-preview';
 import { storyAsset } from './release';
+import { StorySedan } from './story-sedan';
+
+const useMotionStudy=import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-motion')==='1';
+const motionStudyUrl=`${import.meta.env.BASE_URL}outputs/quality-overhaul/gait/story-hero-walk-mocap.glb?v=cmu-91-02`;
+const useSedanStudy=import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-car')==='1';
+const sedanStudyUrl=`${import.meta.env.BASE_URL}outputs/quality-overhaul/vehicle/story-sedan.glb?v=dual-door-1`;
 
 /** One compact authored set, original hero mesh, shared skinned actor geometry. */
 export class StoryStreet {
@@ -17,6 +23,7 @@ export class StoryStreet {
   private readonly pivots:T.Object3D[];
   private readonly car:T.Object3D;
   private readonly carDoors:T.Object3D[];
+  private readonly sedan?:StorySedan;
   private readonly bagSocket=new T.Group();
   private readonly lights:T.SpotLight[]=[];
   private frame=streetBlocking('WALK_TO_SHOP',0);
@@ -30,7 +37,8 @@ export class StoryStreet {
     const get=(name:string)=>{const o=set.getObjectByName('StoryStreet_'+name);if(!o)throw Error('Missing street '+name);return o;};
     this.pivots=[get('ShopDoorHingeL'),get('ShopDoorHingeR')];
     this.car=get('Car');this.carDoors=[get('CarDoorHingeL'),get('CarDoorHingeR')];
-    this.hero=new StoryActor(walk,'Alexei',.9);this.scene.add(walk.scene);
+    const heroWalk=(useMotionStudy?assets[3]:undefined)??walk;
+    this.hero=new StoryActor(heroWalk,'Alexei',.9);this.scene.add(heroWalk.scene);
     for(let i=0;i<2;i++){
       const actor=new StoryActor({...walk,scene:clone(walk.scene) as T.Group},'Unknown '+(i+1),.9);
       actor.asset.scene.traverse(o=>{
@@ -47,10 +55,21 @@ export class StoryStreet {
       this.unknowns.push(actor);this.scene.add(actor.asset.scene);
       for(const skin of actor.skins)skin.onAfterRender=()=>this.renderedUnknowns.add(i);
     }
+    if(heroWalk!==walk){
+      // Keep the clone source in the disposal tree (shared geometries and
+      // bitmaps are released once), but never submit it to the renderer.
+      walk.scene.visible=false;this.scene.add(walk.scene);
+    }
     this.bagSocket.add(assets[2]!.scene);this.scene.add(this.bagSocket);
     set.traverse(o=>{if(o instanceof T.Mesh){
       o.receiveShadow=true;o.castShadow=!(Array.isArray(o.material)?o.material:[o.material]).some(m=>m.transparent);
     }});
+    if(useSedanStudy){
+      for(const child of this.car.children)child.visible=false;
+      const candidate=assets[useMotionStudy?4:3];
+      if(!candidate)throw Error('Missing quality-overhaul sedan');
+      this.sedan=new StorySedan(candidate.scene,this.car);
+    }
     const lamp=(x:number)=>{
       const light=new T.SpotLight(0xffdeb0,80,13,.91,.85,2);
       light.position.set(x,4.4,.24);light.target.position.set(x,.1,-1.4);
@@ -66,7 +85,10 @@ export class StoryStreet {
   }
   static async load(){
     const paths=['street/story-street.glb','hero/story-hero-walk.glb','grocery/story-grocery-bag.glb'];
-    const results=await Promise.allSettled(paths.map(p=>new GLTFLoader().loadAsync(storyAsset(p))));
+    const urls=paths.map(storyAsset);
+    if(useMotionStudy)urls.push(motionStudyUrl);
+    if(useSedanStudy)urls.push(sedanStudyUrl);
+    const results=await Promise.allSettled(urls.map(url=>new GLTFLoader().loadAsync(url)));
     if(results.some(r=>r.status==='rejected')){
       for(const r of results)if(r.status==='fulfilled')disposeSet(r.value.scene);
       throw Error('Street asset load failed, cannot show an empty fallback');
@@ -81,7 +103,8 @@ export class StoryStreet {
     this.hero.asset.scene.position.fromArray(f.hero.position);this.hero.asset.scene.rotation.y=f.hero.yaw;
     this.pivots[0]!.rotation.y=1.45*f.shopOpen;this.pivots[1]!.rotation.y=-1.45*f.shopOpen;
     this.car.position.x=f.carX;
-    this.carDoors[0]!.rotation.y=-1.05*f.carOpen;this.carDoors[1]!.rotation.y=1.05*f.carOpen;
+    if(this.sedan)this.sedan.sample(f.carX+10,f.carOpen);
+    else{this.carDoors[0]!.rotation.y=-1.05*f.carOpen;this.carDoors[1]!.rotation.y=1.05*f.carOpen;}
     for(let i=0;i<2;i++){
       const a=this.unknowns[i]!,p=f.unknowns[i]!;
       a.asset.scene.visible=p.visible;
@@ -99,8 +122,9 @@ export class StoryStreet {
       this.bagSocket.rotation.set(.035*Math.sin(f.hero.distance*6),0,.05*Math.sin(f.hero.distance*6+.8));
     }
   }
-  snapshot(){return {beat:this.beat,seconds:this.seconds,hero:this.hero.snapshot(),shopOpen:this.frame.shopOpen,
-    carX:this.frame.carX,carOpen:this.frame.carOpen,black:this.frame.black,groceries:this.frame.groceries,
+  snapshot(){return {beat:this.beat,seconds:this.seconds,hero:this.hero.snapshot(),heroPosition:this.frame.hero.position,
+    motion:useMotionStudy?'cmu-91-02':'original',shopOpen:this.frame.shopOpen,
+    carX:this.frame.carX,carOpen:this.frame.carOpen,sedan:this.sedan?.snapshot(),black:this.frame.black,groceries:this.frame.groceries,
     unknowns:this.unknowns.map((a,i)=>({visible:a.asset.scene.visible,rendered:this.renderedUnknowns.has(i),...a.snapshot()}))};}
   render(renderer:T.WebGLRenderer,aspect:number){
     const {position:p}=this.frame.hero;
