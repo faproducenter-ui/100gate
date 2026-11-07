@@ -35,6 +35,24 @@ export default function EpisodePage(){
   const cloudText={local:t('Сохранение на устройстве','Saved on this device'),saved:t('Резервная копия на сервере','Server backup saved'),saving:t('Сохранение…','Saving…'),offline:t('Локально · сервер недоступен','Local save · server unavailable'),unavailable:t('Хранилище браузера недоступно','Browser storage unavailable'),restored:t('Копия восстановлена','Backup restored')}[view.cloud]||'';
   return <main className="episode" data-mode={view.mode} data-release={ASSET_REVISION} data-intro={!view.save.flags.includes('free')}>
     <canvas ref={canvas} id="episode-canvas" aria-label={t('Трёхмерный мир игры','3D game world')}/>
+    {import.meta.env.DEV&&view.storyHome ? <section className="ep-story-home" data-testid="story-home-shot">
+      <header><span>100GATE / {t('ПРЕДПРОСМОТР ДЕКОРАЦИИ','SET PREVIEW')}</span>
+        <span>22:42 · {t('Квартира','Apartment')}</span></header>
+      {(view.mode==='title'||view.mode==='loading'||view.mode==='error'||view.storyHome==='end')&&
+        <div className="ep-overlay"><section className="ep-card">
+          <h2>{t('Квартира · 22:42','Apartment · 22:42')}</h2>
+          {view.mode==='loading'&&<p role="status">{t('Загрузка декорации Blender…','Loading the Blender set…')}</p>}
+          {view.mode==='error'&&<p role="alert">{view.error}</p>}
+          {view.mode==='title'&&<><p>{t('Проверка света, камеры и двери. Актёры и диалог ещё не подключены.','Lighting, camera and door check. Cast and dialogue are not wired in yet.')}</p>
+            <button className="ep-primary" data-testid="start-story-home" onClick={()=>begin()}>{t('Смотреть постановку','Watch blocking')}</button></>}
+          {view.storyHome==='end'&&<><p data-testid="story-home-end">{t('Конец проверки декорации. Дальнейшие сцены в работе.','End of the set check. Later scenes are in progress.')}</p>
+            <button className="ep-secondary" data-testid="story-home-back" onClick={()=>runtime.current?.title()}>{t('Назад','Back')}</button></>}
+        </section></div>}
+      {(view.mode==='playing'||view.mode==='paused')&&view.storyHome!=='end'&&
+        <button className="ep-secondary ep-story-pause" data-testid="story-home-pause" onClick={()=>{
+          if(view.mode==='paused')runtime.current?.resume();else runtime.current?.pause();
+        }}>{view.mode==='paused'?t('Продолжить','Resume'):t('Пауза','Pause')}</button>}
+    </section> : <>
     <div className="ep-vignette"/><div className="ep-grain"/>
     {view.mode==='loading'&&<div className="ep-loading"><div className="ep-seal">100</div><span className="ep-kicker">100GATE / {t('СТО ДВЕРЕЙ','ONE HUNDRED DOORS')}</span><h1>{t('Дом просыпается','The house is waking')}</h1><p>{t('Загрузка окружения и материалов','Loading the environment and materials')}</p><div className="ep-load-track"><i style={{width:`${Math.max(5,view.loading*100)}%`}}/></div></div>}
     {view.mode==='error'&&<div className="ep-overlay"><section className="ep-card"><h1>{t('Не удалось открыть дом','The house could not load')}</h1><p>{t('Нужен браузер с поддержкой WebGL 2. Попробуй обновить страницу.','A WebGL 2 browser is required. Try reloading the page.')}</p><details><summary>{t('Подробности','Details')}</summary>{view.error}</details><button onClick={()=>location.reload()}>{t('Повторить','Try again')}</button></section></div>}
@@ -98,5 +116,6 @@ export default function EpisodePage(){
       {view.save.items.includes('flashlight')&&<div className="ep-touch-light"><TouchButton game={runtime.current} code="KeyT" label={t('Фонарь','Light')}><Flashlight size={20}/></TouchButton></div>}
     </div>}
     {mobile&&<><button className="ep-fullscreen ep-icon" aria-label={t('Полный экран','Fullscreen')} onClick={()=>void fullscreen()}><Maximize size={17}/></button><div className="ep-rotate"><RotateCw size={46}/><h2>{t('Поверни телефон','Rotate your phone')}</h2><p>{t('Дом лучше исследовать в горизонтальном положении.','Explore the house in landscape orientation.')}</p></div></>}
+    </>}
   </main>;
 }

@@ -12,9 +12,10 @@ import { disposeComposer } from './lifetime';
 import { HEAD_MARGIN } from './headroom';
 import { EscapeRig, SLIP, PICKUP, CUT, RISE, GRIP_TIME, SAW_START, MIN_SAW_TRAVEL, ease } from './intro';
 import { NativeIntro, INTRO_END } from './native-intro';
+import type { StoryHomePreview } from './story-home-preview';
 
 export type Mode = 'loading' | 'title' | 'playing' | 'paused' | 'document' | 'bag' | 'ending' | 'error';
-export interface View { mode: Mode; loading: number; room: number; objective: string; prompt: string; progress: number; message: string; document?: string; save: Save; settings: Settings; cloud: string; held?:PropId; error?: string; }
+export interface View { mode: Mode; loading: number; room: number; objective: string; prompt: string; progress: number; message: string; document?: string; save: Save; settings: Settings; cloud: string; held?:PropId; error?: string; storyHome?: 'dialogue' | 'exit' | 'end'; }
 const SAVE_KEY='100gate.chapter1.save.v1', SETTINGS_KEY='100gate.settings.v1', TOKEN_KEY='100gate.save-token.v1';
 function readLocal(key:string):unknown {try{return JSON.parse(localStorage.getItem(key)||'null');}catch{return null;}}
 function writeLocal(key:string,value:unknown) {try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
@@ -36,9 +37,10 @@ function roomReflections(renderer:T.WebGLRenderer){
   source.dispose();gen.dispose();return target;
 }
 export class Episode {
+  private readonly storyHomeRequested=import.meta.env.DEV&&new URLSearchParams(location.search).get('story-home')==='1';
   private scene=new T.Scene(); private camera=new T.PerspectiveCamera(72,1,.055,100);
   private renderer:T.WebGLRenderer;private composer:EffectComposer;private bloom:UnrealBloomPass;private reflections?:T.WebGLRenderTarget;
-  private house?:House;private audio=new Foley();private keys=new Set<string>();private listeners:(()=>void)[]=[];
+  private house?:House;private audio=new Foley(!this.storyHomeRequested);private keys=new Set<string>();private listeners:(()=>void)[]=[];
   private frame=0;private disposed=false;private last=0;private elapsed=0;private lastUI=0;private atmosphereTime=0;private redraw=true;
   private velocity=new T.Vector3();private position=new T.Vector3();private yaw=0;private pitch=-.23;private grounded=true;
   private target?:Target;private hold=0;private holdId='';private holdElapsed=0;private ray=new T.Raycaster();private flashlight:T.SpotLight;
@@ -57,6 +59,7 @@ export class Episode {
   private savedPosition=new T.Vector3();private saveClock=0;private prePause:'playing'|'document'='playing';
   private mobile=matchMedia('(pointer: coarse)').matches||navigator.maxTouchPoints>0;
   private touchAxes={x:0,z:0};
+  private storyHome?: StoryHomePreview;
   constructor(private canvas:HTMLCanvasElement,private emit:(s:View)=>void){
     const raw=readLocal(SAVE_KEY);this.save=validSave(raw)?raw:newSave();this.recoverPack();
     const stored=readLocal(SETTINGS_KEY);this.settings={...DEFAULT_SETTINGS};
@@ -82,7 +85,22 @@ export class Episode {
     this.bloom=new UnrealBloomPass(new T.Vector2(1280,720),.16,.5,.9);this.composer.addPass(this.bloom);this.composer.addPass(new OutputPass());
     this.player=new PlayerRig(this.scene,this.camera);this.applyQuality();this.resize();this.bind();this.notify();
     this.frame=requestAnimationFrame(this.tick);
-    void this.init();
+    if(import.meta.env.DEV&&this.storyHomeRequested)void this.initStoryHome();else void this.init();
+  }
+  private async initStoryHome(){
+    if(!import.meta.env.DEV)return;
+    try {
+      const {StoryHomePreview}=await import('./story-home-preview');
+      if(this.disposed)return;
+      const preview=await StoryHomePreview.load();
+      if(this.disposed){preview.dispose();return;}
+      this.storyHome=preview;
+      const w=window as unknown as Record<string,unknown>;
+      w.__storyHomeTest=()=>preview.snapshot();
+      this.mode='title';this.loading=1;this.notify();
+    } catch(e) {
+      if(!this.disposed){this.mode='error';this.message=String(e);this.notify();}
+    }
   }
   private async init(){try{
     this.house=await createHouse(this.scene,this.save,n=>{if(!this.disposed){this.loading=n;this.notify();}});
@@ -236,6 +254,12 @@ export class Episode {
     on(window,'resize',()=>this.resize());
     on(window,'keydown',((e:KeyboardEvent)=>{
       if((e.target as HTMLElement)?.matches('input,select,textarea'))return;
+      if(this.storyHomeRequested){
+        if(!e.repeat&&e.code==='Escape'){
+          if(this.mode==='playing')this.pause();else if(this.mode==='paused')this.resume();
+        }
+        return;
+      }
       if(['Space','Tab','ControlLeft','ShiftLeft','KeyW','KeyA','KeyS','KeyD'].includes(e.code))e.preventDefault();
       if(e.repeat)return;this.keys.add(e.code);
       if(e.code==='Escape'){if(this.mode==='bag'){this.toggleBag();}else if(this.mode==='document'||this.mode==='playing'){this.pause();}else if(this.mode==='paused'){this.resume();}return;}
@@ -265,7 +289,7 @@ export class Episode {
     });
     on(window,'blur',()=>{this.keys.clear();if(this.mode==='playing')this.pause();});
     on(document,'visibilitychange',()=>{if(document.hidden&&this.mode==='playing')this.pause();});
-    on(this.canvas,'click',()=>{if(this.mode==='playing')this.requestLock();});
+    on(this.canvas,'click',()=>{if(!this.storyHomeRequested&&this.mode==='playing')this.requestLock();});
     on(window,'pagehide',()=>this.persist(false));
   }
   private releaseLock(){if(document.pointerLockElement===this.canvas){this.expectedPointerUnlock=true;document.exitPointerLock();}}
@@ -284,6 +308,10 @@ export class Episode {
     if(['KeyE','KeyF','KeyG'].includes(code))this.act(code);
   }
   start(fresh=false){
+    if(this.storyHomeRequested){
+      if(this.mode!=='title'||!this.storyHome)return;
+      this.storyHome.restart();this.mode='playing';this.redraw=true;this.notify();return;
+    }
     if(!this.house||this.mode==='error')return;
     if(fresh){this.save=newSave();this.position.fromArray(this.save.position);this.yaw=0;this.pitch=-.23;this.velocity.set(0,0,0);this.movement.set(0,0);this.grounded=true;this.equip();
       this.restoreEscape();
@@ -294,8 +322,8 @@ export class Episode {
     this.mode='playing';this.document=undefined;this.audio.setVolume(this.settings.volume);this.audio.start();this.requestLock();this.persist();this.notify();
   }
   pause(unlock=true){if(this.mode!=='playing'&&this.mode!=='document')return;this.prePause=this.mode;this.mode='paused';this.keys.clear();this.touchAxes={x:0,z:0};this.movement.set(0,0);this.hold=0;this.holdId='';this.audio.pause(true);if(unlock)this.releaseLock();this.persist();this.notify();}
-  resume(){if(this.mode!=='paused')return;this.mode=this.prePause;this.keys.clear();this.audio.pause(false);if(this.mode==='playing')this.requestLock();this.notify();}
-  title(){this.persist();this.mode='title';this.keys.clear();this.audio.pause(true);this.releaseLock();this.notify();}
+  resume(){if(this.mode!=='paused')return;this.mode=this.prePause;this.keys.clear();this.audio.pause(false);if(!this.storyHomeRequested&&this.mode==='playing')this.requestLock();this.notify();}
+  title(){this.persist();this.mode='title';this.storyHome?.restart();this.redraw=true;this.keys.clear();this.audio.pause(true);this.releaseLock();this.notify();}
   settingsChange(next:Partial<Settings>){this.settings={...this.settings,...next};writeLocal(SETTINGS_KEY,this.settings);this.audio.setVolume(this.settings.volume);this.applyQuality();this.resize();this.notify();}
   private applyReflections(){
     if(this.settings.quality==='low'){this.scene.environment=null;return;}
@@ -682,6 +710,15 @@ export class Episode {
   }
   private tick=(now:number)=>{
     if(this.disposed)return;const raw=this.last?(now-this.last)/1000:.016,dt=Math.min(.25,Math.max(0,raw));this.last=now;
+    if(this.storyHomeRequested){
+      if(this.storyHome){
+        const active=this.mode==='playing'&&!this.storyHome.snapshot().ended;
+        if(active)this.storyHome.advance(dt);
+        if(active||this.redraw){this.storyHome.render(this.renderer,this.camera.aspect);this.redraw=false;}
+        if(now-this.lastUI>100){this.lastUI=now;this.notify();}
+      }
+      this.frame=requestAnimationFrame(this.tick);return;
+    }
     if(this.mode==='playing'&&!this.manualClock){this.frameTimes.push(raw*1000);if(this.frameTimes.length>180)this.frameTimes.shift();this.elapsed+=dt;this.update(dt);}else if(this.mode==='title'&&this.house){
       this.camera.position.set(-2.9,4.9,3.8);this.camera.rotation.set(-.1,.21+Math.sin(now*.00007)*.035,0,'YXZ');this.player.setVisible(false);this.escape?.setVisible(false);if(this.nativeIntro)this.nativeIntro.root.visible=false;this.flashlight.intensity=0;
     }
@@ -711,17 +748,21 @@ export class Episode {
       this.scene.traverse(o=>{if(o.name==='rope')o.visible=!s.flags.includes('free');});this.cloud='restored';this.notify();
     }catch{this.cloud='offline';this.notify();}
   }
-  private notify(){if(this.disposed)return;this.emit({mode:this.mode,loading:this.loading,room:this.save.room,objective:this.objective(),prompt:this.mode==='playing'?this.prompt():'',progress:this.hold,message:this.elapsed<this.messageUntil?this.message:'',document:this.document,save:{...this.save,items:[...this.save.items]},settings:{...this.settings},cloud:this.cloud,held:this.held,error:this.mode==='error'?this.message:undefined});}
+  private notify(){if(this.disposed)return;
+    const story=this.storyHome?.snapshot();
+    const storyHome=this.storyHomeRequested?(story?.ended?'end':story?.beat==='HOME_EXIT'?'exit':'dialogue'):undefined;
+    this.emit({mode:this.mode,loading:this.loading,room:this.save.room,objective:storyHome?'':this.objective(),prompt:!storyHome&&this.mode==='playing'?this.prompt():'',progress:this.hold,message:this.elapsed<this.messageUntil?this.message:'',document:this.document,save:{...this.save,items:[...this.save.items]},settings:{...this.settings},cloud:this.cloud,held:this.held,error:this.mode==='error'?this.message:undefined,storyHome});}
   private releaseScene(){this.house?.weather.dispose();const materials=new Set<T.Material>();const textures=new Set<T.Texture>();const geometries=new Set<T.BufferGeometry>();this.scene.traverse(o=>{const mesh=o as T.Mesh;if(mesh.geometry)geometries.add(mesh.geometry);if(mesh.material){for(const mat of Array.isArray(mesh.material)?mesh.material:[mesh.material])materials.add(mat);}});for(const g of geometries)g.dispose();for(const mat of materials){for(const value of Object.values(mat))if(value instanceof T.Texture)textures.add(value);mat.dispose();}for(const t of textures)t.dispose();this.scene.clear();}
   dispose(){
     if(this.disposed)return;
     this.persist(false);this.disposed=true;cancelAnimationFrame(this.frame);clearTimeout(this.cloudTimer);
     for(const off of this.listeners)off();this.keys.clear();
     if(document.pointerLockElement===this.canvas)document.exitPointerLock();
-    this.audio.dispose();this.releaseScene();this.reflections?.dispose();
+    this.audio.dispose();this.storyHome?.dispose();this.releaseScene();this.reflections?.dispose();
     // EffectComposer owns its two buffers, but does not dispose the passes it contains.
     disposeComposer(this.composer);this.renderer.dispose();
     const w=window as unknown as Record<string,unknown>;
     delete w.__episodeTest;delete w.render_game_to_text;delete w.advanceTime;
+    if(import.meta.env.DEV&&this.storyHomeRequested)delete w.__storyHomeTest;
   }
 }

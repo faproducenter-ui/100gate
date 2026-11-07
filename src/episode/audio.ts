@@ -13,19 +13,23 @@ export class Foley {
   private ambience?: AudioBufferSourceNode;
   private active = false;
   private readonly abort=new AbortController();
-  private readonly download=fetch(chapterAsset('assets/chapter1/foley-bank.wav'),{signal:this.abort.signal})
-    .then(r=>r.ok?r.arrayBuffer():undefined).catch(()=>undefined);
+  private readonly download?: Promise<ArrayBuffer | undefined>;
   private bank?:AudioBuffer;
   private last=new Map<Recorded,number>();
   private counts:Partial<Record<Recorded,number>>={};
   volume = .65;
+  constructor(preload = true) { if (preload) this.download = this.loadBank(); }
+  private loadBank() {
+    return fetch(chapterAsset('assets/chapter1/foley-bank.wav'), { signal: this.abort.signal })
+      .then(r => r.ok ? r.arrayBuffer() : undefined).catch(() => undefined);
+  }
   start() {
     if (!this.context) {
       const WebAudio=window.AudioContext??(window as Window&{webkitAudioContext?:typeof AudioContext}).webkitAudioContext;
       if(!WebAudio)return;
       this.context = new WebAudio(); this.master = this.context.createGain(); this.master.connect(this.context.destination);
       const context=this.context;
-      void this.download.then(async bytes=>{if(bytes&&context.state!=='closed')this.bank=await context.decodeAudioData(bytes);}).catch(()=>{});
+      void (this.download??this.loadBank()).then(async bytes=>{if(bytes&&context.state!=='closed')this.bank=await context.decodeAudioData(bytes);}).catch(()=>{});
       this.master.gain.value = this.volume;
       this.noise = this.context.createBuffer(1, this.context.sampleRate * 3, this.context.sampleRate);
       const data = this.noise.getChannelData(0); let last = 0;

@@ -34,3 +34,7 @@
 /* Keep introductory action prompts away from the hand/knife contact area. */
 .episode[data-intro=true] .ep-prompt{top:auto;bottom:13%;}
 @media(max-height:450px) and (orientation:landscape){.episode[data-intro=true] .ep-prompt{bottom:4%;}}
+.ep-story-home{position:absolute;inset:0;pointer-events:none}
+.ep-story-home header{position:absolute;inset:0 0 auto;display:flex;justify-content:space-between;gap:1rem;padding:1.2rem max(1.3rem,env(safe-area-inset-left));background:linear-gradient(#08090cc9,transparent);color:#eee3cf;font-size:.75rem;letter-spacing:.08em}
+.ep-story-home .ep-overlay,.ep-story-home .ep-story-pause{pointer-events:auto}
+.ep-story-pause{position:absolute;bottom:max(1rem,env(safe-area-inset-bottom));right:max(1.3rem,env(safe-area-inset-right))}
