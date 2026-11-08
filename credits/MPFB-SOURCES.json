@@ -1,0 +1,48 @@
+{
+  "license": "CC0-1.0 for selected character, clothing and skin data",
+  "referenceOnly": "fps-arms.7z inspected; no foreign mesh/action retargeted",
+  "mpfbCommit": "d0a32e57a7f915cb2f2b95410e2117648c7bbb7e",
+  "status": "STATIC AND GRIP-CLOSE STUDY ONLY: not integrated; no escape intro accepted",
+  "archives": [
+    {
+      "file": "shirts01.zip",
+      "sha256": "a5a723b0e84a109bb190fcfeac7f1de4138d875da3e30fe5b3340eac9f38bcd3",
+      "url": "https://files.makehumancommunity.org/asset_packs/shirts01/shirts01_cc0.zip"
+    },
+    {
+      "file": "pants01-mirror.zip",
+      "sha256": "e4e0ec60db34f279be291a83cfd7b342a7c5cf09bb7676682a5f39f4f6ac4ad9",
+      "url": "https://files.makehumancommunity.org/asset_packs/pants01/pants01_cc0.zip"
+    },
+    {
+      "file": "shoes01-mirror.zip",
+      "sha256": "ded3f70428505eabbf1f6d7b5f61196a7366ef20757103d276ad0ed336c35ada",
+      "url": "https://files.makehumancommunity.org/asset_packs/shoes01/shoes01_cc0.zip"
+    },
+    {
+      "file": "skins02-mirror.zip",
+      "sha256": "1613f1ef3afca53094511d26620ed7cf1d2dedc29ed3d384d60bdebe250698ae",
+      "url": "https://files.makehumancommunity.org/asset_packs/skins02/skins02_cc0.zip"
+    },
+    {
+      "file": "fps-arms.7z",
+      "sha256": "31f6c7bd5caea8856c4aafca8461f38a3c8bfdd3d8f05c898e403b9475e54562",
+      "url": "https://lpc.opengameart.org/sites/default/files/fps%20arms.7z"
+    }
+  ],
+  "makehumanEyeCommit": "a8bc2d54ff0ac92e78ff71431b1023eda42bf482",
+  "artifacts": [
+    {
+      "name": "character-mpfb-review.blend",
+      "sha256": "1e577e215a311761bcfe2ac9147ea9a1eb86ca4083a748f6ea56450a5fc1b3ad"
+    },
+    {
+      "name": "character-mpfb-grip-review.glb",
+      "sha256": "7bf4673a937f8a22d20653d7983592394cc74f33a7e1d3eadb9a95b2e6690480"
+    },
+    {
+      "name": "knife-prop-review.blend",
+      "sha256": "3bd954c8dcfbeec4dbdcbfc1618403e52ba14fff594ef3a24695e999e4195685"
+    }
+  ]
+}

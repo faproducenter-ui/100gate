@@ -1,0 +1,36 @@
+{
+  "scope": "Local cinematic quality study; not part of the published story-preview build",
+  "assets": [
+    {
+      "path": "outputs/quality-overhaul/home/story-home.glb",
+      "sha256": "e47f6e8998ed200814c6cce564a7450b1ad92255f13cd53cf4e4cfcdb049f566",
+      "source": "Existing 100gate apartment and the materials listed in its export contract",
+      "newMaterials": [
+        {"url": "https://polyhaven.com/a/red_brick_plaster_patch_02", "license": "CC0-1.0"},
+        {"url": "https://polyhaven.com/a/hessian_380", "license": "CC0-1.0"}
+      ]
+    },
+    {
+      "path": "outputs/quality-overhaul/gait/story-hero-walk-mocap.glb",
+      "sha256": "2f3d3426f182e113309394b74b05f071593f558db6cff8ab1f072caf39820b73",
+      "source": "https://mocap.cs.cmu.edu/search.php?subjectnumber=91",
+      "credit": "The data used in this project was obtained from mocap.cs.cmu.edu.",
+      "terms": "Use in a product is permitted; do not resell the raw motion capture data as a standalone product.",
+      "changes": "CMU 91_02 retargeted to the existing CC0 MPFB actor; calibrated shoe contacts, native hands, authored 1m rootless cycle"
+    },
+    {
+      "path": "outputs/quality-overhaul/vehicle/story-sedan.glb",
+      "sha256": "6443ec3ca9df31baece34c0bd41b6acd3ede2ac01accd089e96825dfde83cc15",
+      "source": "https://www.innerscene.com/tools/library/3d-parts/red-four-door-sedan-1d32e180",
+      "download": "https://www.innerscene.com/api/library/red-four-door-sedan-1d32e180/download",
+      "sourceSha256": "f7420509dc0baeed9c193208f726eecc9e7a1b84d3463f64ed912cc992d9f7e3",
+      "author": "Innerscene Corp",
+      "license": "CC0-1.0",
+      "changes": "Dual rear apertures cut from source body; hinged panels, separate glass, finished interior trim and four rolling pivots; static batches per motion owner"
+    }
+  ],
+  "researchOnly": [
+    {"source": "https://static.makehumancommunity.org/assets/assetpacks/faceunits01.html", "license": "CC0", "status": "Native head displacement validated on both actors; not yet in runtime"},
+    {"source": "https://static.makehumancommunity.org/assets/assetpacks/visemes02.html", "license": "CC0", "status": "Native mouth displacement validated on both actors; not yet in runtime"}
+  ]
+}
