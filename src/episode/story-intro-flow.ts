@@ -15,18 +15,20 @@ type Input = { hold?: boolean; paused?: boolean; cutVerified?: boolean };
 const isHeldBeat = (beat: StoryBeat) => beat === 'REACH' || beat === 'RIGHT_CUT';
 const epsilon = 1e-9;
 
-function isCheckpoint(value: unknown): value is StoryCheckpoint {
+function isCheckpoint(value: unknown,abductionDuration:number): value is StoryCheckpoint {
   if (!value || typeof value !== 'object') return false;
   const { version, beat, seconds } = value as Partial<StoryCheckpoint>;
   return version === 3 && typeof beat === 'string' && STORY_BEATS.includes(beat)
     && typeof seconds === 'number' && Number.isFinite(seconds)
-    && seconds >= 0 && seconds <= STORY_SECONDS[beat];
+    && seconds >= 0 && seconds <= (beat==='ABDUCTION'?abductionDuration:STORY_SECONDS[beat]);
 }
 
 export class StoryIntroFlow {
   private beat: StoryBeat = 'DIALOGUE';
   private seconds = 0;
   private needsRelease = false;
+  constructor(private readonly abductionDuration:number=STORY_SECONDS.ABDUCTION){}
+  duration(beat:StoryBeat){return beat==='ABDUCTION'?this.abductionDuration:STORY_SECONDS[beat];}
 
   private enter(beat: StoryBeat, held: boolean, seconds = 0) {
     this.beat = beat;
@@ -43,7 +45,7 @@ export class StoryIntroFlow {
     // An existing completed escape is authoritative even if an intro snapshot
     // was saved out of order. No inventory or quest mutations in this clock.
     if (legacy === 'free') this.enter('FREE', false);
-    else if (isCheckpoint(checkpoint)) this.enter(checkpoint.beat, held, checkpoint.seconds);
+    else if (isCheckpoint(checkpoint,this.abductionDuration)) this.enter(checkpoint.beat, held, checkpoint.seconds);
     else this.enter(
       legacy === 'right-cut' ? 'UNWRAP' : legacy === 'knife-held' ? 'RIGHT_CUT'
         : legacy === 'mid-intro' ? 'REACH' : 'DIALOGUE',
@@ -58,7 +60,7 @@ export class StoryIntroFlow {
     let remaining = dt;
     while (remaining > 0 && this.beat !== 'FREE') {
       if (isHeldBeat(this.beat) && (!hold || this.needsRelease)) return;
-      const duration = STORY_SECONDS[this.beat];
+      const duration = this.duration(this.beat);
       const step = Math.min(remaining, duration - this.seconds);
       this.seconds += step;
       remaining -= step;

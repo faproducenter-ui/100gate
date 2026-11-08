@@ -41,8 +41,8 @@ export class StorySedan {
       o.castShadow=materials.every(m=>!m.transparent&&!(m instanceof T.MeshPhysicalMaterial&&m.transmission>.1));
     });
   }
-  sample(travel:number,opening:number){
-    for(const d of this.doors)d.pivot.rotation.y=d.closed+d.open*opening;
+  sample(travel:number,opening:number,wide=false){
+    for(const d of this.doors)d.pivot.rotation.y=d.closed+(wide?Math.sign(d.open)*1.55:d.open)*opening;
     // Rotation is determined by distance, not FPS or wall time. After the
     // existing brake curve stops, wheels do not continue spinning.
     for(const w of this.wheels)w.pivot.quaternion.copy(w.rest)

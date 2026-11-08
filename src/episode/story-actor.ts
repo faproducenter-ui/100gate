@@ -10,8 +10,10 @@ export class StoryActor {
   private readonly rightFoot: T.Bone;
   private readonly leftFoot: T.Bone;
   private readonly clip: T.AnimationClip;
+  private active:T.AnimationAction;
   readonly skins: T.SkinnedMesh[] = [];
   readonly bones: T.Bone[] = [];
+  private faceState?:Readonly<Record<string,number>>;
   constructor(readonly asset: GLTF, readonly role: string, minDuration=8) {
     asset.scene.traverse(o => {
       if (o instanceof T.SkinnedMesh) {
@@ -32,18 +34,36 @@ export class StoryActor {
       throw Error('Missing actual native performance for '+role);
     }
     this.clip=clip;this.mixer=new T.AnimationMixer(asset.scene);
-    this.mixer.clipAction(clip).setLoop(T.LoopOnce,1).play();
+    this.active=this.mixer.clipAction(clip).setLoop(T.LoopOnce,1).play();
   }
-  sample(seconds:number){
-    this.mixer.setTime(T.MathUtils.clamp(seconds,0,this.clip.duration-1e-5));
+  sample(seconds:number,clip=this.clip){
+    if(this.active.getClip()!==clip){
+      this.active.stop();
+      this.active=this.mixer.clipAction(clip).reset().setLoop(T.LoopOnce,1).play();
+    }
+    this.mixer.setTime(T.MathUtils.clamp(seconds,0,clip.duration-1e-5));
     this.asset.scene.updateMatrixWorld(true);
   }
+  setFace(weights:Readonly<Record<string,number>>){
+    let matched=0;
+    for(const s of this.skins){
+      const values=s.morphTargetInfluences,targets=s.morphTargetDictionary;
+      if(!values||!targets)continue;
+      for(const [name,value] of Object.entries(weights)){
+        const index=targets[name];
+        if(index!==undefined){values[index]=T.MathUtils.clamp(value,0,1);matched++;}
+      }
+    }
+    if(matched)this.faceState=weights;
+    return matched;
+  }
+  headPoint(out:T.Vector3){return this.head.getWorldPosition(out);}
   snapshot(){
     const world=(b:T.Bone)=>b.getWorldPosition(new T.Vector3()).toArray();
     return {role:this.role,skins:this.skins.length,bones:this.bones.length,
       fingerBones:this.bones.filter(b=>/^(index|middle|ring|pinky|thumb)_/.test(b.name)).length,
       pose:[...this.head.quaternion.toArray(),...this.wrist.quaternion.toArray()],
-      feet:[world(this.leftFoot),world(this.rightFoot)],hips:world(this.hips),
+      feet:[world(this.leftFoot),world(this.rightFoot)],hips:world(this.hips),face:this.faceState,
       triangles:this.skins.reduce((n,m)=>n+(m.geometry.index?.count??m.geometry.attributes.position.count)/3,0),
     };
   }

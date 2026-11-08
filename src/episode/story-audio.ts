@@ -1,12 +1,15 @@
 import type {Foley} from './audio';
 import type {StoryBeat} from './story-intro-flow';
 import {storyAsset} from './release';
+import {egressStudy} from './story-final-options';
+import {storyFoleyEvents} from './story-foley-timing';
 
 /** Keep decoded ambience in the existing game audio context and volume bus. */
 export class StoryAudio {
   private loop?:AudioBufferSourceNode;
   private gain?:GainNode;
   private low?:BiquadFilterNode;
+  private motor?:{tone:OscillatorNode;filter:BiquadFilterNode;gain:GainNode};
   private readonly abort=new AbortController();
   private beat?:StoryBeat;
   private last=0;
@@ -37,7 +40,25 @@ export class StoryAudio {
     }
     const last=this.beat===beat?this.last:0;
     const crossed=(at:number)=>seconds>=at&&last<at&&seconds-last<.35;
-    if((beat==='HOME_EXIT'&&(crossed(5.3)||crossed(9.85)))||(beat==='ABDUCTION'&&crossed(2.3)))this.foley.play('door');
+    if((beat==='HOME_EXIT'&&(crossed(5.3)||crossed(9.85)))||(!egressStudy&&beat==='ABDUCTION'&&crossed(2.3)))this.foley.play('door');
+    if(egressStudy&&context&&this.foley.master){
+      if(beat==='ABDUCTION'&&!this.motor){
+        const tone=context.createOscillator(),filter=context.createBiquadFilter(),gain=context.createGain();
+        tone.type='triangle';filter.type='lowpass';filter.frequency.value=125;gain.gain.value=0;
+        tone.connect(filter).connect(gain).connect(this.foley.master);tone.start();
+        this.motor={tone,filter,gain};
+      }
+      if(this.motor){
+        const moving=beat==='ABDUCTION';
+        const speed=(1-Math.min(seconds/2,1))**2;
+        this.motor.tone.frequency.setTargetAtTime(32+45*speed,context.currentTime,.15);
+        this.motor.gain.gain.setTargetAtTime(moving?(.024+.035*speed)*(1-black):0,context.currentTime,.20);
+      }
+      if(seconds-last<.35)for(const cue of storyFoleyEvents(beat,last,seconds,true)){
+        if(cue.kind==='boot')this.foley.step(false,false,cue.pan<0);
+        else this.foley.cinematicCue(cue.kind,cue.pan);
+      }
+    }
     if(beat==='STRAIN'&&(crossed(.45)||crossed(1.25)||crossed(2.28)))this.foley.rock(.34,this.steps++%2?1:-1);
     if(beat==='LEFT_HITCH_RELEASE'&&crossed(1.27))this.foley.ropeContact(-.25,false);
     const walks=beat==='WALK_TO_SHOP'||beat==='WALK_HOME'||(beat==='SHOP_ENTER'&&seconds>1)
@@ -46,5 +67,6 @@ export class StoryAudio {
     if(walks&&seconds-last<.35&&Math.floor(seconds*rate)!==Math.floor(last*rate))this.foley.step(false,false,this.steps++%2===0);
     this.beat=beat;this.last=seconds;
   }
-  dispose(){this.abort.abort();this.loop?.stop();this.loop?.disconnect();this.gain?.disconnect();this.low?.disconnect();}
+  dispose(){this.abort.abort();this.loop?.stop();this.loop?.disconnect();this.gain?.disconnect();this.low?.disconnect();
+    this.motor?.tone.stop();this.motor?.tone.disconnect();this.motor?.filter.disconnect();this.motor?.gain.disconnect();}
 }

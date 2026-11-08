@@ -71,6 +71,27 @@ export class Foley {
   step(running:boolean,crouched:boolean,left:boolean){
     if(!this.sample(running?'run':'walk',{gain:crouched?.54:1,pan:left?-.11:.11,rate:crouched?.89:1,room:true}))this.procedural('step');
   }
+  cinematicCue(kind:'brake'|'carDoor'|'cloth'|'swell',pan:number){
+    const c=this.context,m=this.master,noise=this.noise;
+    if(!this.active||!c||!m||!noise)return;
+    const t=c.currentTime;
+    const p=c.createStereoPanner();p.pan.value=pan;p.connect(m);
+    let tail:AudioBufferSourceNode|undefined,end=t;
+    const hit=(delay:number,length:number,hz:number,endHz:number,volume:number,q:number)=>{
+      const n=c.createBufferSource(),g=c.createGain(),f=c.createBiquadFilter();
+      const s=t+delay;n.buffer=noise;f.type='bandpass';f.Q.value=q;
+      f.frequency.setValueAtTime(hz,s);f.frequency.exponentialRampToValueAtTime(endHz,s+length);
+      g.gain.setValueAtTime(.0001,s);g.gain.linearRampToValueAtTime(volume,s+.022);
+      g.gain.exponentialRampToValueAtTime(.0001,s+length);
+      n.connect(f).connect(g).connect(p);n.start(s,Math.random());n.stop(s+length);
+      if(s+length>end){end=s+length;tail=n;}
+    };
+    if(kind==='brake'){hit(0,.47,770,290,.68,1.5);hit(.10,.36,1850,810,.18,4);}
+    else if(kind==='carDoor'){hit(0,.12,1180,480,.40,1.2);hit(.072,.32,185,65,.67,.9);}
+    else if(kind==='cloth'){hit(0,.24,1350,770,.26,.8);hit(.12,.16,630,280,.27,.8);}
+    else{hit(0,.66,210,38,.78,1.5);}
+    if(tail)tail.onended=()=>p.disconnect();
+  }
   rock(strength:number,side:number){if(!this.sample('chair',{gain:.48+strength*.66,pan:.12*side,rate:.91+strength*.2,room:true}))this.procedural('scrape');}
   ropeContact(pan:number,sever:boolean){
     const c=this.context;if(!this.active||!c||!this.noise||!this.master)return;

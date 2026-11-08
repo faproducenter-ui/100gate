@@ -6,8 +6,13 @@ import type { StoryStreet } from './story-street';
 import {StoryAudio} from './story-audio';
 import type {Foley} from './audio';
 import {storyAsset} from './release';
+import {egressStudy,FINAL_ABDUCTION_SECONDS} from './story-final-options';
+import {dialogueFace} from './story-face';
 
 const apartmentCandidate = import.meta.env.DEV && new URLSearchParams(location.search).get('quality-pass')==='1';
+const faceCandidate=import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-face')==='1';
+const faceReviewCamera=import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-face-camera')==='1';
+const faceUrl=(file:string)=>`${import.meta.env.BASE_URL}outputs/quality-overhaul/dialogue/${file}?v=facial-1`;
 const setUrl = apartmentCandidate
   ? `${import.meta.env.BASE_URL}outputs/quality-overhaul/home/story-home.glb?v=city-depth-1`
   : storyAsset('home/story-home.glb');
@@ -40,7 +45,7 @@ export function disposeSet(root: T.Object3D) {
 export class StoryHomePreview {
   private readonly scene = new T.Scene();
   private readonly camera = new T.PerspectiveCamera(61, 1, .045, 28);
-  readonly flow = new StoryIntroFlow();
+  readonly flow = new StoryIntroFlow(egressStudy?FINAL_ABDUCTION_SECONDS:undefined);
   private readonly door: T.Object3D;
   private readonly opening: number;
   private readonly restRotation: number;
@@ -60,8 +65,8 @@ export class StoryHomePreview {
   static async load() {
     const loader=new GLTFLoader();
     const results=await Promise.allSettled([setUrl,
-      storyAsset('hero/story-hero-home.glb'),
-      storyAsset('partner/story-partner-home.glb'),
+      faceCandidate?faceUrl('story-hero-home-face.glb'):storyAsset('hero/story-hero-home.glb'),
+      faceCandidate?faceUrl('story-partner-home-face.glb'):storyAsset('partner/story-partner-home.glb'),
     ].map(url=>loader.loadAsync(url)));
     if(results.some(r=>r.status==='rejected')){
       for(const r of results)if(r.status==='fulfilled')disposeSet(r.value.scene);
@@ -72,6 +77,7 @@ export class StoryHomePreview {
       const view=new StoryHomePreview(assets[0]!.scene);
       for(let i=1;i<assets.length;i++){
         const actor=new StoryActor(assets[i]!,i===1?'Alexei':'Partner');
+        if(faceCandidate&&!actor.setFace(dialogueFace(i===1?'Alexei':'Partner',0)))throw Error('Missing native facial shapes '+actor.role);
         view.actors.push(actor);view.scene.add(assets[i]!.scene);
       }
       const {StoryStreet}=await import('./story-street');
@@ -145,7 +151,7 @@ export class StoryHomePreview {
     const { beat, seconds } = this.flow.checkpoint();
     if(beat==='AWAKE_BOUND')return;
     const untilBound=STORY_BEATS.slice(STORY_BEATS.indexOf(beat),STORY_BEATS.indexOf('AWAKE_BOUND'))
-      .reduce((sum,b)=>sum+STORY_SECONDS[b],0)-seconds;
+      .reduce((sum,b)=>sum+this.flow.duration(b),0)-seconds;
     this.flow.advance(Math.min(dt,untilBound));
     this.sample();
   }
@@ -154,7 +160,10 @@ export class StoryHomePreview {
     const onStreet=STORY_BEATS.indexOf(beat)>=STORY_BEATS.indexOf('WALK_TO_SHOP');
     const t=beat==='DIALOGUE'?seconds:beat==='HOME_EXIT'?STORY_SECONDS.DIALOGUE+seconds:19;
     if(!this.homeFinished){
-      for(const actor of this.actors)actor.sample(t);
+      for(const [i,actor] of this.actors.entries()){
+        actor.sample(t);
+        if(faceCandidate)actor.setFace(dialogueFace(i===0?'Alexei':'Partner',t));
+      }
       this.door.rotation.y=this.restRotation+this.opening*ease(t,14.3,16.35)*(1-ease(t,18.4,19));
       this.scene.updateMatrixWorld(true);
       this.homeFinished=onStreet;
@@ -171,7 +180,13 @@ export class StoryHomePreview {
     this.camera.fov = dialogue ? this.dialogue.fov : this.exitCamera.fov;
     this.camera.updateProjectionMatrix();
     if (dialogue) {
-      if(seconds>3.5&&seconds<6.2){
+      if(faceReviewCamera){
+        const isPartner=seconds>3.5&&seconds<6.2;
+        const aim=this.actors[isPartner?1:0]!.headPoint(new T.Vector3());aim.y+=.050;
+        this.camera.fov=38;
+        this.camera.position.copy(aim).add(new T.Vector3(isPartner?-.73:.73,.026,.55));
+        this.camera.lookAt(aim);
+      }else if(seconds>3.5&&seconds<6.2){
         this.camera.fov=45;this.camera.position.set(-1.65,1.52,1.10);this.camera.lookAt(.45,1.32,-.56);
       }else if(seconds>6.2&&seconds<8.2){
         this.camera.fov=45;this.camera.position.set(1.53,1.54,1.23);this.camera.lookAt(-.88,1.38,-.49);

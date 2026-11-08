@@ -1,0 +1,19 @@
+{
+  "scope": "Local continuation of the 100gate cinematic, not published",
+  "assetRoot": "outputs/quality-overhaul",
+  "assets": [
+    {"path":"stop/story-hero-stops.json","sha256":"1e522be4f3f8e1bd8eba9c7a602990180ce8c4790919b5d3ef34e415320ba06c","source":"Native Alexei and the existing CMU-retargeted gait","authoring":"scripts/art/author-story-stop.py"},
+    {"path":"egress/egress-L.glb","sha256":"f2d287b7bdd25a444c5632d96c039b11eea8a1acedb0e1b9e4777fa31f597aec","source":"Native Alexei; new IK performance around the CC0 Innerscene sedan","authoring":"scripts/art/author-story-sedan-egress.py"},
+    {"path":"egress/egress-R.glb","sha256":"4aeb8ac096d9480bb0196480406105be336af740d19dee7592ba09089e067ca6","source":"Native Alexei; new IK performance around the CC0 Innerscene sedan","authoring":"scripts/art/author-story-sedan-egress.py"},
+    {"path":"sleeves/story-upright-escape.glb","sha256":"6097652aec909f6ee279b7f3e4b50f51e1f06be8dc5d83abcddd1f788b146574","source":"Existing upright escape, original skin and wardrobe","authoring":"scripts/art/author-story-sleeve-correctives.py"},
+    {"path":"dialogue/story-hero-home-face.glb","sha256":"8978a9e67c1dd77404c5db34c9f62aae4e11593464add61eb3d1ac0e127c1c03","source":"Existing home cast + CC0 MPFB Faceunits 01 by Mika Suominen","authoring":"scripts/art/author-story-faces.py"},
+    {"path":"dialogue/story-partner-home-face.glb","sha256":"565d4b4a3889495a42120b9a822716a9203bd0b780553c6a2b10177022390ae3","source":"Existing home cast + CC0 MPFB Faceunits 01 by Mika Suominen","authoring":"scripts/art/author-story-faces.py"}
+  ],
+  "sources": {
+    "base": "art/provenance/STORY-QUALITY-OVERHAUL.json",
+    "sedan": "https://www.innerscene.com/tools/library/3d-parts/red-four-door-sedan-1d32e180",
+    "faceMorphs": "https://static.makehumancommunity.org/assets/assetpacks/faceunits01.html",
+    "existingCityBed": "art/provenance/STORY-CITY-AUDIO.json",
+    "newAudio": "Original Web Audio synthesis for vehicle engine, brake, door thumps, clothing, and blackout; no new third-party recordings"
+  }
+}
