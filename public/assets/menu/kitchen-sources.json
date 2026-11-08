@@ -1,0 +1,55 @@
+{
+  "render": {
+    "engine": "Blender 4.5 / Cycles",
+    "samples": 42,
+    "denoised": true,
+    "viewTransform": "AgX / Medium High Contrast",
+    "lensMm": 31,
+    "fStop": 3.5,
+    "steadyLampWatts": 62,
+    "dimLampFraction": 0.16,
+    "sameCamera": true
+  },
+  "resolution": [
+    1440,
+    810
+  ],
+  "source": "scripts/art/author-menu-kitchen.py",
+  "plates": {
+    "kitchen.webp": {
+      "bytes": 44330,
+      "sha256": "8006077b37c2349e71d3865593fc50fe7ca925f20f5135c9f7743c2de9d63754"
+    },
+    "kitchen-dim.webp": {
+      "bytes": 17020,
+      "sha256": "e60f9523942181ae5d4024d2783096f90a3e0d6880f91bded6fc14d8b951f0d1"
+    }
+  },
+  "licensed": [
+    {
+      "asset": "Painted Wooden Chair 02",
+      "author": "Kirill Sannikov",
+      "source": "https://polyhaven.com/a/painted_wooden_chair_02",
+      "license": "CC0-1.0"
+    },
+    {
+      "asset": "Painted Wooden Table",
+      "author": "Kirill Sannikov",
+      "source": "https://polyhaven.com/a/painted_wooden_table",
+      "license": "CC0-1.0"
+    },
+    {
+      "asset": "Worn Plaster Wall",
+      "author": "Dimitrios Savva",
+      "source": "https://polyhaven.com/a/worn_plaster_wall",
+      "license": "CC0-1.0"
+    },
+    {
+      "asset": "Wood Planks",
+      "author": "Amal Kumar",
+      "source": "https://polyhaven.com/a/wood_planks",
+      "license": "CC0-1.0"
+    }
+  ],
+  "authored": "Original kitchen architecture, cabinetry, cast fittings, porcelain, enamel, and lighting."
+}

@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import { ArrowUp, Backpack, BookOpen, BookText, Candy, ChevronRight, Compass, Droplets, FileText, Flashlight, Footprints, Hand, KeyRound, Maximize, NotebookPen, PenLine, PersonStanding, RotateCw, Settings as Gear, Smartphone, Volume2, X } from 'lucide-react';
 import { Episode, type View } from './runtime';
 import { DEFAULT_SETTINGS, DOCUMENTS, ROOMS, newSave, text, validSave, type Settings } from './data';
 import { PACK, PACK_IDS, remaining, type PackItem } from './pack';
 import { ASSET_REVISION, SAVE_API, STORY_PRODUCTION, STORY_RELEASE } from './release';
 import {readSave,readSettings,writeLocal,SAVE_KEY,SETTINGS_KEY,TOKEN_KEY,type ProductionIntent} from './story-production-save';
+import KitchenMenu from './KitchenMenu';
+import KitchenOptions,{KitchenCredits} from './KitchenOptions';
 import './episode.css';
 
 const initial:View={mode:'loading',loading:0,room:0,objective:'',prompt:'',progress:0,message:'',save:newSave(),settings:DEFAULT_SETTINGS,cloud:'local'};
@@ -20,6 +22,7 @@ export default function EpisodePage(){
   const canvas=useRef<HTMLCanvasElement>(null);const runtime=useRef<Episode|null>(null);const [view,setView]=useState<View>(()=>STORY_PRODUCTION?productionTitle():initial);
   const [hasSave,setHasSave]=useState(()=>STORY_PRODUCTION&&!!readSave());
   const [settingsOpen,setSettingsOpen]=useState(false);const [newConfirm,setNewConfirm]=useState(false);
+  const [creditsOpen,setCreditsOpen]=useState(false);
   const [packSelected,setPackSelected]=useState<PackItem>('phone');
   const [mobile]=useState(()=>matchMedia('(pointer: coarse)').matches||navigator.maxTouchPoints>0);
   const [stick,setStick]=useState({x:0,y:0});const joy=useRef<{id:number;x:number;y:number}|null>(null);const look=useRef<{id:number;x:number;y:number}|null>(null);
@@ -32,7 +35,7 @@ export default function EpisodePage(){
   useEffect(()=>{if(view.mode==='playing')setSettingsOpen(false);},[view.mode]);
   const launch=(intent:ProductionIntent)=>{
     if(!canvas.current||runtime.current)return;
-    setNewConfirm(false);setSettingsOpen(false);
+    setNewConfirm(false);setSettingsOpen(false);setCreditsOpen(false);
     try{runtime.current=new Episode(canvas.current,setView,intent);}
     catch(e){setView({...productionTitle(),mode:'error',error:String(e)});}
   };
@@ -72,9 +75,16 @@ export default function EpisodePage(){
   const actionCode=view.mode==='document'?'KeyF':/^(УДЕРЖИВАЙ R|Зажми R|HOLD R|Hold R)/.test(view.prompt)?'KeyR':view.prompt.startsWith('F')?'KeyF':view.prompt.startsWith('G')?'KeyG':'KeyE';
   const objective=mobile?view.objective.replace('Удерживай R','Удерживай кнопку действия').replace('клавишей E','кнопкой действия').replace('клавишей G','повторным нажатием').replace('Hold R','Hold the action button').replace(' with E','').replace(' with G',''):view.objective;
   const cloudText={local:t('Сохранение на устройстве','Saved on this device'),saved:t('Резервная копия на сервере','Server backup saved'),saving:t('Сохранение…','Saving…'),offline:t('Локально · сервер недоступен','Local save · server unavailable'),unavailable:t('Хранилище браузера недоступно','Browser storage unavailable'),restored:t('Копия восстановлена','Backup restored')}[view.cloud]||'';
-  return <main className="episode" data-mode={view.mode} data-release={ASSET_REVISION} data-intro={!view.save.flags.includes('free')}>
+  const kitchen=STORY_PRODUCTION&&view.mode==='title'&&!runtime.current;
+  return <main className="episode" data-mode={view.mode} data-release={ASSET_REVISION} data-intro={!view.save.flags.includes('free')}
+    data-contrast={view.settings.highContrast} style={{'--ep-subtitle-scale':view.settings.subtitleScale,'--km-scale':view.settings.uiScale} as CSSProperties}>
     <canvas ref={canvas} id="episode-canvas" aria-label={t('Трёхмерный мир игры','3D game world')}/>
-    {(import.meta.env.DEV||STORY_RELEASE||STORY_PRODUCTION)&&view.storyHome ? <section className="ep-story-home" data-testid="story-home-shot">
+    {kitchen?<KitchenMenu settings={view.settings} hasSave={hasSave} start={()=>begin()} resume={()=>launch('continue')}
+      settingsOpen={()=>setSettingsOpen(true)} creditsOpen={()=>setCreditsOpen(true)}/>:
+    STORY_PRODUCTION&&view.mode==='loading'?<section className="km-loading" data-testid="game-loading" role="status">
+      <p className="km-mark">100<span>GATE</span></p><progress max={1} value={view.loading}
+        aria-label={t('Подготовка игровых ресурсов','Preparing game assets')}/><p>{t('Подготовка сцены','Preparing the scene')} · {Math.floor(view.loading*100)}%</p>
+    </section>:(import.meta.env.DEV||STORY_RELEASE||STORY_PRODUCTION)&&view.storyHome ? <section className="ep-story-home" data-testid="story-home-shot">
       <header><span>100GATE / {STORY_PRODUCTION?t('СЮЖЕТНОЕ ВСТУПЛЕНИЕ','STORY OPENING'):t('СЮЖЕТНОЕ ВСТУПЛЕНИЕ · В РАБОТЕ','STORY OPENING · IN PROGRESS')}</span>
         <span>{view.storyHome==='seated'?t('Незнакомая комната','Unknown room'):
           `${view.storyClock??'22:42'} · ${view.storyHome==='street'?t('Вечерняя улица','Evening street'):t('Квартира','Apartment')}`}</span></header>
@@ -95,7 +105,11 @@ export default function EpisodePage(){
         <button className="ep-secondary ep-story-pause" data-testid="story-home-pause" onClick={()=>{
           if(view.mode==='paused')runtime.current?.resume();else runtime.current?.pause();
         }}>{view.mode==='paused'?t('Продолжить','Resume'):t('Пауза','Pause')}</button>}
-      {view.mode==='playing'&&view.storySubtitle&&<p className="ep-story-subtitle" data-testid="story-subtitle">{view.storySubtitle}</p>}
+      {STORY_PRODUCTION&&view.mode==='paused'&&<div className="ep-story-pause-tools">
+        <button className="ep-secondary" onClick={()=>setSettingsOpen(true)}>{t('Настройки','Settings')}</button>
+        <button className="ep-secondary" onClick={returnToTitle}>{t('В главное меню','Main menu')}</button>
+      </div>}
+      {view.mode==='playing'&&view.settings.subtitles&&view.storySubtitle&&<p className="ep-story-subtitle" data-testid="story-subtitle">{view.storySubtitle}</p>}
       {view.mode==='playing'&&view.storyCanSkip&&<button className="ep-secondary ep-story-skip" data-testid="story-skip" onClick={()=>runtime.current?.skipStory()}>{t('Пропустить сцену','Skip cinematic')}</button>}
       {view.mode==='playing'&&view.storyWait&&<p className="ep-story-subtitle" role="status">{t('Загрузка чердака','Loading the attic')} · {Math.round(view.loading*100)}%</p>}
       {view.mode==='playing'&&view.storyHome==='seated'&&view.prompt&&<div className="ep-story-hold" data-testid="story-hold">
@@ -103,7 +117,7 @@ export default function EpisodePage(){
         <div className="ep-hold"><i style={{width:`${view.progress*100}%`}}/></div>
       </div>}
     </section> : <>
-    <div className="ep-vignette"/><div className="ep-grain"/>
+    {view.settings.vignette&&<div className="ep-vignette"/>}{view.settings.grain&&<div className="ep-grain"/>}
     {view.mode==='loading'&&<div className="ep-loading"><div className="ep-seal">100</div><span className="ep-kicker">100GATE / {t('СТО ДВЕРЕЙ','ONE HUNDRED DOORS')}</span><h1>{t('Дом просыпается','The house is waking')}</h1><p>{t('Загрузка окружения и материалов','Loading the environment and materials')}</p><div className="ep-load-track"><i style={{width:`${Math.max(5,view.loading*100)}%`}}/></div></div>}
     {view.mode==='error'&&<div className="ep-overlay"><section className="ep-card"><h1>{t('Не удалось открыть дом','The house could not load')}</h1><p>{t('Нужен браузер с поддержкой WebGL 2. Попробуй обновить страницу.','A WebGL 2 browser is required. Try reloading the page.')}</p><details><summary>{t('Подробности','Details')}</summary>{view.error}</details><button onClick={STORY_PRODUCTION?returnToTitle:()=>location.reload()}>{t('Повторить','Try again')}</button></section></div>}
     {view.mode==='title'&&<div className="ep-title">
@@ -155,7 +169,8 @@ export default function EpisodePage(){
     </div>}
     {mobile&&<><button className="ep-fullscreen ep-icon" aria-label={t('Полный экран','Fullscreen')} onClick={()=>void fullscreen()}><Maximize size={17}/></button><div className="ep-rotate"><RotateCw size={46}/><h2>{t('Поверни телефон','Rotate your phone')}</h2><p>{t('Дом лучше исследовать в горизонтальном положении.','Explore the house in landscape orientation.')}</p></div></>}
     </>}
-    {settingsOpen&&<div className="ep-overlay ep-settings-overlay"><section className="ep-card ep-settings"><header><div><span className="ep-kicker">{t('ПОД СЕБЯ','MAKE IT YOURS')}</span><h2>{t('Настройки','Settings')}</h2></div><button className="ep-icon" aria-label={t('Закрыть настройки','Close settings')} onClick={()=>setSettingsOpen(false)}><X size={20}/></button></header>
+    {settingsOpen&&(STORY_PRODUCTION?<KitchenOptions settings={view.settings} change={patchSettings} close={()=>setSettingsOpen(false)}
+      fullscreen={()=>void fullscreen()} restore={()=>void restoreCloud()} cloud={cloudText}/>:<div className="ep-overlay ep-settings-overlay"><section className="ep-card ep-settings"><header><div><span className="ep-kicker">{t('ПОД СЕБЯ','MAKE IT YOURS')}</span><h2>{t('Настройки','Settings')}</h2></div><button className="ep-icon" aria-label={t('Закрыть настройки','Close settings')} onClick={()=>setSettingsOpen(false)}><X size={20}/></button></header>
       <label><span>{t('Язык','Language')}</span><select value={view.settings.language} onChange={e=>patchSettings({language:e.target.value as 'ru'|'en'})}><option value="ru">Русский</option><option value="en">English</option></select></label>
       <label><span>{t('Графика','Graphics')}</span><select value={view.settings.quality} onChange={e=>patchSettings({quality:e.target.value as 'low'|'medium'|'high'})}><option value="high">{t('Высокая · тени и свечение','High · shadows and bloom')}</option><option value="medium">{t('Средняя · мягкие тени','Medium · soft shadows')}</option><option value="low">{t('Низкая · без теней','Low · no shadows')}</option></select></label>
       <label><span>{t('Погода снаружи','Outdoor weather')}</span><select value={view.settings.weather} onChange={e=>patchSettings({weather:e.target.value as 'rain'|'snow'})}><option value="rain">{t('Дождь и гроза','Rain and thunder')}</option><option value="snow">{t('Снег','Snow')}</option></select></label>
@@ -165,7 +180,8 @@ export default function EpisodePage(){
       <label className="ep-slider"><span>{t('Интенсивность движения камеры','Camera motion intensity')}<b>{Math.round(view.settings.cameraMotion*100)}%</b></span><input aria-label={t('Движение камеры','Camera motion')} type="range" min="0" max="1" step=".05" value={view.settings.cameraMotion} onChange={e=>patchSettings({cameraMotion:Number(e.target.value)})}/></label>
       <div className="ep-bindings"><span>E — {t('подобрать / отпереть','take / unlock')}</span><span>G — {t('открыть рукой','open by hand')}</span><span>R — {t('удерживать: двигать','hold: move furniture')}</span><span>F — {t('изучить / положить','examine / put back')}</span><span>Ctrl — {t('бежать','run')}</span><span>Shift — {t('присесть','crouch')}</span><span>Space — {t('прыгнуть','jump')}</span><span>T — {t('фонарь','flashlight')}</span><span>H — {t('сумка','bag')}</span></div>
       <footer><small>{cloudText}</small><button className="ep-text" onClick={()=>void restoreCloud()}>{t('Восстановить серверную копию','Restore server backup')}</button></footer><button className="ep-primary" onClick={()=>{setSettingsOpen(false);if(view.mode==='paused')runtime.current?.resume();}}>{t('Готово','Done')}<ChevronRight size={16}/></button>
-    </section></div>}
+    </section></div>)}
+    {STORY_PRODUCTION&&creditsOpen&&<KitchenCredits settings={view.settings} close={()=>setCreditsOpen(false)}/>}
     {newConfirm&&<div className="ep-overlay"><section className="ep-card"><h2>{t('Начать сначала?','Start again?')}</h2><p>{t('Текущее сохранение этой главы будет заменено.','This chapter’s current save will be replaced.')}</p><button className="ep-primary" onClick={()=>begin(true)}>{t('Новая история','New story')}</button><button className="ep-secondary" onClick={()=>setNewConfirm(false)}>{t('Отмена','Cancel')}</button></section></div>}
   </main>;
 }

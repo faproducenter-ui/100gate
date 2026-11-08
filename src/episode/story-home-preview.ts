@@ -9,9 +9,9 @@ import {finalStoryAsset, storyAsset, STORY_PRODUCTION} from './release';
 import {egressStudy,FINAL_ABDUCTION_SECONDS} from './story-final-options';
 import {dialogueFace} from './story-face';
 
-const apartmentCandidate = STORY_PRODUCTION||(import.meta.env.DEV && new URLSearchParams(location.search).get('quality-pass')==='1');
-const faceCandidate=STORY_PRODUCTION||(import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-face')==='1');
-const faceReviewCamera=import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-face-camera')==='1';
+const apartmentCandidate = STORY_PRODUCTION||(import.meta.env.DEV && new URLSearchParams(globalThis.location?.search).get('quality-pass')==='1');
+const faceCandidate=STORY_PRODUCTION||(import.meta.env.DEV&&new URLSearchParams(globalThis.location?.search).get('quality-face')==='1');
+const faceReviewCamera=import.meta.env.DEV&&new URLSearchParams(globalThis.location?.search).get('quality-face-camera')==='1';
 const faceUrl=(file:string)=>finalStoryAsset('dialogue/'+file);
 const setUrl = apartmentCandidate
   ? finalStoryAsset('home/story-home.glb')
@@ -62,12 +62,13 @@ export class StoryHomePreview {
     this.audio?.sample(beat,seconds,beat==='BLACKOUT'?1:beat==='ABDUCTION'?ease(seconds,5.1,6):0);
   }
 
-  static async load() {
+  static async load(progress=(loaded:number,total:number)=>{void loaded;void total;}) {
     const loader=new GLTFLoader();
+    let loaded=0;
     const results=await Promise.allSettled([setUrl,
       faceCandidate?faceUrl('story-hero-home-face.glb'):storyAsset('hero/story-hero-home.glb'),
       faceCandidate?faceUrl('story-partner-home-face.glb'):storyAsset('partner/story-partner-home.glb'),
-    ].map(url=>loader.loadAsync(url)));
+    ].map(url=>loader.loadAsync(url).then(asset=>{progress(++loaded,4);return asset;})));
     if(results.some(r=>r.status==='rejected')){
       for(const r of results)if(r.status==='fulfilled')disposeSet(r.value.scene);
       throw new Error('Story cast failed to load; no empty-scene fallback. '+results.filter(r=>r.status==='rejected').map(r=>r.reason).join('; '));
@@ -83,6 +84,7 @@ export class StoryHomePreview {
       const {StoryStreet}=await import('./story-street');
       view.street=await StoryStreet.load();
       view.sample();
+      progress(4,4);
       return view;
     } catch (error) { for(const asset of assets)disposeSet(asset.scene); throw error; }
   }

@@ -84,7 +84,8 @@ export class Episode {
     this.player=new PlayerRig(this.scene,this.camera);this.applyQuality();this.resize();this.bind();this.notify();
     // Constructed from the actual Play/Continue click; acquire audio unlock
     // here rather than after asynchronous GLBs arrive.
-    if(intent){this.audio.setVolume(this.settings.volume);this.audio.start();this.audio.pause(true);}
+    this.updateMix();
+    if(intent){this.audio.start();this.audio.pause(true);}
     this.frame=requestAnimationFrame(this.tick);
     if((import.meta.env.DEV||STORY_RELEASE||STORY_PRODUCTION)&&this.storyHomeRequested)void this.initStoryHome();else void this.init();
   }
@@ -93,7 +94,9 @@ export class Episode {
     try {
       const {StoryHomePreview}=await import('./story-home-preview');
       if(this.disposed)return;
-      const preview=await StoryHomePreview.load();
+      const preview=await StoryHomePreview.load((loaded,total)=>{
+        if(!this.disposed){this.loading=loaded/total;this.notify();}
+      });
       if(this.disposed){preview.dispose();return;}
       this.storyHome=preview;
       if(import.meta.env.DEV){
@@ -121,6 +124,7 @@ export class Episode {
   private async prepareStoryEscape(){
     if((!import.meta.env.DEV&&!STORY_RELEASE&&!STORY_PRODUCTION)||!this.storyFullRequested||!this.storyHome)return;
     try{
+      this.loading=0;
       const {StorySeated}=await import('./story-seated');
       if(this.disposed)return;
       const escape=await StorySeated.load();
@@ -349,7 +353,7 @@ export class Episode {
     const on=(target:EventTarget,event:string,handler:EventListener)=>{target.addEventListener(event,handler);this.listeners.push(()=>target.removeEventListener(event,handler));};
     on(window,'resize',()=>this.resize());
     on(window,'keydown',((e:KeyboardEvent)=>{
-      if((e.target as HTMLElement)?.matches('input,select,textarea'))return;
+      if((e.target as HTMLElement)?.matches('input,select,textarea')||document.querySelector('dialog[open]'))return;
       if(this.storyHomeRequested&&!this.storyFree){
         if(e.code==='KeyR'&&this.mode==='playing'){e.preventDefault();if(!e.repeat)this.keys.add(e.code);return;}
         if(!e.repeat&&e.code==='Escape'){
@@ -368,7 +372,7 @@ export class Episode {
       if(e.code==='KeyE'||e.code==='KeyG'||e.code==='KeyF')this.act(e.code);
     }) as EventListener);
     on(window,'keyup',((e:KeyboardEvent)=>{if(e.code==='KeyR')this.releaseHold();else this.keys.delete(e.code);}) as EventListener);
-    on(window,'mousemove',((e:MouseEvent)=>{if(document.pointerLockElement!==this.canvas||this.mode!=='playing')return;this.yaw-=e.movementX*.0019*this.settings.sensitivity;this.pitch=T.MathUtils.clamp(this.pitch-e.movementY*.0019*this.settings.sensitivity,-1.42,1.42);}) as EventListener);
+    on(window,'mousemove',((e:MouseEvent)=>{if(document.pointerLockElement!==this.canvas||this.mode!=='playing')return;this.yaw-=e.movementX*.0019*this.settings.sensitivity;this.pitch=T.MathUtils.clamp(this.pitch-e.movementY*.0019*this.settings.sensitivity*(this.settings.invertY?-1:1),-1.42,1.42);}) as EventListener);
     on(document,'pointerlockchange',()=>{
       const owned=document.pointerLockElement===this.canvas,lost=this.pointerWasOwned&&!owned;
       this.pointerWasOwned=owned;
@@ -392,7 +396,7 @@ export class Episode {
   private releaseLock(){if(document.pointerLockElement===this.canvas){this.expectedPointerUnlock=true;document.exitPointerLock();}}
   private requestLock(){if(this.mobile)return;try{const r=this.canvas.requestPointerLock();if(r&&'catch' in r)void r.catch(()=>{this.toast(this.t('Нажми на экран, чтобы управлять взглядом','Click the scene to control the view'));});}catch{/* browser requires an additional user gesture */}}
   touchMove(x:number,z:number){this.touchAxes={x,z};}
-  touchLook(x:number,y:number){if(this.mode!=='playing')return;this.yaw-=x*.004*this.settings.sensitivity;this.pitch=T.MathUtils.clamp(this.pitch-y*.004*this.settings.sensitivity,-1.42,1.42);}
+  touchLook(x:number,y:number){if(this.mode!=='playing')return;this.yaw-=x*.004*this.settings.sensitivity;this.pitch=T.MathUtils.clamp(this.pitch-y*.004*this.settings.sensitivity*(this.settings.invertY?-1:1),-1.42,1.42);}
   private releaseHold(){
     this.keys.delete('KeyR');this.hold=0;this.holdId='';
     // A real release can occur between two animation frames. A fresh
@@ -424,7 +428,7 @@ export class Episode {
       }
       if(this.storyFullRequested){
         if(!this.storyEscapeStarted){this.storyEscapeStarted=true;void this.prepareStoryEscape();}
-        this.audio.setVolume(this.settings.volume);this.audio.start();
+        this.updateMix();this.audio.start();
         this.storyHome.startAudio(this.audio);
       }
       this.mode='playing';this.redraw=true;this.notify();return;
@@ -436,18 +440,23 @@ export class Episode {
       this.scene.traverse(o=>{if(o.name==='rope')o.visible=true;});
     }
     if(this.flag('free')){this.camera.position.copy(this.position).add(new T.Vector3(0,1.68,0));if(!this.held&&this.has('flashlight'))this.equip('flashlight');}
-    this.mode='playing';this.document=undefined;this.audio.setVolume(this.settings.volume);this.audio.start();this.requestLock();this.persist();this.notify();
+    this.mode='playing';this.document=undefined;this.updateMix();this.audio.start();this.requestLock();this.persist();this.notify();
   }
   pause(unlock=true){if(this.mode!=='playing'&&this.mode!=='document')return;this.prePause=this.mode;this.mode='paused';this.keys.clear();this.touchAxes={x:0,z:0};this.movement.set(0,0);this.hold=0;this.holdId='';this.audio.pause(true);if(unlock)this.releaseLock();this.persist();this.notify();}
   resume(){if(this.mode!=='paused')return;this.mode=this.prePause;this.keys.clear();this.audio.pause(false);if((!this.storyHomeRequested||this.storyFree)&&this.mode==='playing')this.requestLock();this.notify();}
   title(){this.persist();this.mode='title';this.storyHome?.restart();this.storyEscaping=this.storyFree=this.storySkipPending=false;this.redraw=true;this.keys.clear();this.audio.pause(true);this.releaseLock();this.notify();}
-  settingsChange(next:Partial<Settings>){this.settings={...this.settings,...next};writeLocal(SETTINGS_KEY,this.settings);this.audio.setVolume(this.settings.volume);this.applyQuality();this.resize();this.notify();}
+  settingsChange(next:Partial<Settings>){this.settings={...this.settings,...next};writeLocal(SETTINGS_KEY,this.settings);this.updateMix();this.applyQuality();this.resize();this.notify();}
+  private updateMix(){this.audio.setVolume(this.settings.mute?0:this.settings.volume);this.audio.setMix(this.settings.ambienceVolume,this.settings.sfxVolume);}
   private applyReflections(){
     if(this.settings.quality==='low'){this.scene.environment=null;return;}
     this.reflections??=roomReflections(this.renderer);
     if(this.reflections){this.scene.environment=this.reflections.texture;this.scene.environmentIntensity=.56;}
   }
-  private applyQuality(){const q=this.settings.quality;this.renderer.setPixelRatio(Math.min(devicePixelRatio,q==='high'?1.75:q==='medium'?1.2:.70));this.renderer.shadowMap.enabled=q!=='low';this.bloom.enabled=q==='high';this.flashlight.castShadow=q==='high';if(this.house)this.applyReflections();}
+  private applyQuality(){const q=this.settings.quality;
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio,q==='high'?1.75:q==='medium'?1.2:.70)*this.settings.renderScale);
+    this.renderer.toneMappingExposure=1.22*this.settings.brightness;
+    this.renderer.shadowMap.enabled=this.settings.shadows&&q!=='low';this.bloom.enabled=q==='high';
+    this.flashlight.castShadow=this.settings.shadows&&q==='high';if(this.house)this.applyReflections();}
   private resize(){const w=window.innerWidth,h=window.innerHeight;this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.renderer.setSize(w,h,false);this.composer.setSize(w,h);this.redraw=true;}
   private toast(message:string){this.message=message;this.messageUntil=this.elapsed+4.5;this.notify();}
   private objective(){
@@ -827,7 +836,9 @@ export class Episode {
     this.findTarget();
   }
   private tick=(now:number)=>{
-    if(this.disposed)return;const raw=this.last?(now-this.last)/1000:.016,dt=Math.min(.25,Math.max(0,raw));this.last=now;
+    if(this.disposed)return;
+    if(this.settings.fpsCap&&this.last&&now-this.last<1000/this.settings.fpsCap-1){this.frame=requestAnimationFrame(this.tick);return;}
+    const raw=this.last?(now-this.last)/1000:.016,dt=Math.min(.25,Math.max(0,raw));this.last=now;
     if(this.storyHomeRequested&&!this.storyFree){
       if(this.storyHome){
         this.stepStory(dt);
@@ -839,7 +850,8 @@ export class Episode {
       this.camera.position.set(-2.9,4.9,3.8);this.camera.rotation.set(-.1,.21+Math.sin(now*.00007)*.035,0,'YXZ');this.player.setVisible(false);this.escape?.setVisible(false);if(this.nativeIntro)this.nativeIntro.root.visible=false;this.flashlight.intensity=0;
     }
     if(this.house&&(this.mode==='title'||this.mode==='playing'||this.mode==='ending')){
-      this.atmosphereTime+=dt;if(this.house.weather.update(this.atmosphereTime,this.settings.quality,this.camera,this.settings.weather==='snow')&&this.mode==='playing')this.audio.play('thunder');
+      this.atmosphereTime+=dt;if(this.house.weather.update(this.atmosphereTime,this.settings.quality,this.camera,this.settings.weather==='snow',
+        this.settings.ambientEffects,this.settings.reducedFlicker)&&this.mode==='playing')this.audio.play('thunder');
     }
     if(this.redraw||this.mode==='playing'||this.mode==='title'||this.mode==='ending'){
       if(this.settings.quality==='high')this.composer.render();else this.renderer.render(this.scene,this.camera);

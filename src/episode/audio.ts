@@ -8,6 +8,8 @@ type SampleOptions={gain?:number;pan?:number;rate?:number;delay?:number;room?:bo
 export class Foley {
   context?: AudioContext;
   master?: GainNode;
+  ambienceBus?: GainNode;
+  effectsBus?: GainNode;
   private noise?: AudioBuffer;
   private drone?: OscillatorNode;
   private ambience?: AudioBufferSourceNode;
@@ -18,6 +20,8 @@ export class Foley {
   private last=new Map<Recorded,number>();
   private counts:Partial<Record<Recorded,number>>={};
   volume = .65;
+  private ambienceVolume=1;
+  private effectsVolume=1;
   constructor(preload = true) { if (preload) this.download = this.loadBank(); }
   private loadBank() {
     return fetch(chapterAsset('assets/chapter1/foley-bank.wav'), { signal: this.abort.signal })
@@ -28,6 +32,9 @@ export class Foley {
       const WebAudio=window.AudioContext??(window as Window&{webkitAudioContext?:typeof AudioContext}).webkitAudioContext;
       if(!WebAudio)return;
       this.context = new WebAudio(); this.master = this.context.createGain(); this.master.connect(this.context.destination);
+      this.ambienceBus=this.context.createGain();this.effectsBus=this.context.createGain();
+      this.ambienceBus.gain.value=this.ambienceVolume;this.effectsBus.gain.value=this.effectsVolume;
+      this.ambienceBus.connect(this.master);this.effectsBus.connect(this.master);
       const context=this.context;
       void (this.download??this.loadBank()).then(async bytes=>{if(bytes&&context.state!=='closed')this.bank=await context.decodeAudioData(bytes);}).catch(()=>{});
       this.master.gain.value = this.volume;
@@ -37,16 +44,20 @@ export class Foley {
       this.ambience = this.context.createBufferSource(); this.ambience.buffer = this.noise; this.ambience.loop = true;
       const low = this.context.createBiquadFilter(); low.type = 'lowpass'; low.frequency.value = 260;
       const gain = this.context.createGain(); gain.gain.value = .045;
-      this.ambience.connect(low).connect(gain).connect(this.master); this.ambience.start();
+      this.ambience.connect(low).connect(gain).connect(this.ambienceBus); this.ambience.start();
       this.drone = this.context.createOscillator(); this.drone.frequency.value = 47;
-      const hum = this.context.createGain(); hum.gain.value = .012; this.drone.connect(hum).connect(this.master); this.drone.start();
+      const hum = this.context.createGain(); hum.gain.value = .012; this.drone.connect(hum).connect(this.ambienceBus); this.drone.start();
     }
     this.active = true; void this.context.resume();
   }
   pause(paused: boolean) { this.active = !paused; if (this.context) void (paused ? this.context.suspend() : this.context.resume()); }
   setVolume(v: number) { this.volume = v; if (this.master && this.context) this.master.gain.setTargetAtTime(v, this.context.currentTime, .08); }
+  setMix(ambience:number,effects:number){
+    this.ambienceVolume=ambience;this.effectsVolume=effects;
+    if(this.context){const t=this.context.currentTime;this.ambienceBus?.gain.setTargetAtTime(ambience,t,.08);this.effectsBus?.gain.setTargetAtTime(effects,t,.08);}
+  }
   private sample(kind:Recorded,options:SampleOptions={}){
-    const c=this.context,bank=this.bank,master=this.master;
+    const c=this.context,bank=this.bank,master=this.effectsBus;
     if(!this.active||!c||!bank||!master)return false;
     const variants=cues[kind],previous=this.last.get(kind);
     let i=Math.floor(Math.random()*variants.length);
@@ -72,7 +83,7 @@ export class Foley {
     if(!this.sample(running?'run':'walk',{gain:crouched?.54:1,pan:left?-.11:.11,rate:crouched?.89:1,room:true}))this.procedural('step');
   }
   cinematicCue(kind:'brake'|'carDoor'|'cloth'|'swell',pan:number){
-    const c=this.context,m=this.master,noise=this.noise;
+    const c=this.context,m=this.effectsBus,noise=this.noise;
     if(!this.active||!c||!m||!noise)return;
     const t=c.currentTime;
     const p=c.createStereoPanner();p.pan.value=pan;p.connect(m);
@@ -94,7 +105,7 @@ export class Foley {
   }
   rock(strength:number,side:number){if(!this.sample('chair',{gain:.48+strength*.66,pan:.12*side,rate:.91+strength*.2,room:true}))this.procedural('scrape');}
   ropeContact(pan:number,sever:boolean){
-    const c=this.context;if(!this.active||!c||!this.noise||!this.master)return;
+    const c=this.context,output=this.effectsBus;if(!this.active||!c||!this.noise||!output)return;
     const time=c.currentTime,len=sever?.19:.13;
     const source=c.createBufferSource(),band=c.createBiquadFilter(),gain=c.createGain();
     source.buffer=this.noise;source.playbackRate.value=1.45+Math.random()*.4;
@@ -102,8 +113,8 @@ export class Foley {
     gain.gain.setValueAtTime(.001,time);gain.gain.linearRampToValueAtTime(sever?.52:.23,time+.008);
     gain.gain.exponentialRampToValueAtTime(.001,time+len);
     source.connect(band).connect(gain);
-    if(typeof c.createStereoPanner==='function'){const p=c.createStereoPanner();p.pan.value=pan;gain.connect(p).connect(this.master);}
-    else gain.connect(this.master);
+    if(typeof c.createStereoPanner==='function'){const p=c.createStereoPanner();p.pan.value=pan;gain.connect(p).connect(output);}
+    else gain.connect(output);
     source.start(time,Math.random(),len*2);source.stop(time+len);
   }
   consume(kind:'candy'|'water'){
@@ -124,18 +135,19 @@ export class Foley {
     this.procedural(kind==='keyPickup'?'key':kind==='chairFall'?'land':kind);
   }
   private procedural(kind:Procedural) {
-    if (!this.active || !this.context || !this.master || !this.noise) return;
+    const output=this.effectsBus;
+    if (!this.active || !this.context || !output || !this.noise) return;
     const c = this.context; const now = c.currentTime;
     const source = c.createBufferSource(); source.buffer = this.noise;
     const filter = c.createBiquadFilter(); filter.type = kind === 'key' ? 'highpass' : 'lowpass';
     filter.frequency.value = { step: 480, key: 2200, door: 260, paper: 3500, scrape: 650, cut: 1600, click: 1800, land: 160, drink:410, thunder:125 }[kind];
     const gain = c.createGain(); const duration = { step: .16, key: .4, door: 1.1, paper: .35, scrape: .7, cut: .5, click: .06, land: .3, drink:.47, thunder:1.65 }[kind];
     gain.gain.setValueAtTime(.001, now); gain.gain.linearRampToValueAtTime(kind === 'scrape' ? .55 : .32, now + .02); gain.gain.exponentialRampToValueAtTime(.001, now + duration);
-    source.connect(filter).connect(gain).connect(this.master); source.start(now, Math.random()); source.stop(now + duration);
+    source.connect(filter).connect(gain).connect(output); source.start(now, Math.random()); source.stop(now + duration);
     if (kind === 'door' || kind === 'key') {
       const osc = c.createOscillator(); const g = c.createGain(); osc.type = 'triangle'; osc.frequency.setValueAtTime(kind === 'door' ? 130 : 1900, now);
       osc.frequency.exponentialRampToValueAtTime(kind === 'door' ? 53 : 900, now + duration); g.gain.setValueAtTime(.045, now); g.gain.exponentialRampToValueAtTime(.001, now + duration);
-      osc.connect(g).connect(this.master); osc.start(); osc.stop(now + duration);
+      osc.connect(g).connect(output); osc.start(); osc.stop(now + duration);
     }
   }
   dispose() { this.abort.abort();this.ambience?.stop(); this.drone?.stop(); void this.context?.close(); }

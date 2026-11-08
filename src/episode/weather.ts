@@ -171,14 +171,14 @@ export function createWeather(scene:T.Scene,mudMaps:T.Texture[],assets:{workshop
   const flash=new T.PointLight(0xc2ddff,0,27,1.45);flash.position.set(0,7,-6.2);scene.add(flash);
   let previousFlash=false,outdoorWasVisible=false;
   return {group:exterior,
-    update(time:number,quality:Settings['quality'],camera:T.Camera,snow:boolean){
+    update(time:number,quality:Settings['quality'],camera:T.Camera,snow:boolean,particles=true,reducedFlicker=false){
       const visibleExterior=camera.position.x>5.4&&camera.position.z<-30;
       const far=visibleExterior||camera.position.y>3.8;
       exterior.visible=far;
       for(const o of [ground,lane,workshop,bench,outdoorLight,...tracks,...pools])o.visible=visibleExterior;
       for(const set of north)set.group.visible=far&&!visibleExterior;
       for(const set of yard){set.group.visible=visibleExterior;for(const o of set.cloud)o.count=quality==='low'?3:quality==='medium'?4:o.instanceMatrix.count;}
-      const lightningTime=(time+5)%42,lightning=!snow&&lightningTime<.39;
+      const lightningTime=(time+5)%42,lightning=!snow&&!reducedFlicker&&lightningTime<.39;
       const pulse=lightning?Math.max(0,1-lightningTime*3)*(.62+.32*Math.sin(lightningTime*93)):0;
       const crack=lightning&&!previousFlash&&far;previousFlash=lightning;
       moon.intensity=visibleExterior?1.6+pulse*.8:0;
@@ -187,7 +187,7 @@ export function createWeather(scene:T.Scene,mudMaps:T.Texture[],assets:{workshop
       outdoorWasVisible=moon.castShadow;
       flash.intensity=pulse*34;
       sky.uniforms.uTime.value=time;sky.uniforms.uFlash.value=pulse;sky.uniforms.uSnow.value=+snow;
-      rain.visible=far;rainMat.uniforms.uTime.value=time;rainMat.uniforms.uSnow.value=+snow;
+      rain.visible=far&&particles;rainMat.uniforms.uTime.value=time;rainMat.uniforms.uSnow.value=+snow;
       drops.setDrawRange(0,quality==='low'?850:quality==='medium'?1900:3600);
       grass.visible=visibleExterior;grass.count=Math.min(used,quality==='low'?380:quality==='medium'?900:1650);grassShader.uniforms.uTime.value=time;grassShader.uniforms.uSnow.value=+snow;
       roadMaterial.color.setHex(snow?0x9eaaa2:0x716956);grassFloor.color.setHex(snow?0xb7c3ba:0x3d4b39);

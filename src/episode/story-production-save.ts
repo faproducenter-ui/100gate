@@ -24,5 +24,14 @@ export function readSettings():Settings{
   if(typeof s.headBob==='boolean')settings.headBob=s.headBob;
   if(typeof s.cameraMotion==='number'&&Number.isFinite(s.cameraMotion))settings.cameraMotion=Math.max(0,Math.min(1,s.cameraMotion));
   if(s.weather==='rain'||s.weather==='snow')settings.weather=s.weather;
+  for(const key of ['shadows','ambientEffects','grain','vignette','kitchenSoftness','mute','invertY','reducedFlicker','subtitles','highContrast'] as const)
+    if(typeof s[key]==='boolean')settings[key]=s[key];
+  for(const [key,min,max] of [
+    ['renderScale',.60,1.15],['brightness',.75,1.3],['ambienceVolume',0,1],['sfxVolume',0,1],['uiVolume',0,1],
+    ['subtitleScale',.9,1.4],['uiScale',.9,1.2],
+  ] as const){
+    const n=s[key];if(typeof n==='number'&&Number.isFinite(n))settings[key]=Math.max(min,Math.min(max,n));
+  }
+  if(s.fpsCap===0||s.fpsCap===30||s.fpsCap===60)settings.fpsCap=s.fpsCap;
   return settings;
 }

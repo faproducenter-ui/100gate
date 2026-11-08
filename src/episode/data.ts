@@ -37,8 +37,14 @@ export const DOCUMENTS: Record<string, { title: [string, string]; body: [string,
     'Kitchen → 10 A fuse → dining-room alarm → front door.\n\nRestore power first. Then release the alarm at its panel. The key only opens the mechanical lock.',
   ] },
 };
-export interface Settings { language: Lang; quality: 'low' | 'medium' | 'high'; volume: number; sensitivity: number; headBob: boolean; cameraMotion:number; weather:'rain'|'snow'; }
-export const DEFAULT_SETTINGS: Settings = { language: 'ru', quality: 'high', volume: .65, sensitivity: 1, headBob: false, cameraMotion:1, weather:'rain' };
+export interface Settings { language: Lang; quality: 'low' | 'medium' | 'high'; volume: number; sensitivity: number; headBob: boolean; cameraMotion:number; weather:'rain'|'snow';
+  renderScale:number; shadows:boolean; ambientEffects:boolean; grain:boolean; vignette:boolean; kitchenSoftness:boolean; brightness:number; fpsCap:0|30|60;
+  ambienceVolume:number; sfxVolume:number; uiVolume:number; mute:boolean; invertY:boolean;
+  reducedFlicker:boolean; subtitles:boolean; subtitleScale:number; uiScale:number; highContrast:boolean;
+}
+export const DEFAULT_SETTINGS: Settings = { language:'ru',quality:'high',volume:.65,sensitivity:1,headBob:false,cameraMotion:1,weather:'rain',
+  renderScale:1,shadows:true,ambientEffects:true,grain:true,vignette:true,kitchenSoftness:true,brightness:1,fpsCap:0,
+  ambienceVolume:.7,sfxVolume:1,uiVolume:.65,mute:false,invertY:false,reducedFlicker:false,subtitles:true,subtitleScale:1,uiScale:1,highContrast:false };
 export interface Save {
   intro?: {version:2;time:number;leftDraw?:number;rightDraw?:number};
   version: 1; flags: string[]; items: string[]; read: string[]; doors: string[]; moved: string[];

@@ -16,7 +16,7 @@ export class StoryAudio {
   private steps=0;
   constructor(private readonly foley:Foley){}
   async load(){
-    const {context,master}=this.foley;if(!context||!master)return;
+    const {context,ambienceBus:master}=this.foley;if(!context||!master)return;
     try{
       const r=await fetch(storyAsset('audio/night-city-223093.mp3'),{signal:this.abort.signal});
       if(!r.ok)throw Error('City ambience unavailable');
@@ -41,11 +41,11 @@ export class StoryAudio {
     const last=this.beat===beat?this.last:0;
     const crossed=(at:number)=>seconds>=at&&last<at&&seconds-last<.35;
     if((beat==='HOME_EXIT'&&(crossed(5.3)||crossed(9.85)))||(!egressStudy&&beat==='ABDUCTION'&&crossed(2.3)))this.foley.play('door');
-    if(egressStudy&&context&&this.foley.master){
+    if(egressStudy&&context&&this.foley.effectsBus){
       if(beat==='ABDUCTION'&&!this.motor){
         const tone=context.createOscillator(),filter=context.createBiquadFilter(),gain=context.createGain();
         tone.type='triangle';filter.type='lowpass';filter.frequency.value=125;gain.gain.value=0;
-        tone.connect(filter).connect(gain).connect(this.foley.master);tone.start();
+        tone.connect(filter).connect(gain).connect(this.foley.effectsBus);tone.start();
         this.motor={tone,filter,gain};
       }
       if(this.motor){
