@@ -2,7 +2,7 @@ import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {STORY_BEATS, STORY_SECONDS, type StoryBeat, type StoryIntroFlow} from './story-intro-flow';
 import {disposeSet} from './story-home-preview';
-import {storyAsset} from './release';
+import {finalStoryAsset,storyAsset,STORY_PRODUCTION} from './release';
 
 const awake=STORY_BEATS.indexOf('AWAKE_BOUND');
 export function seatedSeconds(beat:StoryBeat, seconds:number){
@@ -43,9 +43,9 @@ export class StorySeated {
   private seconds=0;
 
   static async load(){
-    const sleeveStudy=import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-sleeves')==='1';
+    const sleeveStudy=STORY_PRODUCTION||(import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-sleeves')==='1');
     const asset=await new GLTFLoader().loadAsync(sleeveStudy?
-      `${import.meta.env.BASE_URL}outputs/quality-overhaul/sleeves/story-upright-escape.glb?v=sleeves-2`:
+      finalStoryAsset('sleeves/story-upright-escape.glb'):
       storyAsset('escape/story-upright-escape.glb'));
     try{return new StorySeated(asset.scene,asset.animations);}
     catch(e){disposeSet(asset.scene);throw e;}

@@ -5,16 +5,16 @@ import { StoryActor } from './story-actor';
 import type { StoryStreet } from './story-street';
 import {StoryAudio} from './story-audio';
 import type {Foley} from './audio';
-import {storyAsset} from './release';
+import {finalStoryAsset, storyAsset, STORY_PRODUCTION} from './release';
 import {egressStudy,FINAL_ABDUCTION_SECONDS} from './story-final-options';
 import {dialogueFace} from './story-face';
 
-const apartmentCandidate = import.meta.env.DEV && new URLSearchParams(location.search).get('quality-pass')==='1';
-const faceCandidate=import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-face')==='1';
+const apartmentCandidate = STORY_PRODUCTION||(import.meta.env.DEV && new URLSearchParams(location.search).get('quality-pass')==='1');
+const faceCandidate=STORY_PRODUCTION||(import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-face')==='1');
 const faceReviewCamera=import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-face-camera')==='1';
-const faceUrl=(file:string)=>`${import.meta.env.BASE_URL}outputs/quality-overhaul/dialogue/${file}?v=facial-1`;
+const faceUrl=(file:string)=>finalStoryAsset('dialogue/'+file);
 const setUrl = apartmentCandidate
-  ? `${import.meta.env.BASE_URL}outputs/quality-overhaul/home/story-home.glb?v=city-depth-1`
+  ? finalStoryAsset('home/story-home.glb')
   : storyAsset('home/story-home.glb');
 const ease = T.MathUtils.smoothstep;
 

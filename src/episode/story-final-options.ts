@@ -1,5 +1,5 @@
-// These studies have independent acceptance gates and must never leak into the
-// earlier published route. The deploy mode always selects the frozen cut.
-export const egressStudy=import.meta.env.DEV&&['quality-car','quality-egress']
-  .every(key=>new URLSearchParams(location.search).get(key)==='1');
+import {STORY_PRODUCTION} from './release';
+// The root ships the reviewed final cut. The older /story-preview is frozen.
+export const egressStudy=STORY_PRODUCTION||(import.meta.env.DEV&&['quality-car','quality-egress']
+  .every(key=>new URLSearchParams(location.search).get(key)==='1'));
 export const FINAL_ABDUCTION_SECONDS=8.8;

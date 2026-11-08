@@ -5,19 +5,19 @@ import { StoryActor } from './story-actor';
 import type { StoryBeat } from './story-intro-flow';
 import { streetBlocking } from './story-street-motion';
 import { disposeSet } from './story-home-preview';
-import { storyAsset } from './release';
+import { finalStoryAsset, storyAsset, STORY_PRODUCTION } from './release';
 import { StorySedan } from './story-sedan';
 import { StoryEgress } from './story-egress';
 import { egressStudy } from './story-final-options';
 import {finishFarCurb} from './story-street-night';
 
-const useMotionStudy=import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-motion')==='1';
-const motionStudyUrl=`${import.meta.env.BASE_URL}outputs/quality-overhaul/gait/story-hero-walk-mocap.glb?v=cmu-91-02`;
-const stopStudyUrl=`${import.meta.env.BASE_URL}outputs/quality-overhaul/stop/story-hero-stops.json?v=final-1`;
+const useMotionStudy=STORY_PRODUCTION||(import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-motion')==='1');
+const motionStudyUrl=finalStoryAsset('gait/story-hero-walk-mocap.glb');
+const stopStudyUrl=finalStoryAsset('stop/story-hero-stops.json');
 const stopReviewCamera=import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-stop-camera')==='1';
 const stopClipStart={'stop-0':0,'stop-80':1,'stop-95':2};
-const useSedanStudy=import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-car')==='1';
-const sedanStudyUrl=`${import.meta.env.BASE_URL}outputs/quality-overhaul/vehicle/story-sedan.glb?v=dual-door-1`;
+const useSedanStudy=STORY_PRODUCTION||(import.meta.env.DEV&&new URLSearchParams(location.search).get('quality-car')==='1');
+const sedanStudyUrl=finalStoryAsset('vehicle/story-sedan.glb');
 
 /** One compact authored set, original hero mesh, shared skinned actor geometry. */
 export class StoryStreet {
@@ -112,7 +112,7 @@ export class StoryStreet {
     const urls=paths.map(storyAsset);
     if(useMotionStudy)urls.push(motionStudyUrl);
     if(useSedanStudy)urls.push(sedanStudyUrl);
-    if(egressStudy)for(const side of ['L','R'])urls.push(`${import.meta.env.BASE_URL}outputs/quality-overhaul/egress/egress-${side}.glb?v=egress-final-pass`);
+    if(egressStudy)for(const side of ['L','R'])urls.push(finalStoryAsset('egress/egress-'+side+'.glb'));
     const results=await Promise.allSettled(urls.map(url=>new GLTFLoader().loadAsync(url)));
     if(results.some(r=>r.status==='rejected')){
       for(const r of results)if(r.status==='fulfilled')disposeSet(r.value.scene);

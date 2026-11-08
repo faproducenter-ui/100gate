@@ -1,11 +1,17 @@
 import path from "path"
 import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
+import { defineConfig, loadEnv } from "vite"
 import gameBuildOutput from "./scripts/build-output"
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({mode})=>({
   base: './',
+  // The production story mode uses the same public backup endpoint as the
+  // deployed game. Do not copy any other env variables into the bundle.
+  define: mode==='story-production' ? {
+    'import.meta.env.VITE_SAVE_API':JSON.stringify(process.env.VITE_SAVE_API??
+      loadEnv('production',process.cwd(),'VITE_SAVE_API').VITE_SAVE_API??''),
+  }:undefined,
   plugins: [react(), gameBuildOutput()],
   server: {
     port: 3000,
@@ -19,4 +25,4 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-});
+}));

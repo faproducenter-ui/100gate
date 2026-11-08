@@ -5,7 +5,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { createHouse, doorTouches, type House, type Target } from './world';
 import { Foley } from './audio';
-import { DEFAULT_SETTINGS, DOCUMENTS, ROOMS, newSave, text, validSave, type Save, type Settings } from './data';
+import { DOCUMENTS, ROOMS, newSave, text, validSave, type Save, type Settings } from './data';
 import { PACK, PORTIONS, remaining, type Consumable, type PackItem, type PropId } from './pack';
 import { PlayerRig } from './player';
 import { disposeComposer } from './lifetime';
@@ -14,14 +14,11 @@ import { EscapeRig, SLIP, PICKUP, CUT, RISE, GRIP_TIME, SAW_START, MIN_SAW_TRAVE
 import { NativeIntro, INTRO_END } from './native-intro';
 import type { StoryHomePreview } from './story-home-preview';
 import type { StorySeated } from './story-seated';
-import {STORY_RELEASE} from './release';
+import {SAVE_API as API, STORY_PRODUCTION, STORY_RELEASE} from './release';
+import {canWriteGameSave,readSave,readSettings,writeLocal,SAVE_KEY,SETTINGS_KEY,TOKEN_KEY,type ProductionIntent} from './story-production-save';
 
 export type Mode = 'loading' | 'title' | 'playing' | 'paused' | 'document' | 'bag' | 'ending' | 'error';
 export interface View { mode: Mode; loading: number; room: number; objective: string; prompt: string; progress: number; message: string; document?: string; save: Save; settings: Settings; cloud: string; held?:PropId; error?: string; storyHome?: 'dialogue' | 'exit' | 'street' | 'seated' | 'end'; storySubtitle?:string; storyClock?:string; storyBlack?:number; storyWait?:boolean; storyCanSkip?:boolean; }
-const SAVE_KEY='100gate.chapter1.save.v1', SETTINGS_KEY='100gate.settings.v1', TOKEN_KEY='100gate.save-token.v1';
-function readLocal(key:string):unknown {try{return JSON.parse(localStorage.getItem(key)||'null');}catch{return null;}}
-function writeLocal(key:string,value:unknown) {try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
-const API=STORY_RELEASE?'':(import.meta.env.VITE_SAVE_API as string|undefined)?.replace(/\/$/,'')||'';
 function roomReflections(renderer:T.WebGLRenderer){
   if(!renderer.extensions.has('EXT_color_buffer_float'))return;
   const width=128,height=64,data=new Float32Array(width*height*4);
@@ -39,11 +36,11 @@ function roomReflections(renderer:T.WebGLRenderer){
   source.dispose();gen.dispose();return target;
 }
 export class Episode {
-  private readonly storyFullRequested=STORY_RELEASE||(import.meta.env.DEV&&new URLSearchParams(location.search).get('story-intro')==='1');
-  private readonly storyHomeRequested=this.storyFullRequested||(import.meta.env.DEV&&new URLSearchParams(location.search).get('story-home')==='1');
+  private readonly storyFullRequested:boolean;
+  private readonly storyHomeRequested:boolean;
   private scene=new T.Scene(); private camera=new T.PerspectiveCamera(72,1,.055,100);
   private renderer:T.WebGLRenderer;private composer:EffectComposer;private bloom:UnrealBloomPass;private reflections?:T.WebGLRenderTarget;
-  private house?:House;private audio=new Foley(!this.storyHomeRequested);private keys=new Set<string>();private listeners:(()=>void)[]=[];
+  private house?:House;private audio:Foley;private keys=new Set<string>();private listeners:(()=>void)[]=[];
   private frame=0;private disposed=false;private last=0;private elapsed=0;private lastUI=0;private atmosphereTime=0;private redraw=true;
   private velocity=new T.Vector3();private position=new T.Vector3();private yaw=0;private pitch=-.23;private grounded=true;
   private target?:Target;private hold=0;private holdId='';private holdElapsed=0;private ray=new T.Raycaster();private flashlight:T.SpotLight;
@@ -67,18 +64,12 @@ export class Episode {
   private storyEscaping=false;
   private storyFree=false;
   private storySkipPending=false;
-  constructor(private canvas:HTMLCanvasElement,private emit:(s:View)=>void){
-    const raw=readLocal(SAVE_KEY);this.save=validSave(raw)?raw:newSave();this.recoverPack();
-    const stored=readLocal(SETTINGS_KEY);this.settings={...DEFAULT_SETTINGS};
-    if(stored&&typeof stored==='object'){
-      const s=stored as Partial<Settings>;if(s.language==='ru'||s.language==='en')this.settings.language=s.language;
-      if(['low','medium','high'].includes(s.quality||''))this.settings.quality=s.quality!;
-      if(Number.isFinite(s.volume))this.settings.volume=T.MathUtils.clamp(s.volume!,0,1);
-      if(Number.isFinite(s.sensitivity))this.settings.sensitivity=T.MathUtils.clamp(s.sensitivity!,.2,2);
-      if(typeof s.headBob==='boolean')this.settings.headBob=s.headBob;
-      if(typeof s.cameraMotion==='number'&&Number.isFinite(s.cameraMotion))this.settings.cameraMotion=T.MathUtils.clamp(s.cameraMotion,0,1);
-      if(s.weather==='rain'||s.weather==='snow')this.settings.weather=s.weather;
-    }
+  constructor(private canvas:HTMLCanvasElement,private emit:(s:View)=>void,private readonly intent?:ProductionIntent){
+    this.storyFullRequested=(STORY_PRODUCTION&&intent==='new')||STORY_RELEASE||(import.meta.env.DEV&&new URLSearchParams(location.search).get('story-intro')==='1');
+    this.storyHomeRequested=this.storyFullRequested||(import.meta.env.DEV&&new URLSearchParams(location.search).get('story-home')==='1');
+    this.audio=new Foley(!this.storyHomeRequested);
+    this.save=(intent==='new'?undefined:readSave())??newSave();this.recoverPack();
+    this.settings=readSettings();
     this.position.fromArray(this.save.position);this.yaw=this.save.yaw;this.pitch=this.save.pitch;
     this.renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:true});
     this.renderer.outputColorSpace=T.SRGBColorSpace;this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.22;
@@ -91,11 +82,14 @@ export class Episode {
     this.composer=new EffectComposer(this.renderer);this.composer.addPass(new RenderPass(this.scene,this.camera));
     this.bloom=new UnrealBloomPass(new T.Vector2(1280,720),.16,.5,.9);this.composer.addPass(this.bloom);this.composer.addPass(new OutputPass());
     this.player=new PlayerRig(this.scene,this.camera);this.applyQuality();this.resize();this.bind();this.notify();
+    // Constructed from the actual Play/Continue click; acquire audio unlock
+    // here rather than after asynchronous GLBs arrive.
+    if(intent){this.audio.setVolume(this.settings.volume);this.audio.start();this.audio.pause(true);}
     this.frame=requestAnimationFrame(this.tick);
-    if((import.meta.env.DEV||STORY_RELEASE)&&this.storyHomeRequested)void this.initStoryHome();else void this.init();
+    if((import.meta.env.DEV||STORY_RELEASE||STORY_PRODUCTION)&&this.storyHomeRequested)void this.initStoryHome();else void this.init();
   }
   private async initStoryHome(){
-    if(!import.meta.env.DEV&&!STORY_RELEASE)return;
+    if(!import.meta.env.DEV&&!STORY_RELEASE&&!STORY_PRODUCTION)return;
     try {
       const {StoryHomePreview}=await import('./story-home-preview');
       if(this.disposed)return;
@@ -119,12 +113,13 @@ export class Episode {
       };
       }
       this.mode='title';this.loading=1;this.notify();
+      if(this.intent==='new')this.start();
     } catch(e) {
       if(!this.disposed){this.mode='error';this.message=String(e);this.notify();}
     }
   }
   private async prepareStoryEscape(){
-    if((!import.meta.env.DEV&&!STORY_RELEASE)||!this.storyFullRequested||!this.storyHome)return;
+    if((!import.meta.env.DEV&&!STORY_RELEASE&&!STORY_PRODUCTION)||!this.storyFullRequested||!this.storyHome)return;
     try{
       const {StorySeated}=await import('./story-seated');
       if(this.disposed)return;
@@ -191,7 +186,8 @@ export class Episode {
           this.keys.clear();this.movement.set(0,0);this.velocity.set(0,0,0);this.motionDebt=0;
           this.addFlag('free');this.addFlag('introCompleteV3');
           escape.setBodyVisible(false);this.storyFree=true;
-          this.player.setVisible(true);this.toast(this.t('Руки свободны. Найди фонарь и ключ от люка.','Your hands are free. Find the flashlight and hatch key.'));
+          this.player.setVisible(true);if(STORY_PRODUCTION)this.persist();
+          this.toast(this.t('Руки свободны. Найди фонарь и ключ от люка.','Your hands are free. Find the flashlight and hatch key.'));
         }
       }
       if(active||forceDraw||this.redraw){this.renderer.render(this.scene,this.camera);this.redraw=false;}
@@ -284,6 +280,7 @@ export class Episode {
         this.notify();
       };
     }
+    if(this.intent==='continue')this.start();
   }catch(e){if(!this.disposed){this.mode='error';this.message=String(e);this.notify();}}}
   private t(ru:string,en:string){return text(this.settings.language,ru,en);}
   /** Compile/upload the new native skin and cinematic views under the existing
@@ -853,14 +850,15 @@ export class Episode {
   };
   private token(){try{let token=localStorage.getItem(TOKEN_KEY);if(!token){token=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');localStorage.setItem(TOKEN_KEY,token);}return token;}catch{return null;}}
   private persist(remote=true){
-    if(!this.house||this.storyHomeRequested)return;
+    if(!this.house||(!STORY_PRODUCTION&&this.storyHomeRequested)||
+      !canWriteGameSave(this.intent,this.storyFree,this.mode!=='loading'&&this.mode!=='error'))return;
     if(this.nativeIntro)this.save.intro=this.nativeIntro.flow.checkpoint();
     this.save.position=this.position.toArray() as [number,number,number];this.save.yaw=this.yaw;this.save.pitch=this.pitch;this.save.updatedAt=new Date().toISOString();this.savedPosition.copy(this.position);
     if(!writeLocal(SAVE_KEY,this.save)){this.cloud='unavailable';return;}if(!remote||!API)return;
     clearTimeout(this.cloudTimer);this.cloudTimer=setTimeout(()=>{void this.cloudSave();},800);
   }
   private async cloudSave(){const token=this.token();if(!token||!API)return;this.cloud='saving';this.notify();try{const response=await fetch(`${API}/api/save`,{method:'PUT',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(this.save),signal:AbortSignal.timeout(10000)});if(!response.ok)throw Error('save');this.cloud='saved';}catch{this.cloud='offline';}if(!this.disposed)this.notify();}
-  async restoreCloud(){if(!API||this.storyHomeRequested){this.cloud='local';this.notify();return;}const token=this.token();if(!token)return;
+  async restoreCloud(){if(!API||(this.storyHomeRequested&&!(STORY_PRODUCTION&&this.storyFree))){this.cloud='local';this.notify();return;}const token=this.token();if(!token)return;
     try{const r=await fetch(`${API}/api/save`,{headers:{Authorization:`Bearer ${token}`},signal:AbortSignal.timeout(10000)});if(r.status===404){this.toast(this.t('Серверной копии пока нет.','No server backup yet.'));return;}if(!r.ok)throw Error();const s:unknown=await r.json();if(!validSave(s))throw Error();
       this.save=s;this.restoreEscape();this.escape?.setVisible(false);this.recoverPack();writeLocal(SAVE_KEY,s);this.position.fromArray(s.position);this.yaw=s.yaw;this.pitch=s.pitch;this.equip();this.movement.set(0,0);this.velocity.set(0,0,0);
       for(const t of this.house!.targets){if(t.kind==='item')t.root.visible=!s.items.includes(t.id);if(t.kind==='door'){t.open=s.doors.includes(t.id);t.unlocked=!t.key||s.flags.includes(`unlock:${t.id}`);}if(t.home){t.root.position.copy(t.home);if(s.moved.includes(t.id))t.root.position.add(t.move!);t.progress=s.moved.includes(t.id)?1:0;}}

@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { ArrowUp, Backpack, BookOpen, BookText, Candy, ChevronRight, Compass, Droplets, FileText, Flashlight, Footprints, Hand, KeyRound, Maximize, NotebookPen, PenLine, PersonStanding, RotateCw, Settings as Gear, Smartphone, Volume2, X } from 'lucide-react';
 import { Episode, type View } from './runtime';
-import { DEFAULT_SETTINGS, DOCUMENTS, ROOMS, newSave, text } from './data';
+import { DEFAULT_SETTINGS, DOCUMENTS, ROOMS, newSave, text, validSave, type Settings } from './data';
 import { PACK, PACK_IDS, remaining, type PackItem } from './pack';
-import { ASSET_REVISION, STORY_RELEASE } from './release';
+import { ASSET_REVISION, SAVE_API, STORY_PRODUCTION, STORY_RELEASE } from './release';
+import {readSave,readSettings,writeLocal,SAVE_KEY,SETTINGS_KEY,TOKEN_KEY,type ProductionIntent} from './story-production-save';
 import './episode.css';
 
 const initial:View={mode:'loading',loading:0,room:0,objective:'',prompt:'',progress:0,message:'',save:newSave(),settings:DEFAULT_SETTINGS,cloud:'local'};
+const productionTitle=():View=>({...initial,mode:'title',loading:1,save:readSave()??newSave(),settings:readSettings(),storyHome:'dialogue'});
 const packIcons={phone:Smartphone,book:BookText,compass:Compass,pen:PenLine,sheet:FileText,notebook:NotebookPen,candy:Candy,water:Droplets};
 function TouchButton({game,code,label,children,className=''}:{game:Episode|null;code:string;label:string;children:React.ReactNode;className?:string}){
   const pressed=useRef<string|null>(null);
@@ -15,16 +17,52 @@ function TouchButton({game,code,label,children,className=''}:{game:Episode|null;
   return <button className={`touch-button ${className}`} aria-label={label} onContextMenu={e=>e.preventDefault()} onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);pressed.current=code;game?.touchButton(code,true);}} onPointerUp={()=>release()} onPointerCancel={()=>release(true)} onLostPointerCapture={()=>release(true)}>{children}<small>{label}</small></button>;
 }
 export default function EpisodePage(){
-  const canvas=useRef<HTMLCanvasElement>(null);const runtime=useRef<Episode|null>(null);const [view,setView]=useState<View>(initial);
+  const canvas=useRef<HTMLCanvasElement>(null);const runtime=useRef<Episode|null>(null);const [view,setView]=useState<View>(()=>STORY_PRODUCTION?productionTitle():initial);
+  const [hasSave,setHasSave]=useState(()=>STORY_PRODUCTION&&!!readSave());
   const [settingsOpen,setSettingsOpen]=useState(false);const [newConfirm,setNewConfirm]=useState(false);
   const [packSelected,setPackSelected]=useState<PackItem>('phone');
   const [mobile]=useState(()=>matchMedia('(pointer: coarse)').matches||navigator.maxTouchPoints>0);
   const [stick,setStick]=useState({x:0,y:0});const joy=useRef<{id:number;x:number;y:number}|null>(null);const look=useRef<{id:number;x:number;y:number}|null>(null);
   const t=(ru:string,en:string)=>text(view.settings.language,ru,en);const language=view.settings.language==='ru'?0:1;
-  useEffect(()=>{if(!canvas.current)return;let game:Episode|undefined;try{game=new Episode(canvas.current,setView);runtime.current=game;}catch(e){setView({...initial,mode:'error',error:String(e)});}return()=>{game?.dispose();runtime.current=null;};},[]);
+  useEffect(()=>{
+    if(!STORY_PRODUCTION&&canvas.current)try{runtime.current=new Episode(canvas.current,setView);}catch(e){setView({...initial,mode:'error',error:String(e)});}
+    return()=>{runtime.current?.dispose();runtime.current=null;};
+  },[]);
   useEffect(()=>{document.documentElement.lang=view.settings.language;},[view.settings.language]);
   useEffect(()=>{if(view.mode==='playing')setSettingsOpen(false);},[view.mode]);
-  const begin=(fresh=false)=>{setNewConfirm(false);runtime.current?.start(fresh);};
+  const launch=(intent:ProductionIntent)=>{
+    if(!canvas.current||runtime.current)return;
+    setNewConfirm(false);setSettingsOpen(false);
+    try{runtime.current=new Episode(canvas.current,setView,intent);}
+    catch(e){setView({...productionTitle(),mode:'error',error:String(e)});}
+  };
+  const begin=(fresh=false)=>{
+    if(STORY_PRODUCTION){if(fresh||!hasSave)launch('new');else setNewConfirm(true);return;}
+    setNewConfirm(false);runtime.current?.start(fresh);
+  };
+  const returnToTitle=()=>{
+    if(!STORY_PRODUCTION){runtime.current?.title();return;}
+    runtime.current?.dispose();runtime.current=null;
+    setHasSave(!!readSave());setSettingsOpen(false);setView(productionTitle());
+  };
+  const patchSettings=(next:Partial<Settings>)=>{
+    if(runtime.current)runtime.current.settingsChange(next);
+    else{const settings={...readSettings(),...next};writeLocal(SETTINGS_KEY,settings);setView(v=>({...v,settings}));}
+  };
+  const restoreCloud=async()=>{
+    if(runtime.current){await runtime.current.restoreCloud();return;}
+    if(!SAVE_API)return;
+    try{
+      const token=localStorage.getItem(TOKEN_KEY);
+      if(!token)return;
+      const response=await fetch(SAVE_API+'/api/save',{headers:{Authorization:`Bearer ${token}`},signal:AbortSignal.timeout(10000)});
+      if(response.status===404)return;
+      if(!response.ok)throw Error('Backup request failed');
+      const save:unknown=await response.json();
+      if(runtime.current||!validSave(save)||!writeLocal(SAVE_KEY,save))return;
+      setHasSave(true);setView(v=>({...v,save,cloud:'restored'}));
+    }catch{setView(v=>({...v,cloud:'offline'}));}
+  };
   const fullscreen=async()=>{try{await document.documentElement.requestFullscreen?.();const orientation=screen.orientation as ScreenOrientation&{lock?:(value:string)=>Promise<void>};await orientation.lock?.('landscape');}catch{/* iPhone Safari uses its native landscape viewport. */}};
   const joystickDown=(e:ReactPointerEvent<HTMLDivElement>)=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);const r=e.currentTarget.getBoundingClientRect();joy.current={id:e.pointerId,x:r.left+r.width/2,y:r.top+r.height/2};joystickMove(e);};
   const joystickMove=(e:ReactPointerEvent<HTMLDivElement>)=>{if(joy.current?.id!==e.pointerId)return;const dx=e.clientX-joy.current.x,dy=e.clientY-joy.current.y;const length=Math.hypot(dx,dy),scale=length>42?42/length:1;const x=dx*scale,y=dy*scale;setStick({x,y});runtime.current?.touchMove(x/42,-y/42);};
@@ -36,20 +74,22 @@ export default function EpisodePage(){
   const cloudText={local:t('Сохранение на устройстве','Saved on this device'),saved:t('Резервная копия на сервере','Server backup saved'),saving:t('Сохранение…','Saving…'),offline:t('Локально · сервер недоступен','Local save · server unavailable'),unavailable:t('Хранилище браузера недоступно','Browser storage unavailable'),restored:t('Копия восстановлена','Backup restored')}[view.cloud]||'';
   return <main className="episode" data-mode={view.mode} data-release={ASSET_REVISION} data-intro={!view.save.flags.includes('free')}>
     <canvas ref={canvas} id="episode-canvas" aria-label={t('Трёхмерный мир игры','3D game world')}/>
-    {(import.meta.env.DEV||STORY_RELEASE)&&view.storyHome ? <section className="ep-story-home" data-testid="story-home-shot">
-      <header><span>100GATE / {t('СЮЖЕТНОЕ ВСТУПЛЕНИЕ · В РАБОТЕ','STORY OPENING · IN PROGRESS')}</span>
+    {(import.meta.env.DEV||STORY_RELEASE||STORY_PRODUCTION)&&view.storyHome ? <section className="ep-story-home" data-testid="story-home-shot">
+      <header><span>100GATE / {STORY_PRODUCTION?t('СЮЖЕТНОЕ ВСТУПЛЕНИЕ','STORY OPENING'):t('СЮЖЕТНОЕ ВСТУПЛЕНИЕ · В РАБОТЕ','STORY OPENING · IN PROGRESS')}</span>
         <span>{view.storyHome==='seated'?t('Незнакомая комната','Unknown room'):
           `${view.storyClock??'22:42'} · ${view.storyHome==='street'?t('Вечерняя улица','Evening street'):t('Квартира','Apartment')}`}</span></header>
       {view.storyBlack!==undefined&&view.storyBlack>0&&<div className="ep-story-fade" style={{opacity:view.storyBlack}}/>}
       {(view.mode==='title'||view.mode==='loading'||view.mode==='error'||view.storyHome==='end')&&
         <div className="ep-overlay"><section className="ep-card">
           <h2>{t('Квартира · 22:42','Apartment · 22:42')}</h2>
-          {view.mode==='loading'&&<p role="status">{t('Загрузка декорации Blender…','Loading the Blender set…')}</p>}
-          {view.mode==='error'&&<p role="alert">{view.error}</p>}
+          {view.mode==='loading'&&<p role="status">{t('Загрузка окружения…','Loading the environment…')}</p>}
+          {view.mode==='error'&&<><p role="alert">{view.error}</p>{STORY_PRODUCTION&&<button className="ep-primary" onClick={returnToTitle}>{t('Вернуться в меню','Return to menu')}</button>}</>}
           {view.mode==='title'&&<><p>{t('Алексей и его девушка. Вечер перед выходом.','Alexei and his partner. An evening before going out.')}</p>
-            <button className="ep-primary" data-testid="start-story-home" onClick={()=>begin()}>{t('Новая игра','New Game')}</button></>}
+            {STORY_PRODUCTION&&<button className="ep-secondary" data-testid="continue-story-home" disabled={!hasSave} onClick={()=>launch('continue')}>{t('Продолжить','Continue')}</button>}
+            <button className="ep-primary" data-testid="start-story-home" onClick={()=>begin()}>{t('Новая игра','New Game')}</button>
+            {STORY_PRODUCTION&&<button className="ep-text" onClick={()=>setSettingsOpen(true)}>{t('Настройки','Settings')}</button>}</>}
           {view.storyHome==='end'&&<><p data-testid="story-home-end">{t('Конец текущей постановки. Следующий эпизод ещё не подключён.','End of the current performance. The next episode is not wired in yet.')}</p>
-            <button className="ep-secondary" data-testid="story-home-back" onClick={()=>runtime.current?.title()}>{t('Назад','Back')}</button></>}
+            <button className="ep-secondary" data-testid="story-home-back" onClick={returnToTitle}>{t('Назад','Back')}</button></>}
         </section></div>}
       {(view.mode==='playing'||view.mode==='paused')&&view.storyHome!=='end'&&
         <button className="ep-secondary ep-story-pause" data-testid="story-home-pause" onClick={()=>{
@@ -65,7 +105,7 @@ export default function EpisodePage(){
     </section> : <>
     <div className="ep-vignette"/><div className="ep-grain"/>
     {view.mode==='loading'&&<div className="ep-loading"><div className="ep-seal">100</div><span className="ep-kicker">100GATE / {t('СТО ДВЕРЕЙ','ONE HUNDRED DOORS')}</span><h1>{t('Дом просыпается','The house is waking')}</h1><p>{t('Загрузка окружения и материалов','Loading the environment and materials')}</p><div className="ep-load-track"><i style={{width:`${Math.max(5,view.loading*100)}%`}}/></div></div>}
-    {view.mode==='error'&&<div className="ep-overlay"><section className="ep-card"><h1>{t('Не удалось открыть дом','The house could not load')}</h1><p>{t('Нужен браузер с поддержкой WebGL 2. Попробуй обновить страницу.','A WebGL 2 browser is required. Try reloading the page.')}</p><details><summary>{t('Подробности','Details')}</summary>{view.error}</details><button onClick={()=>location.reload()}>{t('Повторить','Try again')}</button></section></div>}
+    {view.mode==='error'&&<div className="ep-overlay"><section className="ep-card"><h1>{t('Не удалось открыть дом','The house could not load')}</h1><p>{t('Нужен браузер с поддержкой WebGL 2. Попробуй обновить страницу.','A WebGL 2 browser is required. Try reloading the page.')}</p><details><summary>{t('Подробности','Details')}</summary>{view.error}</details><button onClick={STORY_PRODUCTION?returnToTitle:()=>location.reload()}>{t('Повторить','Try again')}</button></section></div>}
     {view.mode==='title'&&<div className="ep-title">
       <header className="ep-title-header"><a className="ep-wordmark" href="#" onClick={e=>e.preventDefault()}>100<span>GATE</span><i/></a><span>{t('ПСИХОЛОГИЧЕСКИЙ ХОРРОР','A PSYCHOLOGICAL HORROR')}</span><button className="ep-icon" aria-label={t('Настройки','Settings')} onClick={()=>setSettingsOpen(true)}><Gear size={19}/></button></header>
       <section className="ep-title-copy"><div className="ep-kicker"><i/>{t('ГЛАВА I / ЗАБРОШЕННЫЙ ДОМ','CHAPTER I / THE ABANDONED HOUSE')}</div><h1>{t('Дом, который','The house that')}<br/><em>{t('помнит.','remembers.')}</em></h1><p>{t('Письмо привело тебя домой.\nКто-то позаботился о том, чтобы ты остался.','A letter brought you home.\nSomeone made sure you would stay.')}</p>
@@ -104,20 +144,8 @@ export default function EpisodePage(){
       </section>
     </div>}
     {view.mode==='document'&&view.document&&<div className="ep-document-overlay"><article className="ep-document"><div className="ep-doc-head"><span>{t('ЛИЧНЫЙ АРХИВ · СОКОЛОВЫ','PERSONAL ARCHIVE · SOKOLOV FAMILY')}</span><button aria-label={t('Положить документ','Put document back')} onClick={()=>runtime.current?.touchButton('KeyF',true)}><X size={18}/></button></div><h2>{DOCUMENTS[view.document]?.title[language]}</h2><div className="ep-document-body">{DOCUMENTS[view.document]?.body[language]}</div><footer><span>№ {String(Object.keys(DOCUMENTS).indexOf(view.document)+1).padStart(3,'0')}</span><button onClick={()=>runtime.current?.touchButton('KeyF',true)}>{mobile?t('Положить обратно','Put back'):t('F · Положить обратно','F · Put back')}</button></footer></article></div>}
-    {view.mode==='paused'&&!settingsOpen&&<div className="ep-overlay"><section className="ep-card ep-pause"><span className="ep-kicker">100GATE / {t('ИСТОРИЯ ПРИОСТАНОВЛЕНА','THE STORY IS PAUSED')}</span><h2>{t('Перевести дух.','Take a breath.')}</h2><p>{t('Дом подождёт.','The house will wait.')}</p><button className="ep-primary" onClick={()=>runtime.current?.resume()}>{t('Продолжить','Resume')}<ChevronRight size={17}/></button><button className="ep-secondary" onClick={()=>setSettingsOpen(true)}><Gear size={16}/>{t('Настройки','Settings')}</button><button className="ep-text" onClick={()=>runtime.current?.title()}>{t('В главное меню','Main menu')}</button><small>{cloudText}</small><span className="ep-esc">{!mobile&&t('ESC — вернуться в игру','ESC — return to the game')}</span></section></div>}
-    {settingsOpen&&<div className="ep-overlay ep-settings-overlay"><section className="ep-card ep-settings"><header><div><span className="ep-kicker">{t('ПОД СЕБЯ','MAKE IT YOURS')}</span><h2>{t('Настройки','Settings')}</h2></div><button className="ep-icon" aria-label={t('Закрыть настройки','Close settings')} onClick={()=>setSettingsOpen(false)}><X size={20}/></button></header>
-      <label><span>{t('Язык','Language')}</span><select value={view.settings.language} onChange={e=>runtime.current?.settingsChange({language:e.target.value as 'ru'|'en'})}><option value="ru">Русский</option><option value="en">English</option></select></label>
-      <label><span>{t('Графика','Graphics')}</span><select value={view.settings.quality} onChange={e=>runtime.current?.settingsChange({quality:e.target.value as 'low'|'medium'|'high'})}><option value="high">{t('Высокая · тени и свечение','High · shadows and bloom')}</option><option value="medium">{t('Средняя · мягкие тени','Medium · soft shadows')}</option><option value="low">{t('Низкая · без теней','Low · no shadows')}</option></select></label>
-      <label><span>{t('Погода снаружи','Outdoor weather')}</span><select value={view.settings.weather} onChange={e=>runtime.current?.settingsChange({weather:e.target.value as 'rain'|'snow'})}><option value="rain">{t('Дождь и гроза','Rain and thunder')}</option><option value="snow">{t('Снег','Snow')}</option></select></label>
-      <label className="ep-slider"><span><Volume2 size={16}/>{t('Громкость','Volume')}<b>{Math.round(view.settings.volume*100)}%</b></span><input aria-label={t('Громкость','Volume')} type="range" min="0" max="1" step=".05" value={view.settings.volume} onChange={e=>runtime.current?.settingsChange({volume:Number(e.target.value)})}/></label>
-      <label className="ep-slider"><span>{t('Чувствительность мыши / обзора','Mouse / look sensitivity')}<b>{view.settings.sensitivity.toFixed(1)}</b></span><input aria-label={t('Чувствительность','Sensitivity')} type="range" min=".2" max="2" step=".1" value={view.settings.sensitivity} onChange={e=>runtime.current?.settingsChange({sensitivity:Number(e.target.value)})}/></label>
-      <label className="ep-checkbox"><span>{t('Движение головы при ходьбе','Head movement while walking')}</span><input type="checkbox" checked={view.settings.headBob} onChange={e=>runtime.current?.settingsChange({headBob:e.target.checked})}/></label>
-      <label className="ep-slider"><span>{t('Интенсивность движения камеры','Camera motion intensity')}<b>{Math.round(view.settings.cameraMotion*100)}%</b></span><input aria-label={t('Движение камеры','Camera motion')} type="range" min="0" max="1" step=".05" value={view.settings.cameraMotion} onChange={e=>runtime.current?.settingsChange({cameraMotion:Number(e.target.value)})}/></label>
-      <div className="ep-bindings"><span>E — {t('подобрать / отпереть','take / unlock')}</span><span>G — {t('открыть рукой','open by hand')}</span><span>R — {t('удерживать: двигать','hold: move furniture')}</span><span>F — {t('изучить / положить','examine / put back')}</span><span>Ctrl — {t('бежать','run')}</span><span>Shift — {t('присесть','crouch')}</span><span>Space — {t('прыгнуть','jump')}</span><span>T — {t('фонарь','flashlight')}</span><span>H — {t('сумка','bag')}</span></div>
-      <footer><small>{cloudText}</small><button className="ep-text" onClick={()=>void runtime.current?.restoreCloud()}>{t('Восстановить серверную копию','Restore server backup')}</button></footer><button className="ep-primary" onClick={()=>{setSettingsOpen(false);if(view.mode==='paused')runtime.current?.resume();}}>{t('Готово','Done')}<ChevronRight size={16}/></button>
-    </section></div>}
-    {newConfirm&&<div className="ep-overlay"><section className="ep-card"><h2>{t('Начать сначала?','Start again?')}</h2><p>{t('Текущее сохранение этой главы будет заменено.','This chapter’s current save will be replaced.')}</p><button className="ep-primary" onClick={()=>begin(true)}>{t('Новая история','New story')}</button><button className="ep-secondary" onClick={()=>setNewConfirm(false)}>{t('Отмена','Cancel')}</button></section></div>}
-    {view.mode==='ending'&&<div className="ep-overlay"><section className="ep-card ep-ending"><span className="ep-kicker">{t('ГЛАВА I ЗАВЕРШЕНА','CHAPTER I COMPLETE')}</span><h2>{t('За порогом.','Beyond the threshold.')}</h2><p>{t('Холодный воздух. Мокрая трава. В окне старой мастерской загорается свет. На двери — тот же знак, что был в письме Веры.','Cold air. Wet grass. A light comes on in the old workshop. Its door bears the mark from Vera’s letter.')}</p><blockquote>{t('«Не уходи без меня».','“Do not leave without me.”')}</blockquote><div className="ep-ending-count">10 <span>/ 100 {t('КОМНАТ','ROOMS')}</span></div><p className="ep-fine">{t('Первый эпизод пройден. Следующие девять глав ещё в разработке.','The first episode is complete. The next nine chapters are still in development.')}</p><button className="ep-primary" onClick={()=>runtime.current?.title()}>{t('В главное меню','Main menu')}<ChevronRight size={17}/></button></section></div>}
+    {view.mode==='paused'&&!settingsOpen&&<div className="ep-overlay"><section className="ep-card ep-pause"><span className="ep-kicker">100GATE / {t('ИСТОРИЯ ПРИОСТАНОВЛЕНА','THE STORY IS PAUSED')}</span><h2>{t('Перевести дух.','Take a breath.')}</h2><p>{t('Дом подождёт.','The house will wait.')}</p><button className="ep-primary" onClick={()=>runtime.current?.resume()}>{t('Продолжить','Resume')}<ChevronRight size={17}/></button><button className="ep-secondary" onClick={()=>setSettingsOpen(true)}><Gear size={16}/>{t('Настройки','Settings')}</button><button className="ep-text" onClick={returnToTitle}>{t('В главное меню','Main menu')}</button><small>{cloudText}</small><span className="ep-esc">{!mobile&&t('ESC — вернуться в игру','ESC — return to the game')}</span></section></div>}
+    {view.mode==='ending'&&<div className="ep-overlay"><section className="ep-card ep-ending"><span className="ep-kicker">{t('ГЛАВА I ЗАВЕРШЕНА','CHAPTER I COMPLETE')}</span><h2>{t('За порогом.','Beyond the threshold.')}</h2><p>{t('Холодный воздух. Мокрая трава. В окне старой мастерской загорается свет. На двери — тот же знак, что был в письме Веры.','Cold air. Wet grass. A light comes on in the old workshop. Its door bears the mark from Vera’s letter.')}</p><blockquote>{t('«Не уходи без меня».','“Do not leave without me.”')}</blockquote><div className="ep-ending-count">10 <span>/ 100 {t('КОМНАТ','ROOMS')}</span></div><p className="ep-fine">{t('Первый эпизод пройден. Следующие девять глав ещё в разработке.','The first episode is complete. The next nine chapters are still in development.')}</p><button className="ep-primary" onClick={returnToTitle}>{t('В главное меню','Main menu')}<ChevronRight size={17}/></button></section></div>}
     {mobile&&view.mode==='playing'&&<div className="ep-touch-controls">
       <div className="ep-look-zone" data-testid="look-zone" onPointerDown={lookDown} onPointerMove={lookMove} onPointerUp={()=>look.current=null} onPointerCancel={()=>look.current=null}/>
       <div className="ep-joystick" data-testid="joystick" role="slider" aria-label={t('Джойстик движения','Movement joystick')} aria-valuemin={-1} aria-valuemax={1} aria-valuenow={stick.y/42} onPointerDown={joystickDown} onPointerMove={joystickMove} onPointerUp={joystickEnd} onPointerCancel={joystickEnd}><i/><span style={{transform:`translate(${stick.x}px,${stick.y}px)`}}/></div>
@@ -127,5 +155,17 @@ export default function EpisodePage(){
     </div>}
     {mobile&&<><button className="ep-fullscreen ep-icon" aria-label={t('Полный экран','Fullscreen')} onClick={()=>void fullscreen()}><Maximize size={17}/></button><div className="ep-rotate"><RotateCw size={46}/><h2>{t('Поверни телефон','Rotate your phone')}</h2><p>{t('Дом лучше исследовать в горизонтальном положении.','Explore the house in landscape orientation.')}</p></div></>}
     </>}
+    {settingsOpen&&<div className="ep-overlay ep-settings-overlay"><section className="ep-card ep-settings"><header><div><span className="ep-kicker">{t('ПОД СЕБЯ','MAKE IT YOURS')}</span><h2>{t('Настройки','Settings')}</h2></div><button className="ep-icon" aria-label={t('Закрыть настройки','Close settings')} onClick={()=>setSettingsOpen(false)}><X size={20}/></button></header>
+      <label><span>{t('Язык','Language')}</span><select value={view.settings.language} onChange={e=>patchSettings({language:e.target.value as 'ru'|'en'})}><option value="ru">Русский</option><option value="en">English</option></select></label>
+      <label><span>{t('Графика','Graphics')}</span><select value={view.settings.quality} onChange={e=>patchSettings({quality:e.target.value as 'low'|'medium'|'high'})}><option value="high">{t('Высокая · тени и свечение','High · shadows and bloom')}</option><option value="medium">{t('Средняя · мягкие тени','Medium · soft shadows')}</option><option value="low">{t('Низкая · без теней','Low · no shadows')}</option></select></label>
+      <label><span>{t('Погода снаружи','Outdoor weather')}</span><select value={view.settings.weather} onChange={e=>patchSettings({weather:e.target.value as 'rain'|'snow'})}><option value="rain">{t('Дождь и гроза','Rain and thunder')}</option><option value="snow">{t('Снег','Snow')}</option></select></label>
+      <label className="ep-slider"><span><Volume2 size={16}/>{t('Громкость','Volume')}<b>{Math.round(view.settings.volume*100)}%</b></span><input aria-label={t('Громкость','Volume')} type="range" min="0" max="1" step=".05" value={view.settings.volume} onChange={e=>patchSettings({volume:Number(e.target.value)})}/></label>
+      <label className="ep-slider"><span>{t('Чувствительность мыши / обзора','Mouse / look sensitivity')}<b>{view.settings.sensitivity.toFixed(1)}</b></span><input aria-label={t('Чувствительность','Sensitivity')} type="range" min=".2" max="2" step=".1" value={view.settings.sensitivity} onChange={e=>patchSettings({sensitivity:Number(e.target.value)})}/></label>
+      <label className="ep-checkbox"><span>{t('Движение головы при ходьбе','Head movement while walking')}</span><input type="checkbox" checked={view.settings.headBob} onChange={e=>patchSettings({headBob:e.target.checked})}/></label>
+      <label className="ep-slider"><span>{t('Интенсивность движения камеры','Camera motion intensity')}<b>{Math.round(view.settings.cameraMotion*100)}%</b></span><input aria-label={t('Движение камеры','Camera motion')} type="range" min="0" max="1" step=".05" value={view.settings.cameraMotion} onChange={e=>patchSettings({cameraMotion:Number(e.target.value)})}/></label>
+      <div className="ep-bindings"><span>E — {t('подобрать / отпереть','take / unlock')}</span><span>G — {t('открыть рукой','open by hand')}</span><span>R — {t('удерживать: двигать','hold: move furniture')}</span><span>F — {t('изучить / положить','examine / put back')}</span><span>Ctrl — {t('бежать','run')}</span><span>Shift — {t('присесть','crouch')}</span><span>Space — {t('прыгнуть','jump')}</span><span>T — {t('фонарь','flashlight')}</span><span>H — {t('сумка','bag')}</span></div>
+      <footer><small>{cloudText}</small><button className="ep-text" onClick={()=>void restoreCloud()}>{t('Восстановить серверную копию','Restore server backup')}</button></footer><button className="ep-primary" onClick={()=>{setSettingsOpen(false);if(view.mode==='paused')runtime.current?.resume();}}>{t('Готово','Done')}<ChevronRight size={16}/></button>
+    </section></div>}
+    {newConfirm&&<div className="ep-overlay"><section className="ep-card"><h2>{t('Начать сначала?','Start again?')}</h2><p>{t('Текущее сохранение этой главы будет заменено.','This chapter’s current save will be replaced.')}</p><button className="ep-primary" onClick={()=>begin(true)}>{t('Новая история','New story')}</button><button className="ep-secondary" onClick={()=>setNewConfirm(false)}>{t('Отмена','Cancel')}</button></section></div>}
   </main>;
 }
