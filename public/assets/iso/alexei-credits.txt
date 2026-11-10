@@ -1,0 +1,16 @@
+100GATE / Алексей
+
+Модель и одежда: MakeHuman / MPFB, выбранные ассеты CC0-1.0.
+https://static.makehumancommunity.org/about/license.html
+Авторы одежды: Toigo (свитер и обувь) и Cortu (брюки).
+Подробный перечень источников сохранён в art/provenance/MPFB-SOURCES.json.
+
+The data used in this project was obtained from mocap.cs.cmu.edu.
+CMU Graphics Lab Motion Capture Database, Subject 91, WalkStraight 02.
+https://mocap.cs.cmu.edu/search.php?subjectnumber=91
+В сборке используется адаптированный цикл ходьбы, а не исходные данные захвата.
+
+Исходная модель и анимации из Blender 4.5 LTS сохранены в
+outputs/quality-overhaul/gait и outputs/quality-overhaul/stop.
+Экспорт: scripts/art/package-iso-actor.py.
+SHA-256: f52ba582053df5bf84fb71e11cd71aacbeb43b98b7c8f08ef078243eb584e62c
