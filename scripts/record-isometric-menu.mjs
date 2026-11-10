@@ -22,20 +22,25 @@ try{
   // The browser requires a user gesture to unlock the actual game audio.
   await page.mouse.click(viewport.width-32,viewport.height-28);
   const audioStart=Date.now();
-  await page.waitForTimeout(61500);
+  // The first recording delivered only 59.82 s of PCM after 61.5 s of wall
+  // time. Audio callback start and GPU back-pressure are not video time.
+  await page.waitForTimeout(66500);
   assert(await page.getByTestId('iso-title').isVisible());
   const media=await page.evaluate(()=>window.__finishStoryMedia());
-  assert(media.frames/media.rate>=60);
+  const audioDuration=media.frames/media.rate;
+  assert(audioDuration>=60,`Captured only ${audioDuration.toFixed(2)} s of game audio`);
   assert.deepEqual(errors,[]);
   await context.close();
   const raw=await video.path();
   const duration=Number(execFileSync('ffprobe',['-v','error','-show_entries','format=duration',
     '-of','default=noprint_wrappers=1:nokey=1',raw],{encoding:'utf8'}).trim());
   const seek=Math.max(0,duration-61);
+  assert(duration-seek>=60,'Browser video is shorter than 60 seconds');
+  const audioSeek=Math.max(0,audioDuration-61);
   const target=out+'/100gate-menu-60s.webm';
   execFileSync('ffmpeg',['-y','-v','error','-ss',String(seek),'-i',raw,'-f','s16le','-ar',String(media.rate),
-    '-ac','2','-i',out+'/menu.pcm','-map','0:v:0','-map','1:a:0','-t','60',
+    '-ac','2','-ss',String(audioSeek),'-i',out+'/menu.pcm','-map','0:v:0','-map','1:a:0','-t','60',
     '-c:v','libvpx-vp9','-deadline','good','-cpu-used','4','-threads','2','-crf','30','-b:v','0','-c:a','libopus',target]);
   execFileSync('ffmpeg',['-v','error','-i',target,'-f','null','-']);
-  await writeFile(out+'/report.json',JSON.stringify({media,errors,rawDuration:duration,sourceAudioStarted:audioStart,target},null,2));
+  await writeFile(out+'/report.json',JSON.stringify({media,errors,rawDuration:duration,audioDuration,sourceAudioStarted:audioStart,target},null,2));
 }finally{await browser.close();}
