@@ -1,7 +1,8 @@
 {
-  "kind": "story-production",
-  "source": "fd4b58f53cc3cb4688849563d562bc7ca08fd2f4",
-  "previousPagesCommit": "c53d6f673ddff5a86a99757923dde6072d476788",
-  "buildSha256": "7e44d5631d881083a31806b58dd6500f6574896e1c703451d60df384a0df527e",
-  "entry": "assets/index-BTtXYCde.js"
+  "kind": "isometric-production",
+  "source": "19aeb5a136cf028593791faecd6e10c200ae1669",
+  "sourceRef": "refs/heads/main",
+  "previousPagesCommit": "57597eb068bd911febab945484f43466d0b67a20",
+  "buildSha256": "3856a183e6f146d052b9b6d8fd602a596a0abec1ad0045ddf91ff3997732009d",
+  "entry": "assets/index-DT7llFDg.js"
 }
