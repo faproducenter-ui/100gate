@@ -2,7 +2,7 @@ import * as T from 'three'
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js'
 import { clone } from 'three/addons/utils/SkeletonUtils.js'
 
-const ASSET = 'assets/iso/alexei-7.glb'
+const ASSET = 'assets/iso/alexei-8.glb'
 const FLASHLIGHT_ASSET = 'assets/iso/flashlight.glb'
 const BACKPACK_ASSET = 'assets/iso/backpack-2.glb'
 /** Metres of travel per authored gait cycle (two steps); see scripts/art/package-iso-gait.py. */
@@ -131,9 +131,9 @@ function loadShared(): Promise<Shared> {
       disposeSource(source.scene)
       throw new Error('Invalid native actor: missing expected rig, skin or gait')
     }
-    // The Blender-authored right-hand grip: finger rotations only (first key of the Grip clip).
+    // The Blender-authored 'flashlight held ahead' pose of the right arm and fingers (first key of the Hold clip).
     const gripPose = new Map<string, T.Quaternion>()
-    for (const track of T.AnimationClip.findByName(source.animations, 'Grip')?.tracks ?? []) {
+    for (const track of T.AnimationClip.findByName(source.animations, 'Hold')?.tracks ?? []) {
       if (track instanceof T.QuaternionKeyframeTrack) gripPose.set(track.name.replace('.quaternion', ''), new T.Quaternion().fromArray(track.values, 0))
     }
     return loadProps().then(props => ({ gripPose, source, idle, walk, run, crouchIdle, crouchWalk, props, references: 0 }))
@@ -423,33 +423,20 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     rightV.set(-fwd.z, 0, fwd.x)
     pole.set(0, -.6, 0).addScaledVector(rightV, .6).addScaledVector(fwd, -.25)
     const pushed = Math.sin(Math.PI * press) // thumb dips onto the switch and releases
+    const fpPitch = fp ? Math.asin(Math.max(-1, Math.min(1, fp.forward.y))) : 0
     const holding = !!gripOffset && !!flashlight && gear.flashlight && beam > .02
+    if (backpack) backpack.visible = !fp
+    if (straps) straps.visible = !fp
     if (holding && arm.upper && arm.lower && arm.hand) {
-      // Where the flashlight should be and which way it points.
-      if (fp) {
-        flashPos.copy(fp.eye).addScaledVector(fp.forward, .3 + .1 * beam).addScaledVector(fp.right, .19 * beam + .24 * (1 - beam))
-          .addScaledVector(fp.up, -.11 * beam - .5 * (1 - beam) - .012 * pushed)
-        beamDir.copy(fp.forward).addScaledVector(fp.right, -.03).normalize()
-      } else {
-        flashPos.set(x, 0, z).addScaledVector(rightV, .17).addScaledVector(fwd, .32 - .015 * pushed)
-        flashPos.y = .86 + .2 * beam
-        beamDir.copy(fwd).addScaledVector(down, .10).normalize()
-      }
-      basisY.copy(UP).addScaledVector(beamDir, -UP.dot(beamDir)).normalize()
-      basisZ.crossVectors(beamDir, basisY)
-      basis.makeBasis(beamDir, basisY, basisZ)
-      flashQuat.setFromRotationMatrix(basis)
-      // hand rotation = flashlight rotation * inverse(authored offset); the wrist sits behind the grip point.
-      offsetQuat.fromArray(gripOffset!.quaternion)
-      handQuat.copy(flashQuat).multiply(offsetQuat.clone().invert())
-      offsetPos.fromArray(gripOffset!.position).applyQuaternion(handQuat)
-      wristGoal.copy(flashPos).sub(offsetPos)
-      if (reachGoal) wristGoal.lerp(reachGoal, reachWeight)
-      reach(wristGoal, pole, beam)
+      // Pose authored in Blender (upper arm, forearm, hand and fingers around the flashlight).
+      const w = beam * (1 - reachWeight * .7)
+      for (const [bone, quat] of gripBones) bone.quaternion.slerp(quat, w)
       root.updateMatrixWorld(true)
-      orientHand(handQuat, beam * (1 - reachWeight * .6))
-      for (const [bone, quat] of gripBones) bone.quaternion.slerp(quat, beam)
+      // In first person the arm follows the look pitch, so the torch stays where the eye expects it.
+      if (fp) { const lift = -Math.max(-1.1, Math.min(1.1, fpPitch)) * .95 * w; bend(arm.upper, lift) }
       if (press < 1 && arm.thumb1) arm.thumb1.rotateX(-pushed * .25)
+      root.updateMatrixWorld(true)
+      if (reachGoal) reach(reachGoal, pole, reachWeight)
     } else if (reachGoal && arm.upper && arm.lower && arm.hand) reach(reachGoal, pole, reachWeight)
     root.updateMatrixWorld(true)
 

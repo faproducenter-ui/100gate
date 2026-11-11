@@ -1,12 +1,12 @@
 """Splice baked Idle/Walk/Run clips (authored in Blender as G_Idle/G_Walk/G_Run,
-exported with the full hero) into public/assets/iso/alexei-7.glb by bone name.
+exported with the full hero) into public/assets/iso/alexei-8.glb by bone name.
 Usage: python package-iso-gait.py <blender-export.glb>
 """
 import json, struct, sys
 from pathlib import Path
 
-DEST = Path(__file__).resolve().parents[2] / "public/assets/iso/alexei-7.glb"
-RENAME = {"G_Idle": "Idle", "G_Walk": "Walk", "G_Run": "Run", "G_CrouchIdle": "CrouchIdle", "G_CrouchWalk": "CrouchWalk", "G_Grip": "Grip"}
+DEST = Path(__file__).resolve().parents[2] / "public/assets/iso/alexei-8.glb"
+RENAME = {"G_Idle": "Idle", "G_Walk": "Walk", "G_Run": "Run", "G_CrouchIdle": "CrouchIdle", "G_CrouchWalk": "CrouchWalk", "G_Hold": "Hold"}
 EXTRAS = {"walkStrideM": 1.25, "runStrideM": 2.0, "crouchStrideM": 0.9}
 
 def read(path):
@@ -38,7 +38,7 @@ def main(src):
         for ch in an["channels"]:
             path = ch["target"]["path"]; name = gname[ch["target"]["node"]]
             if path not in ("translation","rotation") or name not in ids: continue
-            if an["name"] == "G_Grip" and not (name.endswith("_r") and any(k in name for k in ("index","middle","ring","pinky","thumb"))): continue
+            if an["name"] == "G_Hold" and not (name in ("upperarm_r","lowerarm_r","hand_r") or (name.endswith("_r") and any(k in name for k in ("index","middle","ring","pinky","thumb")))): continue
             s = an["samplers"][ch["sampler"]]
             for key in ("input","output"):
                 if (key, s[key]) not in cache:
@@ -48,7 +48,7 @@ def main(src):
             clip["samplers"].append({"input":cache[("input",s["input"])],"output":cache[("output",s["output"])],"interpolation":"LINEAR"})
             clip["channels"].append({"sampler":len(clip["samplers"])-1,"target":{"node":ids[name],"path":path}})
         out.append(clip)
-    assert sorted(c["name"] for c in out) == ["CrouchIdle","CrouchWalk","Grip","Idle","Run","Walk"], [c["name"] for c in out]
+    assert sorted(c["name"] for c in out) == ["CrouchIdle","CrouchWalk","Hold","Idle","Run","Walk"], [c["name"] for c in out]
     dst["animations"] = out
     # The flashlight node parented to hand_r in the Blender export carries the authored grip offset.
     nodes = gen["nodes"]
