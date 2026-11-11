@@ -308,10 +308,11 @@ export class IsoWorld {
       this.fps.update({x:state.x,z:state.z,yaw:frame.look.yaw,pitch:frame.look.pitch,speed:frame.speed,sprint:frame.sprint,
         crouch:frame.crouch,dt:frame.paused?0:dt,time,hasLight:state.items.includes('flashlight'),lightOn:state.lightOn&&state.charge>0,
         press:frame.press,kick:frame.kick});
+      this.cast.setCrouch(frame.crouch);
       const cam=this.fps.camera;
       this.cast.setFirstPerson({yaw:frame.look.yaw,eye:cam.position.clone(),forward:new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion),
         right:new T.Vector3(1,0,0).applyQuaternion(cam.quaternion),up:new T.Vector3(0,1,0).applyQuaternion(cam.quaternion)});
-    }else this.cast.setFirstPerson(null);
+    }else{this.cast.setFirstPerson(null);this.cast.setCrouch(0);}
     if(this.env.drawer)this.env.drawer.position.z=T.MathUtils.damp(this.env.drawer.position.z,this.drawerRest+(frame.drawer?.15:0),11,dt);
     this.cast.root.visible=!menu&&!cctv;
     this.cast.update(frame.paused?0:dt,state.x,state.z,frame.direction.x,frame.direction.z,frame.speed);

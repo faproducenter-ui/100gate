@@ -2,7 +2,7 @@ import * as T from 'three';
 
 /** Eye heights in metres (hero is ~1.78 m tall). */
 export const EYE_STAND = 1.64;
-export const EYE_CROUCH = 1.08;
+export const EYE_CROUCH = 1.25; // head height of the authored crouch pose + a few cm
 const clamp = T.MathUtils.clamp;
 const damp = T.MathUtils.damp;
 
@@ -58,7 +58,9 @@ export class FpRig {
     const sinY = Math.sin(i.yaw), cosY = Math.cos(i.yaw);
     // Offsets: side bob is applied along the camera's right vector (-cos, sin).
     // The camera sits just ahead of the (hidden) head so the real arms and torso stay in view.
-    this.camera.position.set(i.x - cosY * bobX + sinY * .1, this.eye + bobY + breathe, i.z + sinY * bobX + cosY * .1);
+    // In the crouch pose the head leans about 10 cm further forward.
+    const lean = .1 + .1 * i.crouch;
+    this.camera.position.set(i.x - cosY * bobX + sinY * lean, this.eye + bobY + breathe, i.z + sinY * bobX + cosY * lean);
     this.camera.rotation.set(i.pitch + bobY * .12 + sway, i.yaw + Math.PI, this.roll);
     this.camera.updateMatrixWorld(true);
 

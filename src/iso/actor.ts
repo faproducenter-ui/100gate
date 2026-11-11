@@ -2,12 +2,13 @@ import * as T from 'three'
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js'
 import { clone } from 'three/addons/utils/SkeletonUtils.js'
 
-const ASSET = 'assets/iso/alexei-6.glb'
+const ASSET = 'assets/iso/alexei-7.glb'
 const FLASHLIGHT_ASSET = 'assets/iso/flashlight.glb'
 const BACKPACK_ASSET = 'assets/iso/backpack-2.glb'
 /** Metres of travel per authored gait cycle (two steps); see scripts/art/package-iso-gait.py. */
 export const WALK_STRIDE = 1.25
 export const RUN_STRIDE = 2.0
+export const CROUCH_STRIDE = .9
 const TAU = Math.PI * 2
 const clamp = T.MathUtils.clamp
 const shortestAngle = (a: number, b: number) => Math.atan2(Math.sin(b - a), Math.cos(b - a))
@@ -59,14 +60,17 @@ export type IsoActor = {
   flashlightPose(): { position: T.Vector3; direction: T.Vector3 } | undefined;
   /** First person: the hero body follows the camera, the head is hidden and the hand holds the flashlight in view. */
   setFirstPerson(pose: FpPose | null): void;
+  /** 0 = standing, 1 = fully crouched; blends the crouch idle/walk clips in. */
+  setCrouch(amount: number): void;
   /** A fresh copy of the flashlight model for placing in the world. */
   makeFlashlight(): T.Object3D | undefined;
   createEcho(variant?: Variant): IsoActor;
   dispose(): void;
 }
 
-type Props = { flashlight?: T.Object3D; backpack?: T.Object3D; straps?: T.Object3D }
-type Shared = { source: GLTF; idle: T.AnimationClip; walk: T.AnimationClip; run: T.AnimationClip; props: Props; references: number }
+type GripOffset = { position: number[]; quaternion: number[]; scale: number[] }
+type Props = { flashlight?: T.Object3D; backpack?: T.Object3D; straps?: T.Object3D; grip?: GripOffset }
+type Shared = { gripPose: Map<string, T.Quaternion>; source: GLTF; idle: T.AnimationClip; walk: T.AnimationClip; run: T.AnimationClip; crouchIdle: T.AnimationClip; crouchWalk: T.AnimationClip; props: Props; references: number }
 let sharedPromise: Promise<Shared> | undefined
 
 function disposeSource(source: T.Object3D) {
@@ -101,7 +105,12 @@ async function loadProp(path: string, name: string): Promise<T.Object3D | undefi
 const loadProps = async (): Promise<Props> => {
   const [flashlight, backpack, straps] = await Promise.all([loadProp(FLASHLIGHT_ASSET, 'Flashlight'),
     loadProp(BACKPACK_ASSET, 'Backpack'), loadProp(BACKPACK_ASSET, 'Straps')])
-  return { flashlight, backpack, straps }
+  let grip: GripOffset | undefined
+  try {
+    const r = await fetch(import.meta.env.BASE_URL + 'assets/iso/grip.json')
+    if (r.ok) { const j = await r.json(); if (Array.isArray(j.position) && Array.isArray(j.quaternion)) grip = j }
+  } catch { /* authored grip is optional */ }
+  return { flashlight, backpack, straps, grip }
 }
 
 function loadShared(): Promise<Shared> {
@@ -110,17 +119,24 @@ function loadShared(): Promise<Shared> {
     const idle = T.AnimationClip.findByName(source.animations, 'Idle')
     const walk = T.AnimationClip.findByName(source.animations, 'Walk')
     const run = T.AnimationClip.findByName(source.animations, 'Run')
+    const crouchIdle = T.AnimationClip.findByName(source.animations, 'CrouchIdle')
+    const crouchWalk = T.AnimationClip.findByName(source.animations, 'CrouchWalk')
     const bones = new Set<string>()
     let skins = 0
     source.scene.traverse(obj => {
       if (obj instanceof T.Bone) bones.add(obj.name)
       if (obj instanceof T.SkinnedMesh) skins++
     })
-    if (!idle?.validate() || !walk?.validate() || !run?.validate() || Math.abs(walk.duration - 1) > .001 || Math.abs(run.duration - 1) > .001 || bones.size !== 53 || skins !== 5) {
+    if (!idle?.validate() || !walk?.validate() || !run?.validate() || !crouchIdle?.validate() || !crouchWalk?.validate() || Math.abs(walk.duration - 1) > .001 || Math.abs(run.duration - 1) > .001 || bones.size !== 53 || skins !== 5) {
       disposeSource(source.scene)
       throw new Error('Invalid native actor: missing expected rig, skin or gait')
     }
-    return loadProps().then(props => ({ source, idle, walk, run, props, references: 0 }))
+    // The Blender-authored right-hand grip: finger rotations only (first key of the Grip clip).
+    const gripPose = new Map<string, T.Quaternion>()
+    for (const track of T.AnimationClip.findByName(source.animations, 'Grip')?.tracks ?? []) {
+      if (track instanceof T.QuaternionKeyframeTrack) gripPose.set(track.name.replace('.quaternion', ''), new T.Quaternion().fromArray(track.values, 0))
+    }
+    return loadProps().then(props => ({ gripPose, source, idle, walk, run, crouchIdle, crouchWalk, props, references: 0 }))
   }).catch(error => {
     sharedPromise = undefined
     throw error
@@ -180,7 +196,10 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
   const idle = mixer.clipAction(shared.idle).play().setEffectiveWeight(1)
   const walk = mixer.clipAction(shared.walk).play().setEffectiveWeight(0)
   const run = mixer.clipAction(shared.run).play().setEffectiveWeight(0)
-  idle.paused = walk.paused = run.paused = true
+  const cidle = mixer.clipAction(shared.crouchIdle).play().setEffectiveWeight(0)
+  const cwalk = mixer.clipAction(shared.crouchWalk).play().setEffectiveWeight(0)
+  idle.paused = walk.paused = run.paused = cidle.paused = cwalk.paused = true
+  let crouchTarget = 0, crouchW = 0, crouchPhase = 0
   const chest = joints.get('spine_03'), head = joints.get('head')
   const arm = {
     upper: joints.get('upperarm_r'), lower: joints.get('lowerarm_r'), hand: joints.get('hand_r'),
@@ -225,7 +244,12 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
       flashlight.traverse(o => { if (o instanceof T.Mesh) o.castShadow = false })
       flashlightSwitch = flashlight.getObjectByName('Flashlight_switch') ?? undefined
       flashlight.visible = false
-      root.add(flashlight)
+      if (shared.props.grip && joints.get('hand_r')) {
+        // The grip offset authored in Blender is relative to the hand bone.
+        const g = shared.props.grip
+        flashlight.position.fromArray(g.position); flashlight.quaternion.fromArray(g.quaternion); flashlight.scale.fromArray(g.scale)
+        joints.get('hand_r')!.add(flashlight)
+      }
       switchRest = flashlightSwitch?.position.y ?? 0
     }
   }
@@ -274,36 +298,19 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
   const lensWorld = new T.Vector3(), beamDir = new T.Vector3(), handPos = new T.Vector3(), basisZ = new T.Vector3(), basisY = new T.Vector3()
   const heldGoal = new T.Vector3()
   const basis = new T.Matrix4()
-  const wristP = new T.Vector3(), alongV = new T.Vector3(), acrossV = new T.Vector3(), palmN = new T.Vector3()
-  const forearmAxis = new T.Vector3(), wantN = new T.Vector3(), curN = new T.Vector3(), tmpV = new T.Vector3()
-  let grip = 0
-  /** Palm normal (points to where a held object sits) from the hand's own knuckle layout. */
-  function palmFrame() {
-    if (!arm.hand || !knuckles.middle || !knuckles.index || !knuckles.pinky) return false
-    arm.hand.getWorldPosition(wristP)
-    knuckles.middle.getWorldPosition(alongV).sub(wristP)
-    knuckles.pinky.getWorldPosition(acrossV)
-    knuckles.index.getWorldPosition(tmpV)
-    acrossV.sub(tmpV)
-    palmN.copy(alongV).cross(acrossV).normalize()
-    return true
-  }
-  /** Roll the hand about the forearm so the palm faces the body, as when gripping a torch. */
-  function rollHand(weight: number) {
-    if (!arm.hand || !arm.lower || weight < .002 || !palmFrame()) return
-    arm.lower.getWorldPosition(forearmAxis)
-    forearmAxis.negate().add(wristP).normalize()
-    wantN.copy(rightV).negate().addScaledVector(UP, .35).normalize()
-    curN.copy(palmN).addScaledVector(forearmAxis, -palmN.dot(forearmAxis)).normalize()
-    wantN.addScaledVector(forearmAxis, -wantN.dot(forearmAxis)).normalize()
-    const angle = Math.atan2(forearmAxis.dot(tmpV.crossVectors(curN, wantN)), curN.dot(wantN)) * weight
-    delta.setFromAxisAngle(forearmAxis, angle)
-    arm.hand.getWorldQuaternion(worldQ).premultiply(delta)
+  const down = new T.Vector3(0, -1, 0)
+  const gripBones = [...shared.gripPose].map(([name, quat]) => [joints.get(name), quat] as const).filter((x): x is [T.Bone, T.Quaternion] => !!x[0])
+  const gripOffset = shared.props.grip
+  const offsetPos = new T.Vector3(), offsetQuat = new T.Quaternion(), flashQuat = new T.Quaternion(), handQuat = new T.Quaternion()
+  const flashPos = new T.Vector3(), wristGoal = new T.Vector3()
+  /** Set the hand's world rotation (blended by `w`) so the held flashlight points where we want. */
+  function orientHand(target: T.Quaternion, w: number) {
+    if (!arm.hand || w < .002) return
+    arm.hand.getWorldQuaternion(worldQ).slerp(target, w)
     ;(arm.hand.parent ?? root).getWorldQuaternion(parentQ)
     arm.hand.quaternion.copy(parentQ.invert().multiply(worldQ))
     arm.hand.updateMatrixWorld(true)
   }
-  const down = new T.Vector3(0, -1, 0)
 
   // Backpack: a damped pendulum hung from the top seam. The straps hold it against the back, so it
   // lags behind acceleration and settles with a spring, but can never swing into the torso.
@@ -371,9 +378,15 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     const clipTime = motion.phase * shared.walk.duration
     walk.time = run.time = clipTime
     const g = motion.walkWeight < .002 ? 0 : motion.walkWeight
-    idle.setEffectiveWeight(1 - g)
-    walk.setEffectiveWeight(g * (1 - motion.runWeight))
-    run.setEffectiveWeight(g * motion.runWeight)
+    crouchW = T.MathUtils.damp(crouchW, crouchTarget, 9, dt)
+    if (motion.moving) crouchPhase = (crouchPhase + dt * clamp(speed, 0, 3) / CROUCH_STRIDE) % 1
+    cwalk.time = crouchPhase * shared.crouchWalk.duration
+    const stand = 1 - crouchW
+    idle.setEffectiveWeight((1 - g) * stand)
+    walk.setEffectiveWeight(g * (1 - motion.runWeight) * stand)
+    run.setEffectiveWeight(g * motion.runWeight * stand)
+    cidle.setEffectiveWeight((1 - g) * crouchW)
+    cwalk.setEffectiveWeight(g * crouchW)
     if (cleanReady) tweaked.forEach((joint, i) => joint.quaternion.copy(clean[i]!))
     mixer.update(0)
     tweaked.forEach((joint, i) => clean[i]!.copy(joint.quaternion))
@@ -402,48 +415,47 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     stepPack(dt)
     placePack()
 
-    // Carried flashlight: raised and steady when lit, hanging at the side when off.
+    // Carried flashlight with the grip authored in Blender. Light on: held up ahead. Light off: it goes
+    // into the pocket, so the arm is simply free again.
     beam = T.MathUtils.damp(beam, gear.flashlight && gear.on ? 1 : 0, 9, dt)
     press = Math.min(1, press + dt / .34)
     fwd.set(Math.sin(motion.yaw), 0, Math.cos(motion.yaw))
     rightV.set(-fwd.z, 0, fwd.x)
     pole.set(0, -.6, 0).addScaledVector(rightV, .6).addScaledVector(fwd, -.25)
     const pushed = Math.sin(Math.PI * press) // thumb dips onto the switch and releases
-    if (gear.flashlight && arm.upper && arm.lower && arm.hand) {
+    const holding = !!gripOffset && !!flashlight && gear.flashlight && beam > .02
+    if (holding && arm.upper && arm.lower && arm.hand) {
+      // Where the flashlight should be and which way it points.
       if (fp) {
-        // The torch hangs low and to the right of the view, and rises into it when switched on.
-        heldGoal.copy(fp.eye).addScaledVector(fp.forward, .22 + .17 * beam).addScaledVector(fp.right, .2)
-          .addScaledVector(fp.up, -.5 + .36 * beam - .025 * pushed)
+        flashPos.copy(fp.eye).addScaledVector(fp.forward, .3 + .1 * beam).addScaledVector(fp.right, .19 * beam + .24 * (1 - beam))
+          .addScaledVector(fp.up, -.11 * beam - .5 * (1 - beam) - .012 * pushed)
+        beamDir.copy(fp.forward).addScaledVector(fp.right, -.03).normalize()
       } else {
-        heldGoal.set(x, 0, z).addScaledVector(rightV, .17).addScaledVector(fwd, .30 - .015 * pushed)
-        heldGoal.y = .80 + .24 * beam - .025 * pushed
+        flashPos.set(x, 0, z).addScaledVector(rightV, .17).addScaledVector(fwd, .32 - .015 * pushed)
+        flashPos.y = .86 + .2 * beam
+        beamDir.copy(fwd).addScaledVector(down, .10).normalize()
       }
-      if (reachGoal) heldGoal.lerp(reachGoal, reachWeight)
-      // Walking with the light off lets the arm swing; with it on the grip stays steady (always, in first person).
-      reach(heldGoal, pole, fp ? 1 : Math.max(beam, reachWeight, .55 * (1 - g)))
-    } else if (reachGoal && arm.upper && arm.lower && arm.hand) reach(reachGoal, pole, reachWeight)
-    grip = T.MathUtils.damp(grip, gear.flashlight ? 1 : 0, 10, dt)
-    if (grip > .01) {
+      basisY.copy(UP).addScaledVector(beamDir, -UP.dot(beamDir)).normalize()
+      basisZ.crossVectors(beamDir, basisY)
+      basis.makeBasis(beamDir, basisY, basisZ)
+      flashQuat.setFromRotationMatrix(basis)
+      // hand rotation = flashlight rotation * inverse(authored offset); the wrist sits behind the grip point.
+      offsetQuat.fromArray(gripOffset!.quaternion)
+      handQuat.copy(flashQuat).multiply(offsetQuat.clone().invert())
+      offsetPos.fromArray(gripOffset!.position).applyQuaternion(handQuat)
+      wristGoal.copy(flashPos).sub(offsetPos)
+      if (reachGoal) wristGoal.lerp(reachGoal, reachWeight)
+      reach(wristGoal, pole, beam)
       root.updateMatrixWorld(true)
-      rollHand(grip)
-      fingers.forEach(chain => chain.forEach((bone, i) => bone?.rotateX(grip * [.85, 1.0, .7][i]!)))
-      thumbChain.forEach((bone, i) => bone?.rotateX(grip * [.25, .45, .3][i]! - (i < 2 ? pushed * .3 : 0)))
-    }
+      orientHand(handQuat, beam * (1 - reachWeight * .6))
+      for (const [bone, quat] of gripBones) bone.quaternion.slerp(quat, beam)
+      if (press < 1 && arm.thumb1) arm.thumb1.rotateX(-pushed * .25)
+    } else if (reachGoal && arm.upper && arm.lower && arm.hand) reach(reachGoal, pole, reachWeight)
     root.updateMatrixWorld(true)
 
-    if (flashlight && arm.hand) {
-      flashlight.visible = gear.flashlight
-      if (gear.flashlight) {
-        if (fp) beamDir.copy(fp.forward).addScaledVector(fp.right, -.03).addScaledVector(down, (1 - beam) * .9).normalize()
-        else beamDir.copy(fwd).addScaledVector(down, .10 + (1 - beam) * 1.2).normalize()
-        basisY.copy(UP).addScaledVector(beamDir, -UP.dot(beamDir)).normalize()
-        basisZ.crossVectors(beamDir, basisY)
-        basis.makeBasis(beamDir, basisY, basisZ)
-        // The handle sits in the closed fist: mid-palm, pushed out to the palm side.
-        if (palmFrame()) handPos.copy(wristP).addScaledVector(alongV, .5).addScaledVector(palmN, .03)
-        else arm.hand.getWorldPosition(handPos)
-        flashlight.position.copy(root.worldToLocal(handPos))
-        flashlight.quaternion.setFromRotationMatrix(basis).premultiply(root.getWorldQuaternion(q).invert())
+    if (flashlight) {
+      flashlight.visible = !!gripOffset && gear.flashlight && beam > .02
+      if (flashlight.visible) {
         if (flashlightSwitch) flashlightSwitch.position.y = switchRest - .004 * pushed
         flashlight.updateMatrixWorld(true)
         lensWorld.set(.15, 0, 0)
@@ -461,6 +473,7 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     },
     setGear(next) { gear = next },
     setFirstPerson(pose) { fp = pose ?? undefined },
+    setCrouch(amount) { crouchTarget = clamp(amount, 0, 1) },
     pressFlashlight() { press = 0 },
     flashlightPose() {
       if (!flashlight?.visible) return undefined

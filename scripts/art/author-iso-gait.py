@@ -101,7 +101,7 @@ def pose(p, f):
 
     # ---- pelvis ----
     if S == 0:
-        zoff = 0.0; sway = 0.0; tw = 0.0; roll = 0.0
+        zoff = -p['crouch']; sway = 0.0; tw = 0.0; roll = 0.0
     else:
         zoff = -p['crouch'] + p['bob'] * math.cos(4 * math.pi * (f - D / 2)) * (1 if p['bobsign'] > 0 else -1)
         sway = p['sway'] * math.cos(2 * math.pi * (f - D / 2))
@@ -114,7 +114,7 @@ def pose(p, f):
         zoff = min(zoff, (ank[s].z + zmax) - HIP[s].z)
     lean = p['lean']
     c = Vector(BASE['pelvis'].translation)
-    PB['pelvis'].matrix = Tr(Vector((sway, 0, zoff))) @ about(c, Rz(tw) @ Rx(lean * 0.45) @ Ry(roll)) @ BASE['pelvis']
+    PB['pelvis'].matrix = Tr(Vector((sway, p['back'], zoff))) @ about(c, Rz(tw) @ Rx(lean * 0.45) @ Ry(roll)) @ BASE['pelvis']
     bpy.context.view_layer.update()
 
     # ---- spine: counter-rotates against the pelvis, head stays level and looks forward ----
@@ -141,6 +141,8 @@ def pose(p, f):
             dz = p['az0'] + p['azAmp'] * math.cos(th - p['azLead'])
             dx = sg * (p['ax0'] + p['axAmp'] * -u)
             w = sh + Vector((dx, dy, dz))
+        elif p['armHold']:
+            w = sh + Vector((sg * p['armHold'][0], p['armHold'][1], p['armHold'][2]))
         else:
             w = W0[s].copy()
         TG['T_wrist_' + s].location = w
@@ -175,7 +177,7 @@ def bake(name, p, n=24):
                 pb.keyframe_insert(k, frame=i, group=pb.name)
 
 Z = dict(S=0, D=.6, front=.3, H=0, strike=0, off=0, uStrike=.15, uLift=.6, heel=0, toe=0, narrow=0, bob=0, bobsign=1, sway=0, twist=0, spineTwist=0,
-         lean=0, crouch=0, hipDrop=0, ay0=0, ay=0, az0=0, azAmp=0, azLead=.9, ax0=0, axAmp=0)
+         lean=0, crouch=0, back=0, armHold=None, hipDrop=0, ay0=0, ay=0, az0=0, azAmp=0, azLead=.9, ax0=0, axAmp=0)
 
 # Walking: arms hang with a soft elbow, swing opposite to the legs.
 WALK = dict(Z, S=1.25, D=.62, front=.30, H=.075, strike=.22, off=.55, uStrike=.14, uLift=.6, heel=.16, toe=.30, narrow=.12, bob=.02, bobsign=1, crouch=.035,
@@ -186,6 +188,24 @@ WALK = dict(Z, S=1.25, D=.62, front=.30, H=.075, strike=.22, off=.55, uStrike=.1
 RUN = dict(Z, S=2.0, D=.36, front=.24, H=.28, strike=.17, off=.62, uStrike=.16, uLift=.5, heel=.05, toe=.40, narrow=.30, bob=.04, bobsign=-1, crouch=.08,
            sway=.012, twist=.11, spineTwist=.05, lean=.17, hipDrop=.05,
            ay0=-.035, ay=.235, az0=-.27, azAmp=.13, azLead=.6, ax0=.015, axAmp=.035)
+
+# Crouch: hips drop ~0.42 m and shift back, torso leans forward, hands rest ahead of the knees.
+CROUCH_IDLE = dict(Z, crouch=.31, lean=.46, back=.05, armHold=(.09, -.20, -.30))
+CROUCH_WALK = dict(Z, S=.9, D=.68, front=.2, H=.06, strike=.12, off=.35, uStrike=.15, uLift=.6, narrow=.1, bob=.012, bobsign=1,
+                   crouch=.30, lean=.42, back=.05, sway=.02, twist=.08, spineTwist=.05, hipDrop=.03,
+                   ay0=-.02, ay=.10, az0=-.36, azAmp=.02, azLead=.9, ax0=.07, axAmp=.01)
+
+def build_crouch():
+    bake('G_CrouchIdle', CROUCH_IDLE, 1)
+    bake('G_CrouchWalk', CROUCH_WALK)
+    for pb in PB:
+        for c in list(pb.constraints):
+            pb.constraints.remove(c)
+    for o in [o for o in bpy.data.objects if o.name.startswith(('T_', 'P_'))]:
+        bpy.data.objects.remove(o, do_unlink=True)
+    arm.animation_data.action = bpy.data.actions['G_CrouchIdle']
+    bpy.context.scene.frame_set(0)
+    print('crouch baked')
 
 def build(do_walk=True, do_run=True):
     pose(Z, 0)
@@ -203,4 +223,8 @@ def build(do_walk=True, do_run=True):
     bpy.context.scene.frame_set(0)
     print('baked')
 
-build()
+import os
+if os.environ.get('GATE_GAIT','')!='crouch':
+    build()
+else:
+    build_crouch()

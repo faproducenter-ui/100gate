@@ -1,13 +1,13 @@
 """Splice baked Idle/Walk/Run clips (authored in Blender as G_Idle/G_Walk/G_Run,
-exported with the full hero) into public/assets/iso/alexei-6.glb by bone name.
+exported with the full hero) into public/assets/iso/alexei-7.glb by bone name.
 Usage: python package-iso-gait.py <blender-export.glb>
 """
 import json, struct, sys
 from pathlib import Path
 
-DEST = Path(__file__).resolve().parents[2] / "public/assets/iso/alexei-6.glb"
-RENAME = {"G_Idle": "Idle", "G_Walk": "Walk", "G_Run": "Run"}
-EXTRAS = {"walkStrideM": 1.25, "runStrideM": 2.0}
+DEST = Path(__file__).resolve().parents[2] / "public/assets/iso/alexei-7.glb"
+RENAME = {"G_Idle": "Idle", "G_Walk": "Walk", "G_Run": "Run", "G_CrouchIdle": "CrouchIdle", "G_CrouchWalk": "CrouchWalk", "G_Grip": "Grip"}
+EXTRAS = {"walkStrideM": 1.25, "runStrideM": 2.0, "crouchStrideM": 0.9}
 
 def read(path):
     raw = Path(path).read_bytes()
@@ -38,6 +38,7 @@ def main(src):
         for ch in an["channels"]:
             path = ch["target"]["path"]; name = gname[ch["target"]["node"]]
             if path not in ("translation","rotation") or name not in ids: continue
+            if an["name"] == "G_Grip" and not (name.endswith("_r") and any(k in name for k in ("index","middle","ring","pinky","thumb"))): continue
             s = an["samplers"][ch["sampler"]]
             for key in ("input","output"):
                 if (key, s[key]) not in cache:
@@ -47,8 +48,14 @@ def main(src):
             clip["samplers"].append({"input":cache[("input",s["input"])],"output":cache[("output",s["output"])],"interpolation":"LINEAR"})
             clip["channels"].append({"sampler":len(clip["samplers"])-1,"target":{"node":ids[name],"path":path}})
         out.append(clip)
-    assert sorted(c["name"] for c in out) == ["Idle","Run","Walk"], [c["name"] for c in out]
+    assert sorted(c["name"] for c in out) == ["CrouchIdle","CrouchWalk","Grip","Idle","Run","Walk"], [c["name"] for c in out]
     dst["animations"] = out
+    # The flashlight node parented to hand_r in the Blender export carries the authored grip offset.
+    nodes = gen["nodes"]
+    fl = next(n for n in nodes if n.get("name") == "Flashlight" and n.get("mesh") is not None)
+    grip = {"bone": "hand_r", "position": fl.get("translation", [0,0,0]), "quaternion": fl.get("rotation", [0,0,0,1]),
+            "scale": fl.get("scale", [1,1,1])}
+    (DEST.parent / "grip.json").write_text(json.dumps(grip, indent=1))
     dst.setdefault("asset", {}).setdefault("extras", {}).update(EXTRAS)
     dst["buffers"][0]["byteLength"] = len(dbin)
     doc = json.dumps(dst, separators=(",",":"), ensure_ascii=False).encode(); doc += b" " * (-len(doc) % 4)
