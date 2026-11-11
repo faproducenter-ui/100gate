@@ -1,9 +1,10 @@
 import {DEFAULTS,type CameraId,type DocumentView,type ItemId,type Panel,type PowerLine,type Save,type Settings,type TapeId} from './contracts';
-import {canStand,START,type ObjectId} from './map';
+import {BATTERIES,canStand,START,type ObjectId} from './map';
 
 export const SAVE_KEY='100gate.isometric.save.v1';
 export const SETTINGS_KEY='100gate.isometric.settings.v1';
 export const ITEMS:Record<ItemId,{name:string;description:string;kind:'key'|'paper'|'media'}>={
+  flashlight:{name:'Фонарь',description:'Тяжёлый ручной фонарь дежурного. F — включить или выключить. Заряд садится, пока он горит; запасные батарейки меняются сами.',kind:'key'},
   technicalKey:{name:'Ключ от щитовой',description:'Латунный ключ с биркой «Щ». Его приклеили под столом дежурного.',kind:'key'},
   archiveKey:{name:'Ключ от архива',description:'Плоский ключ в бумажном конверте. На конверте — «Не оставлять в журнале».',kind:'key'},
   plan:{name:'План здания',description:'Коридор связывает приёмную, щитовую, операторскую и архив. Школа №7 отмечена за северным выходом.',kind:'paper'},
@@ -28,7 +29,8 @@ export function activeQuest(s:Save){
 }
 
 export const newSave=():Save=>({version:1,...START,items:[],doors:{technical:false,surveillance:false,archive:false},
-  dutyRead:false,diagramRead:false,power:false,breaker:[],archiveClue:false,archiveIndex:false,anomaly:false,finished:false});
+  dutyRead:false,diagramRead:false,power:false,breaker:[],archiveClue:false,archiveIndex:false,anomaly:false,finished:false,
+  lightOn:false,charge:100,spare:0,taken:[]});
 const order:readonly PowerLine[]=['lights','locks','cctv'];
 const has=(s:Save,id:ItemId)=>s.items.includes(id);
 const item=(s:Save,id:ItemId):Save=>has(s,id)?s:{...s,items:[...s.items,id]};
@@ -37,8 +39,34 @@ const msg=(state:Save,message:string):Outcome=>({state,message});
 const doc=(state:Save,title:string,text:string):Outcome=>({state,panel:'document',document:{title,text}});
 const found=(state:Save,id:ItemId):Outcome=>msg(item(state,id),has(state,id)?'Уже в инвентаре.':'Найдено: '+ITEMS[id].name);
 
+export const BATTERY_SECONDS=180;
+const swapBattery=(s:Save):Save=>s.charge<=0&&s.spare>0?{...s,charge:100,spare:s.spare-1}:s;
+export function toggleLight(s:Save):Outcome{
+  if(!has(s,'flashlight'))return msg(s,'У тебя нет фонаря.');
+  if(s.lightOn)return msg({...s,lightOn:false},'Фонарь выключен.');
+  const n=swapBattery(s);
+  return n.charge<=0?msg(s,'Фонарь разряжен. Нужны батарейки.'):msg({...n,lightOn:true},n===s?'Фонарь включён.':'Поставил новые батарейки.');
+}
+/** Drain only while the beam is on; swap a spare battery automatically when empty. */
+export function drainLight(s:Save,dt:number):Outcome{
+  if(!s.lightOn||!has(s,'flashlight')||dt<=0)return {state:s};
+  const charge=Math.max(0,s.charge-dt*100/BATTERY_SECONDS);
+  if(charge>0)return charge<=20&&s.charge>20?msg({...s,charge},'Фонарь садится. Поищи батарейки.'):{state:{...s,charge}};
+  if(s.spare>0)return msg({...s,charge:100,spare:s.spare-1},'Поставил новые батарейки.');
+  return msg({...s,charge:0,lightOn:false},'Фонарь погас. Нужны батарейки.');
+}
+function takeBattery(s:Save,id:string):Outcome{
+  if(s.taken.includes(id))return msg(s,'Здесь больше ничего нет.');
+  let n:Save={...s,taken:[...s.taken,id],spare:s.spare+1};
+  const empty=has(n,'flashlight')&&n.charge<=0;
+  if(empty)n={...swapBattery(n),lightOn:true};
+  return msg(n,empty?'Батарейки найдены. Фонарь снова горит.':'Найдены батарейки.');
+}
+
 export function act(s:Save,id:ObjectId):Outcome {
   switch(id){
+    case 'flashlight':return has(s,'flashlight')?msg(s,'Уже в инвентаре.'):msg({...item(s,'flashlight'),lightOn:true},'Найден фонарь. F — включить или выключить.');
+    case 'battery1':case 'battery2':case 'battery3':case 'battery4':case 'battery5':return takeBattery(s,id);
     case 'dutyLog':return doc({...s,dutyRead:true},'Журнал дежурств · 18 ноября',
       '21:48. После просадки горит только аварийное освещение. Ключ от щитовой приклеил под столешницей, слева.\n\n22:16. Дежурный с архива не явился. Камеру в коридоре оставить включённой.');
     case 'underDesk':return s.dutyRead?found(s,'technicalKey'):msg(s,'Снизу ничего не видно. Возможно, в журнале есть подсказка.');
@@ -92,15 +120,22 @@ export function validSave(value:unknown):value is Save{
     !s.doors||!['technical','surveillance','archive'].every(k=>typeof s.doors[k as keyof typeof s.doors]==='boolean')||
     ![s.dutyRead,s.diagramRead,s.power,s.archiveClue,s.archiveIndex,s.anomaly,s.finished].every(v=>typeof v==='boolean')||
     !Array.isArray(s.breaker)||s.breaker.length>3||!s.breaker.every((line,i)=>line===order[i])||
+    typeof s.lightOn!=='boolean'||!Number.isFinite(s.charge)||s.charge<0||s.charge>100||!Number.isInteger(s.spare)||s.spare<0||
+    !Array.isArray(s.taken)||new Set(s.taken).size!==s.taken.length||!s.taken.every(t=>(BATTERIES as readonly string[]).includes(t))||s.spare>s.taken.length||
     s.power!==(s.breaker.length===3)||!canStand(s.x,s.z,s.doors))return false;
-  return !(has(s,'technicalKey')&&!s.dutyRead||s.doors.technical&&!has(s,'technicalKey')||
+  return !(s.lightOn&&!has(s,'flashlight')||has(s,'technicalKey')&&!s.dutyRead||s.doors.technical&&!has(s,'technicalKey')||
     s.diagramRead&&!s.doors.technical||s.breaker.length>0&&!s.diagramRead||s.doors.surveillance&&!s.power||
     (s.archiveClue||s.anomaly||has(s,'vhs'))&&!s.doors.surveillance||has(s,'archiveKey')&&!s.archiveClue||
     s.doors.archive&&!has(s,'archiveKey')||s.archiveIndex&&!s.doors.archive||
     has(s,'file')&&(!s.doors.archive||!s.anomaly||!s.archiveIndex)||s.finished&&!has(s,'file'));
 }
 function read(key:string):unknown{try{return JSON.parse(localStorage.getItem(key)??'null');}catch{return null;}}
-export function getSave(){const value=read(SAVE_KEY);return validSave(value)?value:null;}
+/** Saves from before the flashlight existed get default light fields. */
+export function upgradeSave(value:unknown):unknown{
+  if(!value||typeof value!=='object'||'charge' in value)return value;
+  return {...value,lightOn:false,charge:100,spare:0,taken:[]};
+}
+export function getSave(){const value=upgradeSave(read(SAVE_KEY));return validSave(value)?value:null;}
 export function write(key:string,value:unknown){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
 export function sanitizeSettings(value:unknown):Settings{
   const p=value as Partial<Settings>|null;

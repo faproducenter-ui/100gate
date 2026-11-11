@@ -508,3 +508,4 @@
   .iso-title { align-items: start; overflow: auto; }
   .iso-cctv-shell .iso-dialog { grid-template-rows: auto minmax(5em,1fr) auto; }
 }
+.iso-ui .iso-light[data-low="true"] { color: #e0a070; border-color: #a8643c; }

@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode} from 'react';
-import {Archive, ArrowLeft, ArrowRight, BookOpen, Check, Circle, FileText, KeyRound, Lightbulb,
+import {Archive, ArrowLeft, ArrowRight, BookOpen, Check, Circle, FileText, KeyRound, Flashlight, Lightbulb,
   LockKeyhole, Map as MapIcon, Maximize, Pause, Play, Power, RotateCcw, ScanLine, StepBack,
   StepForward, Video, X, ZoomIn, ZoomOut} from 'lucide-react';
 import type {CCTVView, Panel, PowerLine, Save, Settings, UIAction} from './contracts';
@@ -114,6 +114,9 @@ function Hud({state,settings,hint,notice,act}:{state:Save;settings:Settings;hint
     <nav className="iso-hud-actions" aria-label="Управление игрой">
       <button type="button" className="iso-icon" title="Инвентарь · Tab" aria-label="Инвентарь" data-testid="iso-inventory-open"
         onClick={()=>act({type:'panel',panel:'inventory'})}><Archive/><span>{state.items.length}</span></button>
+      {state.items.includes('flashlight')&&<button type="button" className="iso-icon iso-light" title="Фонарь · F" aria-label="Фонарь"
+        data-testid="iso-flashlight" aria-pressed={state.lightOn} data-low={state.charge<=20} onClick={()=>act({type:'flashlight'})}>
+        <Flashlight/><span>{Math.ceil(state.charge)}%{state.spare>0?' +'+state.spare:''}</span></button>}
       <button type="button" className="iso-icon" title="Журнал · J" aria-label="Журнал" data-testid="iso-journal-open"
         onClick={()=>act({type:'panel',panel:'journal'})}><BookOpen/></button>
       <button type="button" className="iso-icon" title="Пауза · Esc" aria-label="Пауза" data-testid="iso-pause-open"

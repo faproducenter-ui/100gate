@@ -1,7 +1,7 @@
 import * as T from 'three';
 import {buildEnvironment} from './environment';
 import {loadActor} from './actor';
-import {DOORS,OBJECTS,ROOMS,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
+import {BATTERIES,DOORS,OBJECTS,ROOMS,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
 import type {CameraId,CCTVView,Save,Settings} from './contracts';
 
 type Cast=Awaited<ReturnType<typeof loadActor>>;
@@ -62,6 +62,13 @@ export class IsoWorld {
   private readonly shiftEnvelope:T.Mesh;
   private readonly shippingSlip:T.Mesh;
   private readonly lamp:T.PointLight;
+  private readonly hemi:T.HemisphereLight;
+  private readonly sun:T.DirectionalLight;
+  private readonly beam:T.SpotLight;
+  private readonly glow:T.PointLight;
+  private flashlightProp:T.Object3D;
+  private readonly batteryProps=new Map<ObjectId,T.Object3D>();
+  private darkness=1;
   private readonly poweredLevels:number[];
   private readonly mark:T.Mesh;
   private readonly originalVisible=new Map<T.Object3D,boolean>();
@@ -85,12 +92,35 @@ export class IsoWorld {
     this.renderer.shadowMap.type=T.PCFSoftShadowMap;
     this.scene.background=new T.Color(0x121615);
     this.scene.add(this.env.root);
-    this.scene.add(new T.HemisphereLight(0xc9d9cf,0x524333,1.05));
-    const sun=new T.DirectionalLight(0xced9db,1.55);
+    this.hemi=new T.HemisphereLight(0xc9d9cf,0x524333,1.05);this.scene.add(this.hemi);
+    const sun=this.sun=new T.DirectionalLight(0xced9db,1.55);
     sun.position.set(-3,8,6);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);
     Object.assign(sun.shadow.camera,{left:-10,right:10,top:9,bottom:-9,near:.2,far:27});
     sun.shadow.normalBias=.016;sun.shadow.bias=-.00011;sun.shadow.radius=2;
     this.scene.add(sun,sun.target);
+    this.beam=new T.SpotLight(0xfff0d2,0,9,.62,.6,1.6);
+    this.glow=new T.PointLight(0xffe2b0,0,2.6,2);
+    this.scene.add(this.beam,this.beam.target,this.glow);
+    const steel=new T.MeshStandardMaterial({color:0x2f3438,metalness:.7,roughness:.4});
+    const lens=new T.MeshStandardMaterial({color:0xfff0c0,emissive:0xffd890,emissiveIntensity:.5});
+    this.flashlightProp=new T.Group();
+    const body=new T.Mesh(new T.CylinderGeometry(.028,.034,.19,12),steel),head=new T.Mesh(new T.CylinderGeometry(.048,.032,.06,12),steel),
+      face=new T.Mesh(new T.CircleGeometry(.042,12),lens);
+    body.rotation.z=head.rotation.z=Math.PI/2;head.position.x=.12;face.rotation.y=Math.PI/2;face.position.x=.151;
+    this.flashlightProp.add(body,head,face);
+    const model=actor.makeFlashlight();
+    if(model){this.flashlightProp=model;model.position.set(OBJECTS.flashlight.x,.845,OBJECTS.flashlight.z);model.rotation.set(0,.5,.115);}
+    else{this.flashlightProp.position.set(OBJECTS.flashlight.x,.86,OBJECTS.flashlight.z);this.flashlightProp.rotation.y=.5;}
+    this.scene.add(this.flashlightProp);
+    const cell=new T.MeshStandardMaterial({color:0xb08a2e,roughness:.5,metalness:.3});
+    for(const id of BATTERIES){
+      const g=new T.Group();
+      for(const dz of [-.022,.022]){
+        const b=new T.Mesh(new T.CylinderGeometry(.016,.016,.09,10),cell);b.rotation.z=Math.PI/2;b.position.z=dz;g.add(b);
+      }
+      g.position.set(OBJECTS[id].x,.025,OBJECTS[id].z);g.rotation.y=OBJECTS[id].x;
+      this.batteryProps.set(id,g);this.scene.add(g);
+    }
     this.cast=actor;
     this.scene.add(actor.root);
     this.echoes={hero:actor.createEcho('hero'),staff:actor.createEcho('staff'),shadow:actor.createEcho('shadow')};
@@ -119,6 +149,7 @@ export class IsoWorld {
     this.mark=new T.Mesh(ring,new T.MeshBasicMaterial({color:0xdfc393,transparent:true,opacity:.57,depthWrite:false,side:T.DoubleSide}));
     this.mark.rotation.x=-Math.PI/2;this.mark.visible=false;this.scene.add(this.mark);
   }
+  pressFlashlight(){this.cast.pressFlashlight();}
   actorAction(kind:'interact'|'pick-up'|'door'|'fear'|'examine',point?:Point){
     this.cast.react?.(kind,point?.x,point?.z);
   }
@@ -201,6 +232,30 @@ export class IsoWorld {
     const interval=time%34;
     const flicker=settings.reducedFlicker?1:1-.64*Math.exp(-((interval-8.7)**2)/.19)-.78*Math.exp(-((interval-23.4)**2)/.075);
     this.lamp.intensity=menu?25*flicker:state.power?12:4;
+    const lit=menu||state.power,has=state.items.includes('flashlight');
+    this.darkness=T.MathUtils.damp(this.darkness,lit?1:.3,3,dt);
+    this.hemi.intensity=1.05*this.darkness;this.sun.intensity=1.55*this.darkness;
+    this.flashlightProp.visible=!has;
+    this.cast.setGear({flashlight:has,on:state.lightOn&&state.charge>0});
+    for(const [id,prop] of this.batteryProps)prop.visible=!state.taken.includes(id);
+    const on=!menu&&!cctv&&state.lightOn&&state.charge>0&&has;
+    const weak=state.charge<15?.72+.28*Math.sin(time*37)*Math.sin(time*11.3):1;
+    const shadows=settings.shadows&&settings.quality!=='low';
+    if(this.beam.castShadow!==shadows)this.beam.castShadow=shadows;
+    this.beam.intensity=on?60*weak:0;this.glow.intensity=on?3*weak:0;
+    if(on){
+      const {x,z}=state,d=frame.direction,lens=this.cast.flashlightPose();
+      if(lens){
+        this.beam.position.copy(lens.position);
+        this.beam.target.position.copy(lens.position).addScaledVector(lens.direction,3);
+        this.glow.position.copy(lens.position).addScaledVector(lens.direction,-.1);
+      }else{
+        this.beam.position.set(x+d.x*.15,1.05,z+d.z*.15);
+        this.beam.target.position.set(x+d.x*3,.2,z+d.z*3);
+        this.glow.position.set(x,.9,z);
+      }
+      this.beam.target.updateMatrixWorld();
+    }
     this.crt.uniforms.time!.value=time;
     this.crt.uniforms.enabled!.value=menu||state.power?1:.045;
     this.crt.uniforms.noise!.value=settings.ambient?(settings.reducedFlicker?.07:interval%11>10.1?.66:.16):0;

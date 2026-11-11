@@ -58,6 +58,8 @@ function wall(parent:T.Group,m:KitMaterials,axis:'x'|'z',constant:number,lo:numb
     box(g,m.trim,cx,lower+.014,0,w,.035,WALL_D+.014,.004);
   }
   box(g,m.ceiling,cx,h-.025,0,w,.055,WALL_D+.017,.006);
+  // Cut ends read as exposed masonry instead of blank white faces.
+  for(const end of [-1,1])box(g,m.ceiling,cx+end*(w/2+.002),h/2,0,.004,h,WALL_D+.004);
   for(const side of [-1,1]){
     box(g,m.trim,cx,.042,side*(WALL_D*.5+.005),w,.083,.023,.003);
     if(full)box(g,m.paint,cx,2.38,side*(WALL_D*.5+.001),w,.031,.016,.002);

@@ -20,6 +20,12 @@ export const START={x:-1.75,z:3.6};
 
 type Interactable=Point&{room:RoomId;label:string};
 export const OBJECTS={
+  flashlight:{room:'reception',x:-4.25,z:.95,label:'Фонарь'},
+  battery1:{room:'reception',x:-.60,z:3.90,label:'Батарейки'},
+  battery2:{room:'corridor',x:1.60,z:-.90,label:'Батарейки'},
+  battery3:{room:'technical',x:-1.20,z:-2.40,label:'Батарейки'},
+  battery4:{room:'surveillance',x:3.40,z:1.60,label:'Батарейки'},
+  battery5:{room:'archive',x:5.00,z:-2.20,label:'Батарейки'},
   dutyLog:{room:'reception',x:-3.35,z:1.38,label:'Журнал дежурств'},
   underDesk:{room:'reception',x:-4.31,z:1.45,label:'Под столешницей'},
   drawer:{room:'reception',x:-2.86,z:1.02,label:'Ящик стола'},
@@ -37,6 +43,7 @@ export const OBJECTS={
   fileZero:{room:'archive',x:6.69,z:-3.30,label:'Стеллаж Б · секция 4'},
 } satisfies Record<string,Interactable>;
 export type ObjectId=keyof typeof OBJECTS;
+export const BATTERIES=['battery1','battery2','battery3','battery4','battery5'] as const satisfies readonly ObjectId[];
 export const FURNITURE:readonly (Point&{room:RoomId;w:number;d:number;kind:string})[]=[
   {room:'reception',kind:'desk',x:-3.66,z:.91,w:1.88,d:.78},
   {room:'reception',kind:'chair',x:-2.24,z:.55,w:.55,d:.50},

@@ -2,13 +2,13 @@ import { readFile } from 'node:fs/promises'
 import * as T from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { describe, expect, it, vi } from 'vitest'
-import { advanceActorMotion, initialActorMotion, loadActor, reactionEnvelope } from './actor'
+import { WALK_STRIDE, advanceActorMotion, initialActorMotion, loadActor, reactionEnvelope } from './actor'
 
 describe('isometric player movement animation', () => {
-  it('uses distance for the authored one-metre gait cycle', () => {
+  it('uses distance for the authored gait stride', () => {
     const once = advanceActorMotion(initialActorMotion(), .1, 0, 1, 2)
     const split = advanceActorMotion(advanceActorMotion(initialActorMotion(), .05, 0, 1, 2), .05, 0, 1, 2)
-    expect(once.phase).toBeCloseTo(.2)
+    expect(once.phase).toBeCloseTo(.2 / WALK_STRIDE)
     expect(once.phase).toBeCloseTo(split.phase)
     expect(once.walkWeight).toBeCloseTo(split.walkWeight)
   })
@@ -32,7 +32,7 @@ describe('isometric player movement animation', () => {
   it('gates long pause deltas, non-finite input and reaction pulse boundaries', () => {
     const stable = initialActorMotion()
     expect(advanceActorMotion(stable, Number.NaN, 1, 1, Infinity)).toEqual(stable)
-    expect(advanceActorMotion(stable, 10, 0, 1, 2).phase).toBeLessThan(.27)
+    expect(advanceActorMotion(stable, 10, 0, 1, 2).phase).toBeLessThan(.21)
     expect(reactionEnvelope(-.1)).toBe(0)
     expect(reactionEnvelope(.43)).toBeCloseTo(1)
     expect(reactionEnvelope(1)).toBe(0)

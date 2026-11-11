@@ -3,7 +3,7 @@ import {IsoInterface} from './Interface';
 import {IsoWorld} from './world';
 import {IsoSound} from './sound';
 import {OBJECTS,doorFor,movePlayer,roomAt,withinReach,type ObjectId,type Point} from './map';
-import {act,activeQuest,cctvDuration,getSave,isEvidence,newSave,pressLine,readSettings,recordEvidence,sanitizeSettings,SAVE_KEY,SETTINGS_KEY,write} from './state';
+import {act,activeQuest,cctvDuration,drainLight,getSave,toggleLight,isEvidence,newSave,pressLine,readSettings,recordEvidence,sanitizeSettings,SAVE_KEY,SETTINGS_KEY,write} from './state';
 import type {CCTVView,DocumentView,Mode,Panel,Save,UIAction} from './contracts';
 
 const startCCTV=():CCTVView=>({camera:'reception',tape:'shift',time:0,duration:24,playing:false,availableFuture:false,evidence:false,zoom:false});
@@ -24,7 +24,7 @@ export default function IsoPage(){
     const lifetime=new AbortController();
     let settings=readSettings(),mode:Mode='loading',panel:Panel|null=null,back:Panel|null=null,active=getSave(),state=active??newSave();
     let clock=0,noticeUntil=0,notice='',loading='Администрация',target:ObjectId|null=null,documentView:DocumentView|undefined;
-    let cctv=startCCTV(),saveClock=0,uiClock=0,walked=0,drawer=false;
+    let cctv=startCCTV(),lightClock=0,saveClock=0,uiClock=0,walked=0,drawer=false;
     let direction:Point={x:0,z:1},speed=0;
     const keys=new Set<string>(),sound=new IsoSound();
     const emit=()=>setView({mode,panel,state,settings,saved:!!active,hint:target?OBJECTS[target].label:'',notice,loading,
@@ -57,10 +57,16 @@ export default function IsoPage(){
       const before=state,after=act(state,id);
       const door=doorFor[id];
       const kind=door&&after.state.doors[door]&&!before.doors[door]?'door':
-        after.state.items.length>before.items.length?'pick-up':after.document?'examine':'interact';
+        after.state.items.length>before.items.length||after.state.spare>before.spare?'pick-up':after.document?'examine':'interact';
       world?.actorAction(kind,OBJECTS[id]);
       sound.cue(kind==='door'?'door':id==='phone'?'phone':'ui',settings);
       apply(after);drawer=id==='drawer'&&after.panel==='document';emit();
+    };
+    const flash=()=>{
+      if(mode!=='play'||panel)return;
+      const r=toggleLight(state);
+      if(r.state!==state){sound.cue('switch',settings);world?.pressFlashlight();persist();}
+      apply(r);emit();
     };
     const start=(restore:boolean)=>{
       if(!world)return;
@@ -108,6 +114,7 @@ export default function IsoPage(){
           settings=sanitizeSettings({...settings,...a.patch});
           write(SETTINGS_KEY,settings);keys.clear();break;
         case 'interact':use(target);return;
+        case 'flashlight':flash();return;
         case 'breaker':if(panel==='breaker'){sound.cue('switch',settings);apply(pressLine(state,a.line));}break;
         case 'reset-breaker':if(panel==='breaker'&&!state.power){state={...state,breaker:[]};persist();}break;
         case 'cctv-camera':if(panel==='cctv')cctv={...cctv,camera:a.camera};break;
@@ -151,6 +158,7 @@ export default function IsoPage(){
         return;
       }
       if(panel||mode!=='play'||(e.target instanceof HTMLInputElement))return;
+      if(e.code==='KeyF'){e.preventDefault();if(!e.repeat)flash();return;}
       if(e.code==='Tab'||e.code==='KeyJ'||e.code===settings.keys.interact){
         e.preventDefault();if(e.repeat)return;
         if(e.code===settings.keys.interact)use(target);
@@ -168,6 +176,8 @@ export default function IsoPage(){
         if(!withinReach(id,state))continue;
         if(id==='underDesk'&&(!state.dutyRead||state.items.includes('technicalKey')))continue;
         if(id==='vhs'&&state.items.includes('vhs'))continue;
+        if(id==='flashlight'&&state.items.includes('flashlight'))continue;
+        if(id.startsWith('battery')&&state.taken.includes(id))continue;
         const o=OBJECTS[id],dx=o.x-state.x,dz=o.z-state.z,len=Math.hypot(dx,dz);
         const facing=len<.025?1:(dx*direction.x+dz*direction.z)/len;
         const score=len-.31*facing-(id==='underDesk'?.23:0);
@@ -183,13 +193,20 @@ export default function IsoPage(){
         if(ax||az){
           const m=Math.hypot(ax,az);
           direction={x:(ax*Math.cos(YAW)+az*Math.sin(YAW))/m,z:(-ax*Math.sin(YAW)+az*Math.cos(YAW))/m};
-          const max=keys.has(k.sprint)?2.75:1.85;
+          const max=keys.has(k.sprint)?2.9:1.3;
           const p=movePlayer(state,direction.x*max*dt,direction.z*max*dt,world.walkableDoors);
           const distance=Math.hypot(p.x-state.x,p.z-state.z);
           speed=distance/Math.max(dt,1e-6);
           if(distance>1e-8){state={...state,...p};walked+=distance;}
-          if(walked>.54){walked-=.54;sound.cue('step',settings);}
+          const half=speed>2.15?1.1:.625;
+          if(walked>half){walked-=half;sound.cue('step',settings);}
         }else speed=0;
+        if(state.lightOn){
+          const before=state.charge;
+          apply(drainLight(state,dt));
+          lightClock+=dt;
+          if(lightClock>.5||Math.ceil(before/5)!==Math.ceil(state.charge/5)){lightClock=0;emit();}
+        }
         const near=pick();if(near!==target){target=near;emit();}
         saveClock+=dt;
         if(saveClock>1.25&&active!==state){saveClock=0;persist();}
@@ -226,6 +243,7 @@ export default function IsoPage(){
       debug.render_game_to_text=()=>JSON.stringify({mode,panel,room:roomAt(state.x,state.z),state,target,
         objective:activeQuest(state).id,cctv,render:world?.diagnostics()});
       debug.isoProjectTarget=(id:ObjectId)=>world?.projectTarget(id);
+      debug.isoSetState=(patch:Partial<Save>)=>{state={...state,...patch};emit();};
       debug.advanceTime=(ms:number)=>{
         if(!Number.isFinite(ms)||ms<0||ms>3000)throw RangeError('Expected 0..3000ms');
         manual=true;
@@ -243,7 +261,7 @@ export default function IsoPage(){
       document.removeEventListener('visibilitychange',visibility);
       if(import.meta.env.DEV){
         const debug=window as unknown as Record<string,unknown>;
-        delete debug.render_game_to_text;delete debug.advanceTime;delete debug.isoProjectTarget;
+        delete debug.render_game_to_text;delete debug.advanceTime;delete debug.isoProjectTarget;delete debug.isoSetState;
       }
     };
   },[]);
