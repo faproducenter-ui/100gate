@@ -89,11 +89,11 @@ function localBase(){
 function isoInventory(dir){
   const files=inventory(dir),paths=files.map(row=>row.path);
   const entry=parseEntry(readFileSync(join(dir,'index.html'),'utf8'),paths);
-  if(!paths.includes('assets/iso/alexei-4.glb')||!paths.includes('assets/iso/alexei-credits.txt')){
+  if(!paths.includes('assets/iso/alexei-5.glb')||!paths.includes('assets/iso/alexei-credits.txt')){
     throw Error('Isometric player or its attribution is missing');
   }
   const code=files.filter(row=>row.path.endsWith('.js')).map(row=>readFileSync(join(dir,row.path),'utf8')).join('\n');
-  if(!code.includes('assets/iso/alexei-4.glb')||/outputs\/(?:story-intro|quality-overhaul)\/|__storyHomeTest/.test(code)){
+  if(!code.includes('assets/iso/alexei-5.glb')||/outputs\/(?:story-intro|quality-overhaul)\/|__storyHomeTest/.test(code)){
     throw Error('Package is not the standalone isometric build');
   }
   return {entry,files,buildSha256:hash(JSON.stringify(files))};

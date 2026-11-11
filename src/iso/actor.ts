@@ -2,12 +2,12 @@ import * as T from 'three'
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js'
 import { clone } from 'three/addons/utils/SkeletonUtils.js'
 
-const ASSET = 'assets/iso/alexei-4.glb'
+const ASSET = 'assets/iso/alexei-5.glb'
 const FLASHLIGHT_ASSET = 'assets/iso/flashlight.glb'
 const BACKPACK_ASSET = 'assets/iso/backpack-2.glb'
 /** Metres of travel per authored gait cycle (two steps); see scripts/art/package-iso-gait.py. */
 export const WALK_STRIDE = 1.25
-export const RUN_STRIDE = 2.2
+export const RUN_STRIDE = 2.0
 const TAU = Math.PI * 2
 const clamp = T.MathUtils.clamp
 const shortestAngle = (a: number, b: number) => Math.atan2(Math.sin(b - a), Math.cos(b - a))
