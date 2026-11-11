@@ -1,11 +1,11 @@
 """Splice baked Idle/Walk/Run clips (authored in Blender as G_Idle/G_Walk/G_Run,
-exported with the full hero) into public/assets/iso/alexei-2.glb by bone name.
+exported with the full hero) into public/assets/iso/alexei-3.glb by bone name.
 Usage: python package-iso-gait.py <blender-export.glb>
 """
 import json, struct, sys
 from pathlib import Path
 
-DEST = Path(__file__).resolve().parents[2] / "public/assets/iso/alexei-2.glb"
+DEST = Path(__file__).resolve().parents[2] / "public/assets/iso/alexei-3.glb"
 RENAME = {"G_Idle": "Idle", "G_Walk": "Walk", "G_Run": "Run"}
 EXTRAS = {"walkStrideM": 1.25, "runStrideM": 2.2}
 

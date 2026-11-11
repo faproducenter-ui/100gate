@@ -40,7 +40,7 @@ describe('isometric player movement animation', () => {
 })
 
 it('grounds the packed native actor and gives CCTV its own skeleton', async () => {
-  const file = await readFile(new URL('../../public/assets/iso/alexei-2.glb', import.meta.url))
+  const file = await readFile(new URL('../../public/assets/iso/alexei-3.glb', import.meta.url))
   const oldJsonLength = file.readUInt32LE(12)
   const document = JSON.parse(file.subarray(20, 20 + oldJsonLength).toString())
   // This rig check runs in Node without decoding images or starting a browser.
