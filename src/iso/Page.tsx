@@ -243,6 +243,7 @@ export default function IsoPage(){
       debug.render_game_to_text=()=>JSON.stringify({mode,panel,room:roomAt(state.x,state.z),state,target,
         objective:activeQuest(state).id,cctv,render:world?.diagnostics()});
       debug.isoProjectTarget=(id:ObjectId)=>world?.projectTarget(id);
+      debug.isoWorld=()=>world;
       debug.isoSetState=(patch:Partial<Save>)=>{state={...state,...patch};emit();};
       debug.advanceTime=(ms:number)=>{
         if(!Number.isFinite(ms)||ms<0||ms>3000)throw RangeError('Expected 0..3000ms');
@@ -261,7 +262,7 @@ export default function IsoPage(){
       document.removeEventListener('visibilitychange',visibility);
       if(import.meta.env.DEV){
         const debug=window as unknown as Record<string,unknown>;
-        delete debug.render_game_to_text;delete debug.advanceTime;delete debug.isoProjectTarget;delete debug.isoSetState;
+        delete debug.render_game_to_text;delete debug.advanceTime;delete debug.isoProjectTarget;delete debug.isoSetState;delete debug.isoWorld;
       }
     };
   },[]);

@@ -4,7 +4,7 @@ import { clone } from 'three/addons/utils/SkeletonUtils.js'
 
 const ASSET = 'assets/iso/alexei-2.glb'
 const FLASHLIGHT_ASSET = 'assets/iso/flashlight.glb'
-const BACKPACK_ASSET = 'assets/iso/backpack.glb'
+const BACKPACK_ASSET = 'assets/iso/backpack-2.glb'
 /** Metres of travel per authored gait cycle (two steps); see scripts/art/package-iso-gait.py. */
 export const WALK_STRIDE = 1.25
 export const RUN_STRIDE = 2.2
@@ -62,7 +62,7 @@ export type IsoActor = {
   dispose(): void;
 }
 
-type Props = { flashlight?: T.Object3D; backpack?: T.Object3D }
+type Props = { flashlight?: T.Object3D; backpack?: T.Object3D; straps?: T.Object3D }
 type Shared = { source: GLTF; idle: T.AnimationClip; walk: T.AnimationClip; run: T.AnimationClip; props: Props; references: number }
 let sharedPromise: Promise<Shared> | undefined
 
@@ -96,8 +96,9 @@ async function loadProp(path: string, name: string): Promise<T.Object3D | undefi
   } catch { return undefined }
 }
 const loadProps = async (): Promise<Props> => {
-  const [flashlight, backpack] = await Promise.all([loadProp(FLASHLIGHT_ASSET, 'Flashlight'), loadProp(BACKPACK_ASSET, 'Backpack')])
-  return { flashlight, backpack }
+  const [flashlight, backpack, straps] = await Promise.all([loadProp(FLASHLIGHT_ASSET, 'Flashlight'),
+    loadProp(BACKPACK_ASSET, 'Backpack'), loadProp(BACKPACK_ASSET, 'Straps')])
+  return { flashlight, backpack, straps }
 }
 
 function loadShared(): Promise<Shared> {
@@ -182,23 +183,38 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     upper: joints.get('upperarm_r'), lower: joints.get('lowerarm_r'), hand: joints.get('hand_r'),
     thumb1: joints.get('thumb_01_r'), thumb2: joints.get('thumb_02_r'),
   }
+  // Right-hand finger chains and knuckle markers used to wrap the grip around the handle.
+  const fingers = ['index', 'middle', 'ring', 'pinky'].map(n => [1, 2, 3].map(i => joints.get(`${n}_0${i}_r`)))
+  const thumbChain = [1, 2, 3].map(i => joints.get(`thumb_0${i}_r`))
+  const knuckles = { middle: joints.get('middle_01_r'), index: joints.get('index_01_r'), pinky: joints.get('pinky_01_r') }
   const axis = new T.Vector3(), target = new T.Vector3()
   const worldRight = new T.Vector3(), q = new T.Quaternion()
   let motion = initialActorMotion(), elapsed = 0, disposed = false
+  // three's mixer only rewrites a bone when its animated value *changes*, so a held idle pose is
+  // never refreshed. Every procedural tweak below would then pile up frame after frame and make
+  // the hero rock back and forth. Restore the clean animated pose before each evaluation.
+  const tweaked = [chest, head, arm.upper, arm.lower, arm.hand, ...fingers.flat(), ...thumbChain].filter((b): b is T.Bone => !!b)
+  const clean = tweaked.map(() => new T.Quaternion())
+  let cleanReady = false
   let acting: { kind: Reaction; t: number; x?: number; z?: number } | undefined
   let gear = { flashlight: false, on: false }, beam = 0, press = 1
 
   // The backpack rides the upper spine; its matrix is the inverse bind pose so it
   // sits exactly where it was modelled against the standing hero.
-  let backpack: T.Object3D | undefined, flashlight: T.Object3D | undefined, flashlightSwitch: T.Object3D | undefined
+  let backpack: T.Object3D | undefined, straps: T.Object3D | undefined, flashlight: T.Object3D | undefined, flashlightSwitch: T.Object3D | undefined
   let switchRest = 0
+  const packBind = new T.Matrix4(), packSwing = new T.Matrix4(), packTilt = new T.Matrix4(), packEuler = new T.Euler()
+  let packBound = false
   if (variant === 'hero') {
     if (shared.props.backpack && chest) {
       backpack = prepProp(shared.props.backpack)
-      root.updateMatrixWorld(true)
       backpack.matrixAutoUpdate = false
-      backpack.matrix.copy(chest.matrixWorld).invert().multiply(body.matrixWorld)
       chest.add(backpack)
+      if (shared.props.straps) {
+        straps = prepProp(shared.props.straps)
+        straps.matrixAutoUpdate = false
+        chest.add(straps)
+      }
     }
     if (shared.props.flashlight) {
       flashlight = prepProp(shared.props.flashlight)
@@ -253,7 +269,85 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
   const lensWorld = new T.Vector3(), beamDir = new T.Vector3(), handPos = new T.Vector3(), basisZ = new T.Vector3(), basisY = new T.Vector3()
   const heldGoal = new T.Vector3()
   const basis = new T.Matrix4()
+  const wristP = new T.Vector3(), alongV = new T.Vector3(), acrossV = new T.Vector3(), palmN = new T.Vector3()
+  const forearmAxis = new T.Vector3(), wantN = new T.Vector3(), curN = new T.Vector3(), tmpV = new T.Vector3()
+  let grip = 0
+  /** Palm normal (points to where a held object sits) from the hand's own knuckle layout. */
+  function palmFrame() {
+    if (!arm.hand || !knuckles.middle || !knuckles.index || !knuckles.pinky) return false
+    arm.hand.getWorldPosition(wristP)
+    knuckles.middle.getWorldPosition(alongV).sub(wristP)
+    knuckles.pinky.getWorldPosition(acrossV)
+    knuckles.index.getWorldPosition(tmpV)
+    acrossV.sub(tmpV)
+    palmN.copy(alongV).cross(acrossV).normalize()
+    return true
+  }
+  /** Roll the hand about the forearm so the palm faces the body, as when gripping a torch. */
+  function rollHand(weight: number) {
+    if (!arm.hand || !arm.lower || weight < .002 || !palmFrame()) return
+    arm.lower.getWorldPosition(forearmAxis)
+    forearmAxis.negate().add(wristP).normalize()
+    wantN.copy(rightV).negate().addScaledVector(UP, .35).normalize()
+    curN.copy(palmN).addScaledVector(forearmAxis, -palmN.dot(forearmAxis)).normalize()
+    wantN.addScaledVector(forearmAxis, -wantN.dot(forearmAxis)).normalize()
+    const angle = Math.atan2(forearmAxis.dot(tmpV.crossVectors(curN, wantN)), curN.dot(wantN)) * weight
+    delta.setFromAxisAngle(forearmAxis, angle)
+    arm.hand.getWorldQuaternion(worldQ).premultiply(delta)
+    ;(arm.hand.parent ?? root).getWorldQuaternion(parentQ)
+    arm.hand.quaternion.copy(parentQ.invert().multiply(worldQ))
+    arm.hand.updateMatrixWorld(true)
+  }
   const down = new T.Vector3(0, -1, 0)
+
+  // Backpack: a damped pendulum hung from the top seam. The straps hold it against the back, so it
+  // lags behind acceleration and settles with a spring, but can never swing into the torso.
+  const PACK_PIVOT = new T.Vector3(0, 1.40, -.252) // top seam, in the hero's model space
+  const pack = { pitch: 0, pitchV: 0, roll: 0, rollV: 0, ready: false, accX: 0, accZ: 0 }
+  const packPos = new T.Vector3(), packPrev = new T.Vector3(), packVel = new T.Vector3(), packPrevVel = new T.Vector3()
+  function stepPack(dt: number) {
+    if (!backpack || !chest || dt <= 0) return
+    chest.getWorldPosition(packPos)
+    if (!pack.ready) { packPrev.copy(packPos); packVel.set(0, 0, 0); packPrevVel.set(0, 0, 0); pack.ready = true; return }
+    packVel.copy(packPos).sub(packPrev).divideScalar(dt)
+    if (packVel.length() > 9) { packVel.set(0, 0, 0); packPrev.copy(packPos); packPrevVel.set(0, 0, 0); return } // teleport
+    const ax = (packVel.x - packPrevVel.x) / dt, az = (packVel.z - packPrevVel.z) / dt
+    packPrev.copy(packPos); packPrevVel.copy(packVel)
+    const k = 1 - Math.exp(-dt * 22)
+    pack.accX += (clamp(ax, -22, 22) - pack.accX) * k
+    pack.accZ += (clamp(az, -22, 22) - pack.accZ) * k
+    // Acceleration in the hero's frame: forward is +Z at yaw 0, left is +X.
+    const sin = Math.sin(motion.yaw), cos = Math.cos(motion.yaw)
+    const forward = pack.accX * sin + pack.accZ * cos, left = pack.accX * cos - pack.accZ * sin
+    const L = .2, w2 = 90, damping = 6, gain = .75
+    const sub = Math.max(1, Math.ceil(dt / .008)), h = dt / sub
+    for (let i = 0; i < sub; i++) {
+      // Positive pitch swings the bottom backwards; forward acceleration lags it back.
+      pack.pitchV += ((forward * Math.cos(pack.pitch)) / L * gain - w2 * pack.pitch - damping * pack.pitchV) * h
+      pack.pitch += pack.pitchV * h
+      // Positive roll swings the bottom to the hero's left; leftward acceleration lags it right.
+      pack.rollV += ((-left * Math.cos(pack.roll)) / L * gain - w2 * pack.roll - damping * pack.rollV) * h
+      pack.roll += pack.rollV * h
+      // Body contact: the pack rests on the back and cannot rotate into the torso.
+      if (pack.pitch < -.015) { pack.pitch = -.015; pack.pitchV = Math.max(0, -pack.pitchV * .25) }
+      if (pack.pitch > .24) { pack.pitch = .24; pack.pitchV = Math.min(0, -pack.pitchV * .25) }
+      pack.roll = clamp(pack.roll, -.16, .16)
+    }
+  }
+  function placePack() {
+    if (!backpack || !chest) return
+    if (!packBound) {
+      packBind.copy(chest.matrixWorld).invert().multiply(body.matrixWorld)
+      packBound = true
+      if (straps) { straps.matrix.copy(packBind); straps.matrixWorldNeedsUpdate = true }
+    }
+    packEuler.set(pack.pitch, 0, pack.roll, 'XYZ')
+    packSwing.makeTranslation(PACK_PIVOT.x, PACK_PIVOT.y, PACK_PIVOT.z)
+    packSwing.multiply(packTilt.makeRotationFromEuler(packEuler))
+    packSwing.multiply(packTilt.makeTranslation(-PACK_PIVOT.x, -PACK_PIVOT.y, -PACK_PIVOT.z))
+    backpack.matrix.copy(packBind).multiply(packSwing)
+    backpack.matrixWorldNeedsUpdate = true
+  }
 
   const update: IsoActor['update'] = (delta, x, z, dx, dz, speed) => {
     if (disposed) return
@@ -273,10 +367,15 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     idle.setEffectiveWeight(1 - g)
     walk.setEffectiveWeight(g * (1 - motion.runWeight))
     run.setEffectiveWeight(g * motion.runWeight)
+    if (cleanReady) tweaked.forEach((joint, i) => joint.quaternion.copy(clean[i]!))
     mixer.update(0)
+    tweaked.forEach((joint, i) => clean[i]!.copy(joint.quaternion))
+    cleanReady = true
     worldRight.set(Math.cos(motion.yaw), 0, -Math.sin(motion.yaw))
     // Slow breathing only; no whole-body rocking when standing.
-    const breath = Math.sin(elapsed * TAU / 4.4) * .009 * (1 - g)
+    const settle = 1 - g
+    const breath = (Math.sin(elapsed * TAU / 4.4) * .012 + Math.sin(elapsed * TAU / 2.2 + 1) * .003) * settle
+    bend(head, -breath * .6)
     let reachWeight = 0, reachGoal: T.Vector3 | undefined
     if (acting) {
       const beat = REACTION[acting.kind]
@@ -293,6 +392,8 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
       if (acting.t >= beat.seconds) acting = undefined
     } else bend(chest, breath)
     root.updateMatrixWorld(true)
+    stepPack(dt)
+    placePack()
 
     // Carried flashlight: raised and steady when lit, hanging at the side when off.
     beam = T.MathUtils.damp(beam, gear.flashlight && gear.on ? 1 : 0, 9, dt)
@@ -308,22 +409,25 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
       // Walking with the light off lets the arm swing; with it on the grip stays steady.
       reach(heldGoal, pole, Math.max(beam, reachWeight, .55 * (1 - g)))
     } else if (reachGoal && arm.upper && arm.lower && arm.hand) reach(reachGoal, pole, reachWeight)
-    if (press < 1 && arm.thumb1) {
-      arm.thumb1.rotateX(-pushed * .33)
-      arm.thumb2?.rotateX(-pushed * .55)
+    grip = T.MathUtils.damp(grip, gear.flashlight ? 1 : 0, 10, dt)
+    if (grip > .01) {
+      root.updateMatrixWorld(true)
+      rollHand(grip)
+      fingers.forEach(chain => chain.forEach((bone, i) => bone?.rotateX(grip * [.85, 1.0, .7][i]!)))
+      thumbChain.forEach((bone, i) => bone?.rotateX(grip * [.25, .45, .3][i]! - (i < 2 ? pushed * .3 : 0)))
     }
     root.updateMatrixWorld(true)
 
     if (flashlight && arm.hand) {
       flashlight.visible = gear.flashlight
       if (gear.flashlight) {
-        arm.hand.getWorldPosition(handPos)
         beamDir.copy(fwd).addScaledVector(down, .10 + (1 - beam) * 1.2).normalize()
         basisY.copy(UP).addScaledVector(beamDir, -UP.dot(beamDir)).normalize()
         basisZ.crossVectors(beamDir, basisY)
         basis.makeBasis(beamDir, basisY, basisZ)
-        // Palm centre sits a few cm along the hand and slightly under the wrist.
-        handPos.addScaledVector(beamDir, .035).addScaledVector(UP, -.008)
+        // The handle sits in the closed fist: mid-palm, pushed out to the palm side.
+        if (palmFrame()) handPos.copy(wristP).addScaledVector(alongV, .5).addScaledVector(palmN, .03)
+        else arm.hand.getWorldPosition(handPos)
         flashlight.position.copy(root.worldToLocal(handPos))
         flashlight.quaternion.setFromRotationMatrix(basis).premultiply(root.getWorldQuaternion(q).invert())
         if (flashlightSwitch) flashlightSwitch.position.y = switchRest - .004 * pushed
@@ -364,13 +468,14 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
       mixer.stopAllAction()
       mixer.uncacheRoot(body)
       backpack?.removeFromParent()
+      straps?.removeFromParent()
       root.removeFromParent()
       root.clear()
       for (const skeleton of skeletons) skeleton.dispose()
       for (const material of variantMaterials.values()) material.dispose()
       if (--shared.references === 0) {
         disposeSource(shared.source.scene)
-        for (const prop of [shared.props.flashlight, shared.props.backpack]) if (prop) disposeSource(prop)
+        for (const prop of [shared.props.flashlight, shared.props.backpack, shared.props.straps]) if (prop) disposeSource(prop)
         sharedPromise = undefined
       }
     },
