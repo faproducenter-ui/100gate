@@ -2,7 +2,7 @@ import * as T from 'three'
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js'
 import { clone } from 'three/addons/utils/SkeletonUtils.js'
 
-const ASSET = 'assets/iso/alexei.glb'
+const ASSET = 'assets/iso/alexei-2.glb'
 const FLASHLIGHT_ASSET = 'assets/iso/flashlight.glb'
 const BACKPACK_ASSET = 'assets/iso/backpack.glb'
 /** Metres of travel per authored gait cycle (two steps); see scripts/art/package-iso-gait.py. */
