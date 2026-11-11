@@ -1,8 +1,8 @@
 {
   "kind": "isometric-production",
-  "source": "cc7630c3d5ea1f3d878a5ae1120ccaca596ddfe5",
+  "source": "dbf0c1235e66d0c067c68908b48e44f22084f57e",
   "sourceRef": "refs/heads/main",
-  "previousPagesCommit": "92453664289abf73c19e8a66c78260f698317deb",
-  "buildSha256": "da5e3114f9e0311f8847eb57e0bf5caf1c508c4d08ea339c02e344632f5ec04d",
-  "entry": "assets/index-w95QZPB3.js"
+  "previousPagesCommit": "4bcc11a638977e5187f69cac11b5864c064aac87",
+  "buildSha256": "31761f9fceb4475032679210b474eecf832caeaed42a547ef4d3241f4dc3db14",
+  "entry": "assets/index-BNugnaKI.js"
 }
