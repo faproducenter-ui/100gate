@@ -509,3 +509,12 @@
   .iso-cctv-shell .iso-dialog { grid-template-rows: auto minmax(5em,1fr) auto; }
 }
 .iso-ui .iso-light[data-low="true"] { color: #e0a070; border-color: #a8643c; }
+
+/* First person */
+.iso-crosshair { position:absolute; left:50%; top:50%; width:5px; height:5px; margin:-2.5px 0 0 -2.5px; border-radius:50%;
+  background:rgba(240,232,208,.55); box-shadow:0 0 0 1px rgba(0,0,0,.35); pointer-events:none; transition:transform .12s, background .12s; }
+.iso-crosshair[data-active="true"] { transform:scale(1.9); background:rgba(245,222,160,.95); }
+.iso-lockhint { position:absolute; left:50%; bottom:22%; transform:translateX(-50%); margin:0; padding:7px 14px; font-size:.84rem;
+  color:#e8dcb8; background:rgba(14,17,15,.78); border:1px solid #5b5846; pointer-events:none; }
+.iso-stamina { position:absolute; left:50%; bottom:11%; width:140px; height:3px; transform:translateX(-50%); background:rgba(255,255,255,.14); pointer-events:none; }
+.iso-stamina i { display:block; height:100%; background:#cdbd8a; }

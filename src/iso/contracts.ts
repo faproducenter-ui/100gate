@@ -17,12 +17,14 @@ export interface Save {
 export type Settings={
   quality:'low'|'medium'|'high';scale:number;shadows:boolean;ambient:boolean;motion:boolean;reducedFlicker:boolean;
   volume:number;ambience:number;effects:number;ui:number;textScale:number;hints:boolean;
-  keys:{up:string;down:string;left:string;right:string;interact:string;sprint:string};
+  /** 'fps' = first person (default), 'iso' = the original isometric camera. */
+  view:'fps'|'iso';sensitivity:number;
+  keys:{up:string;down:string;left:string;right:string;interact:string;sprint:string;crouch:string;light:string};
 };
 export const DEFAULTS:Settings={
   quality:'medium',scale:1,shadows:true,ambient:true,motion:true,reducedFlicker:false,
-  volume:.8,ambience:.55,effects:.65,ui:.6,textScale:1,hints:true,
-  keys:{up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',interact:'KeyE',sprint:'ShiftLeft'},
+  volume:.8,ambience:.55,effects:.65,ui:.6,textScale:1,hints:true,view:'fps',sensitivity:1,
+  keys:{up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',interact:'KeyE',sprint:'ShiftLeft',crouch:'KeyC',light:'KeyF'},
 };
 export type CCTVView={camera:CameraId;tape:TapeId;time:number;duration:number;playing:boolean;
   availableFuture:boolean;evidence:boolean;zoom:boolean};

@@ -8,6 +8,11 @@ type Furniture=typeof FURNITURE[number];
 type Portal={z:number;half:number};
 const FLOOR_TOP=0, WALL_H=2.66, WALL_D=.16, NEAR_H=.37;
 const wallY=.955;
+// First-person view needs closed rooms: the iso cutaway walls are completed, doorways get lintels and
+// every room a ceiling. Those meshes are tagged so the isometric view can hide them (and vice versa).
+let fpOnly:T.Mesh[]=[],isoOnly:T.Mesh[]=[];
+const forFp=(m:T.Mesh)=>{fpOnly.push(m);return m;};
+const forIso=(m:T.Mesh)=>{isoOnly.push(m);return m;};
 const roomNames={
   reception:'01 · ПРИЁМНАЯ',technical:'02 · ЩИТОВАЯ',surveillance:'03 · ОПЕРАТОРСКАЯ',archive:'04 · АРХИВ',corridor:'АДМИНИСТРАЦИЯ',
 };
@@ -57,9 +62,17 @@ function wall(parent:T.Group,m:KitMaterials,axis:'x'|'z',constant:number,lo:numb
     box(g,m.plaster,cx,(lower+h)/2,0,w,h-lower,WALL_D);
     box(g,m.trim,cx,lower+.014,0,w,.035,WALL_D+.014,.004);
   }
-  box(g,m.ceiling,cx,h-.025,0,w,.055,WALL_D+.017,.006);
+  const cap=box(g,m.ceiling,cx,h-.025,0,w,.055,WALL_D+.017,.006);
+  if(h<WALL_H)forIso(cap);
   // Cut ends read as exposed masonry instead of blank white faces.
-  for(const end of [-1,1])box(g,m.ceiling,cx+end*(w/2+.002),h/2,0,.004,h,WALL_D+.004);
+  for(const end of [-1,1])forIso(box(g,m.ceiling,cx+end*(w/2+.002),h/2,0,.004,h,WALL_D+.004));
+  if(h<WALL_H){
+    // First person: finish the low cutaway wall up to the ceiling.
+    if(h<wallY)forFp(box(g,m.paint,cx,(h+wallY)/2,0,w,wallY-h,WALL_D));
+    const from=Math.max(h,wallY);
+    forFp(box(g,m.plaster,cx,(from+WALL_H)/2,0,w,WALL_H-from,WALL_D));
+    if(h<wallY)forFp(box(g,m.trim,cx,wallY+.014,0,w,.035,WALL_D+.014,.004));
+  }
   for(const side of [-1,1]){
     box(g,m.trim,cx,.042,side*(WALL_D*.5+.005),w,.083,.023,.003);
     if(full)box(g,m.paint,cx,2.38,side*(WALL_D*.5+.001),w,.031,.016,.002);
@@ -82,6 +95,7 @@ function frame(parent:T.Group,m:KitMaterials,x:number,z:number,half:number,h=2.2
   }
   box(parent,m.veneer,x,h-.012,z,.217,.083,half*2+.105,.008);
   box(parent,m.steel,x,.007,z,.231,.013,half*2,.002);
+  forFp(box(parent,m.plaster,x,(h+WALL_H)/2,z,WALL_D,WALL_H-h,half*2+.2));
 }
 
 function roomWalls(p:T.Group,m:KitMaterials,r:Rect,id:Exclude<RoomId,'corridor'>,seed:number){
@@ -229,11 +243,14 @@ function typewriter(p:T.Group,m:KitMaterials,x:number,y:number,z:number){
 }
 
 export type AdminEnvironment={
+  /** Meshes shown only in first person (ceilings, lintels, completed walls) and only in isometric view. */
+  fpOnly:T.Mesh[]; isoOnly:T.Mesh[];
   root:T.Group; doors:Record<DoorId,T.Group>; targets:Partial<Record<ObjectId,T.Object3D>>;
   screens:T.Mesh[]; powerLights:T.PointLight[]; occluders:T.Mesh[]; lamp:T.PointLight; drawer:T.Group;
 };
 
 export function buildEnvironment():AdminEnvironment {
+  fpOnly=[];isoOnly=[];
   const root=new T.Group();root.name='Municipal administration · floor 01';
   const m=materials(),doors={} as AdminEnvironment['doors'],targets:AdminEnvironment['targets']={};
   const screens:T.Mesh[]=[],powerLights:T.PointLight[]=[],occluders:T.Mesh[]=[];
@@ -399,7 +416,12 @@ export function buildEnvironment():AdminEnvironment {
     live.add(furniture);
     furniture.traverse(o=>{if(o instanceof T.Mesh)occluders.push(o);});
   }
+  for(const id of Object.keys(rooms) as RoomId[]){
+    const r=ROOMS[id];
+    forFp(box(rooms[id],m.ceiling,(r.minX+r.maxX)/2,WALL_H+.03,(r.minZ+r.maxZ)/2,r.maxX-r.minX,.06,r.maxZ-r.minZ));
+  }
+  for(const o of [...fpOnly,...isoOnly]){o.visible=false;live.add(o);}
   for(const id of Object.keys(rooms) as RoomId[])consolidate(rooms[id],live);
   if(!deskDrawer)throw Error('The reception drawer has no mapped desk');
-  return {root,doors,targets,screens,powerLights,occluders,lamp:menuLamp,drawer:deskDrawer};
+  return {fpOnly,isoOnly,root,doors,targets,screens,powerLights,occluders,lamp:menuLamp,drawer:deskDrawer};
 }

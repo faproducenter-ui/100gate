@@ -92,3 +92,12 @@ describe('flashlight side system',()=>{
     expect(validSave(upgradeSave(old))).toBe(true);
   });
 });
+
+it('defaults to first person, keeps a chosen view and clamps look sensitivity',async()=>{
+  const {sanitizeSettings}=await import('./state');
+  expect(sanitizeSettings(null).view).toBe('fps');
+  expect(sanitizeSettings({view:'iso'}).view).toBe('iso');
+  expect(sanitizeSettings({view:'nonsense',sensitivity:99}).view).toBe('fps');
+  expect(sanitizeSettings({sensitivity:99}).sensitivity).toBe(2.5);
+  expect(sanitizeSettings({keys:{up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',interact:'KeyE',sprint:'ShiftLeft',crouch:'ControlLeft',light:'KeyF'}}).keys.crouch).toBe('ControlLeft');
+});

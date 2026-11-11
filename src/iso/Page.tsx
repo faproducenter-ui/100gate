@@ -9,6 +9,8 @@ import type {CCTVView,DocumentView,Mode,Panel,Save,UIAction} from './contracts';
 const startCCTV=():CCTVView=>({camera:'reception',tape:'shift',time:0,duration:24,playing:false,availableFuture:false,evidence:false,zoom:false});
 const YAW=.69;
 const ids=Object.keys(OBJECTS) as ObjectId[];
+const START_YAW=-2.52; // facing the reception desk from the start position
+const LOOK_RAD=.0021;
 
 export default function IsoPage(){
   const canvas=useRef<HTMLCanvasElement>(null);
@@ -16,7 +18,7 @@ export default function IsoPage(){
   const click=useRef<(event:{clientX:number;clientY:number})=>void>(()=>{});
   const activateAudio=useRef<()=>void>(()=>{});
   const [view,setView]=useState(()=>({mode:'loading' as Mode,panel:null as Panel|null,state:newSave(),settings:readSettings(),
-    saved:!!getSave(),hint:'',notice:'',loading:'Администрация',cctv:startCCTV(),document:undefined as DocumentView|undefined}));
+    saved:!!getSave(),hint:'',notice:'',loading:'Администрация',cctv:startCCTV(),document:undefined as DocumentView|undefined,fp:{locked:false,stamina:1}}));
 
   useEffect(()=>{
     const surface=canvas.current!;
@@ -26,9 +28,13 @@ export default function IsoPage(){
     let clock=0,noticeUntil=0,notice='',loading='Администрация',target:ObjectId|null=null,documentView:DocumentView|undefined;
     let cctv=startCCTV(),lightClock=0,saveClock=0,uiClock=0,walked=0,drawer=false;
     let direction:Point={x:0,z:1},speed=0;
+    // First person: look angles, smoothed velocity, stance and stamina.
+    let yaw=START_YAW,pitch=-.06,crouch=0,stamina=1,tired=false,vx=0,vz=0,locked=false,kick=1,press=1,sprinting=false,ignoreUnlock=false;
+    const fpOn=()=>settings.view==='fps';
+    const unlockPointer=()=>{try{if(document.pointerLockElement===surface){ignoreUnlock=true;document.exitPointerLock();}}catch{/* not locked */}};
     const keys=new Set<string>(),sound=new IsoSound();
     const emit=()=>setView({mode,panel,state,settings,saved:!!active,hint:target?OBJECTS[target].label:'',notice,loading,
-      cctv:{...cctv,availableFuture:state.items.includes('file'),evidence:isEvidence(cctv.camera,cctv.tape,cctv.time)},document:documentView});
+      cctv:{...cctv,availableFuture:state.items.includes('file'),evidence:isEvidence(cctv.camera,cctv.tape,cctv.time)},document:documentView,fp:{locked,stamina}});
     const inform=(s:string)=>{notice=s;noticeUntil=clock+5.6;};
     const persist=()=>{
       if(mode!=='play'&&mode!=='complete')return;
@@ -36,7 +42,8 @@ export default function IsoPage(){
       else if(notice!=='Сохранение на устройстве недоступно.')inform('Сохранение на устройстве недоступно.');
     };
     const setPanel=(p:Panel|null)=>{
-      panel=p;keys.clear();speed=0;
+      panel=p;keys.clear();speed=0;vx=vz=0;
+      if(p!==null)unlockPointer();
       if(p!=='document')drawer=false;
       if(p!=='cctv')cctv={...cctv,playing:false};
     };
@@ -53,8 +60,9 @@ export default function IsoPage(){
       if(changed)persist();
     };
     const use=(id:ObjectId|null)=>{
-      if(!id||mode!=='play'||panel||!withinReach(id,state))return;
+      if(!id||mode!=='play'||panel||!withinReach(id,state,fpOn()?.7:0))return;
       const before=state,after=act(state,id);
+      kick=0;
       const door=doorFor[id];
       const kind=door&&after.state.doors[door]&&!before.doors[door]?'door':
         after.state.items.length>before.items.length||after.state.spare>before.spare?'pick-up':after.document?'examine':'interact';
@@ -65,12 +73,13 @@ export default function IsoPage(){
     const flash=()=>{
       if(mode!=='play'||panel)return;
       const r=toggleLight(state);
-      if(r.state!==state){sound.cue('switch',settings);world?.pressFlashlight();persist();}
+      if(r.state!==state){sound.cue('switch',settings);world?.pressFlashlight();press=0;persist();}
       apply(r);emit();
     };
     const start=(restore:boolean)=>{
       if(!world)return;
       state=restore&&active?active:newSave();
+      yaw=START_YAW;pitch=-.06;vx=vz=0;stamina=1;tired=false;
       mode=state.finished?'complete':'play';target=null;notice='';setPanel(null);persist();emit();
     };
     async function load(){
@@ -112,7 +121,9 @@ export default function IsoPage(){
         case 'close':{const p=panel==='settings'||panel==='credits'?back:null;back=null;setPanel(p);break;}
         case 'settings':
           settings=sanitizeSettings({...settings,...a.patch});
-          write(SETTINGS_KEY,settings);keys.clear();break;
+          write(SETTINGS_KEY,settings);keys.clear();
+          if(settings.view!=='fps')unlockPointer();
+          break;
         case 'interact':use(target);return;
         case 'flashlight':flash();return;
         case 'breaker':if(panel==='breaker'){sound.cue('switch',settings);apply(pressLine(state,a.line));}break;
@@ -147,7 +158,13 @@ export default function IsoPage(){
     click.current=event=>{
       if(!canMenu())return;
       unlock();
-      if(mode==='play'&&!panel)use(world?.select(event,state)??null);
+      if(mode!=='play'||panel)return;
+      if(fpOn()){
+        if(document.pointerLockElement!==surface){try{void Promise.resolve(surface.requestPointerLock?.()).catch(()=>{});}catch{/* unsupported */}}
+        else use(target);
+        return;
+      }
+      use(world?.select(event,state)??null);
     };
     const keydown=(e:KeyboardEvent)=>{
       if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey)return;
@@ -158,7 +175,9 @@ export default function IsoPage(){
         return;
       }
       if(panel||mode!=='play'||(e.target instanceof HTMLInputElement))return;
-      if(e.code==='KeyF'){e.preventDefault();if(!e.repeat)flash();return;}
+      if(e.code===settings.keys.light){e.preventDefault();if(!e.repeat)flash();return;}
+      if(e.code==='KeyV'){e.preventDefault();if(!e.repeat)dispatch.current({type:'settings',patch:{view:fpOn()?'iso':'fps'}});return;}
+      if(fpOn()&&e.code.startsWith('Arrow')){e.preventDefault();keys.add(e.code);return;}
       if(e.code==='Tab'||e.code==='KeyJ'||e.code===settings.keys.interact){
         e.preventDefault();if(e.repeat)return;
         if(e.code===settings.keys.interact)use(target);
@@ -168,16 +187,30 @@ export default function IsoPage(){
       if(Object.values(settings.keys).includes(e.code)){e.preventDefault();keys.add(e.code);}
     };
     const keyup=(e:KeyboardEvent)=>{keys.delete(e.code);};
-    const blur=()=>{keys.clear();speed=0;persist();};
+    const blur=()=>{keys.clear();speed=0;vx=vz=0;persist();};
+    const mouse=(e:MouseEvent)=>{
+      if(document.pointerLockElement!==surface||mode!=='play'||panel||!fpOn())return;
+      const k=LOOK_RAD*settings.sensitivity;
+      yaw-=e.movementX*k;
+      pitch=Math.min(1.45,Math.max(-1.45,pitch-e.movementY*k));
+    };
+    const lockChange=()=>{
+      locked=document.pointerLockElement===surface;
+      if(!locked&&!ignoreUnlock&&mode==='play'&&!panel&&fpOn())dispatch.current({type:'panel',panel:'pause'});
+      if(!locked)ignoreUnlock=false;
+      emit();
+    };
     const visibility=()=>{if(document.hidden)blur();};
+    const available=(id:ObjectId)=>{
+      if(id==='underDesk'&&(!state.dutyRead||state.items.includes('technicalKey')))return false;
+      if(id==='vhs'&&state.items.includes('vhs'))return false;
+      if(id==='flashlight'&&state.items.includes('flashlight'))return false;
+      return !(id.startsWith('battery')&&state.taken.includes(id));
+    };
     const pick=()=>{
       let best=Infinity;let next:ObjectId|null=null;
       for(const id of ids){
-        if(!withinReach(id,state))continue;
-        if(id==='underDesk'&&(!state.dutyRead||state.items.includes('technicalKey')))continue;
-        if(id==='vhs'&&state.items.includes('vhs'))continue;
-        if(id==='flashlight'&&state.items.includes('flashlight'))continue;
-        if(id.startsWith('battery')&&state.taken.includes(id))continue;
+        if(!withinReach(id,state)||!available(id))continue;
         const o=OBJECTS[id],dx=o.x-state.x,dz=o.z-state.z,len=Math.hypot(dx,dz);
         const facing=len<.025?1:(dx*direction.x+dz*direction.z)/len;
         const score=len-.31*facing-(id==='underDesk'?.23:0);
@@ -190,7 +223,34 @@ export default function IsoPage(){
       clock+=dt;
       if(gameplay&&world){
         const k=settings.keys,ax=Number(keys.has(k.right))-Number(keys.has(k.left)),az=Number(keys.has(k.down))-Number(keys.has(k.up));
-        if(ax||az){
+        press=Math.min(1,press+dt/.34);kick=Math.min(1,kick+dt/.6);
+        if(fpOn()){
+          // --- first person: look, stance, stamina, smoothed velocity and sliding collision ---
+          yaw+=(Number(keys.has('ArrowLeft'))-Number(keys.has('ArrowRight')))*1.9*dt*settings.sensitivity;
+          pitch=Math.min(1.45,Math.max(-1.45,pitch+(Number(keys.has('ArrowUp'))-Number(keys.has('ArrowDown')))*1.4*dt*settings.sensitivity));
+          crouch+=((keys.has(k.crouch)?1:0)-crouch)*(1-Math.exp(-dt*9));
+          const sin=Math.sin(yaw),cos=Math.cos(yaw);
+          let wx=-az*sin-ax*cos,wz=-az*cos+ax*sin;
+          const m=Math.hypot(wx,wz),moving=m>1e-6;
+          if(moving){wx/=m;wz/=m;}
+          const wantsRun=keys.has(k.sprint)&&moving&&az<0&&crouch<.3&&!tired&&stamina>0;
+          if(wantsRun){stamina=Math.max(0,stamina-dt*.2);if(stamina<=0)tired=true;}
+          else{stamina=Math.min(1,stamina+dt*(moving?.1:.18));if(tired&&stamina>.3)tired=false;}
+          const top=(wantsRun?3.0:crouch>.5?.85:1.45)*(az>0?.7:1)*(ax&&!az?.88:1);
+          const rate=moving?10:13;
+          const blend=1-Math.exp(-dt*rate);
+          vx+=(wx*top-vx)*blend;vz+=(wz*top-vz)*blend;
+          const p=movePlayer(state,vx*dt,vz*dt,world.walkableDoors);
+          const moved=Math.hypot(p.x-state.x,p.z-state.z);
+          speed=moved/Math.max(dt,1e-6);
+          // A wall stops the matching velocity component so you do not keep "pushing" into it.
+          if(dt>0&&moved<Math.hypot(vx,vz)*dt*.98){vx=(p.x-state.x)/dt;vz=(p.z-state.z)/dt;}
+          if(moved>1e-8){state={...state,...p};walked+=moved;}
+          direction={x:sin,z:cos};
+          sprinting=wantsRun&&speed>1.8;
+          const half=sprinting?1.05:crouch>.5?.6:.74;
+          if(walked>half){walked-=half;sound.cue('step',settings);}
+        }else if(ax||az){
           const m=Math.hypot(ax,az);
           direction={x:(ax*Math.cos(YAW)+az*Math.sin(YAW))/m,z:(-ax*Math.sin(YAW)+az*Math.cos(YAW))/m};
           const max=keys.has(k.sprint)?2.9:1.3;
@@ -207,7 +267,7 @@ export default function IsoPage(){
           lightClock+=dt;
           if(lightClock>.5||Math.ceil(before/5)!==Math.ceil(state.charge/5)){lightClock=0;emit();}
         }
-        const near=pick();if(near!==target){target=near;emit();}
+        const near=fpOn()?(world.aimTarget(state,available)??null):pick();if(near!==target){target=near;emit();}
         saveClock+=dt;
         if(saveClock>1.25&&active!==state){saveClock=0;persist();}
       }else speed=0;
@@ -223,7 +283,7 @@ export default function IsoPage(){
       sound.mix(settings,{paused,power:state.power,menu});
       if(!document.hidden&&(mode==='title'||mode==='play'||mode==='complete')){
         world?.render({state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,
-          direction,speed,target:panel?null:target,drawer});
+          direction,speed,target:panel?null:target,drawer,look:{yaw,pitch},crouch,sprint:sprinting,press,kick});
       }
     };
     const loop=(now:number)=>{
@@ -237,6 +297,7 @@ export default function IsoPage(){
     };
     window.addEventListener('keydown',keydown);window.addEventListener('keyup',keyup);
     window.addEventListener('blur',blur);window.addEventListener('pagehide',blur);
+    document.addEventListener('mousemove',mouse);document.addEventListener('pointerlockchange',lockChange);
     document.addEventListener('visibilitychange',visibility);
     if(import.meta.env.DEV){
       const debug=window as unknown as Record<string,unknown>;
@@ -244,6 +305,7 @@ export default function IsoPage(){
         objective:activeQuest(state).id,cctv,render:world?.diagnostics()});
       debug.isoProjectTarget=(id:ObjectId)=>world?.projectTarget(id);
       debug.isoWorld=()=>world;
+      debug.isoLook=(y:number,p:number)=>{yaw=y;pitch=p;};
       debug.isoSetState=(patch:Partial<Save>)=>{state={...state,...patch};emit();};
       debug.advanceTime=(ms:number)=>{
         if(!Number.isFinite(ms)||ms<0||ms>3000)throw RangeError('Expected 0..3000ms');
@@ -259,10 +321,11 @@ export default function IsoPage(){
       disposed=true;lifetime.abort();cancelAnimationFrame(raf);world?.dispose();sound.dispose();
       window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);
       window.removeEventListener('blur',blur);window.removeEventListener('pagehide',blur);
+      document.removeEventListener('mousemove',mouse);document.removeEventListener('pointerlockchange',lockChange);unlockPointer();
       document.removeEventListener('visibilitychange',visibility);
       if(import.meta.env.DEV){
         const debug=window as unknown as Record<string,unknown>;
-        delete debug.render_game_to_text;delete debug.advanceTime;delete debug.isoProjectTarget;delete debug.isoSetState;delete debug.isoWorld;
+        delete debug.render_game_to_text;delete debug.advanceTime;delete debug.isoProjectTarget;delete debug.isoSetState;delete debug.isoWorld;delete debug.isoLook;
       }
     };
   },[]);

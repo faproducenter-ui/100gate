@@ -105,8 +105,8 @@ export function movePlayer(p:Point,dx:number,dz:number,doors:DoorStates):Point {
 export const doorFor:Partial<Record<ObjectId,DoorId>>={
   technicalDoor:'technical',surveillanceDoor:'surveillance',archiveDoor:'archive',
 };
-export const withinReach=(id:ObjectId,p:Point)=> {
+export const withinReach=(id:ObjectId,p:Point,extra=0)=> {
   const o=OBJECTS[id],room=roomAt(p.x,p.z);
   const door=doorFor[id];
-  return (room===o.room||(door!==undefined&&room===door))&&Math.hypot(p.x-o.x,p.z-o.z)<(door?1.15:1.20);
+  return (room===o.room||(door!==undefined&&room===door))&&Math.hypot(p.x-o.x,p.z-o.z)<(door?1.15:1.20)+extra;
 };

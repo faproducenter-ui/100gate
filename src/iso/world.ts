@@ -1,12 +1,14 @@
 import * as T from 'three';
 import {buildEnvironment} from './environment';
 import {loadActor} from './actor';
+import {FpRig} from './fps';
 import {BATTERIES,DOORS,OBJECTS,ROOMS,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
 import type {CameraId,CCTVView,Save,Settings} from './contracts';
 
 type Cast=Awaited<ReturnType<typeof loadActor>>;
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
-  direction:Point;speed:number;target:ObjectId|null;drawer:boolean};
+  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;
+  look:{yaw:number;pitch:number};crouch:number;sprint:boolean;press:number;kick:number};
 const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
 const smooth=T.MathUtils.smoothstep;
 const cameraPos:Record<CameraId,[T.Vector3,T.Vector3]>={
@@ -62,6 +64,8 @@ export class IsoWorld {
   private readonly shiftEnvelope:T.Mesh;
   private readonly shippingSlip:T.Mesh;
   private readonly lamp:T.PointLight;
+  private readonly fps:FpRig;
+  private fpActive=false;
   private readonly hemi:T.HemisphereLight;
   private readonly sun:T.DirectionalLight;
   private readonly beam:T.SpotLight;
@@ -121,7 +125,11 @@ export class IsoWorld {
       g.position.set(OBJECTS[id].x,.025,OBJECTS[id].z);g.rotation.y=OBJECTS[id].x;
       this.batteryProps.set(id,g);this.scene.add(g);
     }
+    // Aim the crosshair at the real props, not at invisible anchors.
+    this.env.targets.flashlight=this.flashlightProp;
+    for(const [id,prop] of this.batteryProps)this.env.targets[id]=prop;
     this.cast=actor;
+    this.fps=new FpRig(this.scene,actor.makeFlashlight());
     this.scene.add(actor.root);
     this.echoes={hero:actor.createEcho('hero'),staff:actor.createEcho('staff'),shadow:actor.createEcho('shadow')};
     for(const echo of Object.values(this.echoes)){echo.root.visible=false;this.scene.add(echo.root);}
@@ -150,6 +158,30 @@ export class IsoWorld {
     this.mark.rotation.x=-Math.PI/2;this.mark.visible=false;this.scene.add(this.mark);
   }
   pressFlashlight(){this.cast.pressFlashlight();}
+  /** The interactable under the crosshair in first person, within arm's reach. */
+  aimTarget(p:Point,ok:(id:ObjectId)=>boolean=()=>true):ObjectId|undefined{
+    const cam=this.fps.camera;
+    const options=Object.entries(this.env.targets).filter(([key])=>withinReach(key as ObjectId,p,.7)&&ok(key as ObjectId));
+    this.cursor.set(0,0);
+    this.clickRay.setFromCamera(this.cursor,cam);
+    this.clickRay.far=2.7;
+    const hit=this.clickRay.intersectObjects(options.map(([,o])=>o!),true)[0];
+    this.clickRay.far=Infinity;
+    if(hit){
+      let node:T.Object3D|null=hit.object;
+      while(node){const id=options.find(([,target])=>target===node)?.[0];if(id)return id as ObjectId;node=node.parent;}
+    }
+    // Small props (batteries, keys) get a forgiving cone around the crosshair.
+    let best=.13,id:ObjectId|undefined;
+    for(const [key,target] of options){
+      const v=target!.getWorldPosition(new T.Vector3()).project(cam);
+      if(v.z>1)continue;
+      const d=Math.hypot(v.x*cam.aspect,v.y);
+      if(d<best){best=d;id=key as ObjectId;}
+    }
+    return id;
+  }
+  get firstPerson(){return this.fpActive;}
   actorAction(kind:'interact'|'pick-up'|'door'|'fear'|'examine',point?:Point){
     this.cast.react?.(kind,point?.x,point?.z);
   }
@@ -212,6 +244,7 @@ export class IsoWorld {
       this.renderer.setSize(w,h,false);
       this.renderer.shadowMap.enabled=settings.shadows&&settings.quality!=='low';
       this.titleCamera.aspect=this.securityCamera.aspect=w/h;
+      this.fps.setAspect(w/h);
       const half=Math.max(3.68,4.05/(w/h));
       Object.assign(this.gameCamera,{left:-half*w/h,right:half*w/h,top:half,bottom:-half});
       this.gameCamera.updateProjectionMatrix();
@@ -222,8 +255,17 @@ export class IsoWorld {
     if(!this.resize(frame.settings))return;
     const {state,settings,time,dt,menu,cctv}=frame;
     this.restoreOcclusion();
+    const fp=settings.view==='fps'&&!menu&&!cctv;
+    this.fpActive=fp;
+    for(const o of this.env.fpOnly)o.visible=fp;
+    for(const o of this.env.isoOnly)o.visible=!fp;
+    if(fp){
+      this.fps.update({x:state.x,z:state.z,yaw:frame.look.yaw,pitch:frame.look.pitch,speed:frame.speed,sprint:frame.sprint,
+        crouch:frame.crouch,dt:frame.paused?0:dt,time,hasLight:state.items.includes('flashlight'),lightOn:state.lightOn&&state.charge>0,
+        press:frame.press,kick:frame.kick});
+    }
     if(this.env.drawer)this.env.drawer.position.z=T.MathUtils.damp(this.env.drawer.position.z,this.drawerRest+(frame.drawer?.15:0),11,dt);
-    this.cast.root.visible=!menu&&!cctv;
+    this.cast.root.visible=!menu&&!cctv&&!fp;
     this.cast.update(frame.paused?0:dt,state.x,state.z,frame.direction.x,frame.direction.z,frame.speed);
     for(const [i,l] of this.env.powerLights.entries()){
       const value=this.poweredLevels[i]!;
@@ -242,9 +284,9 @@ export class IsoWorld {
     const weak=state.charge<15?.72+.28*Math.sin(time*37)*Math.sin(time*11.3):1;
     const shadows=settings.shadows&&settings.quality!=='low';
     if(this.beam.castShadow!==shadows)this.beam.castShadow=shadows;
-    this.beam.intensity=on?60*weak:0;this.glow.intensity=on?3*weak:0;
+    this.beam.intensity=on?(fp?26:60)*weak:0;this.glow.intensity=on?(fp?.7:3)*weak:0;this.beam.angle=fp?.5:.62;
     if(on){
-      const {x,z}=state,d=frame.direction,lens=this.cast.flashlightPose();
+      const {x,z}=state,d=frame.direction,lens=fp?this.fps.beamPose():this.cast.flashlightPose();
       if(lens){
         this.beam.position.copy(lens.position);
         this.beam.target.position.copy(lens.position).addScaledVector(lens.direction,3);
@@ -283,6 +325,11 @@ export class IsoWorld {
       this.stageFootage(cctv);
       this.renderer.render(this.scene,this.securityCamera);
       for(const echo of Object.values(this.echoes))echo.root.visible=false;
+      return;
+    }
+    if(fp){
+      this.mark.visible=false;
+      this.renderer.render(this.scene,this.fps.camera);
       return;
     }
     const id=roomAt(state.x,state.z)??'corridor',r=ROOMS[id];

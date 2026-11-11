@@ -56,27 +56,48 @@ def pose(p, f):
         pb.matrix_basis = Matrix.Identity(4)
     bpy.context.view_layer.update()
 
-    # ---- feet: stance sweeps from `reachF` ahead of the hip to behind it, then a looping swing ----
-    ank = {}; pit = {}
+    # ---- feet: heel strike -> flat -> heel lift about the ball -> toe-off -> swing back to heel strike ----
+    # Foot geometry from the rest pose: ball joint is 0.127 m ahead of and 0.064 m below the ankle.
+    BALL = Vector((0, -0.127, -0.064)); HEEL = Vector((0, 0.05, -0.087)); BALL_Z = 0.023
+    def rot_x(y, z, a):
+        return y * math.cos(a) - z * math.sin(a), y * math.sin(a) + z * math.cos(a)
+    def stance_pose(u):
+        """Ankle offset from the flat-foot position, foot pitch (+ = heel up) for stance progress u."""
+        d = p['front'] - p['S'] * p['D'] * u
+        fy, fz = A0['l'].y - d, A0['l'].z
+        phi = 0.0
+        if u < p['uStrike']:
+            k = u / p['uStrike']
+            phi = -p['strike'] * (1 - ss(k))
+        elif u > p['uLift']:
+            k = (u - p['uLift']) / (1 - p['uLift'])
+            phi = p['off'] * ss(k)
+        if phi < 0:        # rotate about the heel, toe comes down onto the floor
+            hy, hz = fy + HEEL.y, fz + HEEL.z
+            ry, rz = rot_x(-HEEL.y, -HEEL.z, phi)
+            return Vector((0, hy + ry, hz + rz)), phi
+        by, bz = fy + BALL.y, BALL_Z          # rotate about the ball, heel rises
+        ry, rz = rot_x(-BALL.y, fz - BALL_Z, phi)
+        return Vector((0, by + ry, bz + rz)), phi
+    ank = {}; pit = {}; ballflex = {}
     for s, off in (('l', 0.0), ('r', 0.5)):
         q = (f + off) % 1.0
+        ballflex[s] = 0.0
         if S == 0:
-            d = 0.0; z = 0.0; pt = 0.0
-        elif q < D:
-            u = q / D
-            sweep = S * D
-            d = p['front'] - sweep * u
-            z = 0.0
-            pt = -p['heel'] * max(0, 1 - u / 0.2) + p['toe'] * max(0, (u - 0.75) / 0.25)
+            ank[s] = Vector((A0[s].x, A0[s].y, A0[s].z)); pit[s] = 0.0; continue
+        if q < D:
+            pos, phi = stance_pose(q / D)
+            ank[s] = Vector((A0[s].x * (1 - p['narrow']), pos.y, pos.z)); pit[s] = phi
+            ballflex[s] = -max(0.0, phi)         # toes stay flat on the floor while the heel lifts
         else:
             u = (q - D) / (1 - D)
-            sweep = S * D
-            back = p['front'] - sweep
-            # heel recovery: foot first rises behind the hip, then the knee drives forward
-            d = back + sweep * ss(u) ** 1.15
-            z = p['H'] * math.sin(math.pi * min(1, u * 1.08)) ** 1.1
-            pt = p['toe'] * (1 - ss(min(1, u * 2.0))) - p['heel'] * 0.6 * ss(max(0, (u - 0.6) / 0.4))
-        ank[s] = Vector((A0[s].x * (1 - p['narrow']), A0[s].y - d, A0[s].z + z)); pit[s] = pt
+            p0, ph0 = stance_pose(1.0)            # toe-off pose
+            p1, ph1 = stance_pose(0.0)            # next heel strike pose
+            e = ss(u) ** 1.1
+            y = p0.y + (p1.y - p0.y) * e
+            z = p0.z + (p1.z - p0.z) * e + p['H'] * math.sin(math.pi * u) ** 1.1
+            ank[s] = Vector((A0[s].x * (1 - p['narrow']), y, z))
+            pit[s] = ph0 * (1 - ss(u)) + ph1 * ss(u)
 
     # ---- pelvis ----
     if S == 0:
@@ -131,7 +152,12 @@ def pose(p, f):
         foot = PB['foot_' + s]
         head = Vector(foot.head)
         foot.matrix = Tr(head) @ Rx(pit[s]) @ BASE['foot_' + s].to_3x3().to_4x4()
-    bpy.context.view_layer.update()
+        bpy.context.view_layer.update()
+        if ballflex[s]:
+            ball = PB['ball_' + s]
+            bh = Vector(ball.matrix.translation)
+            ball.matrix = about(bh, Rx(ballflex[s])) @ ball.matrix
+            bpy.context.view_layer.update()
 
 def bake(name, p, n=24):
     act = bpy.data.actions.get(name)
@@ -148,16 +174,16 @@ def bake(name, p, n=24):
                 setattr(pb, k, v)
                 pb.keyframe_insert(k, frame=i, group=pb.name)
 
-Z = dict(S=0, D=.6, front=.3, H=0, heel=0, toe=0, narrow=0, bob=0, bobsign=1, sway=0, twist=0, spineTwist=0,
+Z = dict(S=0, D=.6, front=.3, H=0, strike=0, off=0, uStrike=.15, uLift=.6, heel=0, toe=0, narrow=0, bob=0, bobsign=1, sway=0, twist=0, spineTwist=0,
          lean=0, crouch=0, hipDrop=0, ay0=0, ay=0, az0=0, azAmp=0, azLead=.9, ax0=0, axAmp=0)
 
 # Walking: arms hang with a soft elbow, swing opposite to the legs.
-WALK = dict(Z, S=1.25, D=.62, front=.30, H=.075, heel=.16, toe=.30, narrow=.12, bob=.02, bobsign=1, crouch=.035,
+WALK = dict(Z, S=1.25, D=.62, front=.30, H=.075, strike=.22, off=.55, uStrike=.14, uLift=.6, heel=.16, toe=.30, narrow=.12, bob=.02, bobsign=1, crouch=.035,
             sway=.02, twist=.09, spineTwist=.06, lean=.03, hipDrop=.04,
             ay0=-0.01, ay=.17, az0=-.465, azAmp=.02, azLead=.9, ax0=.058, axAmp=.012)
 
 # Jogging/running: elbows bent ~90 degrees, hands travel between hip and chest in an oval.
-RUN = dict(Z, S=2.0, D=.36, front=.24, H=.28, heel=.05, toe=.40, narrow=.30, bob=.04, bobsign=-1, crouch=.08,
+RUN = dict(Z, S=2.0, D=.36, front=.24, H=.28, strike=.17, off=.62, uStrike=.16, uLift=.5, heel=.05, toe=.40, narrow=.30, bob=.04, bobsign=-1, crouch=.08,
            sway=.012, twist=.11, spineTwist=.05, lean=.17, hipDrop=.05,
            ay0=-.035, ay=.235, az0=-.27, azAmp=.13, azLead=.6, ax0=.015, axAmp=.035)
 

@@ -17,6 +17,8 @@ export interface IsoInterfaceProps {
   loading:string;
   cctv:CCTVView;
   document?:{title:string; text:string};
+  /** First-person state: pointer lock and sprint stamina (0..1). */
+  fp?:{locked:boolean; stamina:number};
   onAction:(action:UIAction)=>void;
 }
 
@@ -36,7 +38,7 @@ const cameraLabels = {
 const cameraIds = Object.keys(cameraLabels) as Array<keyof typeof cameraLabels>;
 
 const keyNames:Record<keyof Settings['keys'],string> = {
-  up:'Вперёд',down:'Назад',left:'Влево',right:'Вправо',interact:'Взаимодействие',sprint:'Ускорение',
+  up:'Вперёд',down:'Назад',left:'Влево',right:'Вправо',interact:'Взаимодействие',sprint:'Бег',crouch:'Присесть',light:'Фонарь',
 };
 const keyIds = Object.keys(keyNames) as Array<keyof Settings['keys']>;
 const keyLabel=(code:string)=>code.replace(/^Key/,'').replace(/^Digit/,'')
@@ -104,9 +106,13 @@ function Title({saved,act,covered}:{saved:boolean;act:Act;covered:boolean}){
   </section>;
 }
 
-function Hud({state,settings,hint,notice,act}:{state:Save;settings:Settings;hint:string;notice:string;act:Act}){
+function Hud({state,settings,hint,notice,act,fp}:{state:Save;settings:Settings;hint:string;notice:string;act:Act;fp?:{locked:boolean;stamina:number}}){
   const quest=activeQuest(state);
-  return <div className="iso-hud" data-testid="iso-hud">
+  const first=settings.view==='fps';
+  return <div className="iso-hud" data-testid="iso-hud" data-view={settings.view}>
+    {first&&<div className="iso-crosshair" data-active={!!hint} aria-hidden="true"/>}
+    {first&&fp&&!fp.locked&&<p className="iso-lockhint" role="status">Нажмите на экран, чтобы управлять камерой мышью</p>}
+    {first&&fp&&fp.stamina<.995&&<div className="iso-stamina" aria-label="Выносливость"><i style={{width:Math.round(fp.stamina*100)+'%'}}/></div>}
     <div className="iso-objective">
       <span className="iso-label">Текущая задача</span>
       <strong data-testid="iso-objective">{quest?.title??'Найти путь к школе №7'}</strong>
@@ -172,6 +178,8 @@ function Options({settings,act}:{settings:Settings;act:Act}){
         <option value="low">Низкое</option><option value="medium">Среднее</option><option value="high">Высокое</option>
       </select></label>
       <Meter label="Разрешение сцены" value={settings.scale} min={.55} max={1.25} onChange={scale=>patch({scale})}/>
+      <Toggle label="Вид от первого лица" on={settings.view==='fps'} onChange={on=>patch({view:on?'fps':'iso'})}/>
+      <Meter label="Чувствительность мыши" value={settings.sensitivity} min={.3} max={2.5} onChange={sensitivity=>patch({sensitivity})}/>
       <Toggle label="Тени" on={settings.shadows} onChange={shadows=>patch({shadows})}/>
       <Toggle label="Эффекты окружения" on={settings.ambient} onChange={ambient=>patch({ambient})}/>
       <ActionButton act={act} action={{type:'fullscreen'}}><Maximize/>На весь экран</ActionButton>
@@ -198,7 +206,7 @@ function Options({settings,act}:{settings:Settings;act:Act}){
         </button>
       </div>)}
       {bindingError&&<p className="iso-option-error" role="status">{bindingError}</p>}
-      <p className="iso-controls-note">Tab — инвентарь · J — журнал · Esc — пауза</p>
+      <p className="iso-controls-note">Tab — инвентарь · J — журнал · V — вид · Esc — пауза · Shift — бег · C — присесть</p>
     </fieldset>
   </div>;
 }
@@ -304,7 +312,7 @@ function CCTV({view,act,notice}:{view:CCTVView;act:Act;notice:string}){
   </Modal>;
 }
 
-export function IsoInterface({mode,panel,saved,state,settings,hint,notice,loading,cctv,document, onAction:act}:IsoInterfaceProps){
+export function IsoInterface({mode,panel,saved,state,settings,hint,notice,loading,cctv,document,fp, onAction:act}:IsoInterfaceProps){
   const close=()=>act(closeAction);
   const zoom={'--iso-text':settings.textScale} as CSSProperties;
   let modal:ReactNode=null;
@@ -348,7 +356,7 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,notice,loadin
   }
   return <div className="iso-ui" style={zoom} data-motion={settings.motion?'on':'off'} data-flicker={settings.reducedFlicker?'reduced':'normal'}>
     {mode==='title'&&<Title saved={saved} act={act} covered={!!panel}/>}
-    {mode==='play'&&!panel&&<Hud state={state} settings={settings} hint={hint} notice={notice} act={act}/>}
+    {mode==='play'&&!panel&&<Hud state={state} settings={settings} hint={hint} notice={notice} act={act} fp={fp}/>}
     {mode==='loading'&&<div className="iso-screen-state" role="status" data-testid="iso-loading">
       <p className="iso-wordmark" aria-label="100GATE">100<span>GATE</span></p>
       <p>{loading||'Загрузка администрации…'}</p>

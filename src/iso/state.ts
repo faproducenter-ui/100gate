@@ -139,20 +139,22 @@ export function getSave(){const value=upgradeSave(read(SAVE_KEY));return validSa
 export function write(key:string,value:unknown){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
 export function sanitizeSettings(value:unknown):Settings{
   const p=value as Partial<Settings>|null;
-  if(!p||typeof p!=='object')return DEFAULTS;
-  const n=(key:'scale'|'volume'|'ambience'|'effects'|'ui'|'textScale',min:number,max:number)=>
+  // Touch devices have no mouse look yet, so they start in the isometric view.
+  const view:Settings['view']=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches?'iso':'fps';
+  if(!p||typeof p!=='object')return {...DEFAULTS,view};
+  const n=(key:'scale'|'volume'|'ambience'|'effects'|'ui'|'textScale'|'sensitivity',min:number,max:number)=>
     typeof p[key]==='number'&&Number.isFinite(p[key])?Math.min(max,Math.max(min,p[key]!)):DEFAULTS[key];
   const flag=(key:'shadows'|'ambient'|'motion'|'reducedFlicker'|'hints')=>typeof p[key]==='boolean'?p[key]!:DEFAULTS[key];
   const codes=Object.keys(DEFAULTS.keys) as (keyof Settings['keys'])[];
   const keys={...DEFAULTS.keys};
   for(const key of codes){
     const code=p.keys?.[key];
-    if(typeof code==='string'&&/^(Key[A-Z]|Arrow(Up|Down|Left|Right)|Digit[0-9]|Shift(Left|Right)|Space)$/.test(code)&&
+    if(typeof code==='string'&&/^(Key[A-Z]|Arrow(Up|Down|Left|Right)|Digit[0-9]|Shift(Left|Right)|Control(Left|Right)|Space)$/.test(code)&&
        !['KeyJ','Tab','Escape'].includes(code))keys[key]=code;
   }
   return {quality:p.quality==='low'||p.quality==='high'?p.quality:'medium',scale:n('scale',.55,1.25),shadows:flag('shadows'),
     ambient:flag('ambient'),motion:flag('motion'),reducedFlicker:flag('reducedFlicker'),hints:flag('hints'),
-    volume:n('volume',0,1),ambience:n('ambience',0,1),effects:n('effects',0,1),ui:n('ui',0,1),textScale:n('textScale',.8,1.5),
+    view:p.view==='iso'||p.view==='fps'?p.view:view,sensitivity:n('sensitivity',.3,2.5),volume:n('volume',0,1),ambience:n('ambience',0,1),effects:n('effects',0,1),ui:n('ui',0,1),textScale:n('textScale',.8,1.5),
     keys:new Set(Object.values(keys)).size===codes.length?keys:DEFAULTS.keys};
 }
 export const readSettings=()=>sanitizeSettings(read(SETTINGS_KEY));
