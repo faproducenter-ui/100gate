@@ -518,3 +518,17 @@
   color:#e8dcb8; background:rgba(14,17,15,.78); border:1px solid #5b5846; pointer-events:none; }
 .iso-stamina { position:absolute; left:50%; bottom:11%; width:140px; height:3px; transform:translateX(-50%); background:rgba(255,255,255,.14); pointer-events:none; }
 .iso-stamina i { display:block; height:100%; background:#cdbd8a; }
+
+/* Touch (phones): landscape only, joystick + look + three buttons */
+.iso-touch { position:absolute; inset:0; touch-action:none; pointer-events:auto; z-index:2; -webkit-user-select:none; user-select:none; }
+.iso-hud[data-view="fps"] .iso-touch { pointer-events:auto; }
+.iso-stick { position:fixed; width:104px; height:104px; margin:-52px 0 0 -52px; border-radius:50%; border:2px solid rgba(240,232,208,.35);
+  background:rgba(14,17,15,.28); pointer-events:none; }
+.iso-stick i { position:absolute; left:50%; top:50%; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:50%; background:rgba(240,232,208,.55); }
+.iso-touch-buttons { position:absolute; right:max(14px,env(safe-area-inset-right)); bottom:max(14px,env(safe-area-inset-bottom)); display:flex; flex-direction:column-reverse; gap:12px; pointer-events:auto; }
+.iso-touch-buttons button { width:54px; height:54px; border-radius:50%; border:2px solid rgba(240,232,208,.4); background:rgba(14,17,15,.55); color:#eadfbd; display:grid; place-items:center; }
+.iso-touch-buttons button[aria-pressed="true"] { background:rgba(205,189,138,.55); color:#14110c; }
+.iso-touch-buttons svg { width:24px; height:24px; }
+.iso-rotate { display:none; position:fixed; inset:0; z-index:999; background:#0d100f; color:#e8dcb8; text-align:center; place-content:center; gap:10px; }
+.iso-rotate span { font-size:3rem; }
+@media (pointer: coarse) and (orientation: portrait) { .iso-rotate { display:grid; } }

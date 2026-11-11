@@ -139,8 +139,7 @@ export function getSave(){const value=upgradeSave(read(SAVE_KEY));return validSa
 export function write(key:string,value:unknown){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
 export function sanitizeSettings(value:unknown):Settings{
   const p=value as Partial<Settings>|null;
-  // Touch devices have no mouse look yet, so they start in the isometric view.
-  const view:Settings['view']=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches?'iso':'fps';
+  const view:Settings['view']='fps';
   if(!p||typeof p!=='object')return {...DEFAULTS,view};
   const n=(key:'scale'|'volume'|'ambience'|'effects'|'ui'|'textScale'|'sensitivity',min:number,max:number)=>
     typeof p[key]==='number'&&Number.isFinite(p[key])?Math.min(max,Math.max(min,p[key]!)):DEFAULTS[key];

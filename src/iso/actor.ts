@@ -42,6 +42,7 @@ export function reactionEnvelope(u: number) {
   return T.MathUtils.smootherstep(u, 0, .3) * (1 - T.MathUtils.smootherstep(u, .54, 1))
 }
 
+export type FpPose = { yaw: number; eye: T.Vector3; forward: T.Vector3; right: T.Vector3; up: T.Vector3 }
 type Reaction = 'interact' | 'pick-up' | 'door' | 'fear' | 'examine'
 type Variant = 'hero' | 'staff' | 'shadow'
 export type IsoActor = {
@@ -56,6 +57,8 @@ export type IsoActor = {
   pressFlashlight(): void;
   /** World position of the lens and unit beam direction while the flashlight is carried. */
   flashlightPose(): { position: T.Vector3; direction: T.Vector3 } | undefined;
+  /** First person: the hero body follows the camera, the head is hidden and the hand holds the flashlight in view. */
+  setFirstPerson(pose: FpPose | null): void;
   /** A fresh copy of the flashlight model for placing in the world. */
   makeFlashlight(): T.Object3D | undefined;
   createEcho(variant?: Variant): IsoActor;
@@ -198,6 +201,7 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
   let cleanReady = false
   let acting: { kind: Reaction; t: number; x?: number; z?: number } | undefined
   let gear = { flashlight: false, on: false }, beam = 0, press = 1
+  let fp: FpPose | undefined
 
   // The backpack rides the upper spine; its matrix is the inverse bind pose so it
   // sits exactly where it was modelled against the standing hero.
@@ -218,6 +222,7 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     }
     if (shared.props.flashlight) {
       flashlight = prepProp(shared.props.flashlight)
+      flashlight.traverse(o => { if (o instanceof T.Mesh) o.castShadow = false })
       flashlightSwitch = flashlight.getObjectByName('Flashlight_switch') ?? undefined
       flashlight.visible = false
       root.add(flashlight)
@@ -354,7 +359,9 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     const dt = stepDelta(delta)
     elapsed = (elapsed + dt) % 4.4
     motion = advanceActorMotion(motion, dt, dx, dz, speed)
-    if (acting && acting.x !== undefined && acting.z !== undefined && speed < .15 &&
+    if (fp) motion.yaw = fp.yaw
+    if (head) head.scale.setScalar(fp ? .001 : 1)
+    if (!fp && acting && acting.x !== undefined && acting.z !== undefined && speed < .15 &&
       Math.hypot(acting.x - x, acting.z - z) > .14) {
       const aimYaw = Math.atan2(acting.x - x, acting.z - z)
       motion.yaw += shortestAngle(motion.yaw, aimYaw) * moveAlpha(dt, 9)
@@ -403,11 +410,17 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     pole.set(0, -.6, 0).addScaledVector(rightV, .6).addScaledVector(fwd, -.25)
     const pushed = Math.sin(Math.PI * press) // thumb dips onto the switch and releases
     if (gear.flashlight && arm.upper && arm.lower && arm.hand) {
-      heldGoal.set(x, 0, z).addScaledVector(rightV, .17).addScaledVector(fwd, .30 - .015 * pushed)
-      heldGoal.y = .80 + .24 * beam - .025 * pushed
+      if (fp) {
+        // The torch hangs low and to the right of the view, and rises into it when switched on.
+        heldGoal.copy(fp.eye).addScaledVector(fp.forward, .22 + .17 * beam).addScaledVector(fp.right, .2)
+          .addScaledVector(fp.up, -.5 + .36 * beam - .025 * pushed)
+      } else {
+        heldGoal.set(x, 0, z).addScaledVector(rightV, .17).addScaledVector(fwd, .30 - .015 * pushed)
+        heldGoal.y = .80 + .24 * beam - .025 * pushed
+      }
       if (reachGoal) heldGoal.lerp(reachGoal, reachWeight)
-      // Walking with the light off lets the arm swing; with it on the grip stays steady.
-      reach(heldGoal, pole, Math.max(beam, reachWeight, .55 * (1 - g)))
+      // Walking with the light off lets the arm swing; with it on the grip stays steady (always, in first person).
+      reach(heldGoal, pole, fp ? 1 : Math.max(beam, reachWeight, .55 * (1 - g)))
     } else if (reachGoal && arm.upper && arm.lower && arm.hand) reach(reachGoal, pole, reachWeight)
     grip = T.MathUtils.damp(grip, gear.flashlight ? 1 : 0, 10, dt)
     if (grip > .01) {
@@ -421,7 +434,8 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     if (flashlight && arm.hand) {
       flashlight.visible = gear.flashlight
       if (gear.flashlight) {
-        beamDir.copy(fwd).addScaledVector(down, .10 + (1 - beam) * 1.2).normalize()
+        if (fp) beamDir.copy(fp.forward).addScaledVector(fp.right, -.03).addScaledVector(down, (1 - beam) * .9).normalize()
+        else beamDir.copy(fwd).addScaledVector(down, .10 + (1 - beam) * 1.2).normalize()
         basisY.copy(UP).addScaledVector(beamDir, -UP.dot(beamDir)).normalize()
         basisZ.crossVectors(beamDir, basisY)
         basis.makeBasis(beamDir, basisY, basisZ)
@@ -446,6 +460,7 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
       if (!disposed) acting = { kind, t: 0, x: targetX, z: targetZ }
     },
     setGear(next) { gear = next },
+    setFirstPerson(pose) { fp = pose ?? undefined },
     pressFlashlight() { press = 0 },
     flashlightPose() {
       if (!flashlight?.visible) return undefined

@@ -106,12 +106,51 @@ function Title({saved,act,covered}:{saved:boolean;act:Act;covered:boolean}){
   </section>;
 }
 
+const isTouch=()=>typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
+
+/** Minimal landscape touch layer: left thumb moves, right thumb looks, three round buttons. */
+function TouchControls({act,light}:{act:Act;light:boolean}){
+  const stick=useRef<{id:number;ox:number;oy:number}|null>(null),look=useRef<{id:number;x:number;y:number}|null>(null);
+  const [knob,setKnob]=useState<{x:number;y:number;dx:number;dy:number}|null>(null);
+  const [run,setRun]=useState(false),[crouch,setCrouch]=useState(false);
+  const down=(e:React.PointerEvent)=>{
+    if((e.target as HTMLElement).closest('button'))return;
+    const half=e.currentTarget.getBoundingClientRect().width*.45;
+    if(e.clientX<half&&!stick.current){stick.current={id:e.pointerId,ox:e.clientX,oy:e.clientY};setKnob({x:e.clientX,y:e.clientY,dx:0,dy:0});}
+    else if(!look.current)look.current={id:e.pointerId,x:e.clientX,y:e.clientY};
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const move=(e:React.PointerEvent)=>{
+    const s=stick.current,l=look.current;
+    if(s&&e.pointerId===s.id){
+      const R=52;let dx=e.clientX-s.ox,dy=e.clientY-s.oy;const m=Math.hypot(dx,dy);
+      if(m>R){dx*=R/m;dy*=R/m;}
+      setKnob({x:s.ox,y:s.oy,dx,dy});act({type:'touch',move:{x:dx/R,z:dy/R}});
+    }else if(l&&e.pointerId===l.id){
+      act({type:'touch',look:{dx:e.clientX-l.x,dy:e.clientY-l.y}});l.x=e.clientX;l.y=e.clientY;
+    }
+  };
+  const up=(e:React.PointerEvent)=>{
+    if(stick.current?.id===e.pointerId){stick.current=null;setKnob(null);act({type:'touch',move:{x:0,z:0}});}
+    if(look.current?.id===e.pointerId)look.current=null;
+  };
+  return <div className="iso-touch" data-testid="iso-touch" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
+    {knob&&<div className="iso-stick" style={{left:knob.x,top:knob.y}}><i style={{transform:`translate(${knob.dx}px,${knob.dy}px)`}}/></div>}
+    <div className="iso-touch-buttons">
+      <button type="button" aria-label="Фонарь" aria-pressed={light} onClick={()=>act({type:'flashlight'})}><Flashlight/></button>
+      <button type="button" aria-label="Бег" aria-pressed={run} onClick={()=>{setRun(!run);act({type:'touch',sprint:!run});}}><ArrowRight/></button>
+      <button type="button" aria-label="Присесть" aria-pressed={crouch} onClick={()=>{setCrouch(!crouch);act({type:'touch',crouch:!crouch});}}><StepBack/></button>
+    </div>
+  </div>;
+}
+
 function Hud({state,settings,hint,notice,act,fp}:{state:Save;settings:Settings;hint:string;notice:string;act:Act;fp?:{locked:boolean;stamina:number}}){
   const quest=activeQuest(state);
   const first=settings.view==='fps';
   return <div className="iso-hud" data-testid="iso-hud" data-view={settings.view}>
     {first&&<div className="iso-crosshair" data-active={!!hint} aria-hidden="true"/>}
-    {first&&fp&&!fp.locked&&<p className="iso-lockhint" role="status">Нажмите на экран, чтобы управлять камерой мышью</p>}
+    {first&&isTouch()&&<TouchControls act={act} light={state.lightOn}/>}
+    {first&&!isTouch()&&fp&&!fp.locked&&<p className="iso-lockhint" role="status">Нажмите на экран, чтобы управлять камерой мышью</p>}
     {first&&fp&&fp.stamina<.995&&<div className="iso-stamina" aria-label="Выносливость"><i style={{width:Math.round(fp.stamina*100)+'%'}}/></div>}
     <div className="iso-objective">
       <span className="iso-label">Текущая задача</span>
@@ -343,6 +382,8 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,notice,loadin
     case 'credits':modal=<Modal key="credits" title="Авторы" testId="iso-credits" onClose={close}>
       <div className="iso-credits-copy"><strong>100GATE</strong><p>Проект faproducenter-ui.</p>
         <p>Персонаж: MakeHuman / MPFB (CC0). Окружение и звуковое оформление: 100GATE.</p>
+        <p lang="en">Key with Tag by AxonFXDesigns (<a href="https://sketchfab.com/3d-models/key-with-tag-16ea3fbecc6346df9859f0e18406951b" target="_blank" rel="noreferrer">Sketchfab</a>), CC BY 4.0.
+          Antique Book with Quill and Key by E.Dejnes (<a href="https://sketchfab.com/3d-models/antique-book-with-quill-and-key-6be47f12c73342ef9232e29f71e0fa76" target="_blank" rel="noreferrer">Sketchfab</a>), CC BY-NC 4.0.</p>
         <p lang="en">The data used in this project was obtained from <a href="https://mocap.cs.cmu.edu/" target="_blank" rel="noreferrer">mocap.cs.cmu.edu</a>.</p>
         <p>Three.js · Blender</p></div>
     </Modal>;break;
@@ -355,6 +396,7 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,notice,loadin
     </Modal>;break;
   }
   return <div className="iso-ui" style={zoom} data-motion={settings.motion?'on':'off'} data-flicker={settings.reducedFlicker?'reduced':'normal'}>
+    <div className="iso-rotate" role="alert"><span>⟲</span><p>Поверните телефон горизонтально</p></div>
     {mode==='title'&&<Title saved={saved} act={act} covered={!!panel}/>}
     {mode==='play'&&!panel&&<Hud state={state} settings={settings} hint={hint} notice={notice} act={act} fp={fp}/>}
     {mode==='loading'&&<div className="iso-screen-state" role="status" data-testid="iso-loading">

@@ -31,6 +31,7 @@ export type CCTVView={camera:CameraId;tape:TapeId;time:number;duration:number;pl
 export type DocumentView={title:string;text:string};
 export type UIAction=
   |{type:'flashlight'}
+  |{type:'touch';move?:{x:number;z:number};look?:{dx:number;dy:number};sprint?:boolean;crouch?:boolean}
   |{type:'start'|'continue'|'retry'|'resume'|'title'|'fullscreen'|'close'|'interact'|'archive-evidence'|'cctv-play'|'cctv-zoom'|'reset-breaker'}
   |{type:'cctv-step';delta:number}|{type:'cctv-seek';time:number}
   |{type:'cctv-camera';camera:CameraId}|{type:'cctv-tape';tape:TapeId}

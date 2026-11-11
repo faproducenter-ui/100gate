@@ -31,10 +31,14 @@ export default function IsoPage(){
     // First person: look angles, smoothed velocity, stance and stamina.
     let yaw=START_YAW,pitch=-.06,crouch=0,stamina=1,tired=false,vx=0,vz=0,locked=false,kick=1,press=1,sprinting=false,ignoreUnlock=false;
     const fpOn=()=>settings.view==='fps';
+    // Touch controls: joystick vector, look drag accumulated between frames, run/crouch toggles.
+    const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
+    let tmx=0,tmz=0,tlx=0,tly=0,tsprint=false,tcrouch=false;
+    const portraitBlocked=()=>coarse&&innerHeight>innerWidth;
     const unlockPointer=()=>{try{if(document.pointerLockElement===surface){ignoreUnlock=true;document.exitPointerLock();}}catch{/* not locked */}};
     const keys=new Set<string>(),sound=new IsoSound();
     const emit=()=>setView({mode,panel,state,settings,saved:!!active,hint:target?OBJECTS[target].label:'',notice,loading,
-      cctv:{...cctv,availableFuture:state.items.includes('file'),evidence:isEvidence(cctv.camera,cctv.tape,cctv.time)},document:documentView,fp:{locked,stamina}});
+      cctv:{...cctv,availableFuture:state.items.includes('file'),evidence:isEvidence(cctv.camera,cctv.tape,cctv.time)},document:documentView,fp:{locked:locked||coarse,stamina}});
     const inform=(s:string)=>{notice=s;noticeUntil=clock+5.6;};
     const persist=()=>{
       if(mode!=='play'&&mode!=='complete')return;
@@ -68,6 +72,9 @@ export default function IsoPage(){
         after.state.items.length>before.items.length||after.state.spare>before.spare?'pick-up':after.document?'examine':'interact';
       world?.actorAction(kind,OBJECTS[id]);
       sound.cue(kind==='door'?'door':id==='phone'?'phone':'ui',settings);
+      const gotKey=(['technicalKey','archiveKey'] as const).some(k=>after.state.items.includes(k)&&!before.items.includes(k));
+      if(gotKey)sound.jingle(1,settings);
+      else if(kind==='door'&&(before.items.includes('technicalKey')||before.items.includes('archiveKey')))sound.jingle(.55,settings);
       apply(after);drawer=id==='drawer'&&after.panel==='document';emit();
     };
     const flash=()=>{
@@ -79,6 +86,7 @@ export default function IsoPage(){
     const start=(restore:boolean)=>{
       if(!world)return;
       state=restore&&active?active:newSave();
+      if(coarse){try{void surface.parentElement?.requestFullscreen?.().catch(()=>{});void (screen.orientation as unknown as {lock?:(o:string)=>Promise<void>}).lock?.('landscape').catch(()=>{});}catch{/* optional */}}
       yaw=START_YAW;pitch=-.06;vx=vz=0;stamina=1;tired=false;
       mode=state.finished?'complete':'play';target=null;notice='';setPanel(null);persist();emit();
     };
@@ -90,7 +98,7 @@ export default function IsoPage(){
           if(!disposed&&id===attempt){loading=status;emit();}
         },lifetime.signal);
         if(disposed||id!==attempt){next.dispose();return;}
-        world?.dispose();world=next;mode='title';loading='';emit();
+        world?.dispose();world=next;world.onKeyClink=l=>sound.jingle(l,settings);mode='title';loading='';emit();
       }catch(error){
         if(disposed||id!==attempt)return;
         mode='error';loading=error instanceof Error?error.message:'Не удалось загрузить локацию';emit();
@@ -126,6 +134,12 @@ export default function IsoPage(){
           break;
         case 'interact':use(target);return;
         case 'flashlight':flash();return;
+        case 'touch':
+          if(a.move){tmx=a.move.x;tmz=a.move.z;}
+          if(a.look){tlx+=a.look.dx;tly+=a.look.dy;}
+          if(a.sprint!==undefined)tsprint=a.sprint;
+          if(a.crouch!==undefined)tcrouch=a.crouch;
+          return;
         case 'breaker':if(panel==='breaker'){sound.cue('switch',settings);apply(pressLine(state,a.line));}break;
         case 'reset-breaker':if(panel==='breaker'&&!state.power){state={...state,breaker:[]};persist();}break;
         case 'cctv-camera':if(panel==='cctv')cctv={...cctv,camera:a.camera};break;
@@ -160,6 +174,7 @@ export default function IsoPage(){
       unlock();
       if(mode!=='play'||panel)return;
       if(fpOn()){
+        if(coarse)return;
         if(document.pointerLockElement!==surface){try{void Promise.resolve(surface.requestPointerLock?.()).catch(()=>{});}catch{/* unsupported */}}
         else use(target);
         return;
@@ -219,24 +234,26 @@ export default function IsoPage(){
       return next;
     };
     const step=(dt:number,draw=true)=>{
-      const gameplay=mode==='play'&&!panel;
+      const gameplay=mode==='play'&&!panel&&!portraitBlocked();
       clock+=dt;
       if(gameplay&&world){
         const k=settings.keys,ax=Number(keys.has(k.right))-Number(keys.has(k.left)),az=Number(keys.has(k.down))-Number(keys.has(k.up));
+        const mx=Math.max(-1,Math.min(1,ax+tmx)),mz=Math.max(-1,Math.min(1,az+tmz));
         press=Math.min(1,press+dt/.34);kick=Math.min(1,kick+dt/.6);
         if(fpOn()){
           // --- first person: look, stance, stamina, smoothed velocity and sliding collision ---
+          yaw-=tlx*.0042*settings.sensitivity;pitch=Math.min(1.45,Math.max(-1.45,pitch-tly*.0042*settings.sensitivity));tlx=tly=0;
           yaw+=(Number(keys.has('ArrowLeft'))-Number(keys.has('ArrowRight')))*1.9*dt*settings.sensitivity;
           pitch=Math.min(1.45,Math.max(-1.45,pitch+(Number(keys.has('ArrowUp'))-Number(keys.has('ArrowDown')))*1.4*dt*settings.sensitivity));
-          crouch+=((keys.has(k.crouch)?1:0)-crouch)*(1-Math.exp(-dt*9));
+          crouch+=((keys.has(k.crouch)||tcrouch?1:0)-crouch)*(1-Math.exp(-dt*9));
           const sin=Math.sin(yaw),cos=Math.cos(yaw);
-          let wx=-az*sin-ax*cos,wz=-az*cos+ax*sin;
-          const m=Math.hypot(wx,wz),moving=m>1e-6;
-          if(moving){wx/=m;wz/=m;}
-          const wantsRun=keys.has(k.sprint)&&moving&&az<0&&crouch<.3&&!tired&&stamina>0;
+          let wx=-mz*sin-mx*cos,wz=-mz*cos+mx*sin;
+          const m=Math.hypot(wx,wz),moving=m>.08;
+          if(moving){const mag=Math.min(1,m);wx=wx/m*mag;wz=wz/m*mag;}else{wx=wz=0;}
+          const wantsRun=(keys.has(k.sprint)||tsprint)&&moving&&mz<0&&crouch<.3&&!tired&&stamina>0;
           if(wantsRun){stamina=Math.max(0,stamina-dt*.2);if(stamina<=0)tired=true;}
           else{stamina=Math.min(1,stamina+dt*(moving?.1:.18));if(tired&&stamina>.3)tired=false;}
-          const top=(wantsRun?3.0:crouch>.5?.85:1.45)*(az>0?.7:1)*(ax&&!az?.88:1);
+          const top=(wantsRun?3.0:crouch>.5?.85:1.45)*(mz>0?.7:1)*(mx&&!mz?.88:1);
           const rate=moving?10:13;
           const blend=1-Math.exp(-dt*rate);
           vx+=(wx*top-vx)*blend;vz+=(wz*top-vz)*blend;
@@ -249,7 +266,15 @@ export default function IsoPage(){
           direction={x:sin,z:cos};
           sprinting=wantsRun&&speed>1.8;
           const half=sprinting?1.05:crouch>.5?.6:.74;
-          if(walked>half){walked-=half;sound.cue('step',settings);}
+          if(walked>half){
+            walked-=half;
+            sound.cue('step',settings,sprinting?1.45:crouch>.5?.45:1);
+            // Keys in the pocket jangle with the pace: faint walking, clear running.
+            if(state.items.some(i=>i==='technicalKey'||i==='archiveKey')){
+              if(sprinting)sound.jingle(.22+Math.random()*.1,settings);
+              else if(crouch<.5&&Math.random()<.22)sound.jingle(.05,settings);
+            }
+          }
         }else if(ax||az){
           const m=Math.hypot(ax,az);
           direction={x:(ax*Math.cos(YAW)+az*Math.sin(YAW))/m,z:(-ax*Math.sin(YAW)+az*Math.cos(YAW))/m};

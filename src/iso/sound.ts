@@ -35,11 +35,39 @@ export class IsoSound {
     this.room.gain.setTargetAtTime(paused?0:s.ambience,t,.09);
     this.hum.gain.setTargetAtTime(menu?.024:power?.034:.008,t,.12);
   }
-  cue(kind:'step'|'switch'|'door'|'tape'|'ui'|'phone',s:Settings){
+  /** Metal clinks of a key ring: count, pitch, brightness and decay all follow `loudness` (0..1) and chance. */
+  jingle(loudness:number,s:Settings){
+    const ctx=this.context,master=this.master;
+    if(!ctx||ctx.state!=='running'||!master||loudness<=.01)return;
+    const clinks=1+Math.floor(loudness*loudness*5*Math.random()+loudness*1.4);
+    let at=ctx.currentTime;
+    for(let i=0;i<clinks;i++){
+      const base=2300+Math.random()*2100,hit=Math.min(1,loudness*(.55+Math.random()*.6));
+      const decay=.07+.14*Math.random()+hit*.1;
+      // Inharmonic partials of a small brass/steel body, higher ones die faster.
+      for(const [ratio,level,fade] of [[1,1,1],[2.76,.55,.6],[5.4,.3,.35],[8.93,.16,.2]] as const){
+        const osc=ctx.createOscillator();osc.type='sine';osc.frequency.value=base*ratio*(1+(Math.random()-.5)*.012);
+        const gain=ctx.createGain();gain.gain.setValueAtTime(.0001,at);
+        gain.gain.linearRampToValueAtTime(.0001+.05*hit*level*s.effects,at+.002);
+        gain.gain.exponentialRampToValueAtTime(.0001,at+decay*fade+.02);
+        osc.connect(gain).connect(master);osc.start(at);osc.stop(at+decay+.05);
+        osc.onended=()=>{osc.disconnect();gain.disconnect();};
+      }
+      if(this.texture){// the short contact tick
+        const src=ctx.createBufferSource();src.buffer=this.texture;
+        const f=ctx.createBiquadFilter();f.type='highpass';f.frequency.value=3800;
+        const g=ctx.createGain();g.gain.setValueAtTime(.0001+.03*hit*s.effects,at);g.gain.exponentialRampToValueAtTime(.0001,at+.018);
+        src.connect(f).connect(g).connect(master);src.start(at,Math.random()*.9,.03);
+        src.onended=()=>{src.disconnect();f.disconnect();g.disconnect();};
+      }
+      at+=.03+Math.random()*.1*(1.4-loudness);
+    }
+  }
+  cue(kind:'step'|'switch'|'door'|'tape'|'ui'|'phone',s:Settings,energy=1){
     const ctx=this.context,texture=this.texture,master=this.master;
     if(!ctx||ctx.state!=='running'||!texture||!master)return;
     const spec={
-      step:[.12,175+(this.stepIndex++%2)*48,.11],
+      step:[.12*(1.1-.2*Math.min(1.4,energy)),(175+(this.stepIndex++%2)*48)*(.9+Math.random()*.22),.11*energy],
       switch:[.075,1250,.075],door:[.46,266,.09],tape:[.29,1130,.045],ui:[.05,1560,.04],phone:[.32,710,.08],
     }[kind]!;
     const [length,frequency,peak]=spec as [number,number,number],t=ctx.currentTime;

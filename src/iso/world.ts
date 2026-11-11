@@ -2,10 +2,20 @@ import * as T from 'three';
 import {buildEnvironment} from './environment';
 import {loadActor} from './actor';
 import {FpRig} from './fps';
+import {KeyProp} from './keys';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {BATTERIES,DOORS,OBJECTS,ROOMS,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
 import type {CameraId,CCTVView,Save,Settings} from './contracts';
 
 type Cast=Awaited<ReturnType<typeof loadActor>>;
+type Decor={key?:T.Object3D;book?:T.Object3D};
+async function loadDecor():Promise<Decor>{
+  const load=async(path:string)=>{
+    try{return (await new GLTFLoader().loadAsync(import.meta.env.BASE_URL+path)).scene;}catch{return undefined;}
+  };
+  const [key,book]=await Promise.all([load('assets/iso/key-tag.glb'),load('assets/iso/antique-book.glb')]);
+  return {key,book};
+}
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
   direction:Point;speed:number;target:ObjectId|null;drawer:boolean;
   look:{yaw:number;pitch:number};crouch:number;sprint:boolean;press:number;kick:number};
@@ -64,6 +74,13 @@ export class IsoWorld {
   private readonly shiftEnvelope:T.Mesh;
   private readonly shippingSlip:T.Mesh;
   private readonly lamp:T.PointLight;
+  private deskKey?:KeyProp;
+  private cabinetKey?:KeyProp;
+  private slotTarget?:T.Object3D;
+  private hookTarget?:T.Object3D;
+  /** Called when the hanging keys clink: loudness 0..1 already scaled by distance to the listener. */
+  onKeyClink?:(loudness:number)=>void;
+  private listener={x:0,z:0};
   private readonly fps:FpRig;
   private fpActive=false;
   private readonly hemi:T.HemisphereLight;
@@ -86,10 +103,12 @@ export class IsoWorld {
   static async create(canvas:HTMLCanvasElement,onProgress:(text:string)=>void,signal:AbortSignal){
     onProgress('Персонаж · загрузка модели');
     const actor=await loadActor();
-    try{signal.throwIfAborted();onProgress('Администрация · материалы и свет');return new IsoWorld(canvas,actor);}
+    onProgress('Предметы · ключи и книга');
+    const decor=await loadDecor();
+    try{signal.throwIfAborted();onProgress('Администрация · материалы и свет');return new IsoWorld(canvas,actor,decor);}
     catch(error){actor.dispose();throw error;}
   }
-  private constructor(private readonly canvas:HTMLCanvasElement,actor:Cast){
+  private constructor(private readonly canvas:HTMLCanvasElement,actor:Cast,decor:Decor){
     this.renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'low-power'});
     this.renderer.outputColorSpace=T.SRGBColorSpace;this.renderer.toneMapping=T.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure=1.13;
@@ -125,11 +144,37 @@ export class IsoWorld {
       g.position.set(OBJECTS[id].x,.025,OBJECTS[id].z);g.rotation.y=OBJECTS[id].x;
       this.batteryProps.set(id,g);this.scene.add(g);
     }
+    if(decor.key){
+      // Key on the hook under the reception desk; the archive key lies on the filing cabinet once its place is known.
+      this.deskKey=new KeyProp(decor.key,'hang');this.deskKey.root.position.set(-4.317,.69,1.174);this.deskKey.root.rotation.y=.4;
+      this.cabinetKey=new KeyProp(decor.key,'flat');this.cabinetKey.root.position.set(-4.43,1.128,3.70);this.cabinetKey.root.rotation.z=.9;
+      this.scene.add(this.deskKey.root,this.cabinetKey.root);
+      this.hookTarget=this.env.targets.underDesk;this.slotTarget=this.env.targets.archiveCache;
+    }
+    if(decor.book){
+      // Open antique book left on the top plank of the reception shelf; dusty, because nobody has read it for years.
+      const book=decor.book.clone(true);
+      book.traverse(o=>{
+        if(!(o instanceof T.Mesh))return;
+        o.castShadow=o.receiveShadow=true;
+        const mat=(o.material as T.MeshStandardMaterial).clone();
+        mat.color.lerp(new T.Color(0x9b968a),.42);mat.roughness=1;mat.metalness*=.5;mat.envMapIntensity=.4;
+        o.material=mat;
+      });
+      book.updateMatrixWorld(true);
+      const frame=book.getObjectByName('Book_open')??book,size=new T.Box3().setFromObject(frame).getSize(new T.Vector3());
+      const scale=.33/Math.max(size.x,size.z);
+      book.scale.multiplyScalar(scale);book.rotation.y=.35;book.updateMatrixWorld(true);
+      const lowest=new T.Box3().setFromObject(frame);
+      book.position.set(-1.06,.727-lowest.min.y,4.5);
+      this.scene.add(book);
+    }
     // Aim the crosshair at the real props, not at invisible anchors.
     this.env.targets.flashlight=this.flashlightProp;
     for(const [id,prop] of this.batteryProps)this.env.targets[id]=prop;
+    this.listener={x:0,z:0};
     this.cast=actor;
-    this.fps=new FpRig(this.scene,actor.makeFlashlight());
+    this.fps=new FpRig(this.scene);
     this.scene.add(actor.root);
     this.echoes={hero:actor.createEcho('hero'),staff:actor.createEcho('staff'),shadow:actor.createEcho('shadow')};
     for(const echo of Object.values(this.echoes)){echo.root.visible=false;this.scene.add(echo.root);}
@@ -263,9 +308,12 @@ export class IsoWorld {
       this.fps.update({x:state.x,z:state.z,yaw:frame.look.yaw,pitch:frame.look.pitch,speed:frame.speed,sprint:frame.sprint,
         crouch:frame.crouch,dt:frame.paused?0:dt,time,hasLight:state.items.includes('flashlight'),lightOn:state.lightOn&&state.charge>0,
         press:frame.press,kick:frame.kick});
-    }
+      const cam=this.fps.camera;
+      this.cast.setFirstPerson({yaw:frame.look.yaw,eye:cam.position.clone(),forward:new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion),
+        right:new T.Vector3(1,0,0).applyQuaternion(cam.quaternion),up:new T.Vector3(0,1,0).applyQuaternion(cam.quaternion)});
+    }else this.cast.setFirstPerson(null);
     if(this.env.drawer)this.env.drawer.position.z=T.MathUtils.damp(this.env.drawer.position.z,this.drawerRest+(frame.drawer?.15:0),11,dt);
-    this.cast.root.visible=!menu&&!cctv&&!fp;
+    this.cast.root.visible=!menu&&!cctv;
     this.cast.update(frame.paused?0:dt,state.x,state.z,frame.direction.x,frame.direction.z,frame.speed);
     for(const [i,l] of this.env.powerLights.entries()){
       const value=this.poweredLevels[i]!;
@@ -279,6 +327,18 @@ export class IsoWorld {
     this.hemi.intensity=1.05*this.darkness;this.sun.intensity=1.55*this.darkness;
     this.flashlightProp.visible=!has;
     this.cast.setGear({flashlight:has,on:state.lightOn&&state.charge>0});
+    this.listener={x:state.x,z:state.z};
+    if(this.deskKey&&this.cabinetKey){
+      const hangVisible=!state.items.includes('technicalKey'),lieVisible=state.archiveClue&&!state.items.includes('archiveKey');
+      this.deskKey.root.visible=hangVisible;this.cabinetKey.root.visible=lieVisible;
+      if(hangVisible){
+        const d=Math.hypot(state.x-this.deskKey.root.position.x,state.z-this.deskKey.root.position.z);
+        const stir=Math.max(0,1-d/1.7)*Math.min(1,frame.speed/2.4);
+        this.deskKey.update(frame.paused?0:dt,stir,l=>this.onKeyClink?.(l*Math.max(.15,1-d/7)));
+      }
+      this.env.targets.underDesk=hangVisible?this.deskKey.root:this.hookTarget;
+      this.env.targets.archiveCache=lieVisible?this.cabinetKey.root:this.slotTarget;
+    }
     for(const [id,prop] of this.batteryProps)prop.visible=!state.taken.includes(id);
     const on=!menu&&!cctv&&state.lightOn&&state.charge>0&&has;
     const weak=state.charge<15?.72+.28*Math.sin(time*37)*Math.sin(time*11.3):1;
@@ -286,7 +346,7 @@ export class IsoWorld {
     if(this.beam.castShadow!==shadows)this.beam.castShadow=shadows;
     this.beam.intensity=on?(fp?26:60)*weak:0;this.glow.intensity=on?(fp?.7:3)*weak:0;this.beam.angle=fp?.5:.62;
     if(on){
-      const {x,z}=state,d=frame.direction,lens=fp?this.fps.beamPose():this.cast.flashlightPose();
+      const {x,z}=state,d=frame.direction,lens=this.cast.flashlightPose();
       if(lens){
         this.beam.position.copy(lens.position);
         this.beam.target.position.copy(lens.position).addScaledVector(lens.direction,3);

@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {DOORS,FURNITURE,OBJECTS,RECEPTION_PORTAL,ROOMS,type DoorId,type ObjectId,type RoomId} from './map';
 import {materials,random,type KitMaterials} from './env-materials';
+import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {box,cardboard,cassette,chair,consolidate,crt,curve,cylinder,desk,filing,group,keyboard,paperStack,phone,plate,shelf,vcr} from './env-kit';
 
 type Rect=typeof ROOMS[RoomId];
@@ -118,15 +119,16 @@ function corridorWalls(p:T.Group,m:KitMaterials){
   wall(p,m,'z',r.maxZ,r.minX,r.maxX,NEAR_H,904);
   plate(p,m.label(['ЭТАЖ 01','АДМИНИСТРАЦИЯ'],'#7c744f','#282e2b'),1.15,1.70,-4.91,.82,.38);
   for(const z of [-3.73,2.58]){
-    for(const x of [.18,2.22]){
+    // Room-number plates sit flush on the wall face (walls are WALL_D thick, centred on x=0 / x=2.4).
+    for(const x of [WALL_D/2+.004,2.4-WALL_D/2-.004]){
       const sign=plate(p,m.label([z<0?(x<1?'02':'04'):(x<1?'01':'03')],'#333c36','#a59971',128,64),x,1.44,z,.19,.1);
       sign.rotation.y=x<1?Math.PI/2:-Math.PI/2;
     }
   }
 }
 
-function realDoor(p:T.Group,m:KitMaterials,id:DoorId){
-  const {x,z,half}=DOORS[id];
+function realDoor(p:T.Group,m:KitMaterials,id:DoorId,spec:{x:number;z:number;half:number}=DOORS[id]){
+  const {x,z,half}=spec;
   const door=group(p,x,0,z-half,id+' door hinge'),span=2*half-.021;
   box(door,m.wood,0,1.081,span/2,.066,2.13,span,.009);
   for(const side of [-1,1]){
@@ -263,7 +265,8 @@ export function buildEnvironment():AdminEnvironment {
     flooring(p,m,r,id,802+i*39);
     if(id==='corridor')corridorWalls(p,m);else {
       roomWalls(p,m,r,id,885+i*17);
-      plate(p,m.label([roomNames[id]],'#c1b79b','#404a40'),(r.minX+r.maxX)*.5,2.13,r.minZ+.085,1.02,.197);
+      // The reception window is centred on the same wall, so its sign moves clear of the glass.
+      plate(p,m.label([roomNames[id]],'#c1b79b','#404a40'),id==='reception'?-1.45:(r.minX+r.maxX)*.5,2.13,r.minZ+.085,1.02,.197);
       if(id==='reception')roomWindow(p,m,-3.53,r.minZ+.08,1.46);
       if(id==='surveillance'){
         glazedWall(p,m,4.95,r.minZ+.089,4.98);
@@ -276,6 +279,10 @@ export function buildEnvironment():AdminEnvironment {
     const visual=realDoor(root,m,id);doors[id]=visual.door;
     set(id==='technical'?'technicalDoor':id==='surveillance'?'surveillanceDoor':'archiveDoor',visual.target);
   }
+  // The reception doorway always stays open: its door leaf stands open against the reception wall.
+  const parked=realDoor(root,m,'technical',{x:RECEPTION_PORTAL.x,z:RECEPTION_PORTAL.z,half:RECEPTION_PORTAL.half});
+  parked.door.name='Reception door (open)';parked.door.rotation.y=Math.PI;parked.door.position.x=-WALL_D/2-.04;
+  parked.target.removeFromParent();
   const live=new Set<T.Object3D>();
   const nearFurniture:T.Group[]=[];
   const floorFootprint=(f:Furniture)=>{
@@ -306,11 +313,7 @@ export function buildEnvironment():AdminEnvironment {
         const telephone=phone(g,m,-.211,.825,.069);set('phone',telephone);live.add(telephone);
         const hook=group(g,-.661,.727,.249,'Under-desk hook');set('underDesk',hook);
         curve(hook,m.silver,[[0,.008,0],[.010,-.005,.002],[.011,-.018,.009],[.004,-.026,.015]],.003,8);
-        const key=group(hook,.006,-.030,.015,'Brass key on undersurface');
-        cylinder(key,m.silver,0,0,0,.019,.008).rotation.x=Math.PI/2;
-        cylinder(key,m.dark,0,0,.005,.009,.002).rotation.x=Math.PI/2;
-        box(key,m.silver,0,-.033,0,.009,.034,.007,.001);
-        box(key,m.silver,.009,-.049,0,.021,.007,.007,.001);
+        // The key itself is the physical "Key with Tag" prop (see keys.ts), hung on this hook by the world.
         paperStack(g,m,.54,.827,-.18,19,'ВХОДЯЩИЕ');
         break;
       }
@@ -325,7 +328,7 @@ export function buildEnvironment():AdminEnvironment {
         break;
       case 'shelf':
         shelf(g,m,f.w,f.d,.91,534);
-        cardboard(g,m,.275,.955,.01,.35,.251,.34,'1989');
+        cardboard(g,m,.275,.727,.01,.35,.251,.34,'1989'); // rests on the top plank
         nearFurniture.push(g);
         break;
       case 'waiting':
@@ -420,6 +423,25 @@ export function buildEnvironment():AdminEnvironment {
     const r=ROOMS[id];
     forFp(box(rooms[id],m.ceiling,(r.minX+r.maxX)/2,WALL_H+.03,(r.minZ+r.maxZ)/2,r.maxX-r.minX,.06,r.maxZ-r.minZ));
   }
+  // Merge the view-specific meshes per material so they cost a handful of draw calls, not hundreds.
+  const mergeTagged=(list:T.Mesh[])=>{
+    root.updateMatrixWorld(true);
+    const inv=root.matrixWorld.clone().invert(),by=new Map<T.Material,T.Mesh[]>();
+    for(const mesh of list){const key=mesh.material as T.Material;by.set(key,[...(by.get(key)??[]),mesh]);}
+    const merged:T.Mesh[]=[];
+    for(const [mat,meshes] of by){
+      const geos=meshes.map(o=>(o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone())
+        .applyMatrix4(new T.Matrix4().multiplyMatrices(inv,o.matrixWorld)));
+      const geometry=mergeGeometries(geos,false);
+      geos.forEach(g=>g.dispose());
+      meshes.forEach(o=>o.removeFromParent());
+      if(!geometry)continue;
+      const mesh=new T.Mesh(geometry,mat);mesh.castShadow=mesh.receiveShadow=true;root.add(mesh);merged.push(mesh);
+    }
+    return merged;
+  };
+  const fpMerged=mergeTagged(fpOnly),isoMerged=mergeTagged(isoOnly);
+  fpOnly=fpMerged;isoOnly=isoMerged;
   for(const o of [...fpOnly,...isoOnly]){o.visible=false;live.add(o);}
   for(const id of Object.keys(rooms) as RoomId[])consolidate(rooms[id],live);
   if(!deskDrawer)throw Error('The reception drawer has no mapped desk');

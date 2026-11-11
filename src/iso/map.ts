@@ -47,6 +47,8 @@ export const BATTERIES=['battery1','battery2','battery3','battery4','battery5'] 
 export const FURNITURE:readonly (Point&{room:RoomId;w:number;d:number;kind:string})[]=[
   {room:'reception',kind:'desk',x:-3.66,z:.91,w:1.88,d:.78},
   {room:'reception',kind:'chair',x:-2.24,z:.55,w:.55,d:.50},
+  // The open reception door leaf standing against the wall beside the doorway.
+  {room:'reception',kind:'doorLeaf',x:-.12,z:.91,w:.07,d:1.23},
   {room:'reception',kind:'fileCabinet',x:-4.53,z:3.94,w:.55,d:1.21},
   {room:'reception',kind:'shelf',x:-.86,z:4.51,w:1.14,d:.53},
   {room:'reception',kind:'waiting',x:-3.21,z:4.55,w:1.45,d:.56},
