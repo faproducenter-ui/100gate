@@ -2,7 +2,7 @@ import * as T from 'three'
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js'
 import { clone } from 'three/addons/utils/SkeletonUtils.js'
 
-const ASSET = 'assets/iso/alexei-8.glb'
+const ASSET = 'assets/iso/alexei-9.glb'
 const FLASHLIGHT_ASSET = 'assets/iso/flashlight.glb'
 const BACKPACK_ASSET = 'assets/iso/backpack-2.glb'
 /** Metres of travel per authored gait cycle (two steps); see scripts/art/package-iso-gait.py. */
@@ -166,6 +166,9 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
   root.name = '100gate | ' + (variant === 'hero' ? 'Алексей' : 'CCTV · ' + variant)
   root.add(body)
   const joints = new Map<string, T.Bone>(), skeletons = new Set<T.Skeleton>()
+  // First person looks from inside the torso: show only outer faces so the inside of the sweater never appears.
+  const originalSide = new Map<T.Material, T.Side>()
+  let fpSides = false
   const variantMaterials = new Map<T.Material, T.Material>()
   const materialFor = (original: T.Material) => {
     const existing = variantMaterials.get(original)
@@ -188,6 +191,7 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     obj.castShadow = variant === 'hero'
     obj.receiveShadow = true
     obj.frustumCulled = false // bounds are the old bind-pose proportions
+    if (variant === 'hero') for (const m of Array.isArray(obj.material) ? obj.material : [obj.material]) originalSide.set(m, m.side)
     skeletons.add(obj.skeleton)
     if (variant !== 'hero') obj.material = Array.isArray(obj.material) ? obj.material.map(materialFor) : materialFor(obj.material)
   })
@@ -218,6 +222,8 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
   const tweaked = [chest, head, arm.upper, arm.lower, arm.hand, ...fingers.flat(), ...thumbChain].filter((b): b is T.Bone => !!b)
   const clean = tweaked.map(() => new T.Quaternion())
   let cleanReady = false
+  const upperPos = new T.Vector3() // clean animated local position of the shoulder joint (see the first-person shoulder shift)
+  const shoulderWorld = new T.Vector3()
   let acting: { kind: Reaction; t: number; x?: number; z?: number } | undefined
   let gear = { flashlight: false, on: false }, beam = 0, press = 1
   let fp: FpPose | undefined
@@ -368,6 +374,10 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     motion = advanceActorMotion(motion, dt, dx, dz, speed)
     if (fp) motion.yaw = fp.yaw
     if (head) head.scale.setScalar(fp ? .001 : 1)
+    if (variant === 'hero' && fpSides !== !!fp) {
+      fpSides = !!fp
+      for (const [m, side] of originalSide) { m.side = fp ? T.FrontSide : side; m.needsUpdate = true }
+    }
     if (!fp && acting && acting.x !== undefined && acting.z !== undefined && speed < .15 &&
       Math.hypot(acting.x - x, acting.z - z) > .14) {
       const aimYaw = Math.atan2(acting.x - x, acting.z - z)
@@ -387,9 +397,10 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     run.setEffectiveWeight(g * motion.runWeight * stand)
     cidle.setEffectiveWeight((1 - g) * crouchW)
     cwalk.setEffectiveWeight(g * crouchW)
-    if (cleanReady) tweaked.forEach((joint, i) => joint.quaternion.copy(clean[i]!))
+    if (cleanReady) { tweaked.forEach((joint, i) => joint.quaternion.copy(clean[i]!)); arm.upper?.position.copy(upperPos) }
     mixer.update(0)
     tweaked.forEach((joint, i) => clean[i]!.copy(joint.quaternion))
+    if (arm.upper) upperPos.copy(arm.upper.position)
     cleanReady = true
     worldRight.set(Math.cos(motion.yaw), 0, -Math.sin(motion.yaw))
     // Slow breathing only; no whole-body rocking when standing.
@@ -426,10 +437,21 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     const fpPitch = fp ? Math.asin(Math.max(-1, Math.min(1, fp.forward.y))) : 0
     const holding = !!gripOffset && !!flashlight && gear.flashlight && beam > .02
     if (backpack) backpack.visible = !fp
+    // First person: the forearm is slimmed a little (and the hand scaled back) so the sleeve does not fill the screen.
+    const slim = fp && holding ? .78 : 1
+    arm.lower?.scale.setScalar(slim); arm.hand?.scale.setScalar(1 / slim)
     if (straps) straps.visible = !fp
     if (holding && arm.upper && arm.lower && arm.hand) {
       // Pose authored in Blender (upper arm, forearm, hand and fingers around the flashlight).
       const w = beam * (1 - reachWeight * .7)
+      if (fp && arm.upper.parent) {
+        // The torso is hidden in first person, so the shoulder is brought forward and up: the arm then
+        // enters the view from the lower right, like a viewmodel, instead of running beside the eye.
+        arm.upper.getWorldPosition(shoulderWorld).addScaledVector(fwd, .0 * w)
+        shoulderWorld.y += .0 * w
+        arm.upper.position.copy(arm.upper.parent.worldToLocal(shoulderWorld))
+        root.updateMatrixWorld(true)
+      }
       for (const [bone, quat] of gripBones) bone.quaternion.slerp(quat, w)
       root.updateMatrixWorld(true)
       // In first person the arm follows the look pitch, so the torch stays where the eye expects it.

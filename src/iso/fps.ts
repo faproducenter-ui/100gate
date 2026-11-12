@@ -23,7 +23,7 @@ export type FpInput = {
  * rendered by the actor (see `setFirstPerson`), so the arms and the held flashlight are the real model.
  */
 export class FpRig {
-  readonly camera = new T.PerspectiveCamera(74, 1, .17, 40);
+  readonly camera = new T.PerspectiveCamera(74, 1, .05, 40);
   private bobPhase = 0;
   private eye = EYE_STAND;
   private prevYaw = 0; private prevPitch = 0;
@@ -59,7 +59,7 @@ export class FpRig {
     // Offsets: side bob is applied along the camera's right vector (-cos, sin).
     // The camera sits just ahead of the (hidden) head so the real arms and torso stay in view.
     // In the crouch pose the head leans about 10 cm further forward.
-    const lean = -.12 + .1 * i.crouch; // behind the hidden head, so the arms sit naturally low in view
+    const lean = -.1 + .1 * i.crouch; // just ahead of the hidden head: arms enter the view from below, not beside the eye
     this.camera.position.set(i.x - cosY * bobX + sinY * lean, this.eye + bobY + breathe, i.z + sinY * bobX + cosY * lean);
     this.camera.rotation.set(i.pitch + bobY * .12 + sway, i.yaw + Math.PI, this.roll);
     this.camera.updateMatrixWorld(true);
