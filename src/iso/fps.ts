@@ -59,7 +59,7 @@ export class FpRig {
     // Offsets: side bob is applied along the camera's right vector (-cos, sin).
     // The camera sits just ahead of the (hidden) head so the real arms and torso stay in view.
     // In the crouch pose the head leans about 10 cm further forward.
-    const lean = -.1 + .1 * i.crouch; // just ahead of the hidden head: arms enter the view from below, not beside the eye
+    const lean = .13 + .1 * i.crouch; // just ahead of the hidden head: arms enter the view from below, not beside the eye
     this.camera.position.set(i.x - cosY * bobX + sinY * lean, this.eye + bobY + breathe, i.z + sinY * bobX + cosY * lean);
     this.camera.rotation.set(i.pitch + bobY * .12 + sway, i.yaw + Math.PI, this.roll);
     this.camera.updateMatrixWorld(true);

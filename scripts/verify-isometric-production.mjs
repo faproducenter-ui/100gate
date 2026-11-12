@@ -24,7 +24,7 @@ const out='outputs/isometric/review/'+(live?'production-live':'production-local'
 const SAVE='100gate.isometric.save.v1',SETTINGS='100gate.isometric.settings.v1',LEGACY='100gate.chapter1.save.v1';
 const old=JSON.stringify({version:1,flags:[],items:[],read:[],doors:[],moved:[],position:[0,3.6,2.8],
   yaw:0,pitch:-.23,room:0,updatedAt:'2026-11-01T00:00:00.000Z'});
-const actorPath='/assets/iso/alexei-9.glb';
+const actorPath='/assets/iso/alexei-10.glb';
 const budget=Number(process.env.ISO_PROD_TIMEOUT_MS??12000);
 assert(Number.isFinite(budget)&&budget>=1000&&budget<=60000,'Invalid browser stage timeout');
 const report={url:base.href,passed:false,stages:[],requests:[],errors:[]};

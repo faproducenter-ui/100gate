@@ -2,7 +2,7 @@ import * as T from 'three'
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js'
 import { clone } from 'three/addons/utils/SkeletonUtils.js'
 
-const ASSET = 'assets/iso/alexei-9.glb'
+const ASSET = 'assets/iso/alexei-10.glb'
 const FLASHLIGHT_ASSET = 'assets/iso/flashlight.glb'
 const BACKPACK_ASSET = 'assets/iso/backpack-2.glb'
 /** Metres of travel per authored gait cycle (two steps); see scripts/art/package-iso-gait.py. */
@@ -438,7 +438,7 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     const holding = !!gripOffset && !!flashlight && gear.flashlight && beam > .02
     if (backpack) backpack.visible = !fp
     // First person: the forearm is slimmed a little (and the hand scaled back) so the sleeve does not fill the screen.
-    const slim = fp && holding ? .78 : 1
+    const slim = fp && holding ? .85 : 1
     arm.lower?.scale.setScalar(slim); arm.hand?.scale.setScalar(1 / slim)
     if (straps) straps.visible = !fp
     if (holding && arm.upper && arm.lower && arm.hand) {
@@ -447,8 +447,10 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
       if (fp && arm.upper.parent) {
         // The torso is hidden in first person, so the shoulder is brought forward and up: the arm then
         // enters the view from the lower right, like a viewmodel, instead of running beside the eye.
-        arm.upper.getWorldPosition(shoulderWorld).addScaledVector(fwd, .0 * w)
-        shoulderWorld.y += .0 * w
+        // Looking down brings the shoulder back, so the sleeve never shows its torn opening.
+        const shift = w * Math.max(0, Math.min(1, 1 + fpPitch / .7))
+        arm.upper.getWorldPosition(shoulderWorld).addScaledVector(fwd, .24 * shift)
+        shoulderWorld.y += .16 * shift
         arm.upper.position.copy(arm.upper.parent.worldToLocal(shoulderWorld))
         root.updateMatrixWorld(true)
       }
