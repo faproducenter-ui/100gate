@@ -9,3 +9,9 @@ test-results/
 .railway/
 .pages-publish/
 *.blend[0-9]*
+
+# MotionBricks prototype: clips derived from evaluation-licence sample data, never commit them
+tools/motionbricks/out/
+
+# MotionBricks baked clips use evaluation-licence target poses: local only until stage 4 (own targets)
+public/assets/iso/gait-*.json

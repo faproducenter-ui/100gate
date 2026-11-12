@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MotionBricks retarget preview (dev only, not part of the game)</title>
+<style>
+  html,body{margin:0;height:100%;background:#15181a;color:#cfd8d4;font:13px system-ui}
+  #bar{position:fixed;left:8px;top:8px;display:flex;gap:6px;align-items:center;z-index:2}
+  button{background:#26302e;color:#cfd8d4;border:1px solid #3d4a47;padding:4px 10px;cursor:pointer}
+  button.on{background:#51736a}
+  #info{position:fixed;left:8px;bottom:8px;white-space:pre;color:#9fb3ac}
+</style>
+</head>
+<body>
+<div id="bar"></div><div id="info"></div>
+<script type="module">
+import * as T from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+
+const renderer=new T.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);document.body.appendChild(renderer.domElement);
+const scene=new T.Scene();scene.background=new T.Color(0x15181a);
+const cam=new T.PerspectiveCamera(35,innerWidth/innerHeight,.05,50);
+const sun=new T.DirectionalLight(0xffffff,2.2);sun.position.set(2,4,3);
+scene.add(new T.HemisphereLight(0xdfe8e4,0x202428,1.6),sun);
+scene.add(new T.GridHelper(8,16,0x3d4a47,0x252d2b));
+const ground=new T.Mesh(new T.PlaneGeometry(8,8),new T.MeshBasicMaterial({color:0x1b2020}));ground.rotation.x=-Math.PI/2;ground.position.y=-.002;scene.add(ground);
+
+const url=new URL(location.href),side=url.searchParams.get('view')!=='front';
+const gltf=await new GLTFLoader().loadAsync('/assets/iso/alexei-10.glb');
+const hero=gltf.scene;scene.add(hero);
+hero.traverse(o=>{if(o.isSkinnedMesh)o.frustumCulled=false;});
+const mixer=new T.AnimationMixer(hero);
+const clips={};
+for(const name of ['walk','run','crouch']){
+  const res=await fetch(`/tools/motionbricks/out/${url.searchParams.get('src')==='own'?'own-':''}${name}.clip.json`);
+  if(!res.ok)continue;const j=await res.json();
+  const clip=T.AnimationClip.parse(j);clip.uuid=T.MathUtils.generateUUID();   // parse() leaves uuid undefined and the mixer caches by it
+  clips[name]={clip,meta:j.meta};
+}
+// the game's own gait for comparison
+const own=Object.fromEntries(gltf.animations.map(a=>[a.name,a]));
+const bar=document.getElementById('bar'),info=document.getElementById('info');
+let current,action;
+function play(key){
+  mixer.stopAllAction();
+  const src=key.startsWith('own:')?own[key.slice(4)]:clips[key].clip;
+  action=mixer.clipAction(src);action.play();current=key;
+  if(!key.startsWith('own:')){action.timeScale=Number(new URL(location.href).searchParams.get('ts')??1);}
+  for(const b of bar.querySelectorAll('button'))b.classList.toggle('on',b.dataset.k===key);
+}
+for(const k of [...Object.keys(clips),'own:Walk','own:Run']){
+  const b=document.createElement('button');b.textContent=k==='walk'?'MotionBricks-style walk (retargeted)':k==='run'?'MotionBricks-style run (retargeted)':'game '+k.slice(4);b.dataset.k=k;b.onclick=()=>play(k);bar.appendChild(b);
+}
+play(url.searchParams.get('clip')??'walk');
+window.__preview={hero,mixer,play,scene,T,bone:n=>hero.getObjectByName(n)};
+const clock=new T.Clock();
+function frame(){
+  const dt=clock.getDelta();mixer.update(dt);
+  const t=hero.getObjectByName('pelvis');const p=t.getWorldPosition(new T.Vector3());
+  const L=hero.getObjectByName('foot_l').getWorldPosition(new T.Vector3()),R=hero.getObjectByName('foot_r').getWorldPosition(new T.Vector3());
+  if(side){cam.position.set(4.2,1.1,p.z);cam.lookAt(0,.95,p.z);}else{cam.position.set(0,1.2,4.2);cam.lookAt(0,.95,0);}
+  info.textContent=`${current}  pelvis y ${p.y.toFixed(3)}  ankle L ${L.y.toFixed(3)} R ${R.y.toFixed(3)}`+(clips[current]?`  cycle ${clips[current].meta.cycleSeconds.toFixed(2)} s  source speed ${clips[current].meta.sourceSpeedMps.toFixed(2)} m/s`:'');
+  renderer.render(scene,cam);requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>

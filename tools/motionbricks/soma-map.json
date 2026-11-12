@@ -1,0 +1,32 @@
+{
+  "_about": "SOMA (MotionBricks, 30 model joints) -> 100GATE hero skeleton (MakeHuman, 53 bones). 'aim' is the child that defines the bone direction on each side; frames are built from aim + body lateral axis, so no rest-pose orientation conventions are needed.",
+  "root": { "soma": "Hips", "hero": "pelvis" },
+  "bones": [
+    { "hero": "pelvis",     "soma": "Hips",          "heroAim": "spine_01",   "somaAim": "Spine1",        "lateral": "pelvis" },
+    { "hero": "spine_01",   "soma": "Spine1",        "heroAim": "spine_02",   "somaAim": "Spine2",        "lateral": "pelvis" },
+    { "hero": "spine_02",   "soma": "Spine2",        "heroAim": "spine_03",   "somaAim": "Chest",         "lateral": "chest" },
+    { "hero": "spine_03",   "soma": "Chest",         "heroAim": "neck_01",    "somaAim": "Neck1",         "lateral": "chest" },
+    { "hero": "neck_01",    "soma": "Neck1",         "heroAim": "head",       "somaAim": "Head",          "lateral": "chest" },
+    { "hero": "head",       "soma": "Head",          "heroAimVector": [0, 0.878, 0.478], "somaAim": "EyesMid",     "lateral": "chest" },
+    { "hero": "clavicle_l", "soma": "LeftShoulder",  "heroAim": "upperarm_l", "somaAim": "LeftArm",       "lateral": "chest" },
+    { "hero": "upperarm_l", "soma": "LeftArm",       "heroAim": "lowerarm_l", "somaAim": "LeftForeArm",   "lateral": "chest" },
+    { "hero": "lowerarm_l", "soma": "LeftForeArm",   "heroAim": "hand_l",     "somaAim": "LeftHand",      "lateral": "chest" },
+    { "hero": "hand_l",     "soma": "LeftHand",      "heroAim": "middle_01_l","somaAim": "LeftHandMiddleEnd", "lateral": "chest" },
+    { "hero": "clavicle_r", "soma": "RightShoulder", "heroAim": "upperarm_r", "somaAim": "RightArm",      "lateral": "chest" },
+    { "hero": "upperarm_r", "soma": "RightArm",      "heroAim": "lowerarm_r", "somaAim": "RightForeArm",  "lateral": "chest" },
+    { "hero": "lowerarm_r", "soma": "RightForeArm",  "heroAim": "hand_r",     "somaAim": "RightHand",     "lateral": "chest" },
+    { "hero": "hand_r",     "soma": "RightHand",     "heroAim": "middle_01_r","somaAim": "RightHandMiddleEnd", "lateral": "chest" },
+    { "hero": "thigh_l",    "soma": "LeftLeg",       "heroAim": "calf_l",     "somaAim": "LeftShin",      "lateral": "pelvis" },
+    { "hero": "calf_l",     "soma": "LeftShin",      "heroAim": "foot_l",     "somaAim": "LeftFoot",      "lateral": "pelvis" },
+    { "hero": "foot_l",     "soma": "LeftFoot",      "heroAim": "ball_l",     "somaAim": "LeftToeBase",   "lateral": "pelvis" },
+    { "hero": "thigh_r",    "soma": "RightLeg",      "heroAim": "calf_r",     "somaAim": "RightShin",     "lateral": "pelvis" },
+    { "hero": "calf_r",     "soma": "RightShin",     "heroAim": "foot_r",     "somaAim": "RightFoot",     "lateral": "pelvis" },
+    { "hero": "foot_r",     "soma": "RightFoot",     "heroAim": "ball_r",     "somaAim": "RightToeBase",  "lateral": "pelvis" }
+  ],
+  "keepRest": ["ball_l", "ball_r", "index_*", "middle_*", "ring_*", "pinky_*", "thumb_*"],
+  "virtualJoints": { "EyesMid": ["LeftEye", "RightEye"] },
+  "_headAim": "The model has no HeadEnd joint. The head aim is Head -> midpoint of the eyes; in SOMA's rest pose that is 28.6 deg forward of vertical (BVH offsets 4.45 cm forward, 8.15 cm up), so the hero side uses the same tilt: [0, cos, sin] = [0, 0.878, 0.478].",
+  "unmatchedSomaJoints": ["Neck2 (folded into neck_01/head)", "Jaw", "LeftEye/RightEye (only used for the head aim)", "*HandThumbEnd (no end bone on hero)"],
+  "pelvisLateral": { "left": "thigh_l", "right": "thigh_r", "somaLeft": "LeftLeg", "somaRight": "RightLeg" },
+  "chestLateral":  { "left": "clavicle_l", "right": "clavicle_r", "somaLeft": "LeftShoulder", "somaRight": "RightShoulder" }
+}

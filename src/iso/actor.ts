@@ -1,5 +1,6 @@
 import * as T from 'three'
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js'
+import { loadGaitClips } from './motionbricks'
 import { clone } from 'three/addons/utils/SkeletonUtils.js'
 
 const ASSET = 'assets/iso/alexei-10.glb'
@@ -70,7 +71,7 @@ export type IsoActor = {
 
 type GripOffset = { position: number[]; quaternion: number[]; scale: number[] }
 type Props = { flashlight?: T.Object3D; backpack?: T.Object3D; straps?: T.Object3D; grip?: GripOffset }
-type Shared = { gripPose: Map<string, T.Quaternion>; source: GLTF; idle: T.AnimationClip; walk: T.AnimationClip; run: T.AnimationClip; crouchIdle: T.AnimationClip; crouchWalk: T.AnimationClip; props: Props; references: number }
+type Shared = { gripPose: Map<string, T.Quaternion>; source: GLTF; idle: T.AnimationClip; walk: T.AnimationClip; run: T.AnimationClip; crouchIdle: T.AnimationClip; crouchWalk: T.AnimationClip; gait?: { walk: T.AnimationClip; run: T.AnimationClip; walkCycles: number; runCycles: number; crouch?: T.AnimationClip; crouchCycles: number }; props: Props; references: number }
 let sharedPromise: Promise<Shared> | undefined
 
 function disposeSource(source: T.Object3D) {
@@ -136,7 +137,7 @@ function loadShared(): Promise<Shared> {
     for (const track of T.AnimationClip.findByName(source.animations, 'Hold')?.tracks ?? []) {
       if (track instanceof T.QuaternionKeyframeTrack) gripPose.set(track.name.replace('.quaternion', ''), new T.Quaternion().fromArray(track.values, 0))
     }
-    return loadProps().then(props => ({ gripPose, source, idle, walk, run, crouchIdle, crouchWalk, props, references: 0 }))
+    return Promise.all([loadProps(), loadGaitClips(bones, import.meta.env.BASE_URL, { walk: WALK_STRIDE, run: RUN_STRIDE, crouch: CROUCH_STRIDE })]).then(([props, gait]) => ({ gripPose, source, idle, walk, run, crouchIdle, crouchWalk, gait, props, references: 0 }))
   }).catch(error => {
     sharedPromise = undefined
     throw error
@@ -198,12 +199,12 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
   shared.references++
   const mixer = new T.AnimationMixer(body)
   const idle = mixer.clipAction(shared.idle).play().setEffectiveWeight(1)
-  const walk = mixer.clipAction(shared.walk).play().setEffectiveWeight(0)
-  const run = mixer.clipAction(shared.run).play().setEffectiveWeight(0)
+  const walk = mixer.clipAction(shared.gait?.walk ?? shared.walk).play().setEffectiveWeight(0)
+  const run = mixer.clipAction(shared.gait?.run ?? shared.run).play().setEffectiveWeight(0)
   const cidle = mixer.clipAction(shared.crouchIdle).play().setEffectiveWeight(0)
-  const cwalk = mixer.clipAction(shared.crouchWalk).play().setEffectiveWeight(0)
+  const cwalk = mixer.clipAction(shared.gait?.crouch ?? shared.crouchWalk).play().setEffectiveWeight(0)
   idle.paused = walk.paused = run.paused = cidle.paused = cwalk.paused = true
-  let crouchTarget = 0, crouchW = 0, crouchPhase = 0
+  let crouchTarget = 0, crouchW = 0, crouchPhase = 0, gaitCycle = 0, lastPhase = 0
   const chest = joints.get('spine_03'), head = joints.get('head')
   const arm = {
     upper: joints.get('upperarm_r'), lower: joints.get('lowerarm_r'), hand: joints.get('hand_r'),
@@ -386,11 +387,17 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     root.position.set(x, 0, z)
     root.rotation.y = motion.yaw
     const clipTime = motion.phase * shared.walk.duration
-    walk.time = run.time = clipTime
+    if (shared.gait) {
+      // A baked clip may span several stride cycles: accumulate the unwrapped phase and spread it over the whole clip.
+      gaitCycle = (gaitCycle + ((motion.phase - lastPhase + 1.5) % 1 - .5) + 1e6) % 1e6
+      lastPhase = motion.phase
+      walk.time = (gaitCycle / shared.gait.walkCycles % 1) * shared.gait.walk.duration
+      run.time = (gaitCycle / shared.gait.runCycles % 1) * shared.gait.run.duration
+    } else walk.time = run.time = clipTime
     const g = motion.walkWeight < .002 ? 0 : motion.walkWeight
     crouchW = T.MathUtils.damp(crouchW, crouchTarget, 9, dt)
     if (motion.moving) crouchPhase = (crouchPhase + dt * clamp(speed, 0, 3) / CROUCH_STRIDE) % 1
-    cwalk.time = crouchPhase * shared.crouchWalk.duration
+    cwalk.time = shared.gait?.crouch ? (crouchPhase / shared.gait.crouchCycles % 1) * shared.gait.crouch.duration : crouchPhase * shared.crouchWalk.duration
     const stand = 1 - crouchW
     idle.setEffectiveWeight((1 - g) * stand)
     walk.setEffectiveWeight(g * (1 - motion.runWeight) * stand)
