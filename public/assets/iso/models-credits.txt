@@ -7,11 +7,3 @@ Licensed under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/). Commerci
 "Antique Book with Quill and Key" by E.Dejnes (https://sketchfab.com/E.Dejnes)
 https://sketchfab.com/3d-models/antique-book-with-quill-and-key-6be47f12c73342ef9232e29f71e0fa76
 Licensed under CC BY-NC 4.0 (http://creativecommons.org/licenses/by-nc/4.0/). Credit required, NO commercial use.
-
-Textures (assets/iso/tex)
-"Worn Plaster Wall", "Painted Plaster Wall", "Fine Grained Wood", "Green Metal Rust" from Poly Haven (https://polyhaven.com)
-Licensed CC0 (public domain). No attribution required; credited here as thanks.
-
-Reference only (not shipped)
-"Rigged Arms W Flashlight" by Flxz1337 (https://sketchfab.com/tomycrepin), CC BY 4.0 - studied for the diagonal
-flashlight grip; none of its geometry, skeleton or textures is included in the game.
