@@ -1,4 +1,5 @@
 import * as T from 'three';
+import { clone } from 'three/addons/utils/SkeletonUtils.js';
 
 /** Eye heights in metres (hero is ~1.78 m tall). */
 export const EYE_STAND = 1.64;
@@ -7,73 +8,115 @@ const clamp = T.MathUtils.clamp;
 const damp = T.MathUtils.damp;
 
 /**
- * The held flashlight and hand, drawn as a separate viewmodel: its own scene, a fixed-FOV camera and a
- * depth clear, so it never sinks into walls. The hand is the hero's own posed hand (built in Blender),
- * the beam is a SpotLight in the main scene that follows the lens of this model.
+ * The first-person viewmodel: the hero's own skinned body with its armature, rendered in a separate scene
+ * with a fixed-FOV camera and a depth clear, so it never sinks into walls. Nothing is cut out of the mesh:
+ * the faces that do not belong to the right arm sit in the `VM_hide` material and are simply not drawn.
+ * The camera sits at the eye of that model (head bone), so the shoulder is behind the camera and the
+ * arm enters the frame from the lower right. Poses come from the Blender actions flashlight_idle,
+ * flashlight_walk and flashlight_raise.
  */
 export class ViewModel {
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(64, 1, .01, 5);
   private readonly pivot = new T.Group();
   private readonly model = new T.Group();
-  private switchNode?: T.Object3D;
-  private switchRest = new T.Vector3();
+  private mixer?: T.AnimationMixer;
+  private idle?: T.AnimationAction; private walk?: T.AnimationAction; private raise?: T.AnimationAction;
+  private lensNode?: T.Object3D;
   private readonly lensLocal = new T.Vector3();
   private lagYaw = 0; private lagPitch = 0; private prevYaw = 0; private prevPitch = 0; private started = false;
-  private shown = 0;
+  private shown = 0; private wasShown = false; private raiseT = 9; private walkW = 0; private rig?: T.Object3D;
   private readonly tmp = new T.Vector3();
   ready = false;
 
-  constructor(source?: T.Object3D) {
+  constructor(source?: { scene: T.Object3D; animations: T.AnimationClip[] }) {
     this.scene.add(this.camera, this.pivot);
     this.pivot.add(this.model);
     this.scene.add(new T.HemisphereLight(0xfff2dc, 0x25272c, 1.5));
     const key = new T.DirectionalLight(0xffe2b8, 2.0); key.position.set(-.6, 1, .8); this.scene.add(key);
     if (!source) return;
-    const m = source.clone(true);
-    m.traverse(o => { if (o instanceof T.Mesh) { o.frustumCulled = false; o.castShadow = o.receiveShadow = false; } });
-    // The model was exported with the beam along +Z; the camera looks down -Z.
-    this.model.add(m); this.model.rotation.y = Math.PI;
-    const light = m.getObjectByName('VM_Flashlight');
-    if (light) {
-      const box = new T.Box3().setFromObject(light), c = box.getCenter(new T.Vector3());
-      this.lensLocal.set(c.x, c.y, box.max.z);
+    const rig = clone(source.scene);
+    rig.traverse(o => {
+      if (!(o instanceof T.Mesh)) return;
+      o.frustumCulled = false; o.castShadow = o.receiveShadow = false;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      if (mats.some(m => m.name === 'VM_hide')) o.visible = false;
+    });
+    this.rig = rig;
+    this.model.add(rig);
+    this.mixer = new T.AnimationMixer(rig);
+    const act = (name: string) => { const c = T.AnimationClip.findByName(source.animations, name); return c ? this.mixer!.clipAction(c) : undefined; };
+    this.idle = act('flashlight_idle'); this.walk = act('flashlight_walk'); this.raise = act('flashlight_raise');
+    if (!this.idle) return;
+    this.idle.play().setEffectiveWeight(1);
+    this.walk?.play().setEffectiveWeight(0);
+    if (this.raise) { this.raise.setLoop(T.LoopOnce, 1); this.raise.clampWhenFinished = true; this.raise.play().setEffectiveWeight(0); }
+    this.mixer.update(0); rig.updateMatrixWorld(true);
+    // Eye = head bone plus a hand's width forward and a little up. The rig is placed so that point is the camera
+    // origin (the model faces +Z, the camera looks down -Z, so the model is turned half a turn).
+    const head = rig.getObjectByName('head');
+    const eye = (head ? head.getWorldPosition(new T.Vector3()) : new T.Vector3(0, 1.6, 0)).add(new T.Vector3(0, .041, .09));
+    rig.position.sub(eye);
+    this.model.rotation.y = Math.PI;
+    // The flashlight hangs under the right hand bone: the beam runs along its local +X, out of the wide end.
+    const body = rig.getObjectByName('Flashlight');
+    if (body) {
+      this.lensNode = body;
+      const box = new T.Box3(); body.traverse(o => { if (o instanceof T.Mesh) { o.geometry.computeBoundingBox(); box.union(o.geometry.boundingBox!); } });
+      this.lensLocal.set(box.max.x, (box.min.y + box.max.y) / 2, (box.min.z + box.max.z) / 2);
     }
-    this.switchNode = m.getObjectByName('VM_Switch') ?? undefined;
-    if (this.switchNode) this.switchRest.copy(this.switchNode.position);
     this.ready = true;
     this.pivot.visible = false;
   }
 
-  update(i: { dt: number; time: number; yaw: number; pitch: number; bobX: number; bobY: number; hold: number; press: number; kick: number; run: boolean }) {
-    if (!this.ready) return;
+  update(i: { dt: number; time: number; yaw: number; pitch: number; hold: number; press: number; kick: number; speed: number; run: boolean }) {
+    if (!this.ready || !this.mixer) return;
     const dt = clamp(i.dt, 0, .1);
-    this.shown = damp(this.shown, i.hold, 6, dt);
+    this.shown = damp(this.shown, i.hold, 7, dt);
+    const on = i.hold > .5;
+    if (on && !this.wasShown && this.raise) { this.raise.reset(); this.raise.play(); this.raiseT = 0; }
+    this.wasShown = on;
     this.pivot.visible = this.shown > .015;
+    // Blend idle / walk by ground speed; the raise clip takes over for half a second after pickup.
+    const moving = clamp((i.speed - .15) / .8, 0, 1);
+    this.walkW = damp(this.walkW, moving, 8, dt);
+    this.walk?.setEffectiveWeight(this.walkW); this.idle?.setEffectiveWeight(1 - this.walkW);
+    if (this.walk) this.walk.timeScale = clamp(i.speed / 1.4, .6, 1.9);
+    if (this.raise) {
+      this.raiseT += dt;
+      const dur = this.raise.getClip().duration;
+      this.raise.setEffectiveWeight(this.raiseT < dur ? 1 : Math.max(0, 1 - (this.raiseT - dur) / .12));
+    }
+    this.mixer.update(dt);
     const dyaw = this.started ? Math.atan2(Math.sin(i.yaw - this.prevYaw), Math.cos(i.yaw - this.prevYaw)) : 0;
     const dpitch = this.started ? i.pitch - this.prevPitch : 0;
     this.prevYaw = i.yaw; this.prevPitch = i.pitch; this.started = true;
+    // The arm trails the turn a little and settles back.
     this.lagYaw = damp(this.lagYaw + dyaw * .9, 0, 6, dt);
     this.lagPitch = damp(this.lagPitch + dpitch * .9, 0, 6, dt);
     const out = 1 - this.shown, push = Math.sin(Math.PI * clamp(i.press, 0, 1)), reach = Math.sin(Math.PI * clamp(i.kick, 0, 1));
-    // Lower right corner: just the hand and the back/side of the flashlight, the centre of the view stays clear.
-    this.pivot.scale.setScalar(1.12);
-    this.pivot.position.set(.29 + i.bobX * .8 + clamp(this.lagYaw, -.1, .1) * .7, -.2 + i.bobY * .8 - out * .5 - push * .008 - clamp(this.lagPitch, -.08, .08) * .5,
-      -.4 - reach * .12 + (i.run ? .03 : 0));
-    this.pivot.rotation.set(.2 + out * .7 + this.lagPitch * .6 + (i.run ? .08 : 0), .13 + this.lagYaw * .8, -.16 - out * .3, 'YXZ');
-    if (this.switchNode) this.switchNode.position.set(this.switchRest.x, this.switchRest.y - .004 * push, this.switchRest.z);
+    this.pivot.position.set(clamp(this.lagYaw, -.1, .1) * .5, -out * .35 - push * .006 - clamp(this.lagPitch, -.08, .08) * .4, -reach * .1);
+    this.pivot.rotation.set(this.lagPitch * .5 + out * .5, this.lagYaw * .6, -out * .2, 'YXZ');
+    this.rig?.updateMatrixWorld(true);
   }
 
   /** Lens position and beam direction in the camera space of the main view. */
   lensPose() {
-    if (!this.ready || !this.pivot.visible) return undefined;
+    if (!this.ready || !this.pivot.visible || !this.lensNode) return undefined;
     this.pivot.updateMatrixWorld(true);
-    const position = this.lensLocal.clone().applyMatrix4(this.model.matrixWorld);
-    const direction = this.tmp.set(0, 0, 1).transformDirection(this.model.matrixWorld).clone(); // local +Z = beam
+    const position = this.lensNode.localToWorld(this.lensLocal.clone());
+    const direction = this.tmp.set(1, 0, 0).transformDirection(this.lensNode.matrixWorld).clone();
     return { position, direction };
   }
 
-  setAspect(a: number) { if (Math.abs(this.camera.aspect - a) > 1e-4) { this.camera.aspect = a; this.camera.updateProjectionMatrix(); } }
+  /** The horizontal field of view stays about 90 degrees, so the hand keeps its place in the lower right corner on any window shape. */
+  setAspect(a: number) {
+    if (Math.abs(this.camera.aspect - a) > 1e-4) {
+      this.camera.aspect = a;
+      this.camera.fov = clamp(T.MathUtils.radToDeg(2 * Math.atan(Math.tan(Math.PI / 4) / a)), 50, 90);
+      this.camera.updateProjectionMatrix();
+    }
+  }
 
   draw(renderer: T.WebGLRenderer) {
     if (!this.ready || !this.pivot.visible) return;
@@ -111,7 +154,7 @@ export class FpRig {
 
   readonly vm: ViewModel;
 
-  constructor(scene: T.Scene, model?: T.Object3D) {
+  constructor(scene: T.Scene, model?: { scene: T.Object3D; animations: T.AnimationClip[] }) {
     this.vm = new ViewModel(model);
     this.camera.name = 'First-person eye';
     this.camera.rotation.order = 'YXZ';
@@ -147,7 +190,7 @@ export class FpRig {
     this.camera.updateMatrixWorld(true);
 
     this.prevYaw = i.yaw; this.prevPitch = i.pitch; this.started = true;
-    this.vm.update({ dt, time: i.time, yaw: i.yaw, pitch: i.pitch, bobX: bobX * .7, bobY: bobY * .7, hold: i.hasLight && i.lightOn ? 1 : 0, press: i.press, kick: i.kick, run });
+    this.vm.update({ dt, time: i.time, yaw: i.yaw, pitch: i.pitch, hold: i.hasLight && i.lightOn ? 1 : 0, press: i.press, kick: i.kick, speed: i.speed, run });
     this.camera.updateMatrixWorld(true);
   }
 

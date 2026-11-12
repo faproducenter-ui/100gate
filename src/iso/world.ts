@@ -8,13 +8,13 @@ import {BATTERIES,DOORS,OBJECTS,ROOMS,roomAt,withinReach,type DoorId,type DoorSt
 import type {CameraId,CCTVView,Save,Settings} from './contracts';
 
 type Cast=Awaited<ReturnType<typeof loadActor>>;
-type Decor={key?:T.Object3D;book?:T.Object3D;viewmodel?:T.Object3D};
+type Decor={key?:T.Object3D;book?:T.Object3D;viewmodel?:{scene:T.Object3D;animations:T.AnimationClip[]}};
 async function loadDecor():Promise<Decor>{
-  const load=async(path:string)=>{
-    try{return (await new GLTFLoader().loadAsync(import.meta.env.BASE_URL+path)).scene;}catch{return undefined;}
+  const gltf=async(path:string)=>{
+    try{return await new GLTFLoader().loadAsync(import.meta.env.BASE_URL+path);}catch{return undefined;}
   };
-  const [key,book,viewmodel]=await Promise.all([load('assets/iso/key-tag.glb'),load('assets/iso/antique-book.glb'),load('assets/iso/viewmodel.glb')]);
-  return {key,book,viewmodel};
+  const [key,book,viewmodel]=await Promise.all([gltf('assets/iso/key-tag.glb'),gltf('assets/iso/antique-book.glb'),gltf('assets/iso/viewmodel-2.glb')]);
+  return {key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations}};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
   direction:Point;speed:number;target:ObjectId|null;drawer:boolean;
