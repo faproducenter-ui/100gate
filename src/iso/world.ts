@@ -8,13 +8,13 @@ import {BATTERIES,DOORS,OBJECTS,ROOMS,roomAt,withinReach,type DoorId,type DoorSt
 import type {CameraId,CCTVView,Save,Settings} from './contracts';
 
 type Cast=Awaited<ReturnType<typeof loadActor>>;
-type Decor={key?:T.Object3D;book?:T.Object3D};
+type Decor={key?:T.Object3D;book?:T.Object3D;viewmodel?:T.Object3D};
 async function loadDecor():Promise<Decor>{
   const load=async(path:string)=>{
     try{return (await new GLTFLoader().loadAsync(import.meta.env.BASE_URL+path)).scene;}catch{return undefined;}
   };
-  const [key,book]=await Promise.all([load('assets/iso/key-tag.glb'),load('assets/iso/antique-book.glb')]);
-  return {key,book};
+  const [key,book,viewmodel]=await Promise.all([load('assets/iso/key-tag.glb'),load('assets/iso/antique-book.glb'),load('assets/iso/viewmodel.glb')]);
+  return {key,book,viewmodel};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
   direction:Point;speed:number;target:ObjectId|null;drawer:boolean;
@@ -174,7 +174,7 @@ export class IsoWorld {
     for(const [id,prop] of this.batteryProps)this.env.targets[id]=prop;
     this.listener={x:0,z:0};
     this.cast=actor;
-    this.fps=new FpRig(this.scene);
+    this.fps=new FpRig(this.scene,decor.viewmodel);
     this.scene.add(actor.root);
     this.echoes={hero:actor.createEcho('hero'),staff:actor.createEcho('staff'),shadow:actor.createEcho('shadow')};
     for(const echo of Object.values(this.echoes)){echo.root.visible=false;this.scene.add(echo.root);}
@@ -327,7 +327,7 @@ export class IsoWorld {
     this.darkness=T.MathUtils.damp(this.darkness,lit?1:.3,3,dt);
     this.hemi.intensity=1.05*this.darkness;this.sun.intensity=1.55*this.darkness;
     this.flashlightProp.visible=!has;
-    this.cast.setGear({flashlight:has,on:state.lightOn&&state.charge>0});
+    this.cast.setGear({flashlight:has&&!(fp&&this.fps.vm.ready),on:state.lightOn&&state.charge>0});
     this.listener={x:state.x,z:state.z};
     if(this.deskKey&&this.cabinetKey){
       const hangVisible=!state.items.includes('technicalKey'),lieVisible=state.archiveClue&&!state.items.includes('archiveKey');
@@ -345,9 +345,9 @@ export class IsoWorld {
     const weak=state.charge<15?.72+.28*Math.sin(time*37)*Math.sin(time*11.3):1;
     const shadows=settings.shadows&&settings.quality!=='low';
     if(this.beam.castShadow!==shadows)this.beam.castShadow=shadows;
-    this.beam.intensity=on?(fp?26:60)*weak:0;this.glow.intensity=on?(fp?.7:3)*weak:0;this.beam.angle=fp?.5:.62;
+    this.beam.intensity=on?(fp?26:60)*weak:0;this.glow.intensity=on?(fp?.7:3)*weak:0;this.beam.angle=fp?.44:.62;this.beam.penumbra=fp?.4:.6;
     if(on){
-      const {x,z}=state,d=frame.direction,lens=this.cast.flashlightPose();
+      const {x,z}=state,d=frame.direction,lens=fp?this.fps.beamPose():this.cast.flashlightPose();
       if(lens){
         this.beam.position.copy(lens.position);
         this.beam.target.position.copy(lens.position).addScaledVector(lens.direction,3);
@@ -391,6 +391,7 @@ export class IsoWorld {
     if(fp){
       this.mark.visible=false;
       this.renderer.render(this.scene,this.fps.camera);
+      this.fps.vm.draw(this.renderer);
       return;
     }
     const id=roomAt(state.x,state.z)??'corridor',r=ROOMS[id];
