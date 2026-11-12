@@ -13,6 +13,8 @@ export interface Save {
   anomaly:boolean;
   /** Optional side system: flashlight charge 0..100, spare batteries, picked-up battery ids. */
   lightOn:boolean;charge:number;spare:number;taken:string[];
+  /** Props put down by hand: world pose [x,y,z,qx,qy,qz,qw]; a dropped flashlight remembers if it was lit. */
+  props?:Partial<Record<'flashlight',number[]>>;flashlightLit?:boolean;
 }
 export type Settings={
   quality:'low'|'medium'|'high';scale:number;shadows:boolean;ambient:boolean;motion:boolean;reducedFlicker:boolean;

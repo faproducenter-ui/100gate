@@ -73,6 +73,29 @@ function surface(kind:Surface,pass:Pass) {
   },pass==='color');
 }
 
+/**
+ * Scanned CC0 surfaces from Poly Haven (polyhaven.com, licence CC0): worn plaster, painted plaster,
+ * fine-grained wood and rusted green metal. Loaded once and shared; UVs are box-projected in metres.
+ */
+type Scan='worn_plaster_wall'|'painted_plaster_wall'|'fine_grained_wood'|'green_metal_rust';
+const scans=new Map<Scan,{map:T.Texture;normalMap:T.Texture;roughnessMap:T.Texture}>();
+function scan(name:Scan){
+  const prior=scans.get(name);if(prior)return prior;
+  const base=(import.meta.env?.BASE_URL??'/')+'assets/iso/tex/'+name;
+  const loader=new T.TextureLoader();
+  const load=(suffix:string,srgb:boolean)=>{
+    const canLoad=typeof document!=='undefined'&&typeof document.createElementNS==='function';
+    const t=canLoad?loader.load(base+suffix):new T.Texture();   // headless tests: no image loading
+    t.wrapS=t.wrapT=T.RepeatWrapping;t.colorSpace=srgb?T.SRGBColorSpace:T.NoColorSpace;t.anisotropy=8;return t;
+  };
+  const set={map:load(name==='fine_grained_wood'?'_col.jpg':'_diff.jpg',true),normalMap:load('_nor_gl.jpg',false),roughnessMap:load('_rough.jpg',false)};
+  scans.set(name,set);return set;
+}
+export function scanned(name:string,source:Scan,color:number,roughness:number,tile:number,metalness=0,relief=1){
+  const m=new T.MeshStandardMaterial({name,color,roughness,metalness,...scan(source),normalScale:new T.Vector2(relief,relief)});
+  m.userData.tile=tile;
+  return m;
+}
 export function materials(){
   const pair=(kind:Surface)=>[surface(kind,'color'),surface(kind,'normal'),surface(kind,'rough')] as const;
   const skins:Record<Surface,readonly [T.Texture,T.Texture,T.Texture]>={
@@ -109,18 +132,18 @@ export function materials(){
   const shadow=new T.MeshBasicMaterial({name:'Soft contact occlusion',map:shadowTex,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1});
   return {
     label,shadow,
-    plaster:mat('Chalk plaster',0xbab6a7,.93,'plaster'),
-    paint:mat('Worn lower sage enamel',0x59675c,.68,'plaster'),
-    trim:mat('Flaking skirting',0x40372d,.89,'wood'),
-    ceiling:mat('Exposed wall cut',0x30302c,.95,'plaster'),
+    plaster:scanned('Chalk plaster','worn_plaster_wall',0xd2cbbb,1,1.7),
+    paint:scanned('Worn lower sage enamel','painted_plaster_wall',0x8a9a8c,.75,1.3,0,.8),
+    trim:scanned('Flaking skirting','fine_grained_wood',0x5c4a3a,.85,.7),
+    ceiling:scanned('Exposed wall cut','worn_plaster_wall',0x4a4842,1,1.7),
     grout:mat('Charcoal mineral grout',0x393631,.96,'plaster'),
     floor:mat('Glazed square stone',0xffffff,.71,'ceramic'),
-    wood:mat('Worn oak veneer',0x745537,.66,'wood'),
-    paleWood:mat('Scraped birch edges',0x8c714d,.73,'wood'),
-    veneer:mat('Tobacco veneer',0x523c2c,.76,'wood'),
-    rust:mat('Rust blooms',0x6b4330,.83,'metal',.23),
+    wood:scanned('Worn oak veneer','fine_grained_wood',0xc9ae8c,.7,.9),
+    paleWood:scanned('Scraped birch edges','fine_grained_wood',0xe2cfb2,.75,.9),
+    veneer:scanned('Tobacco veneer','fine_grained_wood',0x8a6c55,.78,.9),
+    rust:scanned('Rust blooms','green_metal_rust',0xc08a68,.9,.6,.2),
     steel:mat('Oiled grey steel',0x625f51,.57,'metal',.35),
-    greenSteel:mat('Oxidized cabinet enamel',0x3c4742,.65,'metal',.34),
+    greenSteel:scanned('Oxidized cabinet enamel','green_metal_rust',0xaab8b0,.75,.7,.3),
     dark:mat('Rubber and blackened steel',0x272824,.83,'plastic'),
     silver:mat('Tarnished alloy',0x999181,.45,'metal',.53),
     beige:mat('Yellowed ABS',0xb2a180,.64,'plastic'),

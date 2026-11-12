@@ -3,7 +3,7 @@ import {IsoInterface} from './Interface';
 import {IsoWorld} from './world';
 import {IsoSound} from './sound';
 import {OBJECTS,doorFor,movePlayer,roomAt,withinReach,type ObjectId,type Point} from './map';
-import {act,activeQuest,cctvDuration,drainLight,getSave,toggleLight,isEvidence,newSave,pressLine,readSettings,recordEvidence,sanitizeSettings,SAVE_KEY,SETTINGS_KEY,write} from './state';
+import {act,activeQuest,dropFlashlight,cctvDuration,drainLight,getSave,toggleLight,isEvidence,newSave,pressLine,readSettings,recordEvidence,sanitizeSettings,SAVE_KEY,SETTINGS_KEY,write} from './state';
 import type {CCTVView,DocumentView,Mode,Panel,Save,UIAction} from './contracts';
 
 const startCCTV=():CCTVView=>({camera:'reception',tape:'shift',time:0,duration:24,playing:false,availableFuture:false,evidence:false,zoom:false});
@@ -65,6 +65,18 @@ export default function IsoPage(){
     };
     const use=(id:ObjectId|null)=>{
       if(!id||mode!=='play'||panel||!withinReach(id,state,fpOn()?.7:0))return;
+      // Hand-held props are taken by the hand: reach, close the fingers, and only then does it count as picked up.
+      if(id==='flashlight'&&world&&!state.items.includes('flashlight')){
+        if(world.handPhase==='idle')world.beginPickup(()=>{commit('flashlight');sound.cue('ui',settings);});
+        return;
+      }
+      commit(id);
+    };
+    const drop=()=>{
+      if(mode!=='play'||panel||!world||!state.items.includes('flashlight'))return;
+      world.beginDrop(pose=>{apply(dropFlashlight(state,pose));persist();emit();});
+    };
+    const commit=(id:ObjectId)=>{
       const before=state,after=act(state,id);
       kick=0;
       const door=doorFor[id];
@@ -88,6 +100,8 @@ export default function IsoPage(){
       state=restore&&active?active:newSave();
       if(coarse){try{void surface.parentElement?.requestFullscreen?.().catch(()=>{});void (screen.orientation as unknown as {lock?:(o:string)=>Promise<void>}).lock?.('landscape').catch(()=>{});}catch{/* optional */}}
       yaw=START_YAW;pitch=-.06;vx=vz=0;stamina=1;tired=false;
+      world.syncPickups(state);
+      world.onPropSettled=(id,pose)=>{if(!state.items.includes(id)){state={...state,props:{...state.props,[id]:pose}};persist();}};
       mode=state.finished?'complete':'play';target=null;notice='';setPanel(null);persist();emit();
     };
     async function load(){
@@ -191,7 +205,7 @@ export default function IsoPage(){
       }
       if(panel||mode!=='play'||(e.target instanceof HTMLInputElement))return;
       if(e.code===settings.keys.light){e.preventDefault();if(!e.repeat)flash();return;}
-      if(e.code==='KeyV'){e.preventDefault();if(!e.repeat)dispatch.current({type:'settings',patch:{view:fpOn()?'iso':'fps'}});return;}
+      if(e.code==='KeyG'){e.preventDefault();if(!e.repeat)drop();return;}
       if(fpOn()&&e.code.startsWith('Arrow')){e.preventDefault();keys.add(e.code);return;}
       if(e.code==='Tab'||e.code==='KeyJ'||e.code===settings.keys.interact){
         e.preventDefault();if(e.repeat)return;
@@ -253,8 +267,10 @@ export default function IsoPage(){
           const wantsRun=(keys.has(k.sprint)||tsprint)&&moving&&mz<0&&crouch<.3&&!tired&&stamina>0;
           if(wantsRun){stamina=Math.max(0,stamina-dt*.2);if(stamina<=0)tired=true;}
           else{stamina=Math.min(1,stamina+dt*(moving?.1:.18));if(tired&&stamina>.3)tired=false;}
-          const top=(wantsRun?3.0:crouch>.5?.85:1.45)*(mz>0?.7:1)*(mx&&!mz?.88:1);
-          const rate=moving?10:13;
+          const top=(wantsRun?2.7:crouch>.5?.85:1.4)*(mz>0?.7:1)*(mx&&!mz?.88:1);
+          // A body has mass: a walk builds up over ~.4 s, a run over ~.6 s, and a stop takes a step or so.
+          const speeding=Math.hypot(wx*top,wz*top)>Math.hypot(vx,vz);
+          const rate=!moving?6.5:speeding?(wantsRun?3.2:5):7;
           const blend=1-Math.exp(-dt*rate);
           vx+=(wx*top-vx)*blend;vz+=(wz*top-vz)*blend;
           const p=movePlayer(state,vx*dt,vz*dt,world.walkableDoors);

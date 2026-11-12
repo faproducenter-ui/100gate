@@ -2,7 +2,7 @@ import * as T from 'three';
 import {DOORS,FURNITURE,OBJECTS,RECEPTION_PORTAL,ROOMS,type DoorId,type ObjectId,type RoomId} from './map';
 import {materials,random,type KitMaterials} from './env-materials';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
-import {box,cardboard,cassette,chair,consolidate,crt,curve,cylinder,desk,filing,group,keyboard,paperStack,phone,plate,shelf,vcr} from './env-kit';
+import {box,boxProjectUV,cardboard,cassette,chair,consolidate,crt,curve,cylinder,desk,filing,group,keyboard,paperStack,phone,plate,shelf,vcr} from './env-kit';
 
 type Rect=typeof ROOMS[RoomId];
 type Furniture=typeof FURNITURE[number];
@@ -80,8 +80,10 @@ function wall(parent:T.Group,m:KitMaterials,axis:'x'|'z',constant:number,lo:numb
   }
   if(!full)return;
   const rng=random(seed);
-  for(let i=0;i<Math.round(w*7);i++){
-    const x=cx+(rng()-.5)*(w-.035),y=.12+rng()*1.65,worn=y<wallY?m.plaster:m.trim;
+  // Chipped paint only where it really chips: on the painted dado (knocked by chairs and boots), showing
+  // the plaster underneath. The whitewashed upper wall has no dark specks.
+  for(let i=0;i<Math.round(w*2.2);i++){
+    const x=cx+(rng()-.5)*(w-.035),y=.1+rng()*(wallY-.2),worn=m.plaster;
     for(const side of [-1,1]){
       const flake=box(g,worn,x,y,side*(WALL_D*.5+.001),.008+rng()*.065,.008+rng()*.029,.002);
       flake.rotation.z=(rng()-.5)*.92;
@@ -89,7 +91,11 @@ function wall(parent:T.Group,m:KitMaterials,axis:'x'|'z',constant:number,lo:numb
   }
 }
 
+/** Doorways that get the modelled frame (jambs + casings) from the door kit instead of the box frame. */
+let portals:{x:number;z:number;half:number}[]=[],modelFrames=false;
 function frame(parent:T.Group,m:KitMaterials,x:number,z:number,half:number,h=2.25){
+  portals.push({x,z,half});
+  if(modelFrames){forFp(box(parent,m.plaster,x,(h+WALL_H)/2,z,WALL_D,WALL_H-h,half*2+.2));return;}
   for(const side of [-1,1]){
     box(parent,m.veneer,x,h*.5,z+side*(half+.024),.215,h,.080,.008);
     box(parent,m.paleWood,x,h*.5,z+side*(half+.067),.223,h,.018,.003);
@@ -118,8 +124,10 @@ function corridorWalls(p:T.Group,m:KitMaterials){
   wall(p,m,'z',r.minZ,r.minX,r.maxX,WALL_H,903);
   wall(p,m,'z',r.maxZ,r.minX,r.maxX,NEAR_H,904);
   plate(p,m.label(['ЭТАЖ 01','АДМИНИСТРАЦИЯ'],'#7c744f','#282e2b'),1.15,1.70,-4.91,.82,.38);
-  for(const z of [-3.73,2.58]){
-    // Room-number plates sit flush on the wall face (walls are WALL_D thick, centred on x=0 / x=2.4).
+  // Room-number plates are screwed to the wall beside the door frame (on the corridor side of it), never
+  // onto the door opening itself, so they stay on the wall when the door swings open.
+  const half=DOORS.technical.half,clear=half+.115+.13;
+  for(const z of [DOORS.technical.z+clear,RECEPTION_PORTAL.z-clear]){
     for(const x of [WALL_D/2+.004,2.4-WALL_D/2-.004]){
       const sign=plate(p,m.label([z<0?(x<1?'02':'04'):(x<1?'01':'03')],'#333c36','#a59971',128,64),x,1.44,z,.19,.1);
       sign.rotation.y=x<1?Math.PI/2:-Math.PI/2;
@@ -249,10 +257,12 @@ export type AdminEnvironment={
   fpOnly:T.Mesh[]; isoOnly:T.Mesh[];
   root:T.Group; doors:Record<DoorId,T.Group>; targets:Partial<Record<ObjectId,T.Object3D>>;
   screens:T.Mesh[]; powerLights:T.PointLight[]; occluders:T.Mesh[]; lamp:T.PointLight; drawer:T.Group;
+  /** Doorway centres (wall x, opening z, half width) where the modelled door frame goes. */
+  portals:{x:number;z:number;half:number}[];
 };
 
-export function buildEnvironment():AdminEnvironment {
-  fpOnly=[];isoOnly=[];
+export function buildEnvironment(opts:{modelFrames?:boolean}={}):AdminEnvironment {
+  fpOnly=[];isoOnly=[];portals=[];modelFrames=!!opts.modelFrames;
   const root=new T.Group();root.name='Municipal administration · floor 01';
   const m=materials(),doors={} as AdminEnvironment['doors'],targets:AdminEnvironment['targets']={};
   const screens:T.Mesh[]=[],powerLights:T.PointLight[]=[],occluders:T.Mesh[]=[];
@@ -275,14 +285,11 @@ export function buildEnvironment():AdminEnvironment {
       if(id==='archive')roomWindow(p,m,3.38,r.minZ+.08,1.0);
     }
   }
-  for(const id of ['technical','surveillance','archive'] as const){
+  const targetFor={technical:'technicalDoor',surveillance:'surveillanceDoor',archive:'archiveDoor',reception:'receptionDoor'} as const;
+  for(const id of ['technical','surveillance','archive','reception'] as const){
     const visual=realDoor(root,m,id);doors[id]=visual.door;
-    set(id==='technical'?'technicalDoor':id==='surveillance'?'surveillanceDoor':'archiveDoor',visual.target);
+    set(targetFor[id],visual.target);
   }
-  // The reception doorway always stays open: its door leaf stands open against the reception wall.
-  const parked=realDoor(root,m,'technical',{x:RECEPTION_PORTAL.x,z:RECEPTION_PORTAL.z,half:RECEPTION_PORTAL.half});
-  parked.door.name='Reception door (open)';parked.door.rotation.y=Math.PI;parked.door.position.x=-WALL_D/2-.04;
-  parked.target.removeFromParent();
   const live=new Set<T.Object3D>();
   const nearFurniture:T.Group[]=[];
   const floorFootprint=(f:Furniture)=>{
@@ -430,8 +437,11 @@ export function buildEnvironment():AdminEnvironment {
     for(const mesh of list){const key=mesh.material as T.Material;by.set(key,[...(by.get(key)??[]),mesh]);}
     const merged:T.Mesh[]=[];
     for(const [mat,meshes] of by){
-      const geos=meshes.map(o=>(o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone())
-        .applyMatrix4(new T.Matrix4().multiplyMatrices(inv,o.matrixWorld)));
+      const tile=(mat.userData as {tile?:number}).tile;
+      const geos=meshes.map(o=>{
+        const g=(o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone()).applyMatrix4(new T.Matrix4().multiplyMatrices(inv,o.matrixWorld));
+        return tile?boxProjectUV(g,tile):g;
+      });
       const geometry=mergeGeometries(geos,false);
       geos.forEach(g=>g.dispose());
       meshes.forEach(o=>o.removeFromParent());
@@ -445,5 +455,5 @@ export function buildEnvironment():AdminEnvironment {
   for(const o of [...fpOnly,...isoOnly]){o.visible=false;live.add(o);}
   for(const id of Object.keys(rooms) as RoomId[])consolidate(rooms[id],live);
   if(!deskDrawer)throw Error('The reception drawer has no mapped desk');
-  return {fpOnly,isoOnly,root,doors,targets,screens,powerLights,occluders,lamp:menuLamp,drawer:deskDrawer};
+  return {fpOnly,isoOnly,root,doors,targets,screens,powerLights,occluders,lamp:menuLamp,drawer:deskDrawer,portals};
 }

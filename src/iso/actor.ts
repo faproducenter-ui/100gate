@@ -53,7 +53,7 @@ export type IsoActor = {
   poseTape(pose:{x:number;z:number;yaw:number;time:number;distance:number;walk:number;
     action?:{kind:Reaction;t:number;x:number;z:number}}):void;
   /** Gear carried by the hero: flashlight in the right hand, backpack on the back. */
-  setGear(gear: { flashlight: boolean; on: boolean }): void;
+  setGear(gear: { flashlight: boolean; on: boolean; armHidden?: boolean }): void;
   /** Thumb presses the flashlight switch. */
   pressFlashlight(): void;
   /** World position of the lens and unit beam direction while the flashlight is carried. */
@@ -225,7 +225,7 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
   const upperPos = new T.Vector3() // clean animated local position of the shoulder joint (see the first-person shoulder shift)
   const shoulderWorld = new T.Vector3()
   let acting: { kind: Reaction; t: number; x?: number; z?: number } | undefined
-  let gear = { flashlight: false, on: false }, beam = 0, press = 1
+  let gear: { flashlight: boolean; on: boolean; armHidden?: boolean } = { flashlight: false, on: false }, beam = 0, press = 1
   let fp: FpPose | undefined
 
   // The backpack rides the upper spine; its matrix is the inverse bind pose so it
@@ -440,6 +440,9 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
     // First person: the forearm is slimmed a little (and the hand scaled back) so the sleeve does not fill the screen.
     const slim = fp && holding ? .85 : 1
     arm.lower?.scale.setScalar(slim); arm.hand?.scale.setScalar(1 / slim)
+    // While the first-person viewmodel holds the flashlight, the body's own right arm is folded away:
+    // the player must never see two right hands.
+    arm.upper?.scale.setScalar(fp && gear.armHidden ? .001 : 1)
     if (straps) straps.visible = !fp
     if (holding && arm.upper && arm.lower && arm.hand) {
       // Pose authored in Blender (upper arm, forearm, hand and fingers around the flashlight).

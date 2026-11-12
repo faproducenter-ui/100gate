@@ -28,7 +28,7 @@ export function activeQuest(s:Save){
     !s.items.includes('archiveKey')?4:!s.doors.archive?5:!s.items.includes('file')?6:!s.finished?7:8]!;
 }
 
-export const newSave=():Save=>({version:1,...START,items:[],doors:{technical:false,surveillance:false,archive:false},
+export const newSave=():Save=>({version:1,...START,items:[],doors:{technical:false,surveillance:false,archive:false,reception:false},
   dutyRead:false,diagramRead:false,power:false,breaker:[],archiveClue:false,archiveIndex:false,anomaly:false,finished:false,
   lightOn:false,charge:100,spare:0,taken:[]});
 const order:readonly PowerLine[]=['lights','locks','cctv'];
@@ -65,7 +65,15 @@ function takeBattery(s:Save,id:string):Outcome{
 
 export function act(s:Save,id:ObjectId):Outcome {
   switch(id){
-    case 'flashlight':return has(s,'flashlight')?msg(s,'Уже в инвентаре.'):msg({...item(s,'flashlight'),lightOn:true},'Найден фонарь. F — включить или выключить.');
+    case 'flashlight':{
+      if(has(s,'flashlight'))return msg(s,'Уже в инвентаре.');
+      if(s.props?.flashlight){
+        // Picked back up from where it was put down: it keeps the light it had on the floor.
+        const {flashlight:_,...props}=s.props;
+        return msg({...item(s,'flashlight'),props,lightOn:(s.flashlightLit??true)&&s.charge>0,flashlightLit:undefined},'Фонарь снова в руке.');
+      }
+      return msg({...item(s,'flashlight'),lightOn:true},'Найден фонарь. F — включить или выключить, G — положить.');
+    }
     case 'battery1':case 'battery2':case 'battery3':case 'battery4':case 'battery5':return takeBattery(s,id);
     case 'dutyLog':return doc({...s,dutyRead:true},'Журнал дежурств · 18 ноября',
       '21:48. После просадки горит только аварийное освещение. Ключ от щитовой приклеил под столешницей, слева.\n\n22:16. Дежурный с архива не явился. Камеру в коридоре оставить включённой.');
@@ -74,6 +82,12 @@ export function act(s:Save,id:ObjectId):Outcome {
     case 'phone':return doc(s,'Внутренняя линия','В трубке тихо. На наклейке: «07 — школа». Рядом от руки дописано: «Не перезванивать после 23:00».');
     case 'buildingPlan':return doc(item(s,'plan'),'План здания',ITEMS.plan.description);
     case 'archiveCache':return s.archiveClue?found(s,'archiveKey'):msg(s,'Секции пронумерованы. Без номера искать придётся всю ночь.');
+    case 'receptionDoor':{
+      // An ordinary unlocked door: it opens and closes, but never onto the player standing in the doorway.
+      const doors={...s.doors,reception:!s.doors.reception};
+      if(!doors.reception&&!canStand(s.x,s.z,doors))return msg(s,'Мешаешь двери закрыться.');
+      return msg({...s,doors},doors.reception?'Дверь приёмной открыта.':'Дверь приёмной закрыта.');
+    }
     case 'technicalDoor':return s.doors.technical?msg(s,'Щитовая открыта.'):
       has(s,'technicalKey')?msg({...s,doors:{...s.doors,technical:true}},'Дверь щитовой открыта.'):msg(s,'Нужен ключ от щитовой.');
     case 'powerDiagram':return s.doors.technical?doc(item({...s,diagramRead:true},'memo'),'Схема питания',ITEMS.memo.description):msg(s,'Щитовая заперта.');
@@ -86,6 +100,13 @@ export function act(s:Save,id:ObjectId):Outcome {
     case 'fileZero':return !s.doors.archive||!s.anomaly||!s.archiveIndex?msg(s,'Нужны указатель стеллажей и пометка из записи коридора.'):
       doc(item(s,'file'),'Акт №0 / 7',ITEMS.file.description+'\n\nНа обороте: «Запись не стирать. Если время не сходится — проверить камеру архива».');
   }
+}
+
+/** The flashlight leaves the hand and lies where physics put it; a lit one keeps shining on the floor. */
+export function dropFlashlight(s:Save,pose:number[]):Outcome{
+  if(!has(s,'flashlight'))return {state:s};
+  return msg({...s,items:s.items.filter(i=>i!=='flashlight'),lightOn:false,flashlightLit:s.lightOn,props:{...s.props,flashlight:pose}},
+    s.lightOn?'Фонарь положен, он продолжает светить.':'Фонарь положен.');
 }
 
 export function pressLine(s:Save,line:PowerLine):Outcome{
@@ -117,7 +138,7 @@ export function validSave(value:unknown):value is Save{
   const s=value as Save;
   if(s.version!==1||!Number.isFinite(s.x)||!Number.isFinite(s.z)||
     !Array.isArray(s.items)||new Set(s.items).size!==s.items.length||!s.items.every(i=>Object.hasOwn(ITEMS,i))||
-    !s.doors||!['technical','surveillance','archive'].every(k=>typeof s.doors[k as keyof typeof s.doors]==='boolean')||
+    !s.doors||!['technical','surveillance','archive','reception'].every(k=>typeof s.doors[k as keyof typeof s.doors]==='boolean')||
     ![s.dutyRead,s.diagramRead,s.power,s.archiveClue,s.archiveIndex,s.anomaly,s.finished].every(v=>typeof v==='boolean')||
     !Array.isArray(s.breaker)||s.breaker.length>3||!s.breaker.every((line,i)=>line===order[i])||
     typeof s.lightOn!=='boolean'||!Number.isFinite(s.charge)||s.charge<0||s.charge>100||!Number.isInteger(s.spare)||s.spare<0||
@@ -132,8 +153,13 @@ export function validSave(value:unknown):value is Save{
 function read(key:string):unknown{try{return JSON.parse(localStorage.getItem(key)??'null');}catch{return null;}}
 /** Saves from before the flashlight existed get default light fields. */
 export function upgradeSave(value:unknown):unknown{
-  if(!value||typeof value!=='object'||'charge' in value)return value;
-  return {...value,lightOn:false,charge:100,spare:0,taken:[]};
+  if(!value||typeof value!=='object')return value;
+  let v=value as Record<string,unknown>;
+  if(!('charge' in v))v={...v,lightOn:false,charge:100,spare:0,taken:[]};
+  // Saves from before the reception got a real door: that doorway was always open.
+  const d=v.doors as Record<string,unknown>|undefined;
+  if(d&&typeof d==='object'&&typeof d.reception!=='boolean')v={...v,doors:{...d,reception:true}};
+  return v;
 }
 export function getSave(){const value=upgradeSave(read(SAVE_KEY));return validSave(value)?value:null;}
 export function write(key:string,value:unknown){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
@@ -153,7 +179,7 @@ export function sanitizeSettings(value:unknown):Settings{
   }
   return {quality:p.quality==='low'||p.quality==='high'?p.quality:'medium',scale:n('scale',.55,1.25),shadows:flag('shadows'),
     ambient:flag('ambient'),motion:flag('motion'),reducedFlicker:flag('reducedFlicker'),hints:flag('hints'),
-    view:p.view==='iso'||p.view==='fps'?p.view:view,sensitivity:n('sensitivity',.3,2.5),volume:n('volume',0,1),ambience:n('ambience',0,1),effects:n('effects',0,1),ui:n('ui',0,1),textScale:n('textScale',.8,1.5),
+    view /* first person only: an old saved 'iso' choice is ignored */,sensitivity:n('sensitivity',.3,2.5),volume:n('volume',0,1),ambience:n('ambience',0,1),effects:n('effects',0,1),ui:n('ui',0,1),textScale:n('textScale',.8,1.5),
     keys:new Set(Object.values(keys)).size===codes.length?keys:DEFAULTS.keys};
 }
 export const readSettings=()=>sanitizeSettings(read(SETTINGS_KEY));

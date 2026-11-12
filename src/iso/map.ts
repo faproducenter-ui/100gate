@@ -1,5 +1,5 @@
 export type RoomId='reception'|'technical'|'surveillance'|'archive'|'corridor';
-export type DoorId='technical'|'surveillance'|'archive';
+export type DoorId='technical'|'surveillance'|'archive'|'reception';
 export type DoorStates=Record<DoorId,boolean>;
 export type Point={x:number;z:number};
 type Bounds={name:string;minX:number;maxX:number;minZ:number;maxZ:number};
@@ -14,8 +14,11 @@ export const DOORS:Record<DoorId,Point&{room:RoomId;half:number}>={
   technical:{x:0,z:-3.25,half:.625,room:'technical'},
   surveillance:{x:2.4,z:2.15,half:.625,room:'surveillance'},
   archive:{x:2.4,z:-3.25,half:.625,room:'archive'},
+  reception:{x:0,z:2.15,half:.625,room:'reception'},
 };
 export const RECEPTION_PORTAL={x:0,z:2.15,half:.625};
+/** Doors that swing into the rooms on the negative-x side of the corridor. */
+export const doorSwing=(id:DoorId)=>id==='technical'||id==='reception'?-1:1;
 export const START={x:-1.75,z:3.6};
 
 type Interactable=Point&{room:RoomId;label:string};
@@ -32,6 +35,7 @@ export const OBJECTS={
   phone:{room:'reception',x:-3.87,z:.97,label:'Телефон'},
   buildingPlan:{room:'reception',x:-.84,z:.5,label:'План здания'},
   archiveCache:{room:'reception',x:-4.13,z:3.94,label:'Картотека'},
+  receptionDoor:{room:'reception',x:-.05,z:2.15,label:'Дверь приёмной'},
   technicalDoor:{room:'corridor',x:.18,z:-3.25,label:'Дверь щитовой'},
   powerDiagram:{room:'technical',x:-2.35,z:-4.42,label:'Схема питания'},
   breaker:{room:'technical',x:-3.80,z:-3.98,label:'Электрощит'},
@@ -47,8 +51,6 @@ export const BATTERIES=['battery1','battery2','battery3','battery4','battery5'] 
 export const FURNITURE:readonly (Point&{room:RoomId;w:number;d:number;kind:string})[]=[
   {room:'reception',kind:'desk',x:-3.66,z:.91,w:1.88,d:.78},
   {room:'reception',kind:'chair',x:-2.24,z:.55,w:.55,d:.50},
-  // The open reception door leaf standing against the wall beside the doorway.
-  {room:'reception',kind:'doorLeaf',x:-.12,z:.91,w:.07,d:1.23},
   {room:'reception',kind:'fileCabinet',x:-4.53,z:3.94,w:.55,d:1.21},
   {room:'reception',kind:'shelf',x:-.86,z:4.51,w:1.14,d:.53},
   {room:'reception',kind:'waiting',x:-3.21,z:4.55,w:1.45,d:.56},
@@ -69,18 +71,18 @@ export const roomAt=(x:number,z:number):RoomId|undefined=>roomEntries.find(([,r]
 
 function floorAt(x:number,z:number,doors:DoorStates) {
   if(!roomAt(x,z))return false;
-  for(const [id,p] of Object.entries({...DOORS,reception:RECEPTION_PORTAL})){
+  for(const [id,p] of Object.entries(DOORS)){
     if(Math.abs(x-p.x)>.13)continue;
     // The whole dividing wall only has one opening per room.
     const isRoomBand=id==='technical'||id==='archive'?z<-1.25:z>=0;
     if(isRoomBand&&((p.x===0&&(id==='technical'||id==='reception'))||
       (p.x===2.4&&(id==='surveillance'||id==='archive')))){
-      if(Math.abs(z-p.z)>=p.half||!(id==='reception'||doors[id as DoorId]))return false;
+      if(Math.abs(z-p.z)>=p.half||!doors[id as DoorId])return false;
     }
   }
   for(const [key,door] of Object.entries(DOORS) as [DoorId,typeof DOORS[DoorId]][]){
     if(!doors[key])continue;
-    const sweep=(x-door.x)*(key==='technical'?-1:1);
+    const sweep=(x-door.x)*doorSwing(key);
     if(sweep>=0&&sweep<door.half*2&&Math.abs(z-(door.z-door.half))<.047)return false;
   }
   return !FURNITURE.some(f=>Math.abs(x-f.x)<f.w/2 && Math.abs(z-f.z)<f.d/2);
@@ -105,10 +107,13 @@ export function movePlayer(p:Point,dx:number,dz:number,doors:DoorStates):Point {
 }
 
 export const doorFor:Partial<Record<ObjectId,DoorId>>={
-  technicalDoor:'technical',surveillanceDoor:'surveillance',archiveDoor:'archive',
+  technicalDoor:'technical',surveillanceDoor:'surveillance',archiveDoor:'archive',receptionDoor:'reception',
 };
+/** Props that physics has moved (dropped, knocked off a desk) report where they lie now. */
+export const movedProps:Partial<Record<ObjectId,Point>>={};
 export const withinReach=(id:ObjectId,p:Point,extra=0)=> {
-  const o=OBJECTS[id],room=roomAt(p.x,p.z);
+  const base=OBJECTS[id],moved=movedProps[id],o=moved??base,room=roomAt(p.x,p.z);
+  const home=moved?roomAt(moved.x,moved.z)??base.room:base.room;
   const door=doorFor[id];
-  return (room===o.room||(door!==undefined&&room===door))&&Math.hypot(p.x-o.x,p.z-o.z)<(door?1.15:1.20)+extra;
+  return (room===home||(door!==undefined&&room===door))&&Math.hypot(p.x-o.x,p.z-o.z)<(door?1.15:1.20)+extra;
 };

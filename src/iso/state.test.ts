@@ -66,9 +66,12 @@ it('connects every usable object to the same walkable floor and seals all locked
     return {rooms,targets};
   };
   const before=flood(newSave().doors);
-  expect([...before.rooms].sort()).toEqual(['corridor','reception']);
-  expect(before.targets.has('terminal')).toBe(false);
-  const after=flood({technical:true,surveillance:true,archive:true});
+  expect([...before.rooms].sort()).toEqual(['reception']);
+  expect(before.targets.has('receptionDoor')).toBe(true);
+  const opened=flood({...newSave().doors,reception:true});
+  expect([...opened.rooms].sort()).toEqual(['corridor','reception']);
+  expect(opened.targets.has('terminal')).toBe(false);
+  const after=flood({technical:true,surveillance:true,archive:true,reception:true});
   expect(after.rooms.size).toBe(5);
   expect([...after.targets].sort()).toEqual(Object.keys(OBJECTS).sort());
 });
@@ -93,10 +96,10 @@ describe('flashlight side system',()=>{
   });
 });
 
-it('defaults to first person, keeps a chosen view and clamps look sensitivity',async()=>{
+it('is first person only and clamps look sensitivity',async()=>{
   const {sanitizeSettings}=await import('./state');
   expect(sanitizeSettings(null).view).toBe('fps');
-  expect(sanitizeSettings({view:'iso'}).view).toBe('iso');
+  expect(sanitizeSettings({view:'iso'}).view).toBe('fps');
   expect(sanitizeSettings({view:'nonsense',sensitivity:99}).view).toBe('fps');
   expect(sanitizeSettings({sensitivity:99}).sensitivity).toBe(2.5);
   expect(sanitizeSettings({keys:{up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',interact:'KeyE',sprint:'ShiftLeft',crouch:'ControlLeft',light:'KeyF'}}).keys.crouch).toBe('ControlLeft');

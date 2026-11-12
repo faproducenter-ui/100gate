@@ -39,6 +39,23 @@ export function group(parent:T.Object3D,x:number,y:number,z:number,name?:string)
 }
 
 /** Merge solid details within one static group, not the whole map: no lost culling across rooms. */
+/**
+ * Box-project UVs from the geometry's own positions (metres / tile), so scanned textures keep their real
+ * size on a 5 m wall and on a 5 cm knob instead of being stretched over each face.
+ */
+export function boxProjectUV(geometry:T.BufferGeometry,tile:number){
+  const p=geometry.getAttribute('position'),n=geometry.getAttribute('normal');
+  if(!p||!n)return geometry;
+  const uv=new Float32Array(p.count*2);
+  for(let i=0;i<p.count;i++){
+    const ax=Math.abs(n.getX(i)),ay=Math.abs(n.getY(i)),az=Math.abs(n.getZ(i));
+    const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+    const [u,v]=ax>=ay&&ax>=az?[z,y]:ay>=az?[x,z]:[x,y];
+    uv[i*2]=u/tile;uv[i*2+1]=v/tile;
+  }
+  geometry.setAttribute('uv',new T.BufferAttribute(uv,2));
+  return geometry;
+}
 export function consolidate(parent:T.Group,keep=new Set<T.Object3D>()){
   parent.updateMatrixWorld(true);
   const inv=parent.matrixWorld.clone().invert();
@@ -53,7 +70,13 @@ export function consolidate(parent:T.Group,keep=new Set<T.Object3D>()){
     by.set(m,list);
   });
   for(const [m,list] of by){
-    if(list.length<2){list.forEach(x=>x.geometry.dispose());continue;}
+    const tile=(m.userData as {tile?:number}).tile;
+    if(list.length<2&&!tile){list.forEach(x=>x.geometry.dispose());continue;}
+    if(tile)for(const x of list){
+      // Every merged piece needs the same attribute set: drop extras some primitives carry.
+      for(const name of Object.keys(x.geometry.attributes))if(!['position','normal','uv'].includes(name))x.geometry.deleteAttribute(name);
+      boxProjectUV(x.geometry,tile);
+    }
     const geometry=mergeGeometries(list.map(x=>x.geometry),false);
     list.forEach(x=>x.geometry.dispose());
     if(!geometry)continue;

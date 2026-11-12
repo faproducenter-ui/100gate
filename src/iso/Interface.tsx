@@ -217,7 +217,6 @@ function Options({settings,act}:{settings:Settings;act:Act}){
         <option value="low">Низкое</option><option value="medium">Среднее</option><option value="high">Высокое</option>
       </select></label>
       <Meter label="Разрешение сцены" value={settings.scale} min={.55} max={1.25} onChange={scale=>patch({scale})}/>
-      <Toggle label="Вид от первого лица" on={settings.view==='fps'} onChange={on=>patch({view:on?'fps':'iso'})}/>
       <Meter label="Чувствительность мыши" value={settings.sensitivity} min={.3} max={2.5} onChange={sensitivity=>patch({sensitivity})}/>
       <Toggle label="Тени" on={settings.shadows} onChange={shadows=>patch({shadows})}/>
       <Toggle label="Эффекты окружения" on={settings.ambient} onChange={ambient=>patch({ambient})}/>
@@ -245,7 +244,7 @@ function Options({settings,act}:{settings:Settings;act:Act}){
         </button>
       </div>)}
       {bindingError&&<p className="iso-option-error" role="status">{bindingError}</p>}
-      <p className="iso-controls-note">Tab — инвентарь · J — журнал · V — вид · Esc — пауза · Shift — бег · C — присесть</p>
+      <p className="iso-controls-note">Tab — инвентарь · J — журнал · G — положить фонарь · Esc — пауза · Shift — бег · C — присесть</p>
     </fieldset>
   </div>;
 }
