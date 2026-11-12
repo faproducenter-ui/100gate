@@ -55,7 +55,7 @@ export class ViewModel {
     // Eye = head bone plus a hand's width forward and a little up. The rig is placed so that point is the camera
     // origin (the model faces +Z, the camera looks down -Z, so the model is turned half a turn).
     const head = rig.getObjectByName('head');
-    const eye = (head ? head.getWorldPosition(new T.Vector3()) : new T.Vector3(0, 1.6, 0)).add(new T.Vector3(0, .041, .09));
+    const eye = (head ? head.getWorldPosition(new T.Vector3()) : new T.Vector3(0, 1.6, 0)).add(new T.Vector3(0, .05, 0));
     rig.position.sub(eye);
     this.model.rotation.y = Math.PI;
     // The flashlight hangs under the right hand bone: the beam runs along its local +X, out of the wide end.

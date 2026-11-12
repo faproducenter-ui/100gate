@@ -13,7 +13,7 @@ async function loadDecor():Promise<Decor>{
   const gltf=async(path:string)=>{
     try{return await new GLTFLoader().loadAsync(import.meta.env.BASE_URL+path);}catch{return undefined;}
   };
-  const [key,book,viewmodel]=await Promise.all([gltf('assets/iso/key-tag.glb'),gltf('assets/iso/antique-book.glb'),gltf('assets/iso/viewmodel-2.glb')]);
+  const [key,book,viewmodel]=await Promise.all([gltf('assets/iso/key-tag.glb'),gltf('assets/iso/antique-book.glb'),gltf('assets/iso/viewmodel-3.glb')]);
   return {key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations}};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
