@@ -42,5 +42,6 @@ was inspected as a reference but its meshes and actions were not imported.
 - Mountain road: Metazeon, CC-BY-4.0 — https://sketchfab.com/3d-models/mountain-road-5a7164248a244671953ebde24a7a876b
 - Large Camping BackPack (Free/GameReady): Sebastian Webster, CC-BY-4.0 — https://sketchfab.com/3d-models/large-camping-backpack-freegameready-a7086b50dae84706b81bb3ce14ad9094
 - Car Generic Hatchback GameReady with interior: Kinetic Vehicles, Sketchfab Standard licence — https://sketchfab.com/3d-models/car-generic-hatchback-gameready-with-interior-9d21deaa0174412283965baf323133a1
+- Abandoned House: AspectStudios, CC-BY-4.0 — https://sketchfab.com/3d-models/abandoned-house-c876fa6c530f4946a5234666752803ce
 
 The files in `public/assets/iso/trailer/` are optimised copies (resized WebP textures, meshopt); the originals are kept out of git in `assets-src/`.

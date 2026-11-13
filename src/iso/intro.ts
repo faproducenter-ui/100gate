@@ -30,16 +30,21 @@ const rnd = (seed: number) => { let s = seed >>> 0; return () => { s = (s * 1664
 export const ROAD_SCALE = 0.46;
 export const CAR_SCALE = 4.0 / 2.04;
 export const BAG_SCALE = 0.65 / 145.955;
+/** the house file is 14.6 units tall: at 0.5 it is a 7.3 m two-storey; its porch door stands at (0.2, 0, -0.5) in the scaled frame and faces +z */
+export const HOUSE_SCALE = 0.5;
+const HOUSE_DOOR = { x: 0.2, z: -0.5 };
+/** footprint boxes of the house in its scaled frame (x0, x1, z0, z1): the main body, the west wing and the porch */
+const HOUSE_BOXES: [number, number, number, number][] = [[-6.6, 2.8, -5.7, -0.5], [-6.6, -2.2, -5.7, 2.5], [-2.2, 2.6, -0.5, 1.3]];
 /** The road axis, picked on a top-down view of the scan (x, z, surface height in scan units; the heights are smoothed, the scan surface is rough). */
 const AXIS: [number, number, number][] = [
   [-164, 83.3, 54], [-143.4, 67.5, 53.1], [-125.2, 50.6, 52.1], [-115.5, 36, 51.3], [-109.4, 21.4, 50.6], [-102.1, 6.9, 50.1], [-91.2, -3.6, 49.8], [-77.9, -7.7, 49.5], [-60.9, -8.4, 49.4],
 ];
 
-export type TrailerAssets = { road: T.Object3D; car: T.Object3D; bag: T.Object3D };
+export type TrailerAssets = { road: T.Object3D; car: T.Object3D; bag: T.Object3D; house: T.Object3D };
 export async function loadTrailerAssets(base = '', lite = false): Promise<TrailerAssets> {
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
-  const [road, car, bag] = await Promise.all((lite ? ['road-lite', 'car-lite', 'backpack-lite'] : ['road', 'car', 'backpack']).map(n => loader.loadAsync(`${base}assets/iso/trailer/${n}.glb`)));
-  return { road: road!.scene, car: car!.scene, bag: bag!.scene };
+  const [road, car, bag, house] = await Promise.all((lite ? ['road-lite', 'car-lite', 'backpack-lite', 'house-lite'] : ['road', 'car', 'backpack', 'house']).map(n => loader.loadAsync(`${base}assets/iso/trailer/${n}.glb`)));
+  return { road: road!.scene, car: car!.scene, bag: bag!.scene, house: house!.scene };
 }
 
 /** Night grade for the road scan: the baked daylight is crushed, drained and pushed cold; flat grey surfaces turn into wet asphalt with puddles. */
@@ -105,6 +110,11 @@ export class Intro {
   private readonly distantLight = new T.PointLight(0xffc77a, 0, 70, 1.1);
   /** the glow of a far-off window in the fog, at the end of the road */
   private readonly glow = new T.Sprite();
+  private readonly house = new T.Group();
+  /** a faint cold light on the front of the house, so that it reads as a shape in the fog */
+  private readonly houseFill = new T.PointLight(0x9fb8d0, 0, 22, 1.3);
+  /** the porch door in the world and the direction it faces (toward the road) */
+  private readonly door = { p: new T.Vector3(), n: new T.Vector3(0, 0, 1) };
   private readonly rain: T.LineSegments;
   /** the crumpled bonnet: uniforms shared by the body shader (amount 0..1, impact point in the car's frame) */
   private readonly dent = { amount: { value: 0 }, point: { value: new T.Vector3(-.65, .15, -1.95) }, size: { value: .8 } };
@@ -171,12 +181,53 @@ export class Intro {
     this.prepareBag(bag);
     this.bag.add(bag); this.car.add(this.bag);
     this.root.add(this.distantLight);
+    this.placeHouse(assets.house);
     { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d')!, gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
       gr.addColorStop(0, 'rgba(255,214,150,1)'); gr.addColorStop(.18, 'rgba(255,190,110,.55)'); gr.addColorStop(1, 'rgba(255,170,90,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
       this.glow.material = new T.SpriteMaterial({ map: new T.CanvasTexture(c), blending: T.AdditiveBlending, depthWrite: false, transparent: true, fog: false, opacity: 0 }); this.glow.scale.set(2.6, 2.6, 1); this.root.add(this.glow); }
 
     this.simulate();
     this.buildKeys();
+  }
+
+  /**
+   * The abandoned house stands beside the road ahead of the wreck, its porch door facing the road. A patch of dark gravel levels the ground under it,
+   * the siding is darkened to night, and a lantern burns at the porch.
+   */
+  private placeHouse(model: T.Object3D) {
+    // the site was chosen on a height map of the scan: south of the road, just past where the path ends, on a rise about a metre and a half above the road
+    const D = V(-41 * ROAD_SCALE, 52.5 * ROAD_SCALE, 6 * ROAD_SCALE);
+    const toRoad = V(0, 0, -1);
+    const yaw = Math.atan2(toRoad.x, toRoad.z);
+    this.door.p.copy(D); this.door.n.copy(toRoad);
+    const m = model.clone(true); m.scale.setScalar(HOUSE_SCALE);
+    const done = new Set<T.Material>();
+    m.traverse(o => { const mesh = o as T.Mesh; if (!mesh.isMesh) return; for (const mat of (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as T.MeshStandardMaterial[]) { if (done.has(mat)) continue; done.add(mat); mat.color.multiplyScalar(.75); mat.roughness = Math.max(.85, mat.roughness); mat.envMapIntensity = 0; } });
+    this.house.add(m);
+    this.house.rotation.y = yaw;
+    const off = V(HOUSE_DOOR.x, 0, HOUSE_DOOR.z).applyAxisAngle(V(0, 1, 0), yaw);
+    this.house.position.copy(D).sub(off);
+    // the clearing under it (the scan's ground is rough and sloped here)
+    const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d')!, r = rnd(41);
+    g.fillStyle = '#2a2b27'; g.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 1400; i++) { const v = 30 + r() * 40; g.fillStyle = `rgb(${v},${v},${v - 4})`; g.fillRect(r() * 128, r() * 128, 1 + r() * 2, 1 + r() * 2); }
+    const tex = new T.CanvasTexture(c); tex.wrapS = tex.wrapT = T.RepeatWrapping; tex.repeat.set(7, 7); tex.colorSpace = T.SRGBColorSpace;
+    const yard = new T.Mesh(new T.CircleGeometry(8.5, 24), new T.MeshStandardMaterial({ map: tex, roughness: .95, color: 0x3a3a38 }));
+    yard.rotation.x = -Math.PI / 2; yard.position.copy(this.house.position).add(V(0, .04, 0)); yard.position.addScaledVector(toRoad, -3.2); this.root.add(yard);
+    this.house.updateMatrixWorld(true);
+    this.root.add(this.house, this.houseFill);
+  }
+
+  /** push a point out of the house (and its porch) so the camera can never pass through a wall */
+  private keepOutOfHouse(p: T.Vector3) {
+    const inv = this.house.matrixWorld.clone().invert(), q = p.clone().applyMatrix4(inv), pad = .6;
+    for (const [x0, x1, z0, z1] of HOUSE_BOXES) {
+      if (q.x > x0 - pad && q.x < x1 + pad && q.z > z0 - pad && q.z < z1 + pad && q.y < 8) {
+        const d = [q.x - (x0 - pad), (x1 + pad) - q.x, q.z - (z0 - pad), (z1 + pad) - q.z], m = Math.min(...d), k = d.indexOf(m);
+        if (k === 0) q.x = x0 - pad; else if (k === 1) q.x = x1 + pad; else if (k === 2) q.z = z0 - pad; else q.z = z1 + pad;
+      }
+    }
+    return p.copy(q.applyMatrix4(this.house.matrixWorld));
   }
 
   /** materials of the car: the mirror-like paint becomes dull dirty paint; glass does not write depth; lamps are collected for flicker */
@@ -421,8 +472,10 @@ export class Intro {
     // the sign stands at the right of the road before the crash
     const sg = this.at(Math.max(4, this.body(this.crash)[0] - 38), 4.2); this.sign.position.copy(sg.p); this.sign.rotation.y = sg.yaw - .12;
     // the distant light at the end of the road
-    const endA = this.at(this.length - 1, 0), far = endA.p.clone().addScaledVector(endA.tan, 38).add(V(0, 2.2, 0)); this.distantLight.position.copy(far); this.distantLight.intensity = t > 25 ? 60 : 0;
-    this.glow.position.copy(this.distantLight.position); this.glow.visible = t > 25; (this.glow.material as T.SpriteMaterial).opacity = .7 * sstep(25.5, 28, t);
+    const flickerL = 1 - .35 * Math.max(0, Math.sin(t * 9) * Math.sin(t * 3.7)) - .15 * noise(t * 11);
+    this.distantLight.position.copy(this.door.p).add(V(0, 2.5, 0)).addScaledVector(this.door.n, 1.1); this.distantLight.intensity = t > 25 ? 140 * flickerL : 0;
+    this.houseFill.position.copy(this.door.p).addScaledVector(this.door.n, 5).add(V(0, 3.2, 0)); this.houseFill.intensity = t > 25 ? 90 * sstep(25, 27, t) : 0;
+    this.glow.position.copy(this.distantLight.position); this.glow.visible = t > 25; (this.glow.material as T.SpriteMaterial).opacity = .8 * sstep(25.5, 28, t) * flickerL;
     // steam from under the bonnet, rising and drifting
     this.smoke.visible = crashed; (this.smoke.material as T.PointsMaterial).opacity = crashed ? .5 * sstep(this.crash, this.crash + 1.5, t) : 0;
     this.smoke.position.set(0, .8 + ((t * .5) % 1.2), -1.6);
@@ -448,7 +501,15 @@ export class Intro {
       const a = ks[i]!, b = ks[i + 1]!, u = sstep(a.t, b.t, Math.max(a.t, t));
       eyeP.copy(a.eye).lerp(b.eye, u); look.copy(a.look).lerp(b.look, u); roll = lerp(a.roll, b.roll, u);
     }
-    if (t > 25.7) look.lerp(this.car.worldToLocal(this.distantLight.position.clone()), sstep(25.7, 27.2, t));   // turn to the light at the end of the road
+    if (t > 25.7) {
+      // after the bag: turn toward the lantern on the porch and walk to the foot of its steps, in world space (never through the house)
+      const lamp = this.distantLight.position.clone().add(V(0, -.8, 0));
+      look.lerp(this.car.worldToLocal(lamp), sstep(25.7, 27.2, t));
+      const w = sstep(26.2, 27.4, t), start = this.car.localToWorld(V(-2.3, 1.62, -1.2)), stop = this.door.p.clone().addScaledVector(this.door.n, 8.5); stop.y = this.at(this.length - 1, 0).p.y + 1.62;
+      const along = sstep(26.2, 29.7, t), walk = start.clone().lerp(stop, along);
+      const cur = this.car.localToWorld(eyeP.clone()); cur.lerp(walk, w); this.keepOutOfHouse(cur);
+      eyeP.copy(this.car.worldToLocal(cur));
+    }
     this.aim.position.copy(eyeP); this.car.add(this.aim); this.car.updateMatrixWorld(true);
     this.aim.lookAt(this.car.localToWorld(look.clone())); this.aim.rotateZ(roll);
     const wp = new T.Vector3(), wq = new T.Quaternion(); this.aim.getWorldPosition(wp); this.aim.getWorldQuaternion(wq);
