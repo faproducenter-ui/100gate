@@ -109,6 +109,7 @@ export class IsoWorld {
   private torchFlame?:Flame;
   private readonly analog=new AnalogPass();
   private lowHeight=480;
+  private lastAim?:ObjectId;
   private readonly fogFx=new T.FogExp2(0x03070a,.16);
   private readonly darkBg=new T.Color(0x020506);
   private readonly lightBg=new T.Color(0x121615);
@@ -185,8 +186,8 @@ export class IsoWorld {
     if(decor.key){
       // Key on the hook under the reception desk; the archive key lies on the filing cabinet once its place is known.
       // Technical-room key: left lying on the reception desk top, in plain sight (dropped onto the surface below).
-      this.deskKey=new KeyProp(decor.key,'flat');this.deskKey.root.position.set(-4.40,1.2,1.12);this.deskKey.root.rotation.z=-.6;
-      this.cabinetKey=new KeyProp(decor.key,'flat');this.cabinetKey.root.position.set(-4.43,1.128,3.70);this.cabinetKey.root.rotation.z=.9;
+      this.deskKey=new KeyProp(decor.key,'flat');this.deskKey.root.position.set(-4.40,1.2,1.12);this.deskKey.root.rotation.order='YXZ';this.deskKey.root.rotation.set(-Math.PI/2,-.6,0);
+      this.cabinetKey=new KeyProp(decor.key,'flat');this.cabinetKey.root.position.set(-4.43,1.128,3.70);this.cabinetKey.root.rotation.order='YXZ';this.cabinetKey.root.rotation.set(-Math.PI/2,.9,0);
       this.scene.add(this.deskKey.root,this.cabinetKey.root);
       this.hookTarget=this.env.targets.underDesk;this.slotTarget=this.env.targets.archiveCache;
     }
@@ -295,14 +296,19 @@ export class IsoWorld {
       let node:T.Object3D|null=hit.object;
       while(node){const id=options.find(([,target])=>target===node)?.[0];if(id)return id as ObjectId;node=node.parent;}
     }
-    // Small props (batteries, keys) get a forgiving cone around the crosshair.
-    let best=.13,id:ObjectId|undefined;
+    // Anything else gets a forgiving cone around the crosshair, measured to the middle of the object (not its origin, which can sit on the floor),
+    // wider the closer you stand and wider still for the object that was already aimed at, so a prompt does not flicker away at arm's length.
+    let best=Infinity,id:ObjectId|undefined;
+    const box=new T.Box3(),c=new T.Vector3(),fwd=cam.getWorldDirection(new T.Vector3());
     for(const [key,target] of options){
-      const v=target!.getWorldPosition(new T.Vector3()).project(cam);
-      if(v.z>1)continue;
-      const d=Math.hypot(v.x*cam.aspect,v.y);
-      if(d<best){best=d;id=key as ObjectId;}
+      box.setFromObject(target!);
+      if(box.isEmpty())target!.getWorldPosition(c);else box.getCenter(c);
+      const dist=c.distanceTo(cam.position),v=c.clone().project(cam);
+      if(v.z>1||c.clone().sub(cam.position).dot(fwd)<=0)continue;     // beyond the far plane, or behind the camera (it projects mirrored)
+      const d=Math.hypot(v.x*cam.aspect,v.y),limit=(.13+Math.max(0,1.6-dist)*.1)*(key===this.lastAim?1.5:1);
+      if(d<limit&&d<best){best=d;id=key as ObjectId;}
     }
+    this.lastAim=id;
     return id;
   }
   get firstPerson(){return this.fpActive;}

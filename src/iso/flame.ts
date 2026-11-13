@@ -126,7 +126,7 @@ export class Flame {
           uBase: { value: new T.Color(...base) }, uMid: { value: new T.Color(...mid) }, uTop: { value: new T.Color(...top) } },
       });
       const mesh = new T.Mesh(geom, mat); mesh.scale.set(height * scale, height * scale, height * scale); mesh.renderOrder = 10; mesh.frustumCulled = false;
-      this.root.add(mesh); this.layers.push({ geom, mat, mesh });
+      mesh.raycast = () => {}; this.root.add(mesh); this.layers.push({ geom, mat, mesh });
     };
     //          scale  width  seed  base                  mid                  top                 alpha edge tip
     mkLayer(1.00, .26, 0.0, [1, .55, .12], [1, .30, .03], [.55, .06, .01], .30, 1.1, .78);   // outer: red-orange, ragged tip
@@ -140,9 +140,9 @@ export class Flame {
     eg.setAttribute('position', new T.BufferAttribute(pos, 3)); eg.setAttribute('aPhase', new T.BufferAttribute(ph, 1)); eg.setAttribute('aSeed', new T.BufferAttribute(sd, 1));
     this.emberMat = new T.ShaderMaterial({ vertexShader: EMBER_VERT, fragmentShader: EMBER_FRAG, transparent: true, depthWrite: false, blending: T.AdditiveBlending, fog: false,
       uniforms: { uTime: { value: 0 }, uSize: { value: height * .022 }, uRise: { value: height * 2.6 } } });
-    this.embers = new T.Points(eg, this.emberMat); this.embers.frustumCulled = false; this.embers.renderOrder = 11; this.root.add(this.embers);
+    this.embers = new T.Points(eg, this.emberMat); this.embers.frustumCulled = false; this.embers.renderOrder = 11; this.embers.raycast = () => {}; this.root.add(this.embers);
     this.haloSprite = new T.Sprite(new T.SpriteMaterial({ map: halo(), blending: T.AdditiveBlending, depthWrite: false, transparent: true, fog: false, opacity: .5 }));
-    this.haloSprite.scale.set(height * 1.7, height * 1.7, 1); this.haloSprite.position.y = height * .4; this.haloSprite.renderOrder = 9; this.root.add(this.haloSprite);
+    this.haloSprite.scale.set(height * 1.7, height * 1.7, 1); this.haloSprite.position.y = height * .4; this.haloSprite.renderOrder = 9; this.haloSprite.raycast = () => {}; this.root.add(this.haloSprite);
   }
   /** t: seconds; level 0..1: how much of the flame is there (the hosting bone's scale also applies). */
   private static readonly q = new T.Quaternion();

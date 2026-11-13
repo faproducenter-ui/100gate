@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "blender": {
+      "command": "uvx",
+      "args": ["--system-certs", "mcp-for-blender"]
+    }
+  }
+}

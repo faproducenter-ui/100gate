@@ -74,7 +74,8 @@ export default function IsoPage(){
       }
       // The lighter is taken out of the desk drawer by hand: the drawer slides open and the fingers close on it before it counts as found.
       if(id==='drawer'&&world&&!state.items.includes('lighter')){
-        if(world.handPhase==='idle'&&!world.busy)world.beginLighter(()=>{commit('drawer');sound.cue('ui',settings);});
+        // The torch may already be in the right hand: the drawer is opened and the lighter taken with the other one.
+        if((world.handPhase==='idle'||world.handPhase==='holding')&&!world.busy&&!world.beginLighter(()=>{commit('drawer');sound.cue('ui',settings);}))commit('drawer');
         return;
       }
       commit(id);
@@ -93,7 +94,6 @@ export default function IsoPage(){
       sound.cue(kind==='door'?'door':id==='phone'?'phone':'ui',settings);
       const gotKey=(['technicalKey','archiveKey'] as const).some(k=>after.state.items.includes(k)&&!before.items.includes(k));
       if(gotKey)sound.jingle(1,settings);
-      else if(kind==='door'&&(before.items.includes('technicalKey')||before.items.includes('archiveKey')))sound.jingle(.55,settings);
       apply(after);drawer=id==='drawer'&&after.panel==='document';emit();
     };
     const flash=()=>{
@@ -296,11 +296,6 @@ export default function IsoPage(){
           if(walked>half){
             walked-=half;
             sound.cue('step',settings,sprinting?1.45:crouch>.5?.45:1);
-            // Keys in the pocket jangle with the pace: faint walking, clear running.
-            if(state.items.some(i=>i==='technicalKey'||i==='archiveKey')){
-              if(sprinting)sound.jingle(.22+Math.random()*.1,settings);
-              else if(crouch<.5&&Math.random()<.22)sound.jingle(.05,settings);
-            }
           }
         }else if(ax||az){
           const m=Math.hypot(ax,az);
