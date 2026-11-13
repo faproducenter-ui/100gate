@@ -11,6 +11,8 @@ import * as T from 'three';
  * Everything is deterministic in the time t, so it can be skipped, paused or scrubbed.
  */
 export const INTRO_DURATION = 30;
+/** The first draft of the opening is built from simple shapes; it stays off until it is rebuilt from real models. */
+export const INTRO_ENABLED = false;
 
 const V = (x: number, y: number, z: number) => new T.Vector3(x, y, z);
 const sstep = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };

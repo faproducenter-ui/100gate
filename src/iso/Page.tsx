@@ -1,4 +1,4 @@
-import {INTRO_DURATION} from './intro';
+import {INTRO_DURATION,INTRO_ENABLED} from './intro';
 import {useEffect,useRef,useState} from 'react';
 import {IsoInterface} from './Interface';
 import {IsoWorld} from './world';
@@ -118,7 +118,7 @@ export default function IsoPage(){
       world.onPropSettled=(id,pose)=>{if(!state.items.includes(id)){state={...state,props:{...state.props,[id]:pose}};persist();}};
       mode=state.finished?'complete':'play';target=null;notice='';setPanel(null);persist();
       // A new game opens with the drive and the crash (30 s); a loaded one goes straight in.
-      introT=!restore&&fpOn()&&mode==='play'&&!state.lit&&state.items.length===0?0:-1;
+      introT=INTRO_ENABLED&&!restore&&fpOn()&&mode==='play'&&!state.lit&&state.items.length===0?0:-1;
       if(introT===0){void sound.unlock().then(()=>{if(introT>=0)sound.intro(settings);});}
       emit();
     };
