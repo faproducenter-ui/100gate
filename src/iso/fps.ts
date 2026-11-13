@@ -54,10 +54,18 @@ export class ViewModel {
   private readonly gripRel = new T.Matrix4();
   private readonly reachTarget = new T.Matrix4();
   private reachW = 0; private gripW = 1; private carrying = true; private fovMatch = 0; private mainFov = 74; private baseFov = 64;
+  /** A sheet of paper held in the right hand while a document is read. `paperHold` follows the hand's grip frame; the sheet's own pose in it is `paper`. */
+  readonly paperHold = new T.Group();
+  readonly paper: T.Mesh;
+  paperW = 0;
   ready = false;
 
   constructor(source?: { scene: T.Object3D; animations: T.AnimationClip[] }) {
     this.scene.add(this.camera, this.pivot);
+    this.paperHold.matrixAutoUpdate = false; this.paperHold.visible = false;
+    this.paper = new T.Mesh(new T.PlaneGeometry(.21, .297), new T.MeshStandardMaterial({ color: 0x8f8872, roughness: .95, metalness: 0, side: T.DoubleSide }));
+    this.paper.position.set(.0, .12, .0); this.paper.scale.setScalar(.8);
+    this.paperHold.add(this.paper); this.scene.add(this.paperHold);
     this.pivot.add(this.model);
     this.scene.add(new T.HemisphereLight(0xfff2dc, 0x25272c, 1.5));
     const key = new T.DirectionalLight(0xffe2b8, 2.0); key.position.set(-.6, 1, .8); this.scene.add(key);
@@ -211,6 +219,8 @@ export class ViewModel {
       else this.fireLight.intensity = 0;
     }
     if (this.pickupT >= 0) this.solvePickup(); else if (this.reachW > .001) this.solveReach();
+    this.paperHold.visible = this.paperW > .01;
+    if (this.paperHold.visible) { this.paperHold.matrix.copy(this.reachTarget); this.paperHold.matrixWorldNeedsUpdate = true; }
     for (const n of this.heldNodes) n.visible = this.carrying;
     // While reaching into the world the hand is drawn with the main camera's field of view, so the hand and
     // the prop it touches line up on screen; it eases back to the fixed viewmodel FOV afterwards.
@@ -232,6 +242,8 @@ export class ViewModel {
   get lighterPlaying() { return this.lighterT >= 0; }
 
   /** Hand interaction input for this frame. target is the prop's pose in viewmodel (camera) space; the hand is pulled onto the grip that would hold the prop exactly there, by reach (0..1). */
+  /** The sheet is held up (w = 0..1 how far it has been raised); it is drawn at the hand target given to setHand. */
+  setPaper(w: number) { this.paperW = w; }
   setHand(f: { reach: number; grip: number; carrying: boolean; target?: T.Matrix4; up?: T.Vector3; fovMatch: number; mainFov: number }) {
     if (f.up) this.upCam.copy(f.up).normalize();
     this.reachW = f.target ? f.reach : 0; this.gripW = f.grip; this.carrying = f.carrying;

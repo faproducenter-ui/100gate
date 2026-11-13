@@ -23,7 +23,7 @@ async function loadDecor():Promise<Decor>{
   return {key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations},doorKit:doorKit?.scene};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
-  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;
+  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;reading?:boolean;
   look:{yaw:number;pitch:number};crouch:number;sprint:boolean;press:number;kick:number};
 const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
 const smooth=T.MathUtils.smoothstep;
@@ -110,6 +110,9 @@ export class IsoWorld {
   private readonly analog=new AnalogPass();
   private lowHeight=480;
   private lastAim?:ObjectId;
+  private paperW=0;
+  /** Where the grip frame of the right hand is while a sheet is read (camera space): the sheet fills the lower middle of the view. */
+  readonly paperPose=new T.Matrix4().compose(new T.Vector3(0,-.1,-.4),new T.Quaternion().setFromEuler(new T.Euler(-.25,0,0)),new T.Vector3(1,1,1));
   private readonly fogFx=new T.FogExp2(0x03070a,.16);
   private readonly darkBg=new T.Color(0x020506);
   private readonly lightBg=new T.Color(0x121615);
@@ -432,7 +435,9 @@ export class IsoWorld {
     for(const o of this.env.isoOnly)o.visible=!fp;
     if(fp){
       // Hand interaction: where the hand reaches (the prop, or the spot it is put down) and how the fingers close.
-      const hf=this.hand.update(frame.paused?0:dt);
+      const reading=!!frame.reading;
+      this.paperW=T.MathUtils.damp(this.paperW,reading?1:0,reading?5.5:7,dt);
+      const hf=this.hand.update(frame.paused&&!reading?0:dt);
       const active=hf.phase==='reaching'||hf.phase==='releasing';
       this.fovMatch=T.MathUtils.damp(this.fovMatch,active?1:0,9,dt);
       const eyeCam=this.fps.camera;
@@ -448,8 +453,11 @@ export class IsoWorld {
       }else if(hf.phase==='reaching'&&this.grabAt)target=eyeCam.matrixWorldInverse.clone().multiply(this.grabAt);
       else if(hf.phase==='releasing'&&this.dropAt)target=this.dropAt;
       if(hf.phase==='holding'||hf.phase==='idle')this.grabAt=undefined;
-      this.fps.vm.setHand({reach:hf.reach,grip:hf.grip,carrying:hf.carrying,target,up:new T.Vector3(0,1,0).transformDirection(eyeCam.matrixWorldInverse),fovMatch:this.fovMatch,mainFov:eyeCam.fov});
-      const armShown=active||this.fps.vm.igniting||this.fps.vm.lighterPlaying?1:hf.phase==='holding'?1:0;
+      const paperUp=this.paperW>.01;
+      if(paperUp)target=this.paperPose;
+      this.fps.vm.setPaper(this.paperW);
+      this.fps.vm.setHand({reach:paperUp?this.paperW:hf.reach,grip:paperUp?.35+.2*this.paperW:hf.grip,carrying:paperUp?false:hf.carrying,target,up:new T.Vector3(0,1,0).transformDirection(eyeCam.matrixWorldInverse),fovMatch:this.fovMatch,mainFov:eyeCam.fov});
+      const armShown=paperUp||active||this.fps.vm.igniting||this.fps.vm.lighterPlaying?1:hf.phase==='holding'?1:0;
       // Bending over: the body leans toward what the hand goes for, so the arm can reach it naturally.
       let bend:{x:number;y:number;z:number}|undefined;
       const goalWorld=hf.phase==='reaching'?(this.grabAt?new T.Vector3().setFromMatrixPosition(this.grabAt):hf.item?.object.position):
@@ -460,7 +468,7 @@ export class IsoWorld {
         d.setLength(amount);bend={x:d.x,y:d.y*1.1,z:d.z};
       }
       this.fps.update({x:state.x,z:state.z,yaw:frame.look.yaw,pitch:frame.look.pitch,speed:frame.speed,sprint:frame.sprint,
-        crouch:frame.crouch,dt:frame.paused?0:dt,time,hasLight:state.items.includes('torch'),lightOn:state.lightOn,
+        crouch:frame.crouch,dt:frame.paused&&!reading?0:dt,time,hasLight:state.items.includes('torch'),lightOn:state.lightOn,
         press:frame.press,kick:frame.kick,armShown,bend});
       this.cast.setCrouch(frame.crouch);
       const cam=this.fps.camera;

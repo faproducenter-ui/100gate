@@ -600,3 +600,11 @@ html, body, #root { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
 /* panels and the title screen scroll with a finger; the timecode moves off the thumb buttons */
 .iso-dialog, .iso-title { touch-action: pan-y; }
 @media (pointer: coarse) { .iso-cam-time { right: auto; left: calc(max(4.2%, env(safe-area-inset-left) + 14px) + 86px); } }
+
+/* a sheet held up in first person: the 3D paper is drawn by the viewmodel, the ink lies on top of it */
+.iso-paper { position: absolute; left: 50%; top: 48.5%; transform: translate(-50%, -50%); width: min(36vh, 80vw); height: min(47vh, 100vw); padding: 3.4vh 2.6vh 3vh; box-sizing: border-box; overflow: hidden;
+  color: #1f1b12; font-family: Georgia, 'Times New Roman', serif; pointer-events: auto; animation: iso-paper-in .5s ease .3s both; mix-blend-mode: multiply; }
+.iso-paper h2 { margin: 0 0 1vh; font-size: clamp(.7rem, 1.9vh, 1rem); letter-spacing: .02em; border-bottom: 1px solid #1f1b1255; padding-bottom: .8vh; }
+.iso-paper article { white-space: pre-wrap; font-size: clamp(.56rem, 1.5vh, .82rem); line-height: 1.45; }
+.iso-paper-key { position: absolute; left: 0; right: 0; bottom: 1.2vh; margin: 0; text-align: center; font-family: var(--analog-font); font-size: .7rem; letter-spacing: .1em; opacity: .55; }
+@keyframes iso-paper-in { from { opacity: 0; } to { opacity: .92; } }

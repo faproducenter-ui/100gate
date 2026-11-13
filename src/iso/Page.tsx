@@ -215,6 +215,7 @@ export default function IsoPage(){
         else if(mode==='play'){e.preventDefault();dispatch.current({type:'panel',panel:'pause'});}
         return;
       }
+      if(panel==='document'&&fpOn()&&e.code===settings.keys.interact){e.preventDefault();if(!e.repeat)dispatch.current({type:'close'});return;}
       if(panel||mode!=='play'||(e.target instanceof HTMLInputElement))return;
       if(e.code===settings.keys.light){e.preventDefault();if(!e.repeat)flash();return;}
       if(e.code==='KeyG'){e.preventDefault();if(!e.repeat)drop();return;}
@@ -327,7 +328,7 @@ export default function IsoPage(){
       if(!draw)return;
       sound.mix(settings,{paused,power:state.power,menu});
       if(!document.hidden&&(mode==='title'||mode==='play'||mode==='complete')){
-        world?.render({state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,perf,
+        world?.render({state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,perf,reading:panel==='document'&&fpOn(),
           direction,speed,target:panel?null:target,drawer,look:{yaw,pitch},crouch,sprint:sprinting,press,kick});
       }
     };

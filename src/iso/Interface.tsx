@@ -400,7 +400,9 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
       <Breaker state={state} notice={notice} act={act}/>
     </Modal>;break;
     case 'cctv':modal=<CCTV view={cctv} act={act} notice={notice}/>;break;
-    case 'document':if(document)modal=<Modal key="document" title={document.title} testId="iso-document" variant="iso-document-shell" onClose={close}>
+    case 'document':if(document&&settings.view==='fps')modal=<div className="iso-paper" role="dialog" aria-label={document.title} data-testid="iso-document" onClick={close}>
+      <h2>{document.title}</h2><article>{document.text}</article><p className="iso-paper-key">[{keyLabel(settings.keys.interact)}] убрать</p></div>;
+      else if(document)modal=<Modal key="document" title={document.title} testId="iso-document" variant="iso-document-shell" onClose={close}>
       <article>{document.text}</article>
     </Modal>;break;
     case 'credits':modal=<Modal key="credits" title="Авторы" testId="iso-credits" onClose={close}>
