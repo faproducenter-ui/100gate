@@ -32,7 +32,7 @@ export type CCTVView={camera:CameraId;tape:TapeId;time:number;duration:number;pl
   availableFuture:boolean;evidence:boolean;zoom:boolean};
 export type DocumentView={title:string;text:string};
 export type UIAction=
-  |{type:'torch'}
+  |{type:'torch'}|{type:'drop'}
   |{type:'touch';move?:{x:number;z:number};look?:{dx:number;dy:number};sprint?:boolean;crouch?:boolean}
   |{type:'start'|'continue'|'retry'|'resume'|'title'|'fullscreen'|'close'|'interact'|'archive-evidence'|'cctv-play'|'cctv-zoom'|'reset-breaker'}
   |{type:'cctv-step';delta:number}|{type:'cctv-seek';time:number}

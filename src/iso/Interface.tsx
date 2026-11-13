@@ -123,8 +123,9 @@ function Title({saved,act,covered}:{saved:boolean;act:Act;covered:boolean}){
 
 const isTouch=()=>typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
 
-/** Minimal landscape touch layer: left thumb moves, right thumb looks, three round buttons. */
-function TouchControls({act,light}:{act:Act;light:boolean}){
+/** Landscape touch layer: left thumb moves (a stick appears where it lands), right thumb looks, and on the right a big contextual USE button
+ * (it shows what is in front of you), light, put down, run and crouch. */
+function TouchControls({act,light,hint,holding}:{act:Act;light:boolean;hint:string;holding:boolean}){
   const stick=useRef<{id:number;ox:number;oy:number}|null>(null),look=useRef<{id:number;x:number;y:number}|null>(null);
   const [knob,setKnob]=useState<{x:number;y:number;dx:number;dy:number}|null>(null);
   const [run,setRun]=useState(false),[crouch,setCrouch]=useState(false);
@@ -151,8 +152,11 @@ function TouchControls({act,light}:{act:Act;light:boolean}){
   };
   return <div className="iso-touch" data-testid="iso-touch" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
     {knob&&<div className="iso-stick" style={{left:knob.x,top:knob.y}}><i style={{transform:`translate(${knob.dx}px,${knob.dy}px)`}}/></div>}
+    <button type="button" className="iso-touch-use" data-show={!!hint} aria-label={hint||'Взаимодействовать'} onClick={()=>act({type:'interact'})}>
+      <b>E</b><span>{hint||'—'}</span></button>
     <div className="iso-touch-buttons">
-      <button type="button" aria-label="Факел" aria-pressed={light} onClick={()=>act({type:'torch'})}><Flame/></button>
+      {holding&&<button type="button" aria-label="Положить" onClick={()=>act({type:'drop'})}><ArrowLeft/></button>}
+      <button type="button" aria-label="Свет" aria-pressed={light} onClick={()=>act({type:'torch'})}><Flame/></button>
       <button type="button" aria-label="Бег" aria-pressed={run} onClick={()=>{setRun(!run);act({type:'touch',sprint:!run});}}><ArrowRight/></button>
       <button type="button" aria-label="Присесть" aria-pressed={crouch} onClick={()=>{setCrouch(!crouch);act({type:'touch',crouch:!crouch});}}><StepBack/></button>
     </div>
@@ -165,7 +169,7 @@ function Hud({state,settings,hint,notice,act,fp,markers}:{state:Save;settings:Se
   return <div className="iso-hud" data-testid="iso-hud" data-view={settings.view}>
     {first&&<CamOverlay/>}
     {first&&<div className="iso-crosshair" data-active={!!hint} aria-hidden="true"/>}
-    {first&&isTouch()&&<TouchControls act={act} light={state.lightOn}/>}
+    {first&&isTouch()&&<TouchControls act={act} light={state.lightOn} hint={hint} holding={state.items.includes('torch')}/>}
     {first&&!isTouch()&&fp&&!fp.locked&&<p className="iso-lockhint" role="status">Нажмите на экран, чтобы управлять камерой мышью</p>}
     {first&&fp&&fp.stamina<.995&&<div className="iso-stamina" aria-label="Выносливость"><i style={{width:Math.round(fp.stamina*100)+'%'}}/></div>}
     {first&&!isTouch()&&settings.hints&&markers?.map(m=><div key={m.id} className="iso-mark" data-aimed={m.aimed} style={{left:(m.x*100)+'%',top:(m.y*100)+'%'}} aria-hidden="true">

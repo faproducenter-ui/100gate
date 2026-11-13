@@ -23,7 +23,7 @@ async function loadDecor():Promise<Decor>{
   return {key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations},doorKit:doorKit?.scene};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
-  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;
+  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;
   look:{yaw:number;pitch:number};crouch:number;sprint:boolean;press:number;kick:number};
 const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
 const smooth=T.MathUtils.smoothstep;
@@ -108,6 +108,7 @@ export class IsoWorld {
   private torchProp:T.Object3D;
   private torchFlame?:Flame;
   private readonly analog=new AnalogPass();
+  private lowHeight=480;
   private readonly fogFx=new T.FogExp2(0x03070a,.16);
   private readonly darkBg=new T.Color(0x020506);
   private readonly lightBg=new T.Color(0x121615);
@@ -398,10 +399,10 @@ export class IsoWorld {
     const key=[settings.quality,settings.scale,settings.shadows].join(':');
     if(w!==this.lastWidth||h!==this.lastHeight||key!==this.frameSettings){
       this.frameSettings=key;this.lastWidth=w;this.lastHeight=h;
-      const cap={low:1,medium:1.35,high:1.8}[settings.quality];
+      const cap={low:1,medium:1,high:1.25}[settings.quality];
       this.renderer.setPixelRatio(Math.max(.55,Math.min(devicePixelRatio,cap)*settings.scale));
       this.renderer.setSize(w,h,false);
-      this.analog.resize(w,h,settings.quality==='low'?360:480);
+      this.analog.resize(w,h,this.lowHeight);
       this.renderer.shadowMap.enabled=settings.shadows&&settings.quality!=='low';
       this.titleCamera.aspect=this.securityCamera.aspect=w/h;
       this.fps.setAspect(w/h);
@@ -417,6 +418,8 @@ export class IsoWorld {
     this.restoreOcclusion();
     const fp=settings.view==='fps'&&!menu&&!cctv;
     this.fpActive=fp;
+    {const heights=settings.quality==='low'?[360,320,288,240]:[480,420,360,288],hgt=heights[Math.min(3,frame.perf??0)]!;
+      if(hgt!==this.lowHeight){this.lowHeight=hgt;this.analog.resize(this.lastWidth,this.lastHeight,hgt);}}
     for(const o of this.env.fpOnly)o.visible=fp;
     for(const o of this.env.isoOnly)o.visible=!fp;
     if(fp){

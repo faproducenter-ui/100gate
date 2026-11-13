@@ -168,7 +168,8 @@ export function sanitizeSettings(value:unknown):Settings{
     if(typeof code==='string'&&/^(Key[A-Z]|Arrow(Up|Down|Left|Right)|Digit[0-9]|Shift(Left|Right)|Control(Left|Right)|Space)$/.test(code)&&
        !['KeyJ','Tab','Escape'].includes(code))keys[key]=code;
   }
-  return {quality:p.quality==='low'||p.quality==='high'?p.quality:'medium',scale:n('scale',.55,1.25),shadows:flag('shadows'),
+  const phone=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
+  return {quality:p.quality==='low'||p.quality==='medium'||p.quality==='high'?p.quality:phone?'low':'medium',scale:n('scale',.55,1.25),shadows:flag('shadows'),
     ambient:flag('ambient'),motion:flag('motion'),reducedFlicker:flag('reducedFlicker'),hints:flag('hints'),
     view /* first person only: an old saved 'iso' choice is ignored */,sensitivity:n('sensitivity',.3,2.5),volume:n('volume',0,1),ambience:n('ambience',0,1),effects:n('effects',0,1),ui:n('ui',0,1),textScale:n('textScale',.8,1.5),
     keys:new Set(Object.values(keys)).size===codes.length?keys:DEFAULTS.keys};

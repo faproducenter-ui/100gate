@@ -26,14 +26,14 @@ export default function IsoPage(){
     const lifetime=new AbortController();
     let settings=readSettings(),mode:Mode='loading',panel:Panel|null=null,back:Panel|null=null,active=getSave(),state=active??newSave();
     let clock=0,noticeUntil=0,notice='',loading='Администрация',target:ObjectId|null=null,documentView:DocumentView|undefined;
-    let markers:{id:ObjectId;x:number;y:number}[]=[],markClock=0;
+    const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
+    let markers:{id:ObjectId;x:number;y:number}[]=[],markClock=0,perf=coarse?1:0;
     let cctv=startCCTV(),saveClock=0,uiClock=0,walked=0,drawer=false;
     let direction:Point={x:0,z:1},speed=0;
     // First person: look angles, smoothed velocity, stance and stamina.
     let yaw=START_YAW,pitch=-.06,crouch=0,stamina=1,tired=false,vx=0,vz=0,locked=false,kick=1,press=1,sprinting=false,ignoreUnlock=false;
     const fpOn=()=>settings.view==='fps';
     // Touch controls: joystick vector, look drag accumulated between frames, run/crouch toggles.
-    const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
     let tmx=0,tmz=0,tlx=0,tly=0,tsprint=false,tcrouch=false;
     const portraitBlocked=()=>coarse&&innerHeight>innerWidth;
     const unlockPointer=()=>{try{if(document.pointerLockElement===surface){ignoreUnlock=true;document.exitPointerLock();}}catch{/* not locked */}};
@@ -159,6 +159,7 @@ export default function IsoPage(){
           break;
         case 'interact':use(target);return;
         case 'torch':flash();return;
+        case 'drop':drop();return;
         case 'touch':
           if(a.move){tmx=a.move.x;tmz=a.move.z;}
           if(a.look){tlx+=a.look.dx;tly+=a.look.dy;}
@@ -331,19 +332,37 @@ export default function IsoPage(){
       if(!draw)return;
       sound.mix(settings,{paused,power:state.power,menu});
       if(!document.hidden&&(mode==='title'||mode==='play'||mode==='complete')){
-        world?.render({state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,
+        world?.render({state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,perf,
           direction,speed,target:panel?null:target,drawer,look:{yaw,pitch},crouch,sprint:sprinting,press,kick});
       }
     };
+    // Heat: a phone or a laptop must not run flat out. Frames are paced (60 at most, 30 on phones and on the low setting), and a governor trades the
+    // size of the low-resolution picture for speed when the frame time stays high, and gives it back when there is room.
+    let govAcc=0,govN=0,govHold=0;
     const loop=(now:number)=>{
-      // Slow title drift doesn't need 60 full environment/shadow redraws.
-      const minFrame=mode==='title'?32:settings.quality==='low'?22:0;
+      const target=mode==='title'?30:(coarse||settings.quality==='low')?30:60;
+      const minFrame=1000/target-2.5;
       if(!manual&&now-previous>=minFrame){
-        const dt=Math.min(.06,(now-previous)/1000);previous=now;
+        const ms=now-previous;
+        const dt=Math.min(.06,ms/1000);previous=now;
+        if(mode==='play'&&!document.hidden){
+          govAcc+=Math.min(ms,100);govN++;govHold=Math.max(0,govHold-ms);
+          if(govN>=45){
+            const avg=govAcc/govN,slow=avg>1000/target*1.28;
+            if(slow&&perf<3&&govHold<=0){perf++;govHold=4000;}
+            else if(!slow&&avg<1000/target*1.08&&perf>0&&govHold<=0){perf--;govHold=9000;}
+            govAcc=0;govN=0;
+          }
+        }
         step(dt);
       }
       raf=requestAnimationFrame(loop);
     };
+    // The page is a game, not a document: no text selection or copy menu on a long press, no pinch or double-tap zoom, no context menu.
+    const block=(e:Event)=>{e.preventDefault();};
+    const multi=(e:TouchEvent)=>{if(e.touches.length>1)e.preventDefault();};
+    for(const type of ['contextmenu','selectstart','gesturestart','gesturechange','gestureend','dblclick','dragstart'])document.addEventListener(type,block,{passive:false});
+    document.addEventListener('touchmove',multi,{passive:false});
     window.addEventListener('keydown',keydown);window.addEventListener('keyup',keyup);
     window.addEventListener('blur',blur);window.addEventListener('pagehide',blur);
     document.addEventListener('mousemove',mouse);document.addEventListener('pointerlockchange',lockChange);
@@ -368,6 +387,8 @@ export default function IsoPage(){
     void load();raf=requestAnimationFrame(loop);
     return ()=>{
       disposed=true;lifetime.abort();cancelAnimationFrame(raf);world?.dispose();sound.dispose();
+      for(const type of ['contextmenu','selectstart','gesturestart','gesturechange','gestureend','dblclick','dragstart'])document.removeEventListener(type,block);
+      document.removeEventListener('touchmove',multi);
       window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);
       window.removeEventListener('blur',blur);window.removeEventListener('pagehide',blur);
       document.removeEventListener('mousemove',mouse);document.removeEventListener('pointerlockchange',lockChange);unlockPointer();

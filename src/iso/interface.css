@@ -576,3 +576,27 @@
 .iso-mark-name { position: absolute; left: 44px; top: -9px; white-space: nowrap; font-size: .82rem; letter-spacing: .1em; text-transform: uppercase; color: #d6efea; text-shadow: 0 0 8px #5aa6b2cc, 0 1px 0 #000; }
 @keyframes iso-glow { 0%, 100% { opacity: .35; transform: scale(.9); } 50% { opacity: 1; transform: scale(1.08); } }
 @media (prefers-reduced-motion: reduce) { .iso-mark-glow, .iso-mark b { animation: none; opacity: .8; } }
+
+
+/* ---- a game, not a document: nothing selects, nothing pops up on a long press, nothing zooms ---- */
+html, body, #root { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
+.iso-app, .iso-app * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+.iso-app input[type="range"] { touch-action: pan-x; }
+.iso-app { touch-action: none; height: 100dvh; }
+.iso-world-canvas { touch-action: none; -webkit-user-drag: none; }
+/* touch: the use button and bigger thumbs, kept clear of the notches */
+.iso-touch-use {
+  position: absolute; right: max(86px, calc(env(safe-area-inset-right) + 72px)); bottom: max(26px, env(safe-area-inset-bottom)); min-width: 74px; max-width: 46vw; height: 74px; padding: 0 16px;
+  border-radius: 38px; display: none; align-items: center; justify-content: center; gap: 10px; pointer-events: auto;
+  border: 2px solid #c8e2deaa; background: #02080a99; color: #e6f6f2; font-family: var(--analog-font); text-transform: uppercase; letter-spacing: .08em; font-size: .8rem;
+  text-shadow: 0 0 8px #5aa6b2cc, 0 1px 0 #000; animation: iso-glow 2.6s ease-in-out infinite;
+}
+.iso-touch-use[data-show="true"] { display: inline-flex; }
+.iso-touch-use b { color: #ffb53c; font-size: 1.3rem; text-shadow: 0 0 8px #ff8f1f99; }
+.iso-touch-use span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 28vw; }
+.iso-touch-buttons button { width: 60px; height: 60px; background: #02080a88; border-color: #c8e2de88; color: #d6efea; }
+@media (max-height: 460px) { .iso-touch-buttons button { width: 52px; height: 52px; } .iso-touch-use { height: 64px; } }
+@media (pointer: coarse) { .iso-cam-rec, .iso-cam-time { bottom: max(7.5%, calc(env(safe-area-inset-bottom) + 6px)); } .iso-cam-rec { left: max(4.2%, calc(env(safe-area-inset-left) + 14px)); } }
+/* panels and the title screen scroll with a finger; the timecode moves off the thumb buttons */
+.iso-dialog, .iso-title { touch-action: pan-y; }
+@media (pointer: coarse) { .iso-cam-time { right: auto; left: calc(max(4.2%, env(safe-area-inset-left) + 14px) + 86px); } }
