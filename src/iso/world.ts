@@ -10,7 +10,7 @@ import {boxProjectUV} from './env-kit';
 import {createPhysics,type Physics} from './physics';
 import {HandController,Pickup} from './interaction';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {DOORS,OBJECTS,ROOMS,doorSwing,movedProps,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
+import {DOORS,OBJECTS,ROOMS,doorFor,doorSwing,movedProps,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
 import type {CameraId,CCTVView,Save,Settings} from './contracts';
 
 type Cast=Awaited<ReturnType<typeof loadActor>>;
@@ -186,8 +186,8 @@ export class IsoWorld {
     if(decor.key){
       // Key on the hook under the reception desk; the archive key lies on the filing cabinet once its place is known.
       // Technical-room key: left lying on the reception desk top, in plain sight (dropped onto the surface below).
-      this.deskKey=new KeyProp(decor.key,'flat');this.deskKey.root.position.set(-4.40,1.2,1.12);this.deskKey.root.rotation.order='YXZ';this.deskKey.root.rotation.set(-Math.PI/2,-.6,0);
-      this.cabinetKey=new KeyProp(decor.key,'flat');this.cabinetKey.root.position.set(-4.43,1.128,3.70);this.cabinetKey.root.rotation.order='YXZ';this.cabinetKey.root.rotation.set(-Math.PI/2,.9,0);
+      this.deskKey=new KeyProp(decor.key,'flat');this.deskKey.root.position.set(-4.40,1.2,1.12);this.deskKey.root.rotation.set(0,-.6,0);
+      this.cabinetKey=new KeyProp(decor.key,'flat');this.cabinetKey.root.position.set(-4.43,1.128,3.70);this.cabinetKey.root.rotation.set(0,.9,0);
       this.scene.add(this.deskKey.root,this.cabinetKey.root);
       this.hookTarget=this.env.targets.underDesk;this.slotTarget=this.env.targets.archiveCache;
     }
@@ -290,11 +290,13 @@ export class IsoWorld {
     this.cursor.set(0,0);
     this.clickRay.setFromCamera(this.cursor,cam);
     this.clickRay.far=2.7;
-    const hit=this.clickRay.intersectObjects(options.map(([,o])=>o!),true)[0];
+    // A door is aimed at by its whole leaf, not only by the small handle point that marks it.
+    const solid=(id:string,o:T.Object3D)=>{const d=doorFor[id as ObjectId];return (d&&this.env.doors[d])||o;};
+    const hit=this.clickRay.intersectObjects(options.map(([id,o])=>solid(id,o!)),true)[0];
     this.clickRay.far=Infinity;
     if(hit){
       let node:T.Object3D|null=hit.object;
-      while(node){const id=options.find(([,target])=>target===node)?.[0];if(id)return id as ObjectId;node=node.parent;}
+      while(node){const n=node;const id=options.find(([k,o])=>solid(k,o!)===n)?.[0];if(id)return id as ObjectId;node=node.parent;}
     }
     // Anything else gets a forgiving cone around the crosshair, measured to the middle of the object (not its origin, which can sit on the floor),
     // wider the closer you stand and wider still for the object that was already aimed at, so a prompt does not flicker away at arm's length.

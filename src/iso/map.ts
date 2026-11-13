@@ -25,7 +25,7 @@ type Interactable=Point&{room:RoomId;label:string};
 export const OBJECTS={
   torch:{room:'reception',x:-4.80,z:2.45,label:'Факел'},
   dutyLog:{room:'reception',x:-3.35,z:1.38,label:'Журнал дежурств'},
-  underDesk:{room:'reception',x:-4.31,z:1.45,label:'Под столешницей'},
+  underDesk:{room:'reception',x:-4.31,z:1.45,label:'Ключ с биркой'},
   drawer:{room:'reception',x:-2.86,z:1.02,label:'Ящик стола'},
   phone:{room:'reception',x:-3.87,z:.97,label:'Телефон'},
   buildingPlan:{room:'reception',x:-.84,z:.5,label:'План здания'},
