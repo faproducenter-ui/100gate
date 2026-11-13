@@ -441,7 +441,8 @@ export class IsoWorld {
     this.introLoading=true;
     try{
       const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
-      this.intro=new Intro(await loadTrailerAssets('',coarse));
+      const assets=await Promise.race([loadTrailerAssets('',coarse),new Promise<never>((_,no)=>setTimeout(()=>no(new Error('opening assets timed out')),45000))]);
+      this.intro=new Intro(assets);
       this.intro.update(0,this.lastWidth/Math.max(1,this.lastHeight||1));
       // compile every shader in the background before the first frame, so the opening does not stall when it starts
       await this.renderer.compileAsync(this.intro.scene,this.intro.camera);

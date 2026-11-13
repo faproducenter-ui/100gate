@@ -38,7 +38,7 @@ const AXIS: [number, number, number][] = [
 export type TrailerAssets = { road: T.Object3D; car: T.Object3D; bag: T.Object3D };
 export async function loadTrailerAssets(base = '', lite = false): Promise<TrailerAssets> {
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
-  const [road, car, bag] = await Promise.all([lite ? 'road-lite' : 'road', 'car', 'backpack'].map(n => loader.loadAsync(`${base}assets/iso/trailer/${n}.glb`)));
+  const [road, car, bag] = await Promise.all((lite ? ['road-lite', 'car-lite', 'backpack-lite'] : ['road', 'car', 'backpack']).map(n => loader.loadAsync(`${base}assets/iso/trailer/${n}.glb`)));
   return { road: road!.scene, car: car!.scene, bag: bag!.scene };
 }
 
@@ -54,7 +54,8 @@ function gradeRoad(m: T.MeshStandardMaterial) {
         varying vec3 vWN; varying vec3 vWP;
         float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
         float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f); return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
-        float wetAsphalt = 0.;`)
+        float wetAsphalt = 0.;
+        float fbm(vec2 p){ float a = .5, r = 0.; for (int i = 0; i < 4; i++) { r += a * vn(p); p = p * 2.03 + 17.1; a *= .5; } return r; }`)
       .replace('#include <map_fragment>', `#include <map_fragment>
         {
           float lum = dot(diffuseColor.rgb, vec3(.299, .587, .114));
@@ -65,8 +66,15 @@ function gradeRoad(m: T.MeshStandardMaterial) {
           float puddle = smoothstep(.52, .70, vn(vWP.xz * .55) * .65 + vn(vWP.xz * 2.1) * .35) * wetAsphalt;
           vec3 night = mix(vec3(lum), diffuseColor.rgb, .18) * vec3(.62, .86, 1.0);       // drained, cold blue-green: the baked shadows stop reading
           float road = smoothstep(.2, .7, wetAsphalt);
-          diffuseColor.rgb = night * mix(.03, mix(.9, .22, puddle), road);          // trees, slopes and rubble stay nearly black; only the asphalt answers the headlights
+          float detail = fbm(vWP.xz * 1.7 + vWP.y * .9) * 1.3 + fbm(vWP.xz * 7.3) * .5;      // fine grain of needles, rock and earth over the coarse scan
+          diffuseColor.rgb = night * mix(.03 * (.35 + detail), mix(.9, .22, puddle), road);          // trees, slopes and rubble stay nearly black; only the asphalt answers the headlights
           wetAsphalt = mix(wetAsphalt * .7, 1., puddle);
+        }`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        {   // rough up the flat scan facets: a noise gradient bends the normal off the asphalt
+          float nr = 1. - smoothstep(.2, .7, wetAsphalt);
+          vec3 g = vec3(fbm(vWP.xz * 3.1) - .5, fbm(vWP.zy * 2.7 + 3.) - .5, fbm(vWP.xy * 3.4 + 7.) - .5);
+          normal = normalize(normal + (viewMatrix * vec4(g, 0.)).xyz * 1.4 * nr);
         }`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
         roughnessFactor = mix(.92, mix(.38, .05, smoothstep(.6, 1., wetAsphalt)), wetAsphalt);`);
@@ -86,8 +94,8 @@ export class Intro {
   private readonly aim = new T.Camera();
   private readonly bag = new T.Group();
   private readonly root = new T.Group();
-  private readonly headL = new T.SpotLight(0xdbe6ee, 0, 90, .42, .7, 1.0);
-  private readonly headR = new T.SpotLight(0xdbe6ee, 0, 90, .42, .7, 1.0);
+  private readonly headL = new T.SpotLight(0xdbe6ee, 0, 90, .32, .8, 1.0);
+  private readonly headR = new T.SpotLight(0xdbe6ee, 0, 90, .32, .8, 1.0);
   private readonly oncomingBeams: T.SpotLight[] = [];
   private readonly oncomingGlare = new T.PointLight(0xe8f2ff, 0, 40, 1.3);
   private readonly tail = new T.PointLight(0xff1a0c, 0, 6, 1.6);
@@ -98,6 +106,9 @@ export class Intro {
   /** the glow of a far-off window in the fog, at the end of the road */
   private readonly glow = new T.Sprite();
   private readonly rain: T.LineSegments;
+  /** the crumpled bonnet: uniforms shared by the body shader (amount 0..1, impact point in the car's frame) */
+  private readonly dent = { amount: { value: 0 }, point: { value: new T.Vector3(-.65, .15, -1.95) }, size: { value: .8 } };
+  private bodyMeshes: T.Mesh[] = [];
   private readonly smoke: T.Points;
   private readonly crack: T.Mesh;
   private readonly sign = new T.Group();
@@ -116,7 +127,7 @@ export class Intro {
   constructor(assets: TrailerAssets) {
     const s = this.scene;
     s.background = new T.Color(0x0a1218); s.fog = new T.FogExp2(0x15222c, .034);
-    s.add(new T.HemisphereLight(0x3a5470, 0x0a1014, 5));
+    s.add(new T.HemisphereLight(0x3a5470, 0x0a1014, 2.0));
     s.add(this.root);
 
     // --- the road, graded to night, with the axis curve through it
@@ -175,7 +186,10 @@ export class Intro {
       const mesh = o as T.Mesh; if (!mesh.isMesh) return;
       mesh.frustumCulled = false;
       if (mesh.name === 'Circle_Material.003_0') mesh.visible = false;
-      if (/car_body|Bodywork/.test(mesh.name) && !Array.isArray(mesh.material)) { mesh.material = (mesh.material as T.MeshStandardMaterial).clone(); const b = mesh.material as T.MeshStandardMaterial; b.roughness = .45; b.metalness = .5; b.color.multiplyScalar(dirty ? .12 : .2); done.add(b); }
+      if (/car_body|Bodywork/.test(mesh.name) && !Array.isArray(mesh.material)) {
+        mesh.material = (mesh.material as T.MeshStandardMaterial).clone(); const b = mesh.material as T.MeshStandardMaterial; b.roughness = .45; b.metalness = .5; b.color.multiplyScalar(dirty ? .1 : .1); done.add(b);
+        if (!dirty) { this.bodyMeshes.push(mesh); this.makeDentable(mesh, b); }
+      }
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const m of mats as T.MeshStandardMaterial[]) {
         if (done.has(m)) continue; done.add(m);
@@ -184,11 +198,32 @@ export class Intro {
         if (m.transparent || /glass|window|windshield/.test(n)) { m.transparent = true; m.depthWrite = false; m.opacity = .14; m.color.set(0x0c1418); m.roughness = .1; continue; }   // glass: a faint sheen, not a black screen
         if (/headlight/.test(n)) this.lamps.push({ mat: m, base: m.emissiveIntensity });
         let interior = false; for (let p: T.Object3D | null = mesh; p; p = p.parent) if (p.name === 'Car_Interior') interior = true;
-        if (!(m.emissiveIntensity > 0 && m.emissive && m.emissive.getHex() > 0)) m.color.multiplyScalar(interior ? (dirty ? .3 : .32) : (dirty ? .09 : .22));   // the interior and the trim are dark, the paint is dirty and dark
+        if (!(m.emissiveIntensity > 0 && m.emissive && m.emissive.getHex() > 0)) m.color.multiplyScalar(interior ? (dirty ? .12 : .13) : (dirty ? .09 : .22));   // the interior and the trim are dark, the paint is dirty and dark
         if (/^(panel|notice)$/.test(m.name)) m.color.multiplyScalar(.4);
         m.envMapIntensity = 0;
       }
     });
+  }
+
+  /** after the impact the nose is pushed in: vertices near the impact point move inward along their normals, with a ragged edge */
+  private makeDentable(mesh: T.Mesh, m: T.MeshStandardMaterial) {
+    const u = { uDent: this.dent.amount, uHit: { value: new T.Vector3() }, uSize: this.dent.size };
+    m.userData.dent = u;
+    m.onBeforeCompile = sh => {
+      Object.assign(sh.uniforms, u);
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', '#include <common>\nuniform float uDent; uniform vec3 uHit; uniform float uSize;')
+        .replace('#include <begin_vertex>', `#include <begin_vertex>
+          {
+            float d = distance(transformed, uHit);
+            float fall = exp(-pow(d / uSize, 2.));
+            float rag = .8 + .2 * sin(transformed.x * 9. + transformed.y * 7.) * sin(transformed.z * 8.);
+            transformed -= normalize(objectNormal) * uDent * fall * rag * .085;
+            transformed.y -= uDent * fall * .03;
+          }`);
+    };
+    m.customProgramCacheKey = () => 'body-dent';
+    m.needsUpdate = true;
   }
 
   private prepareBag(bag: T.Object3D) {
@@ -362,12 +397,15 @@ export class Intro {
     this.headL.intensity = 800 * on; this.headR.intensity = 800 * on * flick;
     this.tail.intensity = crashed ? 16 : 0;
     this.hazard.position.set(0, .8, crashed ? 2.4 : 0); this.hazard.intensity = crashed && Math.sin(t * 7.5) > 0 ? 9 : 0;
-    this.dash.position.copy(this.driverEye().add(V(0, -.2, -.3))); this.dash.intensity = t < 19.8 ? .35 : 0;
+    this.dash.position.copy(this.driverEye().add(V(0, -.2, -.3))); this.dash.intensity = t < 19.8 ? .22 : 0;
     for (const l of this.lamps) l.mat.emissiveIntensity = l.base * (crashed ? flick : 1);
     this.wheels.forEach(w => { w.rotation.x = -dist / .3; });
     if (this.wiper) this.wiper.rotation.z = Math.sin(t * 2.6) * .7;
     if (this.steer) this.steer.rotation.z = Math.sin(t * .8) * .05 + (t > 10.3 && t < this.crash ? -.9 * sstep(10.3, 10.9, t) : 0);
     if (this.trunk) this.trunk.rotation.x = this.trunkBase - 1.25 * sstep(22.8, 24.4, t);
+    const dentAmount = sstep(this.crash, this.crash + .25, t);
+    this.dent.amount.value = dentAmount;
+    if (dentAmount > 0) for (const mesh of this.bodyMeshes) { const u = (mesh.material as T.MeshStandardMaterial).userData.dent; if (u) { mesh.updateWorldMatrix(true, false); u.uHit.value.copy(this.car.localToWorld(this.dent.point.value.clone())); mesh.worldToLocal(u.uHit.value); u.uSize.value = .8 / (mesh.matrixWorld.getMaxScaleOnAxis() || 1); } }
     this.trunkLamp.intensity = 7 * sstep(22.6, 23.2, t) * (1 - sstep(25.4, 25.7, t));
     this.crack.visible = crashed; (this.crack.material as T.MeshBasicMaterial).opacity = crashed ? .8 : 0;
     const eye = this.driverEye();
