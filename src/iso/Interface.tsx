@@ -6,6 +6,19 @@ import type {CCTVView, Panel, PowerLine, Save, Settings, UIAction} from './contr
 import {activeQuest, ITEMS, QUESTS} from './state';
 import './interface.css';
 
+/** The camera's own display: the red REC dot, a running timecode and the corner marks of a viewfinder. */
+function CamOverlay(){
+  const [t,setT]=useState(0);
+  useEffect(()=>{const id=window.setInterval(()=>setT(x=>x+1),1000);return()=>window.clearInterval(id);},[]);
+  const p=(n:number)=>String(n).padStart(2,'0');
+  return <div className="iso-cam" aria-hidden="true">
+    <span className="iso-cam-rec"><i/>REC</span>
+    <span className="iso-cam-time">{p(Math.floor(t/3600))}:{p(Math.floor(t/60)%60)}:{p(t%60)}</span>
+    <span className="iso-cam-mode">SP · AF</span>
+    <b className="tl"/><b className="tr"/><b className="bl"/><b className="br"/>
+  </div>;
+}
+
 export interface IsoInterfaceProps {
   mode:'title'|'play'|'complete'|'loading'|'error';
   panel:Panel|null;
@@ -13,6 +26,8 @@ export interface IsoInterfaceProps {
   state:Save;
   settings:Settings;
   hint:string;
+  /** Interactable things in view (first person): they glow, and the aimed one shows its key and name. */
+  markers?:{id:string;label:string;x:number;y:number;aimed:boolean}[];
   notice:string;
   loading:string;
   cctv:CCTVView;
@@ -144,19 +159,25 @@ function TouchControls({act,light}:{act:Act;light:boolean}){
   </div>;
 }
 
-function Hud({state,settings,hint,notice,act,fp}:{state:Save;settings:Settings;hint:string;notice:string;act:Act;fp?:{locked:boolean;stamina:number}}){
+function Hud({state,settings,hint,notice,act,fp,markers}:{state:Save;settings:Settings;hint:string;notice:string;act:Act;fp?:{locked:boolean;stamina:number};markers?:IsoInterfaceProps['markers']}){
   const quest=activeQuest(state);
   const first=settings.view==='fps';
   return <div className="iso-hud" data-testid="iso-hud" data-view={settings.view}>
+    {first&&<CamOverlay/>}
     {first&&<div className="iso-crosshair" data-active={!!hint} aria-hidden="true"/>}
     {first&&isTouch()&&<TouchControls act={act} light={state.lightOn}/>}
     {first&&!isTouch()&&fp&&!fp.locked&&<p className="iso-lockhint" role="status">Нажмите на экран, чтобы управлять камерой мышью</p>}
     {first&&fp&&fp.stamina<.995&&<div className="iso-stamina" aria-label="Выносливость"><i style={{width:Math.round(fp.stamina*100)+'%'}}/></div>}
-    <div className="iso-objective">
+    {first&&!isTouch()&&settings.hints&&markers?.map(m=><div key={m.id} className="iso-mark" data-aimed={m.aimed} style={{left:(m.x*100)+'%',top:(m.y*100)+'%'}} aria-hidden="true">
+      <i className="iso-mark-glow"/>
+      {m.aimed&&<><b className="tl"/><b className="tr"/><b className="bl"/><b className="br"/>
+        <span className="iso-mark-key">{keyLabel(settings.keys.interact)}</span><span className="iso-mark-name">{m.label}</span></>}
+    </div>)}
+    {(!first||isTouch())&&<div className="iso-objective">
       <span className="iso-label">Текущая задача</span>
       <strong data-testid="iso-objective">{quest?.title??'Найти путь к школе №7'}</strong>
-    </div>
-    <nav className="iso-hud-actions" aria-label="Управление игрой">
+    </div>}
+    {(!first||isTouch())&&<nav className="iso-hud-actions" aria-label="Управление игрой">
       <button type="button" className="iso-icon" title="Инвентарь · Tab" aria-label="Инвентарь" data-testid="iso-inventory-open"
         onClick={()=>act({type:'panel',panel:'inventory'})}><Archive/><span>{state.items.length}</span></button>
       {state.items.includes('torch')&&<button type="button" className="iso-icon iso-light" title="Факел · F" aria-label="Факел"
@@ -166,10 +187,10 @@ function Hud({state,settings,hint,notice,act,fp}:{state:Save;settings:Settings;h
         onClick={()=>act({type:'panel',panel:'journal'})}><BookOpen/></button>
       <button type="button" className="iso-icon" title="Пауза · Esc" aria-label="Пауза" data-testid="iso-pause-open"
         onClick={()=>act({type:'panel',panel:'pause'})}><Pause/></button>
-    </nav>
+    </nav>}
     <div className="iso-hud-bottom">
       {notice&&<p className="iso-notice" role="status">{notice}</p>}
-      {hint&&settings.hints&&<button className="iso-interact" data-testid="iso-interact" onClick={()=>act({type:'interact'})}
+      {hint&&settings.hints&&(!first||isTouch())&&<button className="iso-interact" data-testid="iso-interact" onClick={()=>act({type:'interact'})}
         type="button"><kbd>{keyLabel(settings.keys.interact)}</kbd><span>{hint}</span></button>}
     </div>
   </div>;
@@ -350,7 +371,7 @@ function CCTV({view,act,notice}:{view:CCTVView;act:Act;notice:string}){
   </Modal>;
 }
 
-export function IsoInterface({mode,panel,saved,state,settings,hint,notice,loading,cctv,document,fp, onAction:act}:IsoInterfaceProps){
+export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notice,loading,cctv,document,fp, onAction:act}:IsoInterfaceProps){
   const close=()=>act(closeAction);
   const zoom={'--iso-text':settings.textScale} as CSSProperties;
   let modal:ReactNode=null;
@@ -397,7 +418,7 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,notice,loadin
   return <div className="iso-ui" style={zoom} data-motion={settings.motion?'on':'off'} data-flicker={settings.reducedFlicker?'reduced':'normal'}>
     <div className="iso-rotate" role="alert"><span>⟲</span><p>Поверните телефон горизонтально</p></div>
     {mode==='title'&&<Title saved={saved} act={act} covered={!!panel}/>}
-    {mode==='play'&&!panel&&<Hud state={state} settings={settings} hint={hint} notice={notice} act={act} fp={fp}/>}
+    {mode==='play'&&!panel&&<Hud state={state} settings={settings} hint={hint} markers={markers} notice={notice} act={act} fp={fp}/>}
     {mode==='loading'&&<div className="iso-screen-state" role="status" data-testid="iso-loading">
       <p className="iso-wordmark" aria-label="100GATE">100<span>GATE</span></p>
       <p>{loading||'Загрузка администрации…'}</p>

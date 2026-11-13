@@ -382,6 +382,7 @@ export class FpRig {
   private prevYaw = 0; private prevPitch = 0;
   private roll = 0;
   private started = false;
+  private syaw = 0; private spitch = 0;      // the look the camera really has: it follows the mouse a moment later and settles
 
   readonly vm: ViewModel;
 
@@ -411,13 +412,24 @@ export class FpRig {
     // Slight head roll toward the foot that is down, and a lean when turning quickly.
     const turn = this.started ? clamp((i.yaw - this.prevYaw) / Math.max(dt, 1e-3), -6, 6) : 0;
     this.roll = damp(this.roll, Math.sin(this.bobPhase * Math.PI * 2) * .006 * amp * w - turn * .0035, 8, dt);
-    const sinY = Math.sin(i.yaw), cosY = Math.cos(i.yaw);
+    // The head has mass: the camera follows the look with a short, critically damped lag instead of snapping to it.
+    if (!this.started) { this.syaw = i.yaw; this.spitch = i.pitch; }
+    const kk = 1 - Math.exp(-dt * 13);
+    this.syaw += THREEangle(i.yaw - this.syaw) * kk; this.spitch += (i.pitch - this.spitch) * kk;
+    // Breathing and a hand-held camera: a slow chest rise, shoulders drifting, small irregular shake; all of it stronger when standing than walking.
+    const t = i.time, still = 1 - w;
+    const breath = Math.sin(t * 1.45) * .5 + .5;
+    const breathY = (breath - .5) * .012 * still, breathP = (breath - .5) * .0075 * still;
+    const handYaw = (Math.sin(t * .83) + Math.sin(t * 2.17 + 1.1) * .6 + Math.sin(t * 3.9 + .4) * .25) * .0021 * (.5 + still);
+    const handPitch = (Math.sin(t * .71 + 2) + Math.sin(t * 1.93) * .5 + Math.sin(t * 4.3 + 1.7) * .2) * .0017 * (.5 + still);
+    const handRoll = Math.sin(t * .57) * .0045 * still + Math.sin(t * 1.31 + .6) * .0016;
+    const sinY = Math.sin(this.syaw), cosY = Math.cos(this.syaw);
     // Offsets: side bob is applied along the camera's right vector (-cos, sin).
     // The camera sits just ahead of the (hidden) head so the real arms and torso stay in view.
     // In the crouch pose the head leans about 10 cm further forward.
     const lean = .13 + .1 * i.crouch; // just ahead of the hidden head: arms enter the view from below, not beside the eye
-    this.camera.position.set(i.x - cosY * bobX + sinY * lean + (i.bend?.x ?? 0), this.eye + bobY + breathe + (i.bend?.y ?? 0), i.z + sinY * bobX + cosY * lean + (i.bend?.z ?? 0));
-    this.camera.rotation.set(i.pitch + bobY * .12 + sway, i.yaw + Math.PI, this.roll);
+    this.camera.position.set(i.x - cosY * bobX + sinY * lean + (i.bend?.x ?? 0), this.eye + bobY + breathe + breathY + (i.bend?.y ?? 0), i.z + sinY * bobX + cosY * lean + (i.bend?.z ?? 0));
+    this.camera.rotation.set(this.spitch + bobY * .12 + sway + breathP + handPitch, this.syaw + Math.PI + handYaw, this.roll + handRoll);
     this.camera.updateMatrixWorld(true);
 
     this.prevYaw = i.yaw; this.prevPitch = i.pitch; this.started = true;

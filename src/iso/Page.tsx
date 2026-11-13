@@ -18,7 +18,7 @@ export default function IsoPage(){
   const click=useRef<(event:{clientX:number;clientY:number})=>void>(()=>{});
   const activateAudio=useRef<()=>void>(()=>{});
   const [view,setView]=useState(()=>({mode:'loading' as Mode,panel:null as Panel|null,state:newSave(),settings:readSettings(),
-    saved:!!getSave(),hint:'',notice:'',loading:'Администрация',cctv:startCCTV(),document:undefined as DocumentView|undefined,fp:{locked:false,stamina:1}}));
+    saved:!!getSave(),hint:'',notice:'',loading:'Администрация',cctv:startCCTV(),document:undefined as DocumentView|undefined,fp:{locked:false,stamina:1},markers:[] as {id:string;label:string;x:number;y:number;aimed:boolean}[]}));
 
   useEffect(()=>{
     const surface=canvas.current!;
@@ -26,6 +26,7 @@ export default function IsoPage(){
     const lifetime=new AbortController();
     let settings=readSettings(),mode:Mode='loading',panel:Panel|null=null,back:Panel|null=null,active=getSave(),state=active??newSave();
     let clock=0,noticeUntil=0,notice='',loading='Администрация',target:ObjectId|null=null,documentView:DocumentView|undefined;
+    let markers:{id:ObjectId;x:number;y:number}[]=[],markClock=0;
     let cctv=startCCTV(),saveClock=0,uiClock=0,walked=0,drawer=false;
     let direction:Point={x:0,z:1},speed=0;
     // First person: look angles, smoothed velocity, stance and stamina.
@@ -38,7 +39,8 @@ export default function IsoPage(){
     const unlockPointer=()=>{try{if(document.pointerLockElement===surface){ignoreUnlock=true;document.exitPointerLock();}}catch{/* not locked */}};
     const keys=new Set<string>(),sound=new IsoSound();
     const emit=()=>setView({mode,panel,state,settings,saved:!!active,hint:target?OBJECTS[target].label:'',notice,loading,
-      cctv:{...cctv,availableFuture:state.items.includes('file'),evidence:isEvidence(cctv.camera,cctv.tape,cctv.time)},document:documentView,fp:{locked:locked||coarse,stamina}});
+      cctv:{...cctv,availableFuture:state.items.includes('file'),evidence:isEvidence(cctv.camera,cctv.tape,cctv.time)},document:documentView,fp:{locked:locked||coarse,stamina},
+      markers:markers.map(m=>({id:m.id,label:OBJECTS[m.id].label,x:m.x,y:m.y,aimed:m.id===target}))});
     const inform=(s:string)=>{notice=s;noticeUntil=clock+5.6;};
     const persist=()=>{
       if(mode!=='play'&&mode!=='complete')return;
@@ -311,6 +313,10 @@ export default function IsoPage(){
           if(walked>half){walked-=half;sound.cue('step',settings);}
         }else speed=0;
         const near=fpOn()?(world.aimTarget(state,available)??null):pick();if(near!==target){target=near;emit();}
+        if(fpOn()){
+          markClock+=dt;
+          if(markClock>.07){markClock=0;markers=world.markers(state,available).map(({id,x,y})=>({id,x,y}));emit();}
+        }else if(markers.length){markers=[];emit();}
         saveClock+=dt;
         if(saveClock>1.25&&active!==state){saveClock=0;persist();}
       }else speed=0;

@@ -3,6 +3,7 @@ import {buildEnvironment} from './environment';
 import {loadActor} from './actor';
 import {FpRig} from './fps';
 import {Flame,fireFlicker} from './flame';
+import {AnalogPass} from './analog';
 import {KeyProp} from './keys';
 import {scanned} from './env-materials';
 import {boxProjectUV} from './env-kit';
@@ -106,6 +107,10 @@ export class IsoWorld {
   private readonly fire:T.PointLight;
   private torchProp:T.Object3D;
   private torchFlame?:Flame;
+  private readonly analog=new AnalogPass();
+  private readonly fogFx=new T.FogExp2(0x03070a,.16);
+  private readonly darkBg=new T.Color(0x020506);
+  private readonly lightBg=new T.Color(0x121615);
   private readonly torchHeads:T.MeshStandardMaterial[]=[];
   private lighterProp?:T.Object3D;
   private darkness=1;
@@ -256,6 +261,26 @@ export class IsoWorld {
     this.torchProp.position.set(OBJECTS.torch.x,.28*Math.cos(t),OBJECTS.torch.z);
     this.torchProp.updateMatrixWorld(true);
   }
+  /** Interactable things near the player that are on screen in first person: where they appear (0..1, after the CRT bulge of the analog pass) and how far they are. */
+  markers(p:Point,ok:(id:ObjectId)=>boolean=()=>true){
+    const cam=this.fps.camera,out:{id:ObjectId;x:number;y:number;dist:number}[]=[];
+    cam.updateMatrixWorld(true);
+    const box=new T.Box3(),c=new T.Vector3(),v=new T.Vector3();
+    for(const [key,obj] of Object.entries(this.env.targets)){
+      const id=key as ObjectId;
+      if(!obj||!obj.visible||!withinReach(id,p,.7)||!ok(id))continue;
+      box.setFromObject(obj);
+      if(box.isEmpty())continue;
+      box.getCenter(c);
+      v.copy(c).project(cam);
+      if(v.z>1||v.z<-1||Math.abs(v.x)>1.05||Math.abs(v.y)>1.05)continue;
+      // the analog pass bulges the picture toward its edges: put the marker where the point is really drawn
+      let ux=v.x,uy=v.y;
+      for(let i=0;i<2;i++){const r2=ux*ux+uy*uy,k2=1+.07*r2;ux=v.x/k2;uy=v.y/k2;}
+      out.push({id,x:(ux+1)/2,y:(1-uy)/2,dist:Math.hypot(c.x-p.x,c.z-p.z)});
+    }
+    return out;
+  }
   /** The interactable under the crosshair in first person, within arm's reach. */
   aimTarget(p:Point,ok:(id:ObjectId)=>boolean=()=>true):ObjectId|undefined{
     const cam=this.fps.camera;
@@ -376,6 +401,7 @@ export class IsoWorld {
       const cap={low:1,medium:1.35,high:1.8}[settings.quality];
       this.renderer.setPixelRatio(Math.max(.55,Math.min(devicePixelRatio,cap)*settings.scale));
       this.renderer.setSize(w,h,false);
+      this.analog.resize(w,h,settings.quality==='low'?360:480);
       this.renderer.shadowMap.enabled=settings.shadows&&settings.quality!=='low';
       this.titleCamera.aspect=this.securityCamera.aspect=w/h;
       this.fps.setAspect(w/h);
@@ -433,20 +459,21 @@ export class IsoWorld {
     const drawerOpen=frame.drawer||this.fps.vm.lighterPlaying;
     if(this.env.drawer)this.env.drawer.position.z=T.MathUtils.damp(this.env.drawer.position.z,this.drawerRest+(drawerOpen?.15:0),11,dt);
     if(this.lighterProp)this.lighterProp.visible=!state.items.includes('lighter');
-    this.cast.root.visible=!menu&&!cctv;
+    this.cast.root.visible=!menu&&!cctv&&!fp;   // first person: no body, no legs, no arms of the actor, only the camera and what is held
     this.cast.update(frame.paused?0:dt,state.x,state.z,frame.direction.x,frame.direction.z,frame.speed);
     for(const [i,l] of this.env.powerLights.entries()){
       const value=this.poweredLevels[i]!;
-      l.intensity=(state.power?value:value*.07)*(fp?.42:1);
+      l.intensity=(state.power?value:value*.07)*(fp?.3:1);
     }
     // In play the house is a dark, half-lit place: the torch has to do the work.
     this.renderer.toneMappingExposure=fp?.86:1.13;
+    this.scene.fog=fp?this.fogFx:null;this.scene.background=fp?this.darkBg:this.lightBg;
     const interval=time%34;
     const flicker=settings.reducedFlicker?1:1-.64*Math.exp(-((interval-8.7)**2)/.19)-.78*Math.exp(-((interval-23.4)**2)/.075);
     this.lamp.intensity=menu?25*flicker:(state.power?3.6:1.0)*flicker;
     const lit=menu||state.power,has=state.items.includes('torch');
     this.darkness=T.MathUtils.damp(this.darkness,lit?1:.3,3,dt);
-    const fill=fp?.3:1;
+    const fill=fp?.1:1;
     this.hemi.intensity=1.05*this.darkness*fill;this.sun.intensity=1.55*this.darkness*fill;
     const pick=this.torchPickup;
     this.torchProp.visible=!pick.held;   // in the hand it is drawn by the viewmodel
@@ -517,7 +544,7 @@ export class IsoWorld {
       this.titleCamera.updateProjectionMatrix();
       const culled=Object.keys(ROOMS).filter(k=>k!=='surveillance').flatMap(k=>this.env.root.getObjectByName(k)??[]);
       culled.forEach(o=>{o.visible=false;});
-      this.renderer.render(this.scene,this.titleCamera);
+      this.analog.render(this.renderer,()=>this.renderer.render(this.scene,this.titleCamera),time,.55);
       culled.forEach(o=>{o.visible=true;});
       return;
     }
@@ -532,8 +559,7 @@ export class IsoWorld {
     }
     if(fp){
       this.mark.visible=false;
-      this.renderer.render(this.scene,this.fps.camera);
-      this.fps.vm.draw(this.renderer);
+      this.analog.render(this.renderer,()=>{this.renderer.render(this.scene,this.fps.camera);this.fps.vm.draw(this.renderer);},time,1);
       return;
     }
     const id=roomAt(state.x,state.z)??'corridor',r=ROOMS[id];
