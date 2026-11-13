@@ -1,0 +1,17 @@
+Third-party 3D models (addition to models-credits-2.txt)
+
+This work is based on "Rigged T-Pose Human Male w 50 Face Blendshapes"
+(https://sketchfab.com/3d-models/rigged-t-pose-human-male-w-50-face-blendshapes-cc7e4596bcd145208a6992c757854c07)
+by Mike Alger (https://sketchfab.com/mikealger), licensed under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/).
+Commercial use allowed with credit.
+Changes: only the right arm and sleeve are kept (the rest of the mesh is removed), the skeleton is renamed and posed for the
+first-person view, and the clips flashlight_idle / walk / raise / pickup are authored on it (assets/iso/viewmodel-8.glb).
+
+This work is based on "Torch stick" (https://sketchfab.com/3d-models/torch-stick-d8eadee1a5c14483aade99b1fe5bc150)
+by DJMaesen (https://sketchfab.com/bumstrum), licensed under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/).
+Changes: scaled to 0.95 m, re-oriented, the wrapped head split into its own material (it is darkened when the torch is out and glows when lit),
+textures reduced to 1024 px (assets/iso/viewmodel-8.glb).
+
+This work is based on "Zippo Lighter" (https://sketchfab.com/3d-models/zippo-lighter-c59810d86f2a4938aad86abb575a3a8f)
+by MH446 (https://sketchfab.com/MH446), licensed under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/).
+Changes: real-world size, the lid separated on its hinge and animated, the small metal details merged and simplified, textures reduced to 1024 px.
