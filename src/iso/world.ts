@@ -10,6 +10,7 @@ import {boxProjectUV} from './env-kit';
 import {createPhysics,type Physics} from './physics';
 import {HandController,Pickup} from './interaction';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {Intro} from './intro';
 import {DOORS,OBJECTS,ROOMS,doorFor,doorSwing,movedProps,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
 import type {CameraId,CCTVView,Save,Settings} from './contracts';
 
@@ -110,6 +111,7 @@ export class IsoWorld {
   private readonly analog=new AnalogPass();
   private lowHeight=480;
   private lastAim?:ObjectId;
+  private intro?:Intro;
   private paperW=0;
   /** Where the grip frame of the right hand is while a sheet is read (camera space): the sheet fills the lower middle of the view. */
   readonly paperPose=new T.Matrix4().compose(new T.Vector3(0,-.1,-.4),new T.Quaternion().setFromEuler(new T.Euler(-.25,0,0)),new T.Vector3(1,1,1));
@@ -423,6 +425,15 @@ export class IsoWorld {
     }
     return true;
   }
+  /** The opening sequence at time t (seconds): its own scene through the same analog pass. */
+  renderIntro(t:number,settings:Settings,time:number){
+    if(!this.resize(settings))return;
+    this.intro??=new Intro();
+    const {fade,flash}=this.intro.update(t,this.lastWidth/Math.max(1,this.lastHeight));
+    this.renderer.toneMappingExposure=1.25;
+    this.analog.render(this.renderer,()=>this.renderer.render(this.intro!.scene,this.intro!.camera),time,1,fade,flash);
+  }
+  endIntro(){this.intro?.dispose();this.intro=undefined;}
   render(frame:Frame){
     if(!this.resize(frame.settings))return;
     const {state,settings,time,dt,menu,cctv}=frame;

@@ -29,6 +29,8 @@ export interface IsoInterfaceProps {
   /** Interactable things in view (first person): they glow, and the aimed one shows its key and name. */
   markers?:{id:string;label:string;x:number;y:number;aimed:boolean}[];
   notice:string;
+  /** The opening sequence is playing: no HUD, only a hint to skip it. */
+  intro?:boolean;
   loading:string;
   cctv:CCTVView;
   document?:{title:string; text:string};
@@ -375,7 +377,7 @@ function CCTV({view,act,notice}:{view:CCTVView;act:Act;notice:string}){
   </Modal>;
 }
 
-export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notice,loading,cctv,document,fp, onAction:act}:IsoInterfaceProps){
+export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notice,intro,loading,cctv,document,fp, onAction:act}:IsoInterfaceProps){
   const close=()=>act(closeAction);
   const zoom={'--iso-text':settings.textScale} as CSSProperties;
   let modal:ReactNode=null;
@@ -424,7 +426,8 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
   return <div className="iso-ui" style={zoom} data-motion={settings.motion?'on':'off'} data-flicker={settings.reducedFlicker?'reduced':'normal'}>
     <div className="iso-rotate" role="alert"><span>⟲</span><p>Поверните телефон горизонтально</p></div>
     {mode==='title'&&<Title saved={saved} act={act} covered={!!panel}/>}
-    {mode==='play'&&!panel&&<Hud state={state} settings={settings} hint={hint} markers={markers} notice={notice} act={act} fp={fp}/>}
+    {mode==='play'&&intro&&<button type="button" className="iso-intro-skip" onClick={()=>act({type:'skip-intro'})}>{isTouch()?'Пропустить':'[Пробел] пропустить'}</button>}
+    {mode==='play'&&!panel&&!intro&&<Hud state={state} settings={settings} hint={hint} markers={markers} notice={notice} act={act} fp={fp}/>}
     {mode==='loading'&&<div className="iso-screen-state" role="status" data-testid="iso-loading">
       <p className="iso-wordmark" aria-label="100GATE">100<span>GATE</span></p>
       <p>{loading||'Загрузка администрации…'}</p>

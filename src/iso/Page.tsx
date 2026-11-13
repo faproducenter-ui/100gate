@@ -1,3 +1,4 @@
+import {INTRO_DURATION} from './intro';
 import {useEffect,useRef,useState} from 'react';
 import {IsoInterface} from './Interface';
 import {IsoWorld} from './world';
@@ -18,7 +19,7 @@ export default function IsoPage(){
   const click=useRef<(event:{clientX:number;clientY:number})=>void>(()=>{});
   const activateAudio=useRef<()=>void>(()=>{});
   const [view,setView]=useState(()=>({mode:'loading' as Mode,panel:null as Panel|null,state:newSave(),settings:readSettings(),
-    saved:!!getSave(),hint:'',notice:'',loading:'Администрация',cctv:startCCTV(),document:undefined as DocumentView|undefined,fp:{locked:false,stamina:1},markers:[] as {id:string;label:string;x:number;y:number;aimed:boolean}[]}));
+    saved:!!getSave(),hint:'',notice:'',loading:'Администрация',cctv:startCCTV(),document:undefined as DocumentView|undefined,intro:false,fp:{locked:false,stamina:1},markers:[] as {id:string;label:string;x:number;y:number;aimed:boolean}[]}));
 
   useEffect(()=>{
     const surface=canvas.current!;
@@ -27,6 +28,8 @@ export default function IsoPage(){
     let settings=readSettings(),mode:Mode='loading',panel:Panel|null=null,back:Panel|null=null,active=getSave(),state=active??newSave();
     let clock=0,noticeUntil=0,notice='',loading='Администрация',target:ObjectId|null=null,documentView:DocumentView|undefined;
     const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
+    let introT=-1;
+    const endIntro=()=>{if(introT<0)return;introT=-1;sound.stopIntro();world?.endIntro();sound.camOn(settings);yaw=START_YAW;pitch=-.06;emit();};
     let markers:{id:ObjectId;x:number;y:number}[]=[],markClock=0,perf=coarse?1:0;
     let cctv=startCCTV(),saveClock=0,uiClock=0,walked=0,drawer=false;
     let direction:Point={x:0,z:1},speed=0;
@@ -39,7 +42,7 @@ export default function IsoPage(){
     const unlockPointer=()=>{try{if(document.pointerLockElement===surface){ignoreUnlock=true;document.exitPointerLock();}}catch{/* not locked */}};
     const keys=new Set<string>(),sound=new IsoSound();
     const emit=()=>setView({mode,panel,state,settings,saved:!!active,hint:target?OBJECTS[target].label:'',notice,loading,
-      cctv:{...cctv,availableFuture:state.items.includes('file'),evidence:isEvidence(cctv.camera,cctv.tape,cctv.time)},document:documentView,fp:{locked:locked||coarse,stamina},
+      cctv:{...cctv,availableFuture:state.items.includes('file'),evidence:isEvidence(cctv.camera,cctv.tape,cctv.time)},document:documentView,intro:introT>=0,fp:{locked:locked||coarse,stamina},
       markers:markers.map(m=>({id:m.id,label:OBJECTS[m.id].label,x:m.x,y:m.y,aimed:m.id===target}))});
     const inform=(s:string)=>{notice=s;noticeUntil=clock+5.6;};
     const persist=()=>{
@@ -113,7 +116,11 @@ export default function IsoPage(){
       yaw=START_YAW;pitch=-.06;vx=vz=0;stamina=1;tired=false;
       world.syncPickups(state);
       world.onPropSettled=(id,pose)=>{if(!state.items.includes(id)){state={...state,props:{...state.props,[id]:pose}};persist();}};
-      mode=state.finished?'complete':'play';target=null;notice='';setPanel(null);persist();emit();
+      mode=state.finished?'complete':'play';target=null;notice='';setPanel(null);persist();
+      // A new game opens with the drive and the crash (30 s); a loaded one goes straight in.
+      introT=!restore&&fpOn()&&mode==='play'&&!state.lit&&state.items.length===0?0:-1;
+      if(introT===0){void sound.unlock().then(()=>{if(introT>=0)sound.intro(settings);});}
+      emit();
     };
     async function load(){
       const id=++attempt;
@@ -160,6 +167,7 @@ export default function IsoPage(){
         case 'interact':use(target);return;
         case 'torch':flash();return;
         case 'drop':drop();return;
+        case 'skip-intro':endIntro();return;
         case 'touch':
           if(a.move){tmx=a.move.x;tmz=a.move.z;}
           if(a.look){tlx+=a.look.dx;tly+=a.look.dy;}
@@ -209,6 +217,7 @@ export default function IsoPage(){
     };
     const keydown=(e:KeyboardEvent)=>{
       if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey)return;
+      if(introT>=0&&mode==='play'&&(e.code==='Space'||e.code==='Enter'||e.code==='Escape')){e.preventDefault();if(!e.repeat)endIntro();return;}
       if(e.code==='Escape'){
         if(e.repeat)return;
         if(panel){e.preventDefault();dispatch.current({type:'close'});}
@@ -260,8 +269,9 @@ export default function IsoPage(){
       return next;
     };
     const step=(dt:number,draw=true)=>{
-      const gameplay=mode==='play'&&!panel&&!portraitBlocked();
+      const gameplay=mode==='play'&&!panel&&!portraitBlocked()&&introT<0;
       clock+=dt;
+      if(introT>=0&&!document.hidden){introT+=dt;if(introT>=INTRO_DURATION)endIntro();}
       if(gameplay&&world){
         const k=settings.keys,ax=Number(keys.has(k.right))-Number(keys.has(k.left)),az=Number(keys.has(k.down))-Number(keys.has(k.up));
         const mx=Math.max(-1,Math.min(1,ax+tmx)),mz=Math.max(-1,Math.min(1,az+tmz));
@@ -327,7 +337,8 @@ export default function IsoPage(){
       world?.animateDoors(state,paused?0:dt);
       if(!draw)return;
       sound.mix(settings,{paused,power:state.power,menu});
-      if(!document.hidden&&(mode==='title'||mode==='play'||mode==='complete')){
+      if(!document.hidden&&introT>=0&&mode==='play')world?.renderIntro(introT,settings,clock);
+      else if(!document.hidden&&(mode==='title'||mode==='play'||mode==='complete')){
         world?.render({state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,perf,reading:panel==='document'&&fpOn(),
           direction,speed,target:panel?null:target,drawer,look:{yaw,pitch},crouch,sprint:sprinting,press,kick});
       }
@@ -370,6 +381,7 @@ export default function IsoPage(){
       debug.isoProjectTarget=(id:ObjectId)=>world?.projectTarget(id);
       debug.isoWorld=()=>world;
       debug.isoLook=(y:number,p:number)=>{yaw=y;pitch=p;};
+      debug.isoIntro=(t:number)=>{introT=t;emit();};
       debug.isoSetState=(patch:Partial<Save>)=>{state={...state,...patch};emit();};
       debug.advanceTime=(ms:number)=>{
         if(!Number.isFinite(ms)||ms<0||ms>3000)throw RangeError('Expected 0..3000ms');
@@ -391,7 +403,7 @@ export default function IsoPage(){
       document.removeEventListener('visibilitychange',visibility);
       if(import.meta.env.DEV){
         const debug=window as unknown as Record<string,unknown>;
-        delete debug.render_game_to_text;delete debug.advanceTime;delete debug.isoProjectTarget;delete debug.isoSetState;delete debug.isoWorld;delete debug.isoLook;
+        delete debug.render_game_to_text;delete debug.advanceTime;delete debug.isoProjectTarget;delete debug.isoSetState;delete debug.isoWorld;delete debug.isoLook;delete debug.isoIntro;
       }
     };
   },[]);

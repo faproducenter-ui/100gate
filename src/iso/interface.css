@@ -608,3 +608,5 @@ html, body, #root { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
 .iso-paper article { white-space: pre-wrap; font-size: clamp(.56rem, 1.5vh, .82rem); line-height: 1.45; }
 .iso-paper-key { position: absolute; left: 0; right: 0; bottom: 1.2vh; margin: 0; text-align: center; font-family: var(--analog-font); font-size: .7rem; letter-spacing: .1em; opacity: .55; }
 @keyframes iso-paper-in { from { opacity: 0; } to { opacity: .92; } }
+
+.iso-intro-skip { position: absolute; right: max(18px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); background: none; border: 0; color: #cfe0dc99; font-family: var(--analog-font); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; padding: 10px 8px; cursor: pointer; pointer-events: auto; animation: iso-paper-in 1s ease 1.5s both; }

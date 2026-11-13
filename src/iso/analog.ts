@@ -13,7 +13,7 @@ const VERT = /* glsl */ `
 const FRAG = /* glsl */ `
   uniform sampler2D tDiffuse;
   uniform vec2 uRes;
-  uniform float uTime, uGrain, uAberr, uScan, uCurve, uVig, uFlicker, uSat, uExposure, uBlack;
+  uniform float uTime, uGrain, uAberr, uScan, uCurve, uVig, uFlicker, uSat, uExposure, uBlack, uFade, uFlash;
   varying vec2 vUv;
   float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
   vec3 aces(vec3 x) { const float a = 2.51, b = .03, c = 2.43, d = .59, e = .14; return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0., 1.); }
@@ -48,6 +48,7 @@ const FRAG = /* glsl */ `
     float v = smoothstep(.98, .22, length(dir) * 1.32);
     col *= mix(1., v, uVig);
     col = pow(max(col, 0.), vec3(1. / 2.2));
+    col = mix(col * uFade, vec3(1.), uFlash);                     // fades (the opening) and the white flash
     gl_FragColor = vec4(col, 1.);
   }
 `;
@@ -62,7 +63,7 @@ export class AnalogPass {
     this.mat = new T.ShaderMaterial({
       vertexShader: VERT, fragmentShader: FRAG, depthTest: false, depthWrite: false, toneMapped: false,
       uniforms: { tDiffuse: { value: this.rt.texture }, uRes: { value: new T.Vector2(2, 2) }, uTime: { value: 0 }, uGrain: { value: .06 }, uAberr: { value: .0042 },
-        uScan: { value: .22 }, uCurve: { value: .07 }, uVig: { value: .92 }, uFlicker: { value: .035 }, uSat: { value: .7 }, uExposure: { value: 1.0 }, uBlack: { value: .012 } },
+        uScan: { value: .22 }, uCurve: { value: .07 }, uVig: { value: .92 }, uFlicker: { value: .035 }, uSat: { value: .7 }, uExposure: { value: 1.0 }, uBlack: { value: .012 }, uFade: { value: 1 }, uFlash: { value: 0 } },
     });
     const quad = new T.Mesh(new T.PlaneGeometry(2, 2), this.mat); quad.frustumCulled = false; this.screen.add(quad);
   }
@@ -74,10 +75,11 @@ export class AnalogPass {
     (this.mat.uniforms.uRes!.value as T.Vector2).set(lw, lowHeight);
   }
   /** strength 0..1 scales every artefact (the menu uses less than the game). */
-  render(renderer: T.WebGLRenderer, draw: () => void, time: number, strength = 1) {
+  render(renderer: T.WebGLRenderer, draw: () => void, time: number, strength = 1, fade = 1, flash = 0) {
     const u = this.mat.uniforms;
     u.uTime!.value = time; u.uGrain!.value = .06 * strength; u.uAberr!.value = .0042 * strength; u.uScan!.value = .22 * strength;
     u.uCurve!.value = .07 * strength; u.uVig!.value = .92 * strength; u.uFlicker!.value = .035 * strength; u.uSat!.value = 1 - .32 * strength;
+    u.uFade!.value = fade; u.uFlash!.value = flash;
     renderer.setRenderTarget(this.rt); renderer.clear(); draw();
     renderer.setRenderTarget(null); renderer.clear(); renderer.render(this.screen, this.cam);
   }
