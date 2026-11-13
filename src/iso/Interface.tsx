@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode} from 'react';
-import {Archive, ArrowLeft, ArrowRight, BookOpen, Check, Circle, FileText, KeyRound, Flashlight, Lightbulb,
+import {Archive, ArrowLeft, ArrowRight, BookOpen, Check, Circle, FileText, KeyRound, Flame, Lightbulb,
   LockKeyhole, Map as MapIcon, Maximize, Pause, Play, Power, RotateCcw, ScanLine, StepBack,
   StepForward, Video, X, ZoomIn, ZoomOut} from 'lucide-react';
 import type {CCTVView, Panel, PowerLine, Save, Settings, UIAction} from './contracts';
@@ -137,7 +137,7 @@ function TouchControls({act,light}:{act:Act;light:boolean}){
   return <div className="iso-touch" data-testid="iso-touch" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
     {knob&&<div className="iso-stick" style={{left:knob.x,top:knob.y}}><i style={{transform:`translate(${knob.dx}px,${knob.dy}px)`}}/></div>}
     <div className="iso-touch-buttons">
-      <button type="button" aria-label="Фонарь" aria-pressed={light} onClick={()=>act({type:'flashlight'})}><Flashlight/></button>
+      <button type="button" aria-label="Факел" aria-pressed={light} onClick={()=>act({type:'torch'})}><Flame/></button>
       <button type="button" aria-label="Бег" aria-pressed={run} onClick={()=>{setRun(!run);act({type:'touch',sprint:!run});}}><ArrowRight/></button>
       <button type="button" aria-label="Присесть" aria-pressed={crouch} onClick={()=>{setCrouch(!crouch);act({type:'touch',crouch:!crouch});}}><StepBack/></button>
     </div>
@@ -159,9 +159,9 @@ function Hud({state,settings,hint,notice,act,fp}:{state:Save;settings:Settings;h
     <nav className="iso-hud-actions" aria-label="Управление игрой">
       <button type="button" className="iso-icon" title="Инвентарь · Tab" aria-label="Инвентарь" data-testid="iso-inventory-open"
         onClick={()=>act({type:'panel',panel:'inventory'})}><Archive/><span>{state.items.length}</span></button>
-      {state.items.includes('flashlight')&&<button type="button" className="iso-icon iso-light" title="Фонарь · F" aria-label="Фонарь"
-        data-testid="iso-flashlight" aria-pressed={state.lightOn} data-low={state.charge<=20} onClick={()=>act({type:'flashlight'})}>
-        <Flashlight/><span>{Math.ceil(state.charge)}%{state.spare>0?' +'+state.spare:''}</span></button>}
+      {state.items.includes('torch')&&<button type="button" className="iso-icon iso-light" title="Факел · F" aria-label="Факел"
+        data-testid="iso-torch" aria-pressed={state.lightOn} onClick={()=>act({type:'torch'})}>
+        <Flame/><span>{state.lightOn?'горит':state.items.includes('lighter')?'F':'—'}</span></button>}
       <button type="button" className="iso-icon" title="Журнал · J" aria-label="Журнал" data-testid="iso-journal-open"
         onClick={()=>act({type:'panel',panel:'journal'})}><BookOpen/></button>
       <button type="button" className="iso-icon" title="Пауза · Esc" aria-label="Пауза" data-testid="iso-pause-open"
@@ -244,7 +244,7 @@ function Options({settings,act}:{settings:Settings;act:Act}){
         </button>
       </div>)}
       {bindingError&&<p className="iso-option-error" role="status">{bindingError}</p>}
-      <p className="iso-controls-note">Tab — инвентарь · J — журнал · G — положить фонарь · Esc — пауза · Shift — бег · C — присесть</p>
+      <p className="iso-controls-note">Tab — инвентарь · J — журнал · F — поджечь факел · G — положить факел · Esc — пауза · Shift — бег · C — присесть</p>
     </fieldset>
   </div>;
 }

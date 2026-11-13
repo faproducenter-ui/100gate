@@ -1,6 +1,6 @@
 import type {DoorStates} from './map';
 
-export type ItemId='flashlight'|'technicalKey'|'archiveKey'|'plan'|'memo'|'vhs'|'file';
+export type ItemId='lighter'|'torch'|'technicalKey'|'archiveKey'|'plan'|'memo'|'vhs'|'file';
 export type PowerLine='lights'|'locks'|'cctv';
 export type CameraId='reception'|'corridor'|'archive';
 export type TapeId='shift'|'future';
@@ -11,10 +11,10 @@ export interface Save {
   dutyRead:boolean;diagramRead:boolean;power:boolean;breaker:PowerLine[];
   archiveClue:boolean;archiveIndex:boolean;finished:boolean;
   anomaly:boolean;
-  /** Optional side system: flashlight charge 0..100, spare batteries, picked-up battery ids. */
-  lightOn:boolean;charge:number;spare:number;taken:string[];
-  /** Props put down by hand: world pose [x,y,z,qx,qy,qz,qw]; a dropped flashlight remembers if it was lit. */
-  props?:Partial<Record<'flashlight',number[]>>;flashlightLit?:boolean;
+  /** The torch burns in the hand; `lit` = it has been lit at least once (the first quest). */
+  lightOn:boolean;lit:boolean;
+  /** Props put down by hand: world pose [x,y,z,qx,qy,qz,qw]; a dropped torch remembers if it was burning. */
+  props?:Partial<Record<'torch',number[]>>;torchLit?:boolean;
 }
 export type Settings={
   quality:'low'|'medium'|'high';scale:number;shadows:boolean;ambient:boolean;motion:boolean;reducedFlicker:boolean;
@@ -32,7 +32,7 @@ export type CCTVView={camera:CameraId;tape:TapeId;time:number;duration:number;pl
   availableFuture:boolean;evidence:boolean;zoom:boolean};
 export type DocumentView={title:string;text:string};
 export type UIAction=
-  |{type:'flashlight'}
+  |{type:'torch'}
   |{type:'touch';move?:{x:number;z:number};look?:{dx:number;dy:number};sprint?:boolean;crouch?:boolean}
   |{type:'start'|'continue'|'retry'|'resume'|'title'|'fullscreen'|'close'|'interact'|'archive-evidence'|'cctv-play'|'cctv-zoom'|'reset-breaker'}
   |{type:'cctv-step';delta:number}|{type:'cctv-seek';time:number}

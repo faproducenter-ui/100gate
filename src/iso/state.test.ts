@@ -76,23 +76,21 @@ it('connects every usable object to the same walkable floor and seals all locked
   expect([...after.targets].sort()).toEqual(Object.keys(OBJECTS).sort());
 });
 
-describe('flashlight side system',()=>{
-  it('drains only while lit, swaps spare batteries, dies without them, and never touches the quest',async()=>{
-    const {drainLight,toggleLight,upgradeSave}=await import('./state');
-    let s=newSave();const quest=activeQuest(s).id;
-    expect(toggleLight(s).state.lightOn).toBe(false);
-    s=act(s,'flashlight').state;
-    expect(s.items).toContain('flashlight');expect(s.lightOn).toBe(true);
-    s=drainLight(s,90).state;expect(s.charge).toBeCloseTo(50);
-    s=act(s,'battery1').state;expect(s.spare).toBe(1);
-    expect(act(s,'battery1').state).toBe(s);
-    s=drainLight(s,200).state;expect(s.charge).toBeGreaterThan(90);expect(s.spare).toBe(0);
-    s=drainLight(s,500).state;expect(s.lightOn).toBe(false);expect(s.charge).toBe(0);
-    expect(toggleLight(s).state.lightOn).toBe(false);
-    s=act(s,'battery2').state;expect(s.lightOn).toBe(true);expect(s.charge).toBe(100);
-    expect(activeQuest(s).id).toBe(quest);expect(validSave(s)).toBe(true);
-    const {lightOn:_a,charge:_b,spare:_c,taken:_d,...old}=newSave();
-    expect(validSave(upgradeSave(old))).toBe(true);
+describe('torch and lighter',()=>{
+  it('the lighter is in the desk drawer, the torch stands by the wall, F lights it; old saves lose the flashlight',async()=>{
+    const {lightTorch,canIgnite,upgradeSave}=await import('./state');
+    let s=newSave();expect(activeQuest(s).id).toBe('light');
+    expect(lightTorch(s).state).toBe(s);
+    s=act(s,'torch').state;expect(s.items).toContain('torch');expect(s.lightOn).toBe(false);
+    expect(canIgnite(s)).toBe(false);expect(lightTorch(s).message).toMatch(/зажигалк/);
+    s=act(s,'drawer').state;expect(s.items).toContain('lighter');expect(canIgnite(s)).toBe(true);
+    expect(act(s,'drawer').document?.title).toBe('Ящик стола');
+    s=lightTorch(s).state;expect(s.lightOn).toBe(true);expect(s.lit).toBe(true);
+    expect(canIgnite(s)).toBe(false);expect(activeQuest(s).id).toBe('reception');expect(validSave(s)).toBe(true);
+    const {lightOn:_a,lit:_b,...rest}=newSave();
+    const old={...rest,charge:50,spare:1,taken:['battery1'],items:['flashlight']};
+    const up=upgradeSave(old) as {items:string[]};
+    expect(validSave(up)).toBe(true);expect(up.items).not.toContain('flashlight');
   });
 });
 

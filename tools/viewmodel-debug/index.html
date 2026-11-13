@@ -1,0 +1,41 @@
+<!doctype html><meta charset="utf-8"><title>viewmodel debug (dev only)</title>
+<style>html,body{margin:0;background:#111}canvas{display:block;width:100vw;height:56.25vw}</style>
+<canvas id="c" width="1280" height="720"></canvas>
+<script type="module">
+// The game's own ViewModel (src/iso/fps.ts) with its camera. ?view=left|side|top for other angles of the hand.
+import * as T from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { ViewModel } from '/src/iso/fps.ts';
+const q = new URL(location.href).searchParams;
+const renderer = new T.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+renderer.setSize(1280, 720, false);
+const gltf = await new GLTFLoader().loadAsync('/assets/iso/viewmodel-8.glb');
+const vm = new ViewModel(gltf); vm.setAspect(1280 / 720);
+if (q.get('pl')) { const a = q.get('pl').split(',').map(Number); vm.place(a[0], a[1], a[2], a[3], a[4], a[5]); }   // ?pl=x,y,z,pitch,yaw,roll
+const bg = new T.Scene(); bg.background = new T.Color(0x20242a);
+// a table under the flashlight for pickup tests: the plane the clip assumes (camera space, looking 40 degrees down)
+const pitch = T.MathUtils.degToRad(40), up = new T.Vector3(0, Math.cos(pitch), Math.sin(pitch));
+const tableM = new T.Matrix4().compose(new T.Vector3(), new T.Quaternion().setFromUnitVectors(new T.Vector3(0, 0, 1), up), new T.Vector3(1, 1, 1));
+const table = new T.Mesh(new T.PlaneGeometry(1.6, 1.0), new T.MeshBasicMaterial({ color: 0x3a2a1c, side: T.DoubleSide }));
+let t = 0, pickupTarget;
+const step = (n, dt = 1 / 60) => { for (let i = 0; i < n; i++) { t += dt; vm.setHand({ reach: pickupTarget ? 1 : 0, grip: 1, carrying: vm.pickupT >= .667 || !pickupTarget, target: pickupTarget, up, fovMatch: 0, mainFov: 64 }); vm.update({ dt, time: t, yaw: 0, pitch: 0, hold: 1, press: 1, kick: 0, speed: 0, run: false, lit: q.get('lit') === '1' }); } };
+step(240);
+window.__vm = vm;
+window.startIgnite = () => vm.startIgnite(() => console.log('flame caught'));
+window.startLighter = () => vm.startLighter(() => console.log('lighter taken'));
+window.run = s => { for (let i = 0; i < s * 60; i++) step(1); };
+window.startPickup = (dx = 0, dz = 0, yaw = 0) => {
+  const nom = vm.pivot.matrixWorld.clone().multiply(vm.pickupNominal);
+  const shift = new T.Matrix4().makeTranslation(dx, 0, dz).multiply(new T.Matrix4().makeRotationAxis(up, yaw));
+  pickupTarget = shift.multiply(nom);
+  const p = new T.Vector3().setFromMatrixPosition(pickupTarget);
+  table.matrix.copy(tableM).setPosition(p.x, p.y - .018, p.z); table.matrixAutoUpdate = false; vm.scene.add(table);
+  vm.startPickup(); vm.pickupT = 0; return p.toArray();
+};
+window.advanceTo = s => { const dt = 1 / 60; while (vm.pickupT < s && vm.pickupT >= 0) step(1, dt); return vm.pickupT; };
+const VIEWS = { side: [.34, .02, 0], left: [-.34, .02, 0], top: [0, .34, .02] };
+const v = q.get('view');
+if (v && VIEWS[v]) { const hp = vm.arm.hand.getWorldPosition(new T.Vector3()); vm.camera.position.set(hp.x + VIEWS[v][0], hp.y + VIEWS[v][1], hp.z + VIEWS[v][2]); vm.camera.lookAt(hp); vm.camera.fov = 32; vm.camera.updateProjectionMatrix(); }
+function frame() { renderer.autoClear = true; renderer.render(bg, vm.camera); vm.draw(renderer); requestAnimationFrame(frame); }
+frame();
+</script>

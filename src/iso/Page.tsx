@@ -3,7 +3,7 @@ import {IsoInterface} from './Interface';
 import {IsoWorld} from './world';
 import {IsoSound} from './sound';
 import {OBJECTS,doorFor,movePlayer,roomAt,withinReach,type ObjectId,type Point} from './map';
-import {act,activeQuest,dropFlashlight,cctvDuration,drainLight,getSave,toggleLight,isEvidence,newSave,pressLine,readSettings,recordEvidence,sanitizeSettings,SAVE_KEY,SETTINGS_KEY,write} from './state';
+import {act,activeQuest,canIgnite,dropTorch,cctvDuration,getSave,lightTorch,isEvidence,newSave,pressLine,readSettings,recordEvidence,sanitizeSettings,SAVE_KEY,SETTINGS_KEY,write} from './state';
 import type {CCTVView,DocumentView,Mode,Panel,Save,UIAction} from './contracts';
 
 const startCCTV=():CCTVView=>({camera:'reception',tape:'shift',time:0,duration:24,playing:false,availableFuture:false,evidence:false,zoom:false});
@@ -26,7 +26,7 @@ export default function IsoPage(){
     const lifetime=new AbortController();
     let settings=readSettings(),mode:Mode='loading',panel:Panel|null=null,back:Panel|null=null,active=getSave(),state=active??newSave();
     let clock=0,noticeUntil=0,notice='',loading='Администрация',target:ObjectId|null=null,documentView:DocumentView|undefined;
-    let cctv=startCCTV(),lightClock=0,saveClock=0,uiClock=0,walked=0,drawer=false;
+    let cctv=startCCTV(),saveClock=0,uiClock=0,walked=0,drawer=false;
     let direction:Point={x:0,z:1},speed=0;
     // First person: look angles, smoothed velocity, stance and stamina.
     let yaw=START_YAW,pitch=-.06,crouch=0,stamina=1,tired=false,vx=0,vz=0,locked=false,kick=1,press=1,sprinting=false,ignoreUnlock=false;
@@ -66,22 +66,27 @@ export default function IsoPage(){
     const use=(id:ObjectId|null)=>{
       if(!id||mode!=='play'||panel||!withinReach(id,state,fpOn()?.7:0))return;
       // Hand-held props are taken by the hand: reach, close the fingers, and only then does it count as picked up.
-      if(id==='flashlight'&&world&&!state.items.includes('flashlight')){
-        if(world.handPhase==='idle')world.beginPickup(()=>{commit('flashlight');sound.cue('ui',settings);});
+      if(id==='torch'&&world&&!state.items.includes('torch')){
+        if(world.handPhase==='idle'&&!world.busy)world.beginPickup(()=>{commit('torch');sound.cue('ui',settings);});
+        return;
+      }
+      // The lighter is taken out of the desk drawer by hand: the drawer slides open and the fingers close on it before it counts as found.
+      if(id==='drawer'&&world&&!state.items.includes('lighter')){
+        if(world.handPhase==='idle'&&!world.busy)world.beginLighter(()=>{commit('drawer');sound.cue('ui',settings);});
         return;
       }
       commit(id);
     };
     const drop=()=>{
-      if(mode!=='play'||panel||!world||!state.items.includes('flashlight'))return;
-      world.beginDrop(pose=>{apply(dropFlashlight(state,pose));persist();emit();});
+      if(mode!=='play'||panel||!world||!state.items.includes('torch')||world.busy)return;
+      world.beginDrop(pose=>{apply(dropTorch(state,pose));persist();emit();});
     };
     const commit=(id:ObjectId)=>{
       const before=state,after=act(state,id);
       kick=0;
       const door=doorFor[id];
       const kind=door&&after.state.doors[door]&&!before.doors[door]?'door':
-        after.state.items.length>before.items.length||after.state.spare>before.spare?'pick-up':after.document?'examine':'interact';
+        after.state.items.length>before.items.length?'pick-up':after.document?'examine':'interact';
       world?.actorAction(kind,OBJECTS[id]);
       sound.cue(kind==='door'?'door':id==='phone'?'phone':'ui',settings);
       const gotKey=(['technicalKey','archiveKey'] as const).some(k=>after.state.items.includes(k)&&!before.items.includes(k));
@@ -91,9 +96,13 @@ export default function IsoPage(){
     };
     const flash=()=>{
       if(mode!=='play'||panel)return;
-      const r=toggleLight(state);
-      if(r.state!==state){sound.cue('switch',settings);world?.pressFlashlight();press=0;persist();}
-      apply(r);emit();
+      if(!world)return;
+      // F lights the torch with the lighter: the hands do it, and the torch counts as burning from the moment the flame catches.
+      if(canIgnite(state)){
+        if(!world.busy&&world.handPhase==='holding')world.beginIgnite(()=>{sound.cue('switch',settings);apply(lightTorch(state));persist();emit();});
+        return;
+      }
+      apply(lightTorch(state));emit();
     };
     const start=(restore:boolean)=>{
       if(!world)return;
@@ -147,7 +156,7 @@ export default function IsoPage(){
           if(settings.view!=='fps')unlockPointer();
           break;
         case 'interact':use(target);return;
-        case 'flashlight':flash();return;
+        case 'torch':flash();return;
         case 'touch':
           if(a.move){tmx=a.move.x;tmz=a.move.z;}
           if(a.look){tlx+=a.look.dx;tly+=a.look.dy;}
@@ -233,8 +242,7 @@ export default function IsoPage(){
     const available=(id:ObjectId)=>{
       if(id==='underDesk'&&(!state.dutyRead||state.items.includes('technicalKey')))return false;
       if(id==='vhs'&&state.items.includes('vhs'))return false;
-      if(id==='flashlight'&&state.items.includes('flashlight'))return false;
-      return !(id.startsWith('battery')&&state.taken.includes(id));
+      return !(id==='torch'&&state.items.includes('torch'));
     };
     const pick=()=>{
       let best=Infinity;let next:ObjectId|null=null;
@@ -302,12 +310,6 @@ export default function IsoPage(){
           const half=speed>2.15?1.1:.625;
           if(walked>half){walked-=half;sound.cue('step',settings);}
         }else speed=0;
-        if(state.lightOn){
-          const before=state.charge;
-          apply(drainLight(state,dt));
-          lightClock+=dt;
-          if(lightClock>.5||Math.ceil(before/5)!==Math.ceil(state.charge/5)){lightClock=0;emit();}
-        }
         const near=fpOn()?(world.aimTarget(state,available)??null):pick();if(near!==target){target=near;emit();}
         saveClock+=dt;
         if(saveClock>1.25&&active!==state){saveClock=0;persist();}

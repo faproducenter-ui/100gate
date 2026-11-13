@@ -2,7 +2,7 @@ import * as T from 'three';
 import type RAPIER from '@dimforge/rapier3d-compat';
 
 /**
- * One interaction system for every hand-held prop (flashlight now; keys, notes, bottles, tools later).
+ * One interaction system for every hand-held prop (the torch now; keys, notes, bottles, tools later).
  *
  *   Pickup         – a world prop: its 3D object, physics body while it lies free, and how the hand holds it.
  *   HandController – the right hand's state machine: idle → reaching → holding → releasing → idle.
@@ -12,7 +12,7 @@ import type RAPIER from '@dimforge/rapier3d-compat';
  * The prop is handed over at the right moment of the motion: it becomes "held" only when the reach has
  * closed on it (fingers already wrapping), and it becomes physical again only when the fingers open.
  */
-export type GripSlot = 'flashlight';
+export type GripSlot = 'torch';
 export type PickupDef = {
   id: string;
   /** kilograms */ mass: number;
@@ -39,7 +39,8 @@ export type HandFrame = {
   item?: Pickup;
 };
 
-const REACH = .52, RETURN = .45, EXTEND = .3, LOWER = .35;
+// REACH / RETURN follow the authored clip torch_pickup (24 fps): the fingers have closed on the torch at frame 16, it is in the carrying pose by frame 40.
+const REACH = 16 / 24, RETURN = 24 / 24, EXTEND = .3, LOWER = .35;
 const ease = (x: number) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
 
 export class HandController {

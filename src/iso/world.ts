@@ -2,13 +2,14 @@ import * as T from 'three';
 import {buildEnvironment} from './environment';
 import {loadActor} from './actor';
 import {FpRig} from './fps';
+import {Flame,fireFlicker} from './flame';
 import {KeyProp} from './keys';
 import {scanned} from './env-materials';
 import {boxProjectUV} from './env-kit';
 import {createPhysics,type Physics} from './physics';
 import {HandController,Pickup} from './interaction';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {BATTERIES,DOORS,OBJECTS,ROOMS,doorSwing,movedProps,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
+import {DOORS,OBJECTS,ROOMS,doorSwing,movedProps,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
 import type {CameraId,CCTVView,Save,Settings} from './contracts';
 
 type Cast=Awaited<ReturnType<typeof loadActor>>;
@@ -17,7 +18,7 @@ async function loadDecor():Promise<Decor>{
   const gltf=async(path:string)=>{
     try{return await new GLTFLoader().loadAsync(import.meta.env.BASE_URL+path);}catch{return undefined;}
   };
-  const [key,book,viewmodel,doorKit]=await Promise.all([gltf('assets/iso/key-tag.glb'),gltf('assets/iso/antique-book.glb'),gltf('assets/iso/viewmodel-5.glb'),gltf('assets/iso/door-kit.glb')]);
+  const [key,book,viewmodel,doorKit]=await Promise.all([gltf('assets/iso/key-tag.glb'),gltf('assets/iso/antique-book.glb'),gltf('assets/iso/viewmodel-8.glb'),gltf('assets/iso/door-kit.glb')]);
   return {key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations},doorKit:doorKit?.scene};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
@@ -74,8 +75,8 @@ export class IsoWorld {
   private readonly env:ReturnType<typeof buildEnvironment>;
   // --- hand interaction and prop physics ---
   private readonly hand=new HandController();
-  private flashlightPickup!:Pickup;
-  private readonly flashHome=new T.Matrix4();
+  private torchPickup!:Pickup;
+  private readonly torchHome=new T.Matrix4();
   private readonly doorSync:(()=>void)[]=[];
   private fovMatch=0;
   private dropAt?:T.Matrix4;
@@ -83,7 +84,7 @@ export class IsoWorld {
   private dropWorld?:T.Vector3;
   private settleTimer=0;
   /** A free prop came to rest: its world pose [x,y,z,qx,qy,qz,qw] (for the save). */
-  onPropSettled?:(id:'flashlight',pose:number[])=>void;
+  onPropSettled?:(id:'torch',pose:number[])=>void;
   private readonly doorSpin:Record<DoorId,number>={technical:0,surveillance:0,archive:0,reception:0};
   private readonly cast:Cast;
   private readonly echoes:Record<'hero'|'staff'|'shadow',Cast>;
@@ -102,10 +103,11 @@ export class IsoWorld {
   private fpActive=false;
   private readonly hemi:T.HemisphereLight;
   private readonly sun:T.DirectionalLight;
-  private readonly beam:T.SpotLight;
-  private readonly glow:T.PointLight;
-  private flashlightProp:T.Object3D;
-  private readonly batteryProps=new Map<ObjectId,T.Object3D>();
+  private readonly fire:T.PointLight;
+  private torchProp:T.Object3D;
+  private torchFlame?:Flame;
+  private readonly torchHeads:T.MeshStandardMaterial[]=[];
+  private lighterProp?:T.Object3D;
   private darkness=1;
   private readonly poweredLevels:number[];
   private readonly mark:T.Mesh;
@@ -142,35 +144,37 @@ export class IsoWorld {
     Object.assign(sun.shadow.camera,{left:-10,right:10,top:9,bottom:-9,near:.2,far:27});
     sun.shadow.normalBias=.016;sun.shadow.bias=-.00011;sun.shadow.radius=2;
     this.scene.add(sun,sun.target);
-    this.beam=new T.SpotLight(0xfff0d2,0,9,.62,.6,1.6);
-    this.glow=new T.PointLight(0xffe2b0,0,2.6,2);
-    this.scene.add(this.beam,this.beam.target,this.glow);
-    const steel=new T.MeshStandardMaterial({color:0x2f3438,metalness:.7,roughness:.4});
-    const lens=new T.MeshStandardMaterial({color:0xfff0c0,emissive:0xffd890,emissiveIntensity:.5});
-    this.flashlightProp=new T.Group();
-    const body=new T.Mesh(new T.CylinderGeometry(.028,.034,.19,12),steel),head=new T.Mesh(new T.CylinderGeometry(.048,.032,.06,12),steel),
-      face=new T.Mesh(new T.CircleGeometry(.042,12),lens);
-    body.rotation.z=head.rotation.z=Math.PI/2;head.position.x=.12;face.rotation.y=Math.PI/2;face.position.x=.151;
-    this.flashlightProp.add(body,head,face);
-    // The world flashlight is the very model the hand holds in the viewmodel (same mesh, scale and lens axis),
+    this.fire=new T.PointLight(0xff9a40,0,11,1.7);
+    this.scene.add(this.fire);
+    // The torch stands against the reception's west wall, foot on the floor; its grip point is the model's origin. It is the very model the hand holds in the viewmodel,
     // so handing it over between world and hand never changes its shape or size.
-    const held=decor.viewmodel?.scene.getObjectByName('Flashlight');
-    const model=held?held.clone(true):actor.makeFlashlight();
-    if(held&&model){
-      model.position.set(OBJECTS.flashlight.x,1.0,OBJECTS.flashlight.z);model.rotation.set(0,.5,0);
-      model.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=o.receiveShadow=true;o.frustumCulled=true;}});
-      this.flashlightProp=model;
-    }else if(model){this.flashlightProp=model;model.position.set(OBJECTS.flashlight.x,.845,OBJECTS.flashlight.z);model.rotation.set(0,.5,.115);}
-    else{this.flashlightProp.position.set(OBJECTS.flashlight.x,.86,OBJECTS.flashlight.z);this.flashlightProp.rotation.y=.5;}
-    this.scene.add(this.flashlightProp);
-    const cell=new T.MeshStandardMaterial({color:0xb08a2e,roughness:.5,metalness:.3});
-    for(const id of BATTERIES){
-      const g=new T.Group();
-      for(const dz of [-.022,.022]){
-        const b=new T.Mesh(new T.CylinderGeometry(.016,.016,.09,10),cell);b.rotation.z=Math.PI/2;b.position.z=dz;g.add(b);
-      }
-      g.position.set(OBJECTS[id].x,.025,OBJECTS[id].z);g.rotation.y=OBJECTS[id].x;
-      this.batteryProps.set(id,g);this.scene.add(g);
+    const held=decor.viewmodel?.scene.getObjectByName('Torch');
+    this.torchProp=new T.Group();
+    if(held){
+      const mesh=held.clone(true);mesh.position.set(0,0,0);
+      mesh.traverse(o=>{
+        if(!(o instanceof T.Mesh))return;
+        o.castShadow=o.receiveShadow=true;o.frustumCulled=true;
+        const mats=Array.isArray(o.material)?o.material:[o.material];
+        const cloned=mats.map(m=>{const c=(m as T.MeshStandardMaterial).clone();if(c.name==='Torch_head')this.torchHeads.push(c);return c;});
+        o.material=Array.isArray(o.material)?cloned:cloned[0]!;
+      });
+      this.torchProp.add(mesh);
+    }else{
+      const stick=new T.Mesh(new T.CylinderGeometry(.022,.026,.95,10),new T.MeshStandardMaterial({color:0x6b4a2a,roughness:.9}));
+      stick.rotation.z=-Math.PI/2;stick.position.x=.195;this.torchProp.add(stick);
+    }
+    this.placeTorchHome();
+    this.scene.add(this.torchProp);
+    this.torchFlame=new Flame(.34,0,16);
+    const flameAt=new T.Object3D();flameAt.position.set(.64,.0,0);flameAt.add(this.torchFlame.root);this.torchProp.add(flameAt);
+    // The lighter lies in the desk drawer and rides with it.
+    const lit=decor.viewmodel?.scene.getObjectByName('prop_lighter_r');
+    if(lit&&this.env.drawer){
+      const g=lit.clone(true);g.position.set(0,0,0);g.quaternion.identity();g.scale.set(1,1,1);
+      g.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=o.receiveShadow=true;}});
+      const holder=new T.Group();holder.add(g);holder.rotation.set(0,.5,Math.PI/2);holder.position.set(.045,-.0505,-.15);
+      this.env.drawer.add(holder);this.lighterProp=holder;
     }
     if(decor.key){
       // Key on the hook under the reception desk; the archive key lies on the filing cabinet once its place is known.
@@ -201,24 +205,20 @@ export class IsoWorld {
     }
     // Loose props rest on whatever is really under them (floor, desk top, shelf plank), never in the air.
     this.env.root.updateMatrixWorld(true);
-    this.restOn(this.flashlightProp,1.4);
-    for(const g of this.batteryProps.values())this.restOn(g,1.6);
     if(this.cabinetKey)this.restOn(this.cabinetKey.root,1.9);
     if(this.deskKey)this.restOn(this.deskKey.root,1.4);
     // Physics: the building is static collision, door leaves are kinematic boxes, loose props are rigid bodies.
-    this.flashHome.copy(this.flashlightProp.matrixWorld);
-    this.flashlightPickup=new Pickup({id:'flashlight',mass:.45,grip:'flashlight'},this.flashlightProp);
+    this.torchHome.copy(this.torchProp.matrixWorld);
+    this.torchPickup=new Pickup({id:'torch',mass:.6,grip:'torch'},this.torchProp);
     if(this.physics){
       const skip=new Set<T.Object3D>([...Object.values(this.env.doors),this.env.drawer]);
       this.physics.addStatic(this.env.root,skip);
       const span=2*DOORS.technical.half-.021;
       for(const g of Object.values(this.env.doors))
         this.doorSync.push(this.physics.addKinematicBox(g,new T.Vector3(0,1.081,span/2),new T.Vector3(.033,1.065,span/2)));
-      this.flashlightPickup.body=this.physics.addDynamic(this.flashlightProp,this.flashlightPickup.def.mass);
     }
     // Aim the crosshair at the real props, not at invisible anchors.
-    this.env.targets.flashlight=this.flashlightProp;
-    for(const [id,prop] of this.batteryProps)this.env.targets[id]=prop;
+    this.env.targets.torch=this.torchProp;
     this.listener={x:0,z:0};
     this.cast=actor;
     this.fps=new FpRig(this.scene,decor.viewmodel);
@@ -249,7 +249,13 @@ export class IsoWorld {
     this.mark=new T.Mesh(ring,new T.MeshBasicMaterial({color:0xdfc393,transparent:true,opacity:.57,depthWrite:false,side:T.DoubleSide}));
     this.mark.rotation.x=-Math.PI/2;this.mark.visible=false;this.scene.add(this.mark);
   }
-  pressFlashlight(){this.cast.pressFlashlight();}
+  /** The torch at its home: foot on the floor, head leaning on the west wall (grip point = the prop's origin). */
+  private placeTorchHome(){
+    const t=.17,axis=new T.Vector3(-Math.sin(t),Math.cos(t),0);
+    this.torchProp.quaternion.setFromUnitVectors(new T.Vector3(1,0,0),axis);
+    this.torchProp.position.set(OBJECTS.torch.x,.28*Math.cos(t),OBJECTS.torch.z);
+    this.torchProp.updateMatrixWorld(true);
+  }
   /** The interactable under the crosshair in first person, within arm's reach. */
   aimTarget(p:Point,ok:(id:ObjectId)=>boolean=()=>true):ObjectId|undefined{
     const cam=this.fps.camera;
@@ -405,8 +411,8 @@ export class IsoWorld {
       }else if(hf.phase==='reaching'&&this.grabAt)target=eyeCam.matrixWorldInverse.clone().multiply(this.grabAt);
       else if(hf.phase==='releasing'&&this.dropAt)target=this.dropAt;
       if(hf.phase==='holding'||hf.phase==='idle')this.grabAt=undefined;
-      this.fps.vm.setHand({reach:hf.reach,grip:hf.grip,carrying:hf.carrying,target,fovMatch:this.fovMatch,mainFov:eyeCam.fov});
-      const armShown=active?1:hf.phase==='holding'?(state.lightOn&&state.charge>0?1:0):0;
+      this.fps.vm.setHand({reach:hf.reach,grip:hf.grip,carrying:hf.carrying,target,up:new T.Vector3(0,1,0).transformDirection(eyeCam.matrixWorldInverse),fovMatch:this.fovMatch,mainFov:eyeCam.fov});
+      const armShown=active||this.fps.vm.igniting||this.fps.vm.lighterPlaying?1:hf.phase==='holding'?1:0;
       // Bending over: the body leans toward what the hand goes for, so the arm can reach it naturally.
       let bend:{x:number;y:number;z:number}|undefined;
       const goalWorld=hf.phase==='reaching'?(this.grabAt?new T.Vector3().setFromMatrixPosition(this.grabAt):hf.item?.object.position):
@@ -417,45 +423,47 @@ export class IsoWorld {
         d.setLength(amount);bend={x:d.x,y:d.y*1.1,z:d.z};
       }
       this.fps.update({x:state.x,z:state.z,yaw:frame.look.yaw,pitch:frame.look.pitch,speed:frame.speed,sprint:frame.sprint,
-        crouch:frame.crouch,dt:frame.paused?0:dt,time,hasLight:state.items.includes('flashlight'),lightOn:state.lightOn&&state.charge>0,
+        crouch:frame.crouch,dt:frame.paused?0:dt,time,hasLight:state.items.includes('torch'),lightOn:state.lightOn,
         press:frame.press,kick:frame.kick,armShown,bend});
       this.cast.setCrouch(frame.crouch);
       const cam=this.fps.camera;
       this.cast.setFirstPerson({yaw:frame.look.yaw,eye:cam.position.clone(),forward:new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion),
         right:new T.Vector3(1,0,0).applyQuaternion(cam.quaternion),up:new T.Vector3(0,1,0).applyQuaternion(cam.quaternion)});
     }else{this.cast.setFirstPerson(null);this.cast.setCrouch(0);}
-    if(this.env.drawer)this.env.drawer.position.z=T.MathUtils.damp(this.env.drawer.position.z,this.drawerRest+(frame.drawer?.15:0),11,dt);
+    const drawerOpen=frame.drawer||this.fps.vm.lighterPlaying;
+    if(this.env.drawer)this.env.drawer.position.z=T.MathUtils.damp(this.env.drawer.position.z,this.drawerRest+(drawerOpen?.15:0),11,dt);
+    if(this.lighterProp)this.lighterProp.visible=!state.items.includes('lighter');
     this.cast.root.visible=!menu&&!cctv;
     this.cast.update(frame.paused?0:dt,state.x,state.z,frame.direction.x,frame.direction.z,frame.speed);
     for(const [i,l] of this.env.powerLights.entries()){
       const value=this.poweredLevels[i]!;
       l.intensity=(state.power?value:value*.07)*(fp?.42:1);
     }
-    // In play the house is a dark, half-lit place: the flashlight has to do the work.
+    // In play the house is a dark, half-lit place: the torch has to do the work.
     this.renderer.toneMappingExposure=fp?.86:1.13;
     const interval=time%34;
     const flicker=settings.reducedFlicker?1:1-.64*Math.exp(-((interval-8.7)**2)/.19)-.78*Math.exp(-((interval-23.4)**2)/.075);
     this.lamp.intensity=menu?25*flicker:(state.power?3.6:1.0)*flicker;
-    const lit=menu||state.power,has=state.items.includes('flashlight');
+    const lit=menu||state.power,has=state.items.includes('torch');
     this.darkness=T.MathUtils.damp(this.darkness,lit?1:.3,3,dt);
     const fill=fp?.3:1;
     this.hemi.intensity=1.05*this.darkness*fill;this.sun.intensity=1.55*this.darkness*fill;
-    const pick=this.flashlightPickup;
-    this.flashlightProp.visible=!pick.held;   // in the hand it is drawn by the viewmodel
+    const pick=this.torchPickup;
+    this.torchProp.visible=!pick.held;   // in the hand it is drawn by the viewmodel
     if(this.physics){
       this.physics.movePlayer(state.x,state.z,this.fps.camera.position.y);
       for(const sync of this.doorSync)sync();
       this.physics.step(frame.paused||menu?0:dt);
       if(pick.body&&!pick.held){
-        this.physics.pull(pick.body,this.flashlightProp);
-        const at=this.flashlightProp.position;
-        if(state.props?.flashlight||movedProps.flashlight)movedProps.flashlight={x:at.x,z:at.z};
+        this.physics.pull(pick.body,this.torchProp);
+        const at=this.torchProp.position;
+        if(state.props?.torch||movedProps.torch)movedProps.torch={x:at.x,z:at.z};
         // Report the resting pose once the body has gone to sleep (or after a few quiet seconds).
         this.settleTimer=pick.body.isSleeping()||pick.body.linvel().y**2+pick.body.linvel().x**2+pick.body.linvel().z**2<1e-4?this.settleTimer+dt:0;
-        if(this.settleTimer>.4&&this.settleTimer-dt<=.4&&state.props?.flashlight)this.onPropSettled?.('flashlight',this.poseOf(this.flashlightProp));
+        if(this.settleTimer>.4&&this.settleTimer-dt<=.4&&state.props?.torch)this.onPropSettled?.('torch',this.poseOf(this.torchProp));
       }
     }
-    this.cast.setGear({flashlight:has&&!(fp&&this.fps.vm.ready),on:state.lightOn&&state.charge>0,armHidden:fp&&this.fps.vm.shownNow});
+    this.cast.setGear({flashlight:false,on:false,armHidden:fp&&this.fps.vm.shownNow});
     this.listener={x:state.x,z:state.z};
     if(this.deskKey&&this.cabinetKey){
       const hangVisible=!state.items.includes('technicalKey'),lieVisible=state.archiveClue&&!state.items.includes('archiveKey');
@@ -468,27 +476,31 @@ export class IsoWorld {
       this.env.targets.underDesk=hangVisible?this.deskKey.root:this.hookTarget;
       this.env.targets.archiveCache=lieVisible?this.cabinetKey.root:this.slotTarget;
     }
-    for(const [id,prop] of this.batteryProps)prop.visible=!state.taken.includes(id);
-    // Lit in the hand, or lying lit wherever it was put down.
-    const lyingLit=!pick.held&&!!state.props?.flashlight&&!!state.flashlightLit;
-    const on=!menu&&!cctv&&state.charge>0&&(state.lightOn&&has||lyingLit);
-    const weak=state.charge<15?.72+.28*Math.sin(time*37)*Math.sin(time*11.3):1;
-    const shadows=settings.shadows&&settings.quality!=='low';
-    if(this.beam.castShadow!==shadows)this.beam.castShadow=shadows;
-    this.beam.intensity=on?(fp?26:60)*weak:0;this.glow.intensity=on?(fp?.7:3)*weak:0;this.beam.angle=fp?.44:.62;this.beam.penumbra=fp?.4:.6;
-    if(on){
-      const {x,z}=state,d=frame.direction,lens=lyingLit?this.propLens():fp?this.fps.beamPose():this.cast.flashlightPose();
-      if(lens){
-        this.beam.position.copy(lens.position);
-        this.beam.target.position.copy(lens.position).addScaledVector(lens.direction,3);
-        this.glow.position.copy(lens.position).addScaledVector(lens.direction,-.1);
-      }else{
-        this.beam.position.set(x+d.x*.15,1.05,z+d.z*.15);
-        this.beam.target.position.set(x+d.x*3,.2,z+d.z*3);
-        this.glow.position.set(x,.9,z);
-      }
-      this.beam.target.updateMatrixWorld();
+    // A burning torch: in the hand (the flame bone of the viewmodel), or lying / standing lit wherever it was put down.
+    const lyingLit=!pick.held&&!!state.props?.torch&&!!state.torchLit;
+    const handFlame=fp&&state.items.includes('torch')?this.fps.flamePose():undefined;
+    const flick=fireFlicker(time);
+    this.fire.color.setHSL(.075+.012*(fireFlicker(time,3)-1),1,.6);
+    const shadows=settings.shadows&&settings.quality==='high';
+    if(this.fire.castShadow!==shadows)this.fire.castShadow=shadows;
+    if(this.torchFlame){
+      this.torchFlame.root.parent!.visible=lyingLit&&!menu&&!cctv;
+      if(lyingLit)this.torchFlame.update(time,1);
     }
+    let burn=0;
+    if(!menu&&!cctv){
+      if(handFlame){
+        this.fire.position.copy(handFlame.position);burn=(fp?15:30)*handFlame.level*flick;
+      }else if(lyingLit){
+        const tip=this.torchProp.localToWorld(new T.Vector3(.66,.05,0));
+        this.fire.position.copy(tip);burn=15*flick;
+      }else if(state.lightOn&&state.items.includes('torch')&&!fp){
+        this.fire.position.set(state.x+frame.direction.x*.3,1.3,state.z+frame.direction.z*.3);burn=28*flick;
+      }
+    }
+    this.fire.intensity=burn;
+    // The wrapped head is charred dark when the torch is out and glows when it burns.
+    for(const m of this.torchHeads){const k=lyingLit?1:0;m.color.setScalar(.12+.88*k);m.emissive.setRGB(1,.42,.12);m.emissiveIntensity=k*.9;}
     this.crt.uniforms.time!.value=time;
     this.crt.uniforms.enabled!.value=menu||state.power?1:.045;
     this.crt.uniforms.noise!.value=settings.ambient?(settings.reducedFlicker?.07:interval%11>10.1?.66:.16):0;
@@ -578,29 +590,31 @@ export class IsoWorld {
     echo.poseTape(pose);
   }
   // ---------------- hand interaction API (used by the page) ----------------
-  /** Is the hand free to take something / is it holding the flashlight. */
+  /** Is the hand free to take something / is it holding the torch. */
   get handPhase(){return this.hand.phase;}
   /**
-   * Reach for the flashlight: the arm moves onto it, the fingers open and close round the handle, and only
+   * Reach for the torch: the arm moves onto it, the fingers open and close round the shaft, and only
    * then (`attach`) does the prop leave physics and become the one in the hand.
    */
   beginPickup(attach:()=>void){
-    const p=this.flashlightPickup;
+    const p=this.torchPickup;
     const handOver=()=>{
       if(p.body&&this.physics){this.physics.remove(p.body);p.body=undefined;}
-      delete movedProps.flashlight;attach();
+      delete movedProps.torch;attach();
     };
     if(!this.fpActive||!this.fps.vm.ready){p.held=true;handOver();this.hand.hold(p);return true;}
-    return this.hand.reachFor(p,handOver);
+    const started=this.hand.reachFor(p,handOver);
+    if(started)this.fps.vm.startPickup();   // the authored take-from-the-table motion
+    return started;
   }
-  /** Put the flashlight down: the hand moves forward and down, the fingers open, physics takes over. */
+  /** Put the torch down: the hand moves forward and down, the fingers open, physics takes over. */
   beginDrop(release:(pose:number[])=>void){
     if(this.hand.phase!=='holding'||!this.fpActive)return false;
     const held=this.fps.vm.heldMatrix();if(!held)return false;
     // Lower and a little forward of where it is held, in camera space.
     this.dropAt=new T.Matrix4().makeTranslation(.03,-.17,-.2).multiply(held);
     this.dropWorld=new T.Vector3().setFromMatrixPosition(this.fps.camera.matrixWorld.clone().multiply(this.dropAt));
-    const p=this.flashlightPickup;
+    const p=this.torchPickup;
     return this.hand.release(()=>{
       const inHand=this.fps.vm.heldMatrix()??held;
       const cam=this.fps.camera;cam.updateMatrixWorld(true);
@@ -610,53 +624,54 @@ export class IsoWorld {
       const eye=cam.getWorldPosition(new T.Vector3()),dir=pos.clone().sub(eye),len=dir.length();
       const hit=new T.Raycaster(eye,dir.normalize(),0,len+.05).intersectObject(this.env.root,true)[0];
       if(hit)pos.copy(eye).addScaledVector(dir,Math.max(.05,hit.distance-.06));
-      this.flashlightProp.position.copy(pos);this.flashlightProp.quaternion.copy(quat);this.flashlightProp.updateMatrixWorld(true);
-      this.flashlightProp.visible=true;
+      this.torchProp.position.copy(pos);this.torchProp.quaternion.copy(quat);this.torchProp.updateMatrixWorld(true);
+      this.torchProp.visible=true;
       if(this.physics){
-        p.body=this.physics.addDynamic(this.flashlightProp,p.def.mass);
+        p.body=this.physics.addDynamic(this.torchProp,p.def.mass);
         const fwd=new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion);fwd.y=0;fwd.normalize();
         p.body.setLinvel({x:fwd.x*.55,y:-.25,z:fwd.z*.55},true);
         p.body.setAngvel({x:(Math.random()-.5)*1.5,y:(Math.random()-.5)*1.2,z:(Math.random()-.5)*1.5},true);
       }
-      movedProps.flashlight={x:pos.x,z:pos.z};this.settleTimer=0;this.dropAt=undefined;
-      release(this.poseOf(this.flashlightProp));
+      movedProps.torch={x:pos.x,z:pos.z};this.settleTimer=0;this.dropAt=undefined;
+      release(this.poseOf(this.torchProp));
     });
   }
   /** Bring props and hand in line with a loaded or fresh save. */
   syncPickups(state:Save){
-    const p=this.flashlightPickup;if(!p)return;
-    if(state.items.includes('flashlight')){
+    const p=this.torchPickup;if(!p)return;
+    if(state.items.includes('torch')){
       if(p.body&&this.physics)this.physics.remove(p.body);
-      p.body=undefined;this.hand.hold(p);delete movedProps.flashlight;return;
+      p.body=undefined;this.hand.hold(p);delete movedProps.torch;return;
     }
     this.hand.reset();p.held=false;
-    const pose=state.props?.flashlight;
+    const pose=state.props?.torch;
+    if(p.body&&this.physics){this.physics.remove(p.body);p.body=undefined;}
     if(pose&&pose.length===7){
-      this.flashlightProp.position.set(pose[0]!,pose[1]!,pose[2]!);this.flashlightProp.quaternion.set(pose[3]!,pose[4]!,pose[5]!,pose[6]!);
-      movedProps.flashlight={x:pose[0]!,z:pose[2]!};
+      this.torchProp.position.set(pose[0]!,pose[1]!,pose[2]!);this.torchProp.quaternion.set(pose[3]!,pose[4]!,pose[5]!,pose[6]!);
+      movedProps.torch={x:pose[0]!,z:pose[2]!};
+      this.torchProp.updateMatrixWorld(true);
+      if(this.physics)p.body=this.physics.addDynamic(this.torchProp,p.def.mass);
     }else{
-      const s=this.flashlightProp.scale.clone();this.flashHome.decompose(this.flashlightProp.position,this.flashlightProp.quaternion,new T.Vector3());
-      this.flashlightProp.scale.copy(s);delete movedProps.flashlight;
+      // Untouched: it stands against the wall, held there (no body: a rigid body would just fall over).
+      this.placeTorchHome();delete movedProps.torch;
     }
-    this.flashlightProp.updateMatrixWorld(true);
-    if(this.physics){if(p.body)this.physics.remove(p.body);p.body=this.physics.addDynamic(this.flashlightProp,p.def.mass);}
+    this.torchProp.updateMatrixWorld(true);
   }
+  /** F: light the torch. onFlame runs when the flame catches (the state changes then, not before). */
+  beginIgnite(onFlame:()=>void){
+    if(!this.fpActive||!this.fps.vm.ready){onFlame();return true;}
+    return this.fps.vm.startIgnite(onFlame);
+  }
+  /** Take the lighter out of the desk drawer: the drawer slides open, the hand takes the lighter; onTaken runs as the fingers close on it. */
+  beginLighter(onTaken:()=>void){
+    if(!this.fpActive||!this.fps.vm.ready){onTaken();return true;}
+    return this.fps.vm.startLighter(onTaken);
+  }
+  get busy(){return this.fps.vm.igniting||this.fps.vm.lighterPlaying||this.fps.vm.pickupPlaying;}
   private poseOf(o:T.Object3D){
     const r=(n:number)=>Math.round(n*1e4)/1e4;
     return [o.position.x,o.position.y,o.position.z,o.quaternion.x,o.quaternion.y,o.quaternion.z,o.quaternion.w].map(r);
   }
-  /** Lens of the flashlight lying in the world (beam along its +X, out of the wide end). */
-  private propLens(){
-    const o=this.flashlightProp;
-    if(!this.lensLocal){
-      const box=new T.Box3();o.updateMatrixWorld(true);
-      const inv=o.matrixWorld.clone().invert();
-      o.traverse(m=>{if(m instanceof T.Mesh){m.geometry.computeBoundingBox();box.union(m.geometry.boundingBox!.clone().applyMatrix4(inv.clone().multiply(m.matrixWorld)));}});
-      this.lensLocal=new T.Vector3(box.max.x,(box.min.y+box.max.y)/2,(box.min.z+box.max.z)/2);
-    }
-    return {position:o.localToWorld(this.lensLocal.clone()),direction:new T.Vector3(1,0,0).transformDirection(o.matrixWorld)};
-  }
-  private lensLocal?:T.Vector3;
   /** Drop a prop straight down onto the first upward-facing surface below `fromY` at its footprint. */
   private restOn(obj:T.Object3D,fromY:number){
     obj.updateMatrixWorld(true);

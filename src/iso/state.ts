@@ -1,10 +1,11 @@
 import {DEFAULTS,type CameraId,type DocumentView,type ItemId,type Panel,type PowerLine,type Save,type Settings,type TapeId} from './contracts';
-import {BATTERIES,canStand,START,type ObjectId} from './map';
+import {canStand,START,type ObjectId} from './map';
 
 export const SAVE_KEY='100gate.isometric.save.v1';
 export const SETTINGS_KEY='100gate.isometric.settings.v1';
 export const ITEMS:Record<ItemId,{name:string;description:string;kind:'key'|'paper'|'media'}>={
-  flashlight:{name:'Фонарь',description:'Тяжёлый ручной фонарь дежурного. F — включить или выключить. Заряд садится, пока он горит; запасные батарейки меняются сами.',kind:'key'},
+  lighter:{name:'Зажигалка',description:'Тяжёлая металлическая зажигалка из ящика стола. Колёсико стёрто, но искра ещё есть.',kind:'key'},
+  torch:{name:'Факел',description:'Деревянное древко с обмотанной ветошью головкой. F — поджечь зажигалкой, G — положить.',kind:'key'},
   technicalKey:{name:'Ключ от щитовой',description:'Латунный ключ с биркой «Щ». Его приклеили под столом дежурного.',kind:'key'},
   archiveKey:{name:'Ключ от архива',description:'Плоский ключ в бумажном конверте. На конверте — «Не оставлять в журнале».',kind:'key'},
   plan:{name:'План здания',description:'Коридор связывает приёмную, щитовую, операторскую и архив. Школа №7 отмечена за северным выходом.',kind:'paper'},
@@ -13,6 +14,7 @@ export const ITEMS:Record<ItemId,{name:string;description:string;kind:'key'|'pap
   file:{name:'Дело о районе №0',description:'Сектор Б, ячейка 4. В акте о закрытии района числится школа №7. Три подписи совпадают с фамилиями пропавших сотрудников.',kind:'paper'},
 };
 export const QUESTS=[
+  {id:'light',title:'Найти свет',description:'Зажигалка лежит в ящике стола. Факел стоит у стены приёмной.'},
   {id:'reception',title:'Осмотреть приёмную',description:'Изучи журнал дежурств на столе.'},
   {id:'technical-key',title:'Найти ключ от щитовой',description:'Дежурный оставил его под столешницей.'},
   {id:'power',title:'Восстановить электропитание',description:'Открой щитовую. Изучи схему перед переключением линий.'},
@@ -24,13 +26,13 @@ export const QUESTS=[
   {id:'school',title:'Найти путь к школе №7',description:'Глава «Администрация» завершена.'},
 ] as const;
 export function activeQuest(s:Save){
-  return QUESTS[!s.dutyRead?0:!s.items.includes('technicalKey')?1:!s.power?2:!s.archiveClue?3:
-    !s.items.includes('archiveKey')?4:!s.doors.archive?5:!s.items.includes('file')?6:!s.finished?7:8]!;
+  return QUESTS[!s.lit&&!s.dutyRead?0:!s.dutyRead?1:!s.items.includes('technicalKey')?2:!s.power?3:!s.archiveClue?4:
+    !s.items.includes('archiveKey')?5:!s.doors.archive?6:!s.items.includes('file')?7:!s.finished?8:9]!;
 }
 
 export const newSave=():Save=>({version:1,...START,items:[],doors:{technical:false,surveillance:false,archive:false,reception:false},
   dutyRead:false,diagramRead:false,power:false,breaker:[],archiveClue:false,archiveIndex:false,anomaly:false,finished:false,
-  lightOn:false,charge:100,spare:0,taken:[]});
+  lightOn:false,lit:false});
 const order:readonly PowerLine[]=['lights','locks','cctv'];
 const has=(s:Save,id:ItemId)=>s.items.includes(id);
 const item=(s:Save,id:ItemId):Save=>has(s,id)?s:{...s,items:[...s.items,id]};
@@ -39,46 +41,32 @@ const msg=(state:Save,message:string):Outcome=>({state,message});
 const doc=(state:Save,title:string,text:string):Outcome=>({state,panel:'document',document:{title,text}});
 const found=(state:Save,id:ItemId):Outcome=>msg(item(state,id),has(state,id)?'Уже в инвентаре.':'Найдено: '+ITEMS[id].name);
 
-export const BATTERY_SECONDS=180;
-const swapBattery=(s:Save):Save=>s.charge<=0&&s.spare>0?{...s,charge:100,spare:s.spare-1}:s;
-export function toggleLight(s:Save):Outcome{
-  if(!has(s,'flashlight'))return msg(s,'У тебя нет фонаря.');
-  if(s.lightOn)return msg({...s,lightOn:false},'Фонарь выключен.');
-  const n=swapBattery(s);
-  return n.charge<=0?msg(s,'Фонарь разряжен. Нужны батарейки.'):msg({...n,lightOn:true},n===s?'Фонарь включён.':'Поставил новые батарейки.');
-}
-/** Drain only while the beam is on; swap a spare battery automatically when empty. */
-export function drainLight(s:Save,dt:number):Outcome{
-  if(!s.lightOn||!has(s,'flashlight')||dt<=0)return {state:s};
-  const charge=Math.max(0,s.charge-dt*100/BATTERY_SECONDS);
-  if(charge>0)return charge<=20&&s.charge>20?msg({...s,charge},'Фонарь садится. Поищи батарейки.'):{state:{...s,charge}};
-  if(s.spare>0)return msg({...s,charge:100,spare:s.spare-1},'Поставил новые батарейки.');
-  return msg({...s,charge:0,lightOn:false},'Фонарь погас. Нужны батарейки.');
-}
-function takeBattery(s:Save,id:string):Outcome{
-  if(s.taken.includes(id))return msg(s,'Здесь больше ничего нет.');
-  let n:Save={...s,taken:[...s.taken,id],spare:s.spare+1};
-  const empty=has(n,'flashlight')&&n.charge<=0;
-  if(empty)n={...swapBattery(n),lightOn:true};
-  return msg(n,empty?'Батарейки найдены. Фонарь снова горит.':'Найдены батарейки.');
+/** Can F light the torch right now: the torch and the lighter are in the pockets and the torch is not burning. */
+export const canIgnite=(s:Save)=>has(s,'torch')&&has(s,'lighter')&&!s.lightOn;
+/** F: the answer for the cases where nothing is lit (the animated lighting itself is applied by the world at the moment the flame catches). */
+export function lightTorch(s:Save):Outcome{
+  if(!has(s,'torch'))return msg(s,'У тебя нет факела.');
+  if(s.lightOn)return msg(s,'Факел уже горит.');
+  if(!has(s,'lighter'))return msg(s,'Нечем поджечь факел. Нужна зажигалка.');
+  return msg({...s,lightOn:true,lit:true},'Факел разгорелся.');
 }
 
 export function act(s:Save,id:ObjectId):Outcome {
   switch(id){
-    case 'flashlight':{
-      if(has(s,'flashlight'))return msg(s,'Уже в инвентаре.');
-      if(s.props?.flashlight){
-        // Picked back up from where it was put down: it keeps the light it had on the floor.
-        const {flashlight:_,...props}=s.props;
-        return msg({...item(s,'flashlight'),props,lightOn:(s.flashlightLit??true)&&s.charge>0,flashlightLit:undefined},'Фонарь снова в руке.');
+    case 'torch':{
+      if(has(s,'torch'))return msg(s,'Уже в руке.');
+      if(s.props?.torch){
+        // Picked back up from where it was put down: it burns as it did.
+        const {torch:_,...props}=s.props;
+        return msg({...item(s,'torch'),props,lightOn:!!s.torchLit&&has(s,'lighter'),torchLit:undefined},'Факел снова в руке.');
       }
-      return msg({...item(s,'flashlight'),lightOn:true},'Найден фонарь. F — включить или выключить, G — положить.');
+      return msg(item(s,'torch'),has(s,'lighter')?'Факел. F — поджечь зажигалкой, G — положить.':'Факел потух. Нужно чем-то его поджечь.');
     }
-    case 'battery1':case 'battery2':case 'battery3':case 'battery4':case 'battery5':return takeBattery(s,id);
     case 'dutyLog':return doc({...s,dutyRead:true},'Журнал дежурств · 18 ноября',
       '21:48. После просадки горит только аварийное освещение. Ключ от щитовой приклеил под столешницей, слева.\n\n22:16. Дежурный с архива не явился. Камеру в коридоре оставить включённой.');
     case 'underDesk':return s.dutyRead?found(s,'technicalKey'):msg(s,'Снизу ничего не видно. Возможно, в журнале есть подсказка.');
-    case 'drawer':return doc(s,'Ящик стола','Пустые бланки, обрывок ленты и три канцелярские кнопки. Замок ящика давно сломан.');
+    case 'drawer':return has(s,'lighter')?doc(s,'Ящик стола','Пустые бланки, обрывок ленты и три канцелярские кнопки. Замок ящика давно сломан.'):
+      msg(item(s,'lighter'),'В ящике нашлась зажигалка. Теперь нужен факел.');
     case 'phone':return doc(s,'Внутренняя линия','В трубке тихо. На наклейке: «07 — школа». Рядом от руки дописано: «Не перезванивать после 23:00».');
     case 'buildingPlan':return doc(item(s,'plan'),'План здания',ITEMS.plan.description);
     case 'archiveCache':return s.archiveClue?found(s,'archiveKey'):msg(s,'Секции пронумерованы. Без номера искать придётся всю ночь.');
@@ -102,11 +90,11 @@ export function act(s:Save,id:ObjectId):Outcome {
   }
 }
 
-/** The flashlight leaves the hand and lies where physics put it; a lit one keeps shining on the floor. */
-export function dropFlashlight(s:Save,pose:number[]):Outcome{
-  if(!has(s,'flashlight'))return {state:s};
-  return msg({...s,items:s.items.filter(i=>i!=='flashlight'),lightOn:false,flashlightLit:s.lightOn,props:{...s.props,flashlight:pose}},
-    s.lightOn?'Фонарь положен, он продолжает светить.':'Фонарь положен.');
+/** The torch leaves the hand and lies where physics put it; a burning one keeps burning on the floor. */
+export function dropTorch(s:Save,pose:number[]):Outcome{
+  if(!has(s,'torch'))return {state:s};
+  return msg({...s,items:s.items.filter(i=>i!=='torch'),lightOn:false,torchLit:s.lightOn,props:{...s.props,torch:pose}},
+    s.lightOn?'Факел положен, он продолжает гореть.':'Факел положен.');
 }
 
 export function pressLine(s:Save,line:PowerLine):Outcome{
@@ -141,21 +129,24 @@ export function validSave(value:unknown):value is Save{
     !s.doors||!['technical','surveillance','archive','reception'].every(k=>typeof s.doors[k as keyof typeof s.doors]==='boolean')||
     ![s.dutyRead,s.diagramRead,s.power,s.archiveClue,s.archiveIndex,s.anomaly,s.finished].every(v=>typeof v==='boolean')||
     !Array.isArray(s.breaker)||s.breaker.length>3||!s.breaker.every((line,i)=>line===order[i])||
-    typeof s.lightOn!=='boolean'||!Number.isFinite(s.charge)||s.charge<0||s.charge>100||!Number.isInteger(s.spare)||s.spare<0||
-    !Array.isArray(s.taken)||new Set(s.taken).size!==s.taken.length||!s.taken.every(t=>(BATTERIES as readonly string[]).includes(t))||s.spare>s.taken.length||
+    typeof s.lightOn!=='boolean'||typeof s.lit!=='boolean'||
     s.power!==(s.breaker.length===3)||!canStand(s.x,s.z,s.doors))return false;
-  return !(s.lightOn&&!has(s,'flashlight')||has(s,'technicalKey')&&!s.dutyRead||s.doors.technical&&!has(s,'technicalKey')||
+  return !(s.lightOn&&!has(s,'torch')||s.lit&&!has(s,'lighter')||s.lightOn&&!s.lit||has(s,'technicalKey')&&!s.dutyRead||s.doors.technical&&!has(s,'technicalKey')||
     s.diagramRead&&!s.doors.technical||s.breaker.length>0&&!s.diagramRead||s.doors.surveillance&&!s.power||
     (s.archiveClue||s.anomaly||has(s,'vhs'))&&!s.doors.surveillance||has(s,'archiveKey')&&!s.archiveClue||
     s.doors.archive&&!has(s,'archiveKey')||s.archiveIndex&&!s.doors.archive||
     has(s,'file')&&(!s.doors.archive||!s.anomaly||!s.archiveIndex)||s.finished&&!has(s,'file'));
 }
 function read(key:string):unknown{try{return JSON.parse(localStorage.getItem(key)??'null');}catch{return null;}}
-/** Saves from before the flashlight existed get default light fields. */
+/** Saves from the flashlight days lose the flashlight and its batteries; the light starts again from the lighter and the torch. */
 export function upgradeSave(value:unknown):unknown{
   if(!value||typeof value!=='object')return value;
   let v=value as Record<string,unknown>;
-  if(!('charge' in v))v={...v,lightOn:false,charge:100,spare:0,taken:[]};
+  if(!('lit' in v)){
+    const {charge:_c,spare:_s,taken:_t,flashlightLit:_f,props,...rest}=v as Record<string,unknown>;
+    const p={...(props as Record<string,unknown>|undefined)};delete p.flashlight;
+    v={...rest,items:Array.isArray(rest.items)?(rest.items as string[]).filter(i=>i!=='flashlight'):[],lightOn:false,lit:false,...(Object.keys(p).length?{props:p}:{})};
+  }
   // Saves from before the reception got a real door: that doorway was always open.
   const d=v.doors as Record<string,unknown>|undefined;
   if(d&&typeof d==='object'&&typeof d.reception!=='boolean')v={...v,doors:{...d,reception:true}};
