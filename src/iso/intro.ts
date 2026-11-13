@@ -43,7 +43,7 @@ const AXIS: [number, number, number][] = [
 export type TrailerAssets = { road: T.Object3D; car: T.Object3D; bag: T.Object3D; house: T.Object3D };
 export async function loadTrailerAssets(base = '', lite = false): Promise<TrailerAssets> {
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
-  const [road, car, bag, house] = await Promise.all((lite ? ['road-lite', 'car-lite', 'backpack-lite', 'house-lite'] : ['road', 'car', 'backpack', 'house']).map(n => loader.loadAsync(`${base}assets/iso/trailer/${n}.glb`)));
+  const [road, car, bag, house] = await Promise.all((lite ? ['road-lite', 'car-lite', 'backpack-lite', 'house-lite'] : ['road-hd', 'car', 'backpack', 'house']).map(n => loader.loadAsync(`${base}assets/iso/trailer/${n}.glb`)));
   return { road: road!.scene, car: car!.scene, bag: bag!.scene, house: house!.scene };
 }
 
