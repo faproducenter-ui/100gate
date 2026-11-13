@@ -15,3 +15,6 @@ tools/motionbricks/out/
 
 # MotionBricks baked clips use evaluation-licence target poses: local only until stage 4 (own targets)
 public/assets/iso/gait-*.json
+
+# original third-party models, kept local (CC-BY / Sketchfab Standard); the optimised ones go to public/assets
+assets-src/
