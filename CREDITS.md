@@ -48,7 +48,7 @@ The files in `public/assets/iso/trailer/` are optimised copies (resized WebP tex
 
 ## Opening sequence sounds (CC0, OpenGameArt)
 
-Recorded sounds used in the opening (public domain, no attribution required; listed here out of courtesy). They are converted to AAC and layered with synthesized sound in `public/assets/iso/trailer-audio/`:
+Recorded sounds used in the opening (public domain, no attribution required; listed here out of courtesy). They are converted to MP3 and layered with synthesized sound in `public/assets/iso/trailer-audio/`:
 
 - Rain (loopable): https://opengameart.org/content/rain-loopable
 - Racing car engine sound loops (slowed and low-passed for the cabin): https://opengameart.org/content/racing-car-engine-sound-loops

@@ -87,7 +87,7 @@ export class IsoSound {
     if(!ctx)return;
     await Promise.all(['rain','engine','crash','heart','gravel','dooropen','doorclose'].map(async n=>{
       if(this.introBuf[n])return;
-      try{const r=await fetch(`${base}assets/iso/trailer-audio/${n}.m4a`);if(!r.ok)return;this.introBuf[n]=await ctx.decodeAudioData(await r.arrayBuffer());}catch{/* keep the synthesized fallback */}
+      try{const r=await fetch(`${base}assets/iso/trailer-audio/${n}.mp3`);if(!r.ok)return;this.introBuf[n]=await ctx.decodeAudioData(await r.arrayBuffer());}catch{/* keep the synthesized fallback */}
     }));
   }
   /** The sound of the opening, scheduled against the audio clock so it stays in step with the picture (30 s, see intro.ts). */
