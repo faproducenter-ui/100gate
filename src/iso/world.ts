@@ -10,7 +10,7 @@ import {boxProjectUV} from './env-kit';
 import {createPhysics,type Physics} from './physics';
 import {HandController,Pickup} from './interaction';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {Intro} from './intro';
+import {Intro,loadTrailerAssets} from './intro';
 import {DOORS,OBJECTS,ROOMS,doorFor,doorSwing,movedProps,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
 import type {CameraId,CCTVView,Save,Settings} from './contracts';
 
@@ -428,11 +428,19 @@ export class IsoWorld {
   /** The opening sequence at time t (seconds): its own scene through the same analog pass. */
   renderIntro(t:number,settings:Settings,time:number){
     if(!this.resize(settings))return;
-    this.intro??=new Intro();
+    if(!this.intro){this.analog.render(this.renderer,()=>{},time,1,0,0);return;}   // the models are still arriving: black
     const {fade,flash}=this.intro.update(t,this.lastWidth/Math.max(1,this.lastHeight));
     this.renderer.toneMappingExposure=1.25;
     this.analog.render(this.renderer,()=>this.renderer.render(this.intro!.scene,this.intro!.camera),time,1,fade,flash);
   }
+  /** Loads the road, the car and the backpack for the opening (about 22 MB, only when a new game starts). */
+  async prepareIntro(){
+    if(this.intro||this.introLoading)return;
+    this.introLoading=true;
+    try{this.intro=new Intro(await loadTrailerAssets());}finally{this.introLoading=false;}
+  }
+  get introReady(){return !!this.intro;}
+  private introLoading=false;
   endIntro(){this.intro?.dispose();this.intro=undefined;}
   render(frame:Frame){
     if(!this.resize(frame.settings))return;

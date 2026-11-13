@@ -119,7 +119,9 @@ export default function IsoPage(){
       mode=state.finished?'complete':'play';target=null;notice='';setPanel(null);persist();
       // A new game opens with the drive and the crash (30 s); a loaded one goes straight in.
       introT=INTRO_ENABLED&&!restore&&fpOn()&&mode==='play'&&!state.lit&&state.items.length===0?0:-1;
-      if(introT===0){void sound.unlock().then(()=>{if(introT>=0)sound.intro(settings);});}
+      if(introT===0){
+        void world.prepareIntro().then(()=>{if(introT>=0)void sound.unlock().then(()=>{if(introT>=0)sound.intro(settings);});}).catch(()=>endIntro());
+      }
       emit();
     };
     async function load(){
@@ -271,7 +273,7 @@ export default function IsoPage(){
     const step=(dt:number,draw=true)=>{
       const gameplay=mode==='play'&&!panel&&!portraitBlocked()&&introT<0;
       clock+=dt;
-      if(introT>=0&&!document.hidden){introT+=dt;if(introT>=INTRO_DURATION)endIntro();}
+      if(introT>=0&&!document.hidden&&world?.introReady){introT+=dt;if(introT>=INTRO_DURATION)endIntro();}
       if(gameplay&&world){
         const k=settings.keys,ax=Number(keys.has(k.right))-Number(keys.has(k.left)),az=Number(keys.has(k.down))-Number(keys.has(k.up));
         const mx=Math.max(-1,Math.min(1,ax+tmx)),mz=Math.max(-1,Math.min(1,az+tmz));

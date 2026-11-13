@@ -15,7 +15,7 @@ const loader=new GLTFLoader();loader.setMeshoptDecoder(MeshoptDecoder);
 const specs=[
   {name:'car',url:'/assets/trailer/car.glb',axis:'z' as const,target:4.0,x:0},
   {name:'backpack',url:'/assets/trailer/backpack.glb',axis:'y' as const,target:.65,x:4},
-  {name:'road',url:'/assets/trailer/road.glb',axis:'x' as const,target:0,x:-12},
+  {name:'road',url:'/assets/trailer/'+(new URLSearchParams(location.search).get('road')||'road')+'.glb',axis:'x' as const,target:0,x:-12},
 ];
 const lines:string[]=[];const loaded:Record<string,T.Object3D>={};
 for(const s of specs){

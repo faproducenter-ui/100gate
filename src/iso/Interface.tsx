@@ -411,6 +411,9 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
       <div className="iso-credits-copy"><strong>100GATE</strong><p>Проект faproducenter-ui.</p>
         <p>Персонаж: MakeHuman / MPFB (CC0). Окружение и звуковое оформление: 100GATE.</p>
         <p lang="en">Key with Tag by AxonFXDesigns (<a href="https://sketchfab.com/3d-models/key-with-tag-16ea3fbecc6346df9859f0e18406951b" target="_blank" rel="noreferrer">Sketchfab</a>), CC BY 4.0.
+          Mountain road by Metazeon (<a href="https://sketchfab.com/3d-models/mountain-road-5a7164248a244671953ebde24a7a876b" target="_blank" rel="noreferrer">Sketchfab</a>), CC BY 4.0.
+          Large Camping BackPack by Sebastian Webster (<a href="https://sketchfab.com/3d-models/large-camping-backpack-freegameready-a7086b50dae84706b81bb3ce14ad9094" target="_blank" rel="noreferrer">Sketchfab</a>), CC BY 4.0.
+          Car Generic Hatchback GameReady with interior by Kinetic Vehicles (<a href="https://sketchfab.com/3d-models/car-generic-hatchback-gameready-with-interior-9d21deaa0174412283965baf323133a1" target="_blank" rel="noreferrer">Sketchfab</a>), Sketchfab Standard licence.
           Antique Book with Quill and Key by E.Dejnes (<a href="https://sketchfab.com/3d-models/antique-book-with-quill-and-key-6be47f12c73342ef9232e29f71e0fa76" target="_blank" rel="noreferrer">Sketchfab</a>), CC BY-NC 4.0.</p>
         <p lang="en">The data used in this project was obtained from <a href="https://mocap.cs.cmu.edu/" target="_blank" rel="noreferrer">mocap.cs.cmu.edu</a>.</p>
         <p>Three.js · Blender</p></div>

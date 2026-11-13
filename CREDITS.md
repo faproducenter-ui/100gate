@@ -36,3 +36,11 @@ and `art/provenance/MAKEHUMAN-LICENSE.md` for exact sources and terms.
 The old chair is the existing credited game prop. Knife geometry/materials
 and grip-study choreography are project-authored. para's CC0 FPS Arms archive
 was inspected as a reference but its meshes and actions were not imported.
+
+## Opening sequence models
+
+- Mountain road: Metazeon, CC-BY-4.0 — https://sketchfab.com/3d-models/mountain-road-5a7164248a244671953ebde24a7a876b
+- Large Camping BackPack (Free/GameReady): Sebastian Webster, CC-BY-4.0 — https://sketchfab.com/3d-models/large-camping-backpack-freegameready-a7086b50dae84706b81bb3ce14ad9094
+- Car Generic Hatchback GameReady with interior: Kinetic Vehicles, Sketchfab Standard licence — https://sketchfab.com/3d-models/car-generic-hatchback-gameready-with-interior-9d21deaa0174412283965baf323133a1
+
+The files in `public/assets/trailer/` are optimised copies (resized WebP textures, meshopt); the originals are kept out of git in `assets-src/`.
