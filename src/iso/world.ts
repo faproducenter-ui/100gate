@@ -442,7 +442,9 @@ export class IsoWorld {
     try{
       const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
       const assets=await Promise.race([loadTrailerAssets('',coarse),new Promise<never>((_,no)=>setTimeout(()=>no(new Error('opening assets timed out')),45000))]);
-      this.intro=new Intro(assets);
+      this.shadowWas=this.renderer.shadowMap.enabled;
+      this.renderer.shadowMap.enabled=!coarse;this.renderer.shadowMap.type=T.PCFSoftShadowMap;
+      this.intro=new Intro(assets,!coarse);
       this.intro.update(0,this.lastWidth/Math.max(1,this.lastHeight||1));
       // compile every shader in the background before the first frame, so the opening does not stall when it starts
       await this.renderer.compileAsync(this.intro.scene,this.intro.camera);
@@ -450,9 +452,10 @@ export class IsoWorld {
   }
   get introReady(){return !!this.intro;}
   private introLoading=false;
+  private shadowWas=false;
   introPrompt(t:number){return this.intro?.prompt(t)??'';}
   get introCrashTime(){return this.intro?.crash??12.1;}
-  endIntro(){this.intro?.dispose();this.intro=undefined;this.analog.setSoft(false);this.analog.resize(this.lastWidth,this.lastHeight,this.lowHeight);}
+  endIntro(){this.intro?.dispose();this.intro=undefined;this.renderer.shadowMap.enabled=this.shadowWas;this.analog.setSoft(false);this.analog.resize(this.lastWidth,this.lastHeight,this.lowHeight);}
   render(frame:Frame){
     if(!this.resize(frame.settings))return;
     const {state,settings,time,dt,menu,cctv}=frame;

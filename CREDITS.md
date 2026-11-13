@@ -45,3 +45,16 @@ was inspected as a reference but its meshes and actions were not imported.
 - Abandoned House: AspectStudios, CC-BY-4.0 — https://sketchfab.com/3d-models/abandoned-house-c876fa6c530f4946a5234666752803ce
 
 The files in `public/assets/iso/trailer/` are optimised copies (resized WebP textures, meshopt); the originals are kept out of git in `assets-src/`.
+
+## Opening sequence sounds (CC0, OpenGameArt)
+
+Recorded sounds used in the opening (public domain, no attribution required; listed here out of courtesy). They are converted to AAC and layered with synthesized sound in `public/assets/iso/trailer-audio/`:
+
+- Rain (loopable): https://opengameart.org/content/rain-loopable
+- Racing car engine sound loops (slowed and low-passed for the cabin): https://opengameart.org/content/racing-car-engine-sound-loops
+- Crash collision: https://opengameart.org/content/crash-collision
+- Glass break: https://opengameart.org/content/glass-break
+- Metal impact sounds: https://opengameart.org/content/metal-impact-sounds
+- Heartbeat sounds: https://opengameart.org/content/heartbeat-sounds
+- Different steps on wood, stone, leaves, gravel and mud: https://opengameart.org/node/5701
+- Car door sound effects: https://opengameart.org/content/cardoorsfx

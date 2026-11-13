@@ -80,6 +80,16 @@ export class IsoSound {
     source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
   }
   private introBus?:GainNode;
+  private introBuf:Record<string,AudioBuffer>={};
+  /** Real recordings for the opening (CC0, OpenGameArt; see CREDITS.md): loaded once, decoded, kept. Missing files fall back to the synthesized sounds. */
+  async prepareIntroAudio(base=''){
+    const ctx=this.context;
+    if(!ctx)return;
+    await Promise.all(['rain','engine','crash','heart','gravel','dooropen','doorclose'].map(async n=>{
+      if(this.introBuf[n])return;
+      try{const r=await fetch(`${base}assets/iso/trailer-audio/${n}.m4a`);if(!r.ok)return;this.introBuf[n]=await ctx.decodeAudioData(await r.arrayBuffer());}catch{/* keep the synthesized fallback */}
+    }));
+  }
   /** The sound of the opening, scheduled against the audio clock so it stays in step with the picture (30 s, see intro.ts). */
   intro(s:Settings,from=0,crash=12.1){
     const C=crash;
@@ -103,6 +113,29 @@ export class IsoSound {
       g.connect(bus);o.start(at(start));o.stop(at(start+len+.1));
     };
     const env=(pts:[number,number][])=>(g:GainNode)=>{g.gain.setValueAtTime(0,at(pts[0]![0]));for(const [t,v] of pts)g.gain.linearRampToValueAtTime(v,at(t));};
+    const B=this.introBuf;
+    /** play a recording: when, gain, rate, optional loop until `until`, filter, slice of the file */
+    const sample=(name:string,when:number,gain:number,opt:{rate?:number;until?:number;lp?:number;hp?:number;offset?:number;dur?:number;fadeIn?:number;fadeOut?:number}={})=>{
+      const buf=B[name];if(!buf)return false;
+      const end=opt.until??when+(opt.dur??buf.duration)/(opt.rate??1);
+      if(end<ctx.currentTime-t0)return true;
+      const src=ctx.createBufferSource();src.buffer=buf;src.playbackRate.value=opt.rate??1;
+      if(opt.until!==undefined)src.loop=true;
+      const g=ctx.createGain();g.gain.setValueAtTime(0,at(when));
+      g.gain.linearRampToValueAtTime(gain,at(when+(opt.fadeIn??.02)));
+      g.gain.setValueAtTime(gain,at(Math.max(when+.03,end-(opt.fadeOut??.05))));g.gain.linearRampToValueAtTime(0,at(end));
+      let node:AudioNode=src;
+      if(opt.lp){const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=opt.lp;node.connect(f);node=f;}
+      if(opt.hp){const f=ctx.createBiquadFilter();f.type='highpass';f.frequency.value=opt.hp;node.connect(f);node=f;}
+      node.connect(g).connect(bus);
+      src.start(at(when),opt.offset??0,opt.until!==undefined?undefined:opt.dur);src.stop(at(end)+.05);
+      return true;
+    };
+    // the rain: all the way through, muffled by the roof while we are in the car, open air after we get out
+    sample('rain',0,.85,{until:19.6,lp:2600,fadeIn:1.5,fadeOut:.6});
+    sample('rain',19.5,1.1,{until:30,fadeIn:1.2,fadeOut:1.2});
+    // the engine, a real recording slowed down and darkened, the revs follow the braking
+    sample('engine',0.3,.42,{rate:.58,until:C-.1,lp:520,fadeIn:1.2,fadeOut:.12});
     // the drive: engine, road, the tyres screaming when it brakes
     tone('sawtooth',46,54,0,C-1.1,env([[0,0],[1.2,.09],[C-1.1,.12]]),240);
     tone('sawtooth',54,40,C-1.1,1.5,env([[C-1.1,.12],[C-.05,.1],[C+.05,0]]),240);
@@ -110,23 +143,29 @@ export class IsoSound {
     noise(0,C+.1,'lowpass',700,900,.7,env([[0,0],[1.4,.07],[11,.1],[C,.1],[C+.1,0]]));
     noise(C-1.1,1.55,'bandpass',1900,1150,9,env([[C-1.1,0],[C-.6,.12],[C-.1,.14],[C+.02,0]]));
     // the impact: a blow, glass, then everything stops
+    if(!sample('crash',C,.85,{fadeOut:.4})){
     noise(C,.7,'lowpass',2600,300,.5,env([[C,.0],[C+.02,.95],[C+.7,0]]));
     tone('sine',70,28,C,.9,env([[C,0],[C+.03,.9],[C+.9,0]]));
-    for(let i=0;i<9;i++)noise(C+.1+i*.05+Math.random()*.1,.12,'highpass',5200,6500,.6,env([[C+.1+i*.05,0],[C+.12+i*.05,.16],[C+.22+i*.05,0]]));
+    }
+    tone('sine',62,30,C,1.1,env([[C,0],[C+.03,.5],[C+1.1,0]]));
+    if(!B.crash)for(let i=0;i<9;i++)noise(C+.1+i*.05+Math.random()*.1,.12,'highpass',5200,6500,.6,env([[C+.1+i*.05,0],[C+.12+i*.05,.16],[C+.22+i*.05,0]]));
     // the ringing in the ears, fading while the heart beats
     tone('sine',3150,3100,C+.1,8.5,env([[C+.1,0],[C+.2,.075],[16,.05],[21.2,0]]));
     tone('sine',4210,4180,C+.1,6,env([[C+.1,0],[C+.2,.03],[17,.012],[18.7,0]]));
-    for(let k=0;k<7;k++){const b=C+.9+k*.92,v=.34*(1-k*.08);
+    for(let k=0;k<(B.heart?0:7);k++){const b=C+.9+k*.92,v=.34*(1-k*.08);
       tone('sine',60,38,b,.2,env([[b,0],[b+.03,v],[b+.18,0]]));tone('sine',52,34,b+.26,.2,env([[b+.26,0],[b+.29,v*.7],[b+.44,0]]));}
+    sample('heart',C+.9,2.4,{until:19.4,fadeIn:.6,fadeOut:1.2,lp:900});
     // the forest at night, muffled at first
     noise(15.6,14.5,'bandpass',420,700,.7,env([[15.6,0],[19,.035],[28.5,.05],[30,0]]));
     noise(15.8,14,'highpass',4500,5200,.5,env([[15.8,0],[20,.008],[29,.01],[30,0]]));
     // the door, the steps along the car
-    tone('sawtooth',170,255,19.35,.9,env([[19.35,0],[19.6,.05],[20.1,.04],[20.25,0]]),600);
-    const step=(t:number,v:number)=>noise(t,.2,'lowpass',2600,900,.9,env([[t,0],[t+.015,v],[t+.2,0]]));
+    if(!sample('dooropen',19.3,.75,{lp:3500}))tone('sawtooth',170,255,19.35,.9,env([[19.35,0],[19.6,.05],[20.1,.04],[20.25,0]]),600);
+    let stepN=0;
+    const step=(t:number,v:number)=>{const k=stepN++;if(!sample('gravel',t,2.0+.7*Math.random(),{rate:.92+.16*Math.random(),offset:(k%2)*.34,dur:.32,fadeIn:.004,fadeOut:.1}))noise(t,.2,'lowpass',2600,900,.9,env([[t,0],[t+.015,v],[t+.2,0]]));};
     for(let t=20;t<22.7;t+=.56)step(t,.2);
     // the trunk: latch, hinge, the bag
     noise(22.7,.08,'bandpass',3200,3200,3,env([[22.7,0],[22.72,.2],[22.78,0]]));
+    sample('dooropen',22.8,.7,{rate:.62,lp:2200});
     tone('sawtooth',130,330,22.85,1.5,env([[22.85,0],[23.3,.045],[24.2,.05],[24.4,0]]),500);
     noise(24.3,1.25,'bandpass',3000,2200,1.2,env([[24.3,0],[24.45,.07],[24.7,.02],[24.9,.09],[25.2,.03],[25.55,0]]));
     tone('sine',90,50,25.05,.25,env([[25.05,0],[25.07,.2],[25.3,0]]));

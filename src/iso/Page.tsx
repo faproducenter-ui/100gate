@@ -28,7 +28,7 @@ export default function IsoPage(){
     let settings=readSettings(),mode:Mode='loading',panel:Panel|null=null,back:Panel|null=null,active=getSave(),state=active??newSave();
     let clock=0,noticeUntil=0,notice='',loading='Администрация',target:ObjectId|null=null,documentView:DocumentView|undefined;
     const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
-    let introT=-1;
+    let introT=-1,introGo=false;
     const endIntro=()=>{if(introT<0)return;introT=-1;sound.stopIntro();world?.endIntro();sound.camOn(settings);yaw=START_YAW;pitch=-.06;emit();};
     let markers:{id:ObjectId;x:number;y:number}[]=[],markClock=0,perf=coarse?1:0;
     let cctv=startCCTV(),saveClock=0,uiClock=0,walked=0,drawer=false;
@@ -120,7 +120,9 @@ export default function IsoPage(){
       // A new game opens with the drive and the crash (30 s); a loaded one goes straight in.
       introT=INTRO_ENABLED&&!restore&&fpOn()&&mode==='play'&&!state.lit&&state.items.length===0?0:-1;
       if(introT===0){
-        void world.prepareIntro().then(()=>{if(introT>=0)void sound.unlock().then(()=>{if(introT>=0)sound.intro(settings,0,world?.introCrashTime??12.1);});}).catch(()=>endIntro());
+        // pictures and sound are both loaded first; the clock of the opening starts only when the sound is scheduled, so they stay together
+        introGo=false;
+        void Promise.all([world.prepareIntro(),sound.unlock().then(()=>sound.prepareIntroAudio())]).then(()=>{if(introT>=0){sound.intro(settings,0,world?.introCrashTime??12.1);introGo=true;}}).catch(()=>endIntro());
       }
       emit();
     };
@@ -273,7 +275,7 @@ export default function IsoPage(){
     const step=(dt:number,draw=true)=>{
       const gameplay=mode==='play'&&!panel&&!portraitBlocked()&&introT<0;
       clock+=dt;
-      if(introT>=0&&!document.hidden&&world?.introReady){introT+=dt;if(introT>=INTRO_DURATION)endIntro();}
+      if(introT>=0&&!document.hidden&&world?.introReady&&introGo){introT+=dt;if(introT>=INTRO_DURATION)endIntro();}
       if(gameplay&&world){
         const k=settings.keys,ax=Number(keys.has(k.right))-Number(keys.has(k.left)),az=Number(keys.has(k.down))-Number(keys.has(k.up));
         const mx=Math.max(-1,Math.min(1,ax+tmx)),mz=Math.max(-1,Math.min(1,az+tmz));

@@ -48,15 +48,17 @@ export async function loadTrailerAssets(base = '', lite = false): Promise<Traile
 }
 
 /** Night grade for the road scan: the baked daylight is crushed, drained and pushed cold; flat grey surfaces turn into wet asphalt with puddles. */
-function gradeRoad(m: T.MeshStandardMaterial) {
+function gradeRoad(m: T.MeshStandardMaterial, axis: T.Vector2[]) {
   m.roughness = .9; m.metalness = 0;
   m.onBeforeCompile = sh => {
+    sh.uniforms.uAxis = { value: axis };
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vWN; varying vec3 vWP;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWN = normalize(mat3(modelMatrix) * normal); vWP = (modelMatrix * vec4(position, 1.)).xyz;');
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
-        varying vec3 vWN; varying vec3 vWP;
+        varying vec3 vWN; varying vec3 vWP; uniform vec2 uAxis[9];
+        float axisDist(vec2 p){ float best = 1e9; for (int i = 0; i < 8; i++) { vec2 a = uAxis[i], b = uAxis[i + 1], ab = b - a; float t = clamp(dot(p - a, ab) / dot(ab, ab), 0., 1.); best = min(best, length(p - a - ab * t)); } return best; }
         float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
         float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f); return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
         float wetAsphalt = 0.;
@@ -72,7 +74,8 @@ function gradeRoad(m: T.MeshStandardMaterial) {
           vec3 night = mix(vec3(lum), diffuseColor.rgb, .18) * vec3(.62, .86, 1.0);       // drained, cold blue-green: the baked shadows stop reading
           float road = smoothstep(.2, .7, wetAsphalt);
           float detail = fbm(vWP.xz * 1.7 + vWP.y * .9) * 1.3 + fbm(vWP.xz * 7.3) * .5;      // fine grain of needles, rock and earth over the coarse scan
-          diffuseColor.rgb = night * mix(.03 * (.35 + detail), mix(.9, .22, puddle), road);          // trees, slopes and rubble stay nearly black; only the asphalt answers the headlights
+          float far = smoothstep(6., 15., axisDist(vWP.xz));          // the coarse scan far from the road drops into the dark: the crude slopes are seen only where they are lit and close
+          diffuseColor.rgb = night * mix(.03 * (.35 + detail) * (1. - .8 * far), mix(.9, .22, puddle), road);          // trees, slopes and rubble stay nearly black; only the asphalt answers the headlights
           wetAsphalt = mix(wetAsphalt * .7, 1., puddle);
         }`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
@@ -116,6 +119,8 @@ export class Intro {
   /** the porch door in the world and the direction it faces (toward the road) */
   private readonly door = { p: new T.Vector3(), n: new T.Vector3(0, 0, 1) };
   private readonly rain: T.LineSegments;
+  /** drops and dust on the windshield: a plane on the camera; the wiper clears it as it passes, the drops grow back */
+  private readonly glassFx: T.Mesh;
   /** the crumpled bonnet: uniforms shared by the body shader (amount 0..1, impact point in the car's frame) */
   private readonly dent = { amount: { value: 0 }, point: { value: new T.Vector3(-.65, .15, -1.95) }, size: { value: .8 } };
   private bodyMeshes: T.Mesh[] = [];
@@ -134,16 +139,16 @@ export class Intro {
 
   private find(m: T.Object3D, name: string) { return m.getObjectByName(name.replace(/ /g, '_')) ?? undefined; }
 
-  constructor(assets: TrailerAssets) {
+  constructor(assets: TrailerAssets, shadows = false) {
     const s = this.scene;
-    s.background = new T.Color(0x0a1218); s.fog = new T.FogExp2(0x15222c, .034);
+    s.background = new T.Color(0x0a1218); s.fog = new T.FogExp2(0x15222c, .04);
     s.add(new T.HemisphereLight(0x3a5470, 0x0a1014, 2.0));
     s.add(this.root);
 
     // --- the road, graded to night, with the axis curve through it
     const road = assets.road.clone(true);
     road.scale.setScalar(ROAD_SCALE);
-    road.traverse(o => { const mesh = o as T.Mesh; if (mesh.isMesh) gradeRoad(mesh.material as T.MeshStandardMaterial); });
+    road.traverse(o => { const mesh = o as T.Mesh; if (mesh.isMesh) gradeRoad(mesh.material as T.MeshStandardMaterial, AXIS.map(([x, z]) => new T.Vector2(x * ROAD_SCALE, z * ROAD_SCALE))); });
     this.root.add(road);
     const pts = AXIS.map(([x, z, y]) => V(x * ROAD_SCALE, y * ROAD_SCALE + .02, z * ROAD_SCALE));
     const d = pts[pts.length - 1]!.clone().sub(pts[pts.length - 2]!).normalize(); pts.push(pts[pts.length - 1]!.clone().addScaledVector(d, 6));
@@ -174,6 +179,7 @@ export class Intro {
     // --- weather and the details
     this.rain = this.makeRain(); this.root.add(this.rain);
     this.smoke = this.makeSmoke(); this.car.add(this.smoke);
+    this.glassFx = this.makeGlassFx(); this.camera.add(this.glassFx); this.scene.add(this.camera);
     this.crack = new T.Mesh(new T.PlaneGeometry(1.5, .72), new T.MeshBasicMaterial({ map: this.crackTexture(), transparent: true, depthWrite: false, opacity: 0, fog: false }));
     this.car.add(this.crack);
     this.makeSign(); this.root.add(this.sign);
@@ -188,6 +194,7 @@ export class Intro {
 
     this.simulate();
     this.buildKeys();
+    if (shadows) this.enableShadows();
   }
 
   /**
@@ -228,6 +235,19 @@ export class Intro {
       }
     }
     return p.copy(q.applyMatrix4(this.house.matrixWorld));
+  }
+
+  /**
+   * Shadows from the headlights: the left beam of the player's car (the car itself does not cast, the light sits inside its nose), the oncoming
+   * car, the sign and the house cast onto the road and the ground. Off on phones.
+   */
+  private enableShadows() {
+    this.headL.castShadow = true;
+    this.headL.shadow.mapSize.set(1024, 1024); this.headL.shadow.camera.near = .6; this.headL.shadow.camera.far = 70; this.headL.shadow.bias = -.0006; this.headL.shadow.radius = 3;
+    const cast = (o: T.Object3D) => o.traverse(c => { const m = c as T.Mesh; if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
+    cast(this.oncoming); cast(this.house); cast(this.sign);
+    this.root.traverse(c => { const m = c as T.Mesh; if (m.isMesh && m.geometry && !this.car.getObjectById(m.id) && !this.oncoming.getObjectById(m.id) && !this.house.getObjectById(m.id) && !this.sign.getObjectById(m.id)) m.receiveShadow = true; });
+    this.car.traverse(c => { const m = c as T.Mesh; if (m.isMesh) m.receiveShadow = true; });
   }
 
   /** materials of the car: the mirror-like paint becomes dull dirty paint; glass does not write depth; lamps are collected for flicker */
@@ -287,6 +307,53 @@ export class Intro {
     const g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(pos, 3));
     const l = new T.LineSegments(g, new T.LineBasicMaterial({ color: 0xaac4d4, transparent: true, opacity: .32, depthWrite: false }));
     l.frustumCulled = false; return l;
+  }
+
+  private makeGlassFx(): T.Mesh {
+    const mat = new T.ShaderMaterial({
+      transparent: true, depthTest: false, depthWrite: false, fog: false,
+      uniforms: { uTime: { value: 0 }, uAspect: { value: 1.6 }, uGlare: { value: 0 }, uAmount: { value: 1 } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy * 2., 0., 1.); }',
+      fragmentShader: `
+        varying vec2 vUv; uniform float uTime, uAspect, uGlare, uAmount;
+        float h11(float n){ return fract(sin(n * 127.1) * 43758.5453); }
+        vec2 h22(vec2 p){ p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3))); return fract(sin(p) * 43758.5453); }
+        void main(){
+          vec2 uv = (vUv - .5) * vec2(uAspect, 1.) * 2.;                 // x in -aspect..aspect, y in -1..1
+          float zone = smoothstep(-.16, -.06, uv.y) * uAmount;           // only the glass above the dashboard
+          // the wiper sweeps +-0.7 rad about a pivot below the glass; each pixel's age = time since the blade last passed
+          float a = atan(uv.x, uv.y + 1.15), x = clamp(a / .7, -1., 1.), w = 2.6, T = 6.2831853 / w;
+          float t1 = asin(x) / w, t2 = (3.1415927 - asin(x)) / w;
+          float age = min(mod(uTime - t1, T), mod(uTime - t2, T));
+          float cover = 0.;  vec3 col = vec3(0.);  float alpha = 0.;
+          for (int layer = 0; layer < 2; layer++) {
+            float sc = layer == 0 ? 9. : 19.;                            // big drops and small ones
+            vec2 g = uv * sc, id = floor(g), f = fract(g);
+            vec2 r = h22(id + float(layer) * 31.7);
+            float delay = r.x * T * .9, grow = smoothstep(0., 1.1, age - delay);
+            vec2 c = .25 + r * .5; c.y += (age - delay) * .015 * step(.7, r.y);   // a few of the big ones run down
+            float rad = (layer == 0 ? .30 : .17) * (.4 + .6 * h11(id.x * 7. + id.y * 13.)) * grow;
+            vec2 d = (f - c) / max(rad, 1e-3); float dd = length(d);
+            if (dd < 1. && rad > .02) {
+              vec2 n = d;
+              float rim = smoothstep(.55, 1., dd);                       // the drop bends the dark scene: a dark ring, a lighter centre
+              float spec = pow(max(dot(normalize(vec3(n, .7)), normalize(vec3(-.45, .55, .7))), 0.), 22.);
+              float lamp = pow(max(dot(normalize(vec3(n, .6)), normalize(vec3(.4, -.2, .8))), 0.), 14.) * (.15 + uGlare * 2.2);
+              col += vec3(.55, .66, .74) * (spec * .9 + lamp) + vec3(.02, .035, .05) * (1. - rim);
+              alpha = max(alpha, .22 + rim * .35 + spec * .5 + lamp * .6);
+            }
+          }
+          // dust and grime: a fine speckle, heavier toward the bottom corners
+          float speck = step(.985, h11(floor(uv.x * 170.) * 3.1 + floor(uv.y * 170.) * 17.3)) * .16;
+          float film = .05 + .05 * smoothstep(-.2, -1., uv.y);
+          alpha = clamp(alpha + speck * (1. - cover) + film * .5, 0., .85) * zone;
+          col += vec3(.06, .075, .085) * (speck + film);
+          gl_FragColor = vec4(col, alpha);
+        }`,
+    });
+    const m = new T.Mesh(new T.PlaneGeometry(1, 1), mat);
+    m.renderOrder = 1000; m.frustumCulled = false; m.position.z = -.3;
+    return m;
   }
 
   /** steam rising from under the bonnet after the impact */
@@ -479,6 +546,10 @@ export class Intro {
     // steam from under the bonnet, rising and drifting
     this.smoke.visible = crashed; (this.smoke.material as T.PointsMaterial).opacity = crashed ? .5 * sstep(this.crash, this.crash + 1.5, t) : 0;
     this.smoke.position.set(0, .8 + ((t * .5) % 1.2), -1.6);
+    // the glass: drops and dust while we are in the car; the beams of the oncoming car light the drops up
+    const fx = this.glassFx.material as T.ShaderMaterial;
+    this.glassFx.visible = t < 19.6; fx.uniforms.uTime!.value = t; fx.uniforms.uAspect!.value = cam.aspect;
+    fx.uniforms.uAmount!.value = 1 - sstep(18.6, 19.6, t); fx.uniforms.uGlare!.value = Math.max(0, 1 - Math.max(0, (os - dist)) / 120) * (t > 5 ? 1 : 0);
     // rain falls round the camera
     this.rain.position.set(cam.position.x, cam.position.y - 2 - (t * 9) % 12, cam.position.z);
 
