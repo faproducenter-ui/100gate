@@ -81,7 +81,8 @@ export class IsoSound {
   }
   private introBus?:GainNode;
   /** The sound of the opening, scheduled against the audio clock so it stays in step with the picture (30 s, see intro.ts). */
-  intro(s:Settings,from=0){
+  intro(s:Settings,from=0,crash=12.1){
+    const C=crash;
     const ctx=this.context,master=this.master,tex=this.texture;
     if(!ctx||!master||!tex)return;
     this.stopIntro();
@@ -103,19 +104,19 @@ export class IsoSound {
     };
     const env=(pts:[number,number][])=>(g:GainNode)=>{g.gain.setValueAtTime(0,at(pts[0]![0]));for(const [t,v] of pts)g.gain.linearRampToValueAtTime(v,at(t));};
     // the drive: engine, road, the tyres screaming when it brakes
-    tone('sawtooth',46,54,0,11.1,env([[0,0],[1.2,.09],[11.1,.12]]),240);
-    tone('sawtooth',54,40,11.1,1.5,env([[11.1,.12],[12.55,.1],[12.65,0]]),240);
-    tone('triangle',92,108,0,11.1,env([[0,0],[1.2,.035],[11.1,.05]]),400);
-    noise(0,12.7,'lowpass',700,900,.7,env([[0,0],[1.4,.07],[11,.1],[12.6,.1],[12.7,0]]));
-    noise(11.1,1.55,'bandpass',1900,1150,9,env([[11.1,0],[11.5,.12],[12.5,.14],[12.62,0]]));
+    tone('sawtooth',46,54,0,C-1.1,env([[0,0],[1.2,.09],[C-1.1,.12]]),240);
+    tone('sawtooth',54,40,C-1.1,1.5,env([[C-1.1,.12],[C-.05,.1],[C+.05,0]]),240);
+    tone('triangle',92,108,0,C-1.1,env([[0,0],[1.2,.035],[C-1.1,.05]]),400);
+    noise(0,C+.1,'lowpass',700,900,.7,env([[0,0],[1.4,.07],[11,.1],[C,.1],[C+.1,0]]));
+    noise(C-1.1,1.55,'bandpass',1900,1150,9,env([[C-1.1,0],[C-.6,.12],[C-.1,.14],[C+.02,0]]));
     // the impact: a blow, glass, then everything stops
-    noise(12.6,.7,'lowpass',2600,300,.5,env([[12.6,.0],[12.62,.95],[13.3,0]]));
-    tone('sine',70,28,12.6,.9,env([[12.6,0],[12.63,.9],[13.5,0]]));
-    for(let i=0;i<9;i++)noise(12.7+i*.05+Math.random()*.1,.12,'highpass',5200,6500,.6,env([[12.7+i*.05,0],[12.72+i*.05,.16],[12.82+i*.05,0]]));
+    noise(C,.7,'lowpass',2600,300,.5,env([[C,.0],[C+.02,.95],[C+.7,0]]));
+    tone('sine',70,28,C,.9,env([[C,0],[C+.03,.9],[C+.9,0]]));
+    for(let i=0;i<9;i++)noise(C+.1+i*.05+Math.random()*.1,.12,'highpass',5200,6500,.6,env([[C+.1+i*.05,0],[C+.12+i*.05,.16],[C+.22+i*.05,0]]));
     // the ringing in the ears, fading while the heart beats
-    tone('sine',3150,3100,12.7,8.5,env([[12.7,0],[12.8,.075],[16,.05],[21.2,0]]));
-    tone('sine',4210,4180,12.7,6,env([[12.7,0],[12.8,.03],[17,.012],[18.7,0]]));
-    for(let k=0;k<7;k++){const b=13.5+k*.92,v=.34*(1-k*.08);
+    tone('sine',3150,3100,C+.1,8.5,env([[C+.1,0],[C+.2,.075],[16,.05],[21.2,0]]));
+    tone('sine',4210,4180,C+.1,6,env([[C+.1,0],[C+.2,.03],[17,.012],[18.7,0]]));
+    for(let k=0;k<7;k++){const b=C+.9+k*.92,v=.34*(1-k*.08);
       tone('sine',60,38,b,.2,env([[b,0],[b+.03,v],[b+.18,0]]));tone('sine',52,34,b+.26,.2,env([[b+.26,0],[b+.29,v*.7],[b+.44,0]]));}
     // the forest at night, muffled at first
     noise(15.6,14.5,'bandpass',420,700,.7,env([[15.6,0],[19,.035],[28.5,.05],[30,0]]));

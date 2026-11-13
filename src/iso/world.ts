@@ -426,9 +426,11 @@ export class IsoWorld {
     return true;
   }
   /** The opening sequence at time t (seconds): its own scene through the same analog pass. */
-  renderIntro(t:number,settings:Settings,time:number){
+  renderIntro(t:number,settings:Settings,time:number,frame_perf=0){
     if(!this.resize(settings))return;
     if(!this.intro){this.analog.render(this.renderer,()=>{},time,1,0,0);return;}   // the models are still arriving: black
+    {const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches,h=[coarse?540:720,coarse?480:640,coarse?420:540,432][Math.min(3,frame_perf)];
+      this.analog.setSoft(true);this.analog.resize(this.lastWidth,this.lastHeight,h);}
     const {fade,flash}=this.intro.update(t,this.lastWidth/Math.max(1,this.lastHeight));
     this.renderer.toneMappingExposure=1.25;
     this.analog.render(this.renderer,()=>this.renderer.render(this.intro!.scene,this.intro!.camera),time,1,fade,flash);
@@ -437,12 +439,19 @@ export class IsoWorld {
   async prepareIntro(){
     if(this.intro||this.introLoading)return;
     this.introLoading=true;
-    try{this.intro=new Intro(await loadTrailerAssets());}finally{this.introLoading=false;}
+    try{
+      const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
+      this.intro=new Intro(await loadTrailerAssets('',coarse));
+      this.intro.update(0,this.lastWidth/Math.max(1,this.lastHeight||1));
+      // compile every shader in the background before the first frame, so the opening does not stall when it starts
+      await this.renderer.compileAsync(this.intro.scene,this.intro.camera);
+    }finally{this.introLoading=false;}
   }
   get introReady(){return !!this.intro;}
   private introLoading=false;
   introPrompt(t:number){return this.intro?.prompt(t)??'';}
-  endIntro(){this.intro?.dispose();this.intro=undefined;}
+  get introCrashTime(){return this.intro?.crash??12.1;}
+  endIntro(){this.intro?.dispose();this.intro=undefined;this.analog.setSoft(false);this.analog.resize(this.lastWidth,this.lastHeight,this.lowHeight);}
   render(frame:Frame){
     if(!this.resize(frame.settings))return;
     const {state,settings,time,dt,menu,cctv}=frame;

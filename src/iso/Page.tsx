@@ -120,7 +120,7 @@ export default function IsoPage(){
       // A new game opens with the drive and the crash (30 s); a loaded one goes straight in.
       introT=INTRO_ENABLED&&!restore&&fpOn()&&mode==='play'&&!state.lit&&state.items.length===0?0:-1;
       if(introT===0){
-        void world.prepareIntro().then(()=>{if(introT>=0)void sound.unlock().then(()=>{if(introT>=0)sound.intro(settings);});}).catch(()=>endIntro());
+        void world.prepareIntro().then(()=>{if(introT>=0)void sound.unlock().then(()=>{if(introT>=0)sound.intro(settings,0,world?.introCrashTime??12.1);});}).catch(()=>endIntro());
       }
       emit();
     };
@@ -339,7 +339,7 @@ export default function IsoPage(){
       world?.animateDoors(state,paused?0:dt);
       if(!draw)return;
       sound.mix(settings,{paused,power:state.power,menu});
-      if(!document.hidden&&introT>=0&&mode==='play')world?.renderIntro(introT,settings,clock);
+      if(!document.hidden&&introT>=0&&mode==='play')world?.renderIntro(introT,settings,clock,perf);
       else if(!document.hidden&&(mode==='title'||mode==='play'||mode==='complete')){
         world?.render({state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,perf,reading:panel==='document'&&fpOn(),
           direction,speed,target:panel?null:target,drawer,look:{yaw,pitch},crouch,sprint:sprinting,press,kick});

@@ -64,7 +64,7 @@ const FRAG = /* glsl */ `
 `;
 
 export class AnalogPass {
-  private readonly rt = new T.WebGLRenderTarget(2, 2, { type: T.HalfFloatType, magFilter: T.NearestFilter, minFilter: T.NearestFilter, depthBuffer: true, generateMipmaps: false });
+  private readonly rt = new T.WebGLRenderTarget(2, 2, { type: T.HalfFloatType, magFilter: T.NearestFilter, minFilter: T.NearestFilter, depthBuffer: true, generateMipmaps: false, samples: 4 });
   private readonly mat: T.ShaderMaterial;
   private readonly screen = new T.Scene();
   private readonly cam = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -77,6 +77,8 @@ export class AnalogPass {
     });
     const quad = new T.Mesh(new T.PlaneGeometry(2, 2), this.mat); quad.frustumCulled = false; this.screen.add(quad);
   }
+  /** Soft = smooth upscaling (the opening); not soft = hard pixels (the game). */
+  setSoft(soft: boolean) { const f = soft ? T.LinearFilter : T.NearestFilter; if (this.rt.texture.magFilter !== f) { this.rt.texture.magFilter = f; this.rt.texture.minFilter = f; this.rt.texture.needsUpdate = true; } }
   /** Size of the output in CSS pixels and the height of the low-resolution picture. */
   resize(w: number, h: number, lowHeight = 480) {
     this.lowHeight = lowHeight;

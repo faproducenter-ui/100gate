@@ -21,6 +21,9 @@ export const INTRO_ENABLED = true;
 const V = (x: number, y: number, z: number) => new T.Vector3(x, y, z);
 const sstep = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const lerp = T.MathUtils.lerp;
+/** smooth 1-D value noise (0..1), for the slow drift of a living head */
+const hash = (n: number) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+const noise = (x: number) => { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return hash(i) * (1 - u) + hash(i + 1) * u; };
 const rnd = (seed: number) => { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; };
 
 /** The scan is in its own units: 6 m of asphalt measured 13 units wide, so one unit is 0.46 m. The car file is 2.04 units long and is brought to 4 m. */
@@ -33,9 +36,9 @@ const AXIS: [number, number, number][] = [
 ];
 
 export type TrailerAssets = { road: T.Object3D; car: T.Object3D; bag: T.Object3D };
-export async function loadTrailerAssets(base = ''): Promise<TrailerAssets> {
+export async function loadTrailerAssets(base = '', lite = false): Promise<TrailerAssets> {
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
-  const [road, car, bag] = await Promise.all(['road', 'car', 'backpack'].map(n => loader.loadAsync(`${base}assets/iso/trailer/${n}.glb`)));
+  const [road, car, bag] = await Promise.all([lite ? 'road-lite' : 'road', 'car', 'backpack'].map(n => loader.loadAsync(`${base}assets/iso/trailer/${n}.glb`)));
   return { road: road!.scene, car: car!.scene, bag: bag!.scene };
 }
 
@@ -60,9 +63,9 @@ function gradeRoad(m: T.MeshStandardMaterial) {
           float flatUp = smoothstep(.80, .95, abs(vWN.y));
           wetAsphalt = flatUp * (1. - smoothstep(.12, .30, sat)) * smoothstep(.12, .3, lum);
           float puddle = smoothstep(.52, .70, vn(vWP.xz * .55) * .65 + vn(vWP.xz * 2.1) * .35) * wetAsphalt;
-          vec3 night = mix(vec3(lum), diffuseColor.rgb, .18) * vec3(.46, .82, 1.0);       // drained, cold blue-green: the baked shadows stop reading
+          vec3 night = mix(vec3(lum), diffuseColor.rgb, .18) * vec3(.62, .86, 1.0);       // drained, cold blue-green: the baked shadows stop reading
           float road = smoothstep(.2, .7, wetAsphalt);
-          diffuseColor.rgb = night * mix(.06, mix(.9, .4, puddle), road);          // trees, slopes and rubble stay nearly black; only the asphalt answers the headlights
+          diffuseColor.rgb = night * mix(.03, mix(.9, .22, puddle), road);          // trees, slopes and rubble stay nearly black; only the asphalt answers the headlights
           wetAsphalt = mix(wetAsphalt * .7, 1., puddle);
         }`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
@@ -90,6 +93,7 @@ export class Intro {
   private readonly tail = new T.PointLight(0xff1a0c, 0, 6, 1.6);
   private readonly hazard = new T.PointLight(0xff9a20, 0, 5, 1.8);
   private readonly dash = new T.PointLight(0xa8d8c8, 0, 1.4, 2);
+  private readonly trunkLamp = new T.PointLight(0xd8e4ff, 0, 4, 1.6);
   private readonly distantLight = new T.PointLight(0xffc77a, 0, 70, 1.1);
   /** the glow of a far-off window in the fog, at the end of the road */
   private readonly glow = new T.Sprite();
@@ -102,15 +106,17 @@ export class Intro {
   private readonly lamps: { mat: T.MeshStandardMaterial; base: number }[] = [];
   private wheels: T.Object3D[] = []; private wiper?: T.Object3D; private steer?: T.Object3D; private trunk?: T.Object3D; private trunkBase = 0;
   private readonly keys: Key[] = [];
-  private readonly CRASH = 12.6;
-  private crashPose = { s: 0, side: 0, yaw: 0 };
+  /** the moment the cars touch, found by the collision simulation (the sound and the flash are scheduled from it) */
+  crash = 12.1;
+  private sim = new Float32Array(0);
+  private readonly SIM_DT = 1 / 120;
 
   private find(m: T.Object3D, name: string) { return m.getObjectByName(name.replace(/ /g, '_')) ?? undefined; }
 
   constructor(assets: TrailerAssets) {
     const s = this.scene;
     s.background = new T.Color(0x0a1218); s.fog = new T.FogExp2(0x15222c, .034);
-    s.add(new T.HemisphereLight(0x3a5470, 0x0a1014, 7));
+    s.add(new T.HemisphereLight(0x3a5470, 0x0a1014, 5));
     s.add(this.root);
 
     // --- the road, graded to night, with the axis curve through it
@@ -130,9 +136,9 @@ export class Intro {
     this.car.updateMatrixWorld(true);
     const wp = (n: string) => { const o = this.find(carModel, n); return o ? this.car.worldToLocal(o.getWorldPosition(new T.Vector3())) : V(0, .8, 0); };
     const hl = wp('Interior HeadLight');
-    for (const [l, sx] of [[this.headL, -1], [this.headR, 1]] as const) { l.position.set(sx * .6, hl.y || .75, hl.z || -1.9); l.target.position.set(sx * .3, -1.2, -26); this.car.add(l, l.target); }
+    for (const [l, sx] of [[this.headL, -1], [this.headR, 1]] as const) { l.position.set(sx * .6, -.12, -2.05); l.target.position.set(sx * .3, -1.0, -26); void hl; this.car.add(l, l.target); }
     this.car.add(this.tail); this.tail.position.set(0, .9, 2.4);
-    this.car.add(this.hazard); this.car.add(this.dash);
+    this.car.add(this.hazard); this.car.add(this.dash); this.car.add(this.trunkLamp); this.trunkLamp.position.set(0, 1.35, 1.7);
     this.steer = this.find(carModel, 'Steering Wheel Pivot'); this.wiper = this.find(carModel, 'Windshield wiper pivot');
     this.trunk = this.find(carModel, 'Trunk Pivot'); this.trunkBase = this.trunk?.rotation.x ?? 0;
     this.wheels = ['Left Front Tire Pivot', 'Right Front Tire Pivot', 'Left Back Tire Pivot', 'Right Back Tire Pivot'].map(n => this.find(carModel, n)).filter(Boolean) as T.Object3D[];
@@ -158,7 +164,7 @@ export class Intro {
       gr.addColorStop(0, 'rgba(255,214,150,1)'); gr.addColorStop(.18, 'rgba(255,190,110,.55)'); gr.addColorStop(1, 'rgba(255,170,90,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
       this.glow.material = new T.SpriteMaterial({ map: new T.CanvasTexture(c), blending: T.AdditiveBlending, depthWrite: false, transparent: true, fog: false, opacity: 0 }); this.glow.scale.set(2.6, 2.6, 1); this.root.add(this.glow); }
 
-    this.crashPose = { s: this.travelled(this.CRASH) + 2, side: 2.9, yaw: -.55 };
+    this.simulate();
     this.buildKeys();
   }
 
@@ -178,7 +184,7 @@ export class Intro {
         if (m.transparent || /glass|window|windshield/.test(n)) { m.transparent = true; m.depthWrite = false; m.opacity = .14; m.color.set(0x0c1418); m.roughness = .1; continue; }   // glass: a faint sheen, not a black screen
         if (/headlight/.test(n)) this.lamps.push({ mat: m, base: m.emissiveIntensity });
         let interior = false; for (let p: T.Object3D | null = mesh; p; p = p.parent) if (p.name === 'Car_Interior') interior = true;
-        if (!(m.emissiveIntensity > 0 && m.emissive && m.emissive.getHex() > 0)) m.color.multiplyScalar(interior ? (dirty ? .45 : .6) : (dirty ? .09 : .22));   // the interior and the trim are dark, the paint is dirty and dark
+        if (!(m.emissiveIntensity > 0 && m.emissive && m.emissive.getHex() > 0)) m.color.multiplyScalar(interior ? (dirty ? .3 : .32) : (dirty ? .09 : .22));   // the interior and the trim are dark, the paint is dirty and dark
         if (/^(panel|notice)$/.test(m.name)) m.color.multiplyScalar(.4);
         m.envMapIntensity = 0;
       }
@@ -186,7 +192,7 @@ export class Intro {
   }
 
   private prepareBag(bag: T.Object3D) {
-    bag.traverse(o => { const m = o as T.Mesh; if (!m.isMesh) return; for (const mat of (Array.isArray(m.material) ? m.material : [m.material]) as T.MeshStandardMaterial[]) { mat.color.multiplyScalar(.55); mat.roughness = Math.max(.75, mat.roughness); } });
+    bag.traverse(o => { const m = o as T.Mesh; if (!m.isMesh) return; for (const mat of (Array.isArray(m.material) ? m.material : [m.material]) as T.MeshStandardMaterial[]) { mat.color.multiplyScalar(.85); mat.roughness = Math.max(.75, mat.roughness); } });
   }
 
   private makeRain(): T.LineSegments {
@@ -253,8 +259,66 @@ export class Intro {
     return { p: p.clone().addScaledVector(right, side), tan, yaw: Math.atan2(-tan.x, -tan.z) };
   }
 
-  /** the player's distance along the road: 6.4 m/s (a rainy mountain road in fog), braking at the end */
-  private travelled(t: number) { const tt = Math.min(t, this.CRASH); return 6.4 * tt - 2.6 * sstep(11.1, 12.6, tt) * (tt - 11.1) * .5; }
+  /**
+   * Two cars on the road as boxes (road frame: s along the road, side to the right). The player drives on, the oncoming car swings into the lane,
+   * the player swerves right. The boxes are tested against each other every 1/120 s (separating-axis test): the first overlap is the impact, from that
+   * moment the cars exchange momentum, spin a little, are pushed apart by the minimum translation, slow down and stop. Nothing passes through anything.
+   */
+  private simulate() {
+    type Body = { s: number; side: number; th: number; v: number; vl: number; w: number };
+    const dt = this.SIM_DT, N = Math.ceil(17 / dt), out = new Float32Array(N * 6);
+    const P: Body = { s: 0, side: 1.6, th: 0, v: 6.4, vl: 0, w: 0 }, O: Body = { s: 225, side: -1.7, th: Math.PI, v: 12, vl: 0, w: 0 };
+    const box = (b: Body) => ({ cx: b.s, cy: b.side, ax: Math.cos(b.th), ay: Math.sin(b.th), hl: 2.0, hw: .92 });
+    type Box = ReturnType<typeof box>;
+    const sat = (A: Box, B: Box) => {
+      const axes = [[A.ax, A.ay], [-A.ay, A.ax], [B.ax, B.ay], [-B.ay, B.ax]] as const;
+      let best = 1e9, nx = 0, ny = 0;
+      for (const [x, y] of axes) {
+        const ra = A.hl * Math.abs(x * A.ax + y * A.ay) + A.hw * Math.abs(-x * A.ay + y * A.ax);
+        const rb = B.hl * Math.abs(x * B.ax + y * B.ay) + B.hw * Math.abs(-x * B.ay + y * B.ax);
+        const d = (B.cx - A.cx) * x + (B.cy - A.cy) * y, o = ra + rb - Math.abs(d);
+        if (o <= 0) return null;
+        if (o < best) { best = o; nx = d < 0 ? -x : x; ny = d < 0 ? -y : y; }
+      }
+      return { nx, ny, depth: best };
+    };
+    let hit = -1;
+    for (let i = 0; i < N; i++) {
+      const t = i * dt;
+      if (hit < 0) {
+        P.v = t < 11 ? 6.4 : Math.max(2, 6.4 - 2.2 * (t - 11));
+        P.side = 1.6 + .85 * sstep(10.3, 11.1, t); P.th = .13 * sstep(10.3, 11.1, t);
+        O.side = -1.7 + 3.0 * sstep(10, 11.3, t); O.th = Math.PI + .05 * sstep(10, 11.3, t);
+        P.s += P.v * Math.cos(P.th) * dt; O.s += O.v * Math.cos(O.th) * dt;
+      } else {
+        for (const b of [P, O]) {
+          b.s += b.v * Math.cos(b.th) * dt; b.side += (b.v * Math.sin(b.th) + b.vl) * dt; b.th += b.w * dt;
+          b.v = Math.max(0, b.v - (b === P ? 6.5 : 2.5) * dt); b.vl *= Math.exp(-3 * dt); b.w *= Math.exp(-2.4 * dt);
+        }
+        if (P.side > 3.1) { P.side = 3.1; P.vl = Math.min(0, P.vl); }
+      }
+      const c = sat(box(P), box(O));
+      if (c) {
+        // push apart along the minimum translation (A = player, B = oncoming)
+        P.s -= c.nx * c.depth * .5; P.side -= c.ny * c.depth * .5; O.s += c.nx * c.depth * .5; O.side += c.ny * c.depth * .5;
+        if (hit < 0) {
+          hit = i;
+          P.v *= .45; P.vl = 1.6; P.w = 1.3;     // the oncoming car's corner catches the player's left front: the nose is flung to the right
+          O.v *= .85; O.vl = -.9; O.w = -.4;
+        }
+      }
+      out.set([P.s, P.side, P.th, O.s, O.side, O.th], i * 6);
+    }
+    this.sim = out;
+    this.crash = hit >= 0 ? hit * dt : 12.1;
+  }
+
+  /** the two cars at time t from the simulation: [player s, side, heading, oncoming s, side, heading] */
+  private body(t: number) {
+    const f = Math.min(this.sim.length / 6 - 2, Math.max(0, t / this.SIM_DT)), i = Math.floor(f), u = f - i, a = i * 6, b = a + 6, r = [0, 0, 0, 0, 0, 0];
+    for (let k = 0; k < 6; k++) r[k] = this.sim[a + k]! * (1 - u) + this.sim[b + k]! * u;
+    return r as [number, number, number, number, number, number];
+  }
 
   private buildKeys() {
     const k = (t: number, eye: T.Vector3, look: T.Vector3, roll = 0) => this.keys.push({ t, eye, look, roll });
@@ -265,9 +329,9 @@ export class Intro {
     k(19.7, eye0.clone().add(V(-.5, 0, .2)), V(-3, 1.0, .5), .05);
     k(20.6, V(-1.9, 1.62, .6), V(-1.9, 1.4, 4), 0);
     k(21.7, V(-1.9, 1.62, 2.0), V(-1.0, 1.2, 4), 0);
-    k(22.8, V(-1.0, 1.55, 3.9), V(0, 1.0, 2.0), 0);
-    k(24.4, V(-.6, 1.45, 3.3), V(0, .85, 1.7), 0);
-    k(25.2, V(-.6, 1.4, 3.1), V(0, .9, 1.8), 0);
+    k(22.8, V(-1.0, 1.6, 4.0), V(0, 0, 2.8), 0);
+    k(24.4, V(-.35, 1.4, 3.4), V(0, -.1, 2.75), 0);
+    k(25.2, V(-.35, 1.4, 3.3), V(0, .5, 2.9), 0);
     k(25.7, V(-.6, 1.45, 3.1), V(-1.5, 1.4, 0), 0);
     k(27.0, V(-2.2, 1.62, 1.0), V(-2, 1.6, -20), 0);
     k(28.5, V(-2.6, 1.62, -5), V(-2, 1.6, -30), 0);
@@ -278,12 +342,9 @@ export class Intro {
   private driverEye() { const w = this.steer ? this.car.worldToLocal(this.steer.getWorldPosition(new T.Vector3())) : V(-.4, 1.1, -.4); return V(w.x, w.y + .5, w.z + .5); }
 
   private carPose(t: number) {
-    const crashed = t >= this.CRASH;
-    const dist = crashed ? this.crashPose.s : this.travelled(t);
-    const swerve = sstep(11.1, 12.5, t), lane = 1.6 + swerve * 1.3, side = crashed ? this.crashPose.side : lane;
-    const a = this.at(dist, side);
+    const [ps, pside, pth] = this.body(t), a = this.at(ps, pside), k = sstep(this.crash, this.crash + .35, t);
     this.car.position.copy(a.p);
-    this.car.rotation.set(crashed ? -.07 : 0, a.yaw + (crashed ? this.crashPose.yaw : -.5 * swerve), crashed ? .05 : 0, 'YXZ');
+    this.car.rotation.set(-.045 * k, a.yaw - pth, .04 * k, 'YXZ');
     this.car.updateMatrixWorld(true);
   }
 
@@ -292,8 +353,8 @@ export class Intro {
     const cam = this.camera;
     if (Math.abs(cam.aspect - aspect) > 1e-3) { cam.aspect = aspect; cam.updateProjectionMatrix(); }
     this.carPose(t);
-    const crashed = t >= this.CRASH;
-    const dist = crashed ? this.crashPose.s : this.travelled(t);
+    const crashed = t >= this.crash;
+    const [dist, , , os, oside, oth] = this.body(t);
 
     // the lights
     const on = t < .6 ? 0 : sstep(.6, 1.2, t);
@@ -301,31 +362,31 @@ export class Intro {
     this.headL.intensity = 800 * on; this.headR.intensity = 800 * on * flick;
     this.tail.intensity = crashed ? 16 : 0;
     this.hazard.position.set(0, .8, crashed ? 2.4 : 0); this.hazard.intensity = crashed && Math.sin(t * 7.5) > 0 ? 9 : 0;
-    this.dash.position.copy(this.driverEye().add(V(0, -.2, -.3))); this.dash.intensity = t < 19.8 ? .7 : 0;
+    this.dash.position.copy(this.driverEye().add(V(0, -.2, -.3))); this.dash.intensity = t < 19.8 ? .35 : 0;
     for (const l of this.lamps) l.mat.emissiveIntensity = l.base * (crashed ? flick : 1);
     this.wheels.forEach(w => { w.rotation.x = -dist / .3; });
     if (this.wiper) this.wiper.rotation.z = Math.sin(t * 2.6) * .7;
-    if (this.steer) this.steer.rotation.z = Math.sin(t * .8) * .05 + (t > 11.1 && t < 12.6 ? -.9 * sstep(11.1, 11.6, t) : 0);
+    if (this.steer) this.steer.rotation.z = Math.sin(t * .8) * .05 + (t > 10.3 && t < this.crash ? -.9 * sstep(10.3, 10.9, t) : 0);
     if (this.trunk) this.trunk.rotation.x = this.trunkBase - 1.25 * sstep(22.8, 24.4, t);
+    this.trunkLamp.intensity = 7 * sstep(22.6, 23.2, t) * (1 - sstep(25.4, 25.7, t));
     this.crack.visible = crashed; (this.crack.material as T.MeshBasicMaterial).opacity = crashed ? .8 : 0;
     const eye = this.driverEye();
     this.crack.position.set(eye.x * .3, eye.y - .05, eye.z - .95); this.crack.rotation.x = -.55;
 
-    // the oncoming car: appears far up the road at 5.5 s, comes down the left lane, swings into ours at 11 s
-    const gap = Math.max(-40, 140 - (t - 5.5) * 23);
-    const oSide = -1.7 + sstep(10.4, 11.4, t) * 3.0;
-    const oa = this.at(dist + gap + 3, oSide); this.oncoming.position.copy(oa.p);
-    this.oncoming.rotation.set(0, oa.yaw + Math.PI + .25 * sstep(10.4, 11.4, t), 0, 'YXZ');
-    this.oncoming.visible = t > 5 && t < 14;
-    const beam = t > 5 ? 1 : 0; this.oncomingBeams.forEach(b => { b.intensity = 2600 * beam; });
-    this.oncomingGlare.intensity = beam * 40 * Math.max(0, 1 - gap / 140);
+    // the oncoming car comes down the road from far away, swings into our lane and clips us (see simulate)
+    const oa = this.at(os, oside); this.oncoming.position.copy(oa.p);
+    this.oncoming.rotation.set(0, oa.yaw - oth + Math.PI, 0, 'YXZ');
+    const gap = os - dist;
+    this.oncoming.visible = gap < 190 && gap > -60 && t < 15;
+    const beam = this.oncoming.visible ? 1 : 0; this.oncomingBeams.forEach(b => { b.intensity = 2600 * beam; });
+    this.oncomingGlare.intensity = beam * 40 * Math.max(0, 1 - gap / 150);
     // the sign stands at the right of the road before the crash
-    const sg = this.at(Math.max(4, this.travelled(this.CRASH) - 38), 4.2); this.sign.position.copy(sg.p); this.sign.rotation.y = sg.yaw - .12;
+    const sg = this.at(Math.max(4, this.body(this.crash)[0] - 38), 4.2); this.sign.position.copy(sg.p); this.sign.rotation.y = sg.yaw - .12;
     // the distant light at the end of the road
     const endA = this.at(this.length - 1, 0), far = endA.p.clone().addScaledVector(endA.tan, 38).add(V(0, 2.2, 0)); this.distantLight.position.copy(far); this.distantLight.intensity = t > 25 ? 60 : 0;
     this.glow.position.copy(this.distantLight.position); this.glow.visible = t > 25; (this.glow.material as T.SpriteMaterial).opacity = .7 * sstep(25.5, 28, t);
     // steam from under the bonnet, rising and drifting
-    this.smoke.visible = crashed; (this.smoke.material as T.PointsMaterial).opacity = crashed ? .5 * sstep(this.CRASH, this.CRASH + 1.5, t) : 0;
+    this.smoke.visible = crashed; (this.smoke.material as T.PointsMaterial).opacity = crashed ? .5 * sstep(this.crash, this.crash + 1.5, t) : 0;
     this.smoke.position.set(0, .8 + ((t * .5) % 1.2), -1.6);
     // rain falls round the camera
     this.rain.position.set(cam.position.x, cam.position.y - 2 - (t * 9) % 12, cam.position.z);
@@ -333,44 +394,67 @@ export class Intro {
     // the bag: in the trunk, lifted toward the camera, then carried away down out of the frame
     const lift = sstep(24.3, 24.95, t), away = sstep(24.95, 25.55, t);
     this.bag.visible = t < 25.7;
-    this.bag.position.set(0, .98 + lift * .55, 1.55 + lift * 1.5 + away * .3); this.bag.rotation.set(-Math.PI / 2 + lift * 1.3, 0, lift * .15 - away * .5);   // it lies in the cargo area, then comes up toward the camera
+    this.bag.position.set(0, -.12 + lift * 1.25, 2.75 + lift * .5 + away * .3); this.bag.rotation.set(-Math.PI / 2 + lift * 1.3, 0, lift * .15 - away * .5);   // it lies in the cargo area, then comes up toward the camera
 
     // --- the camera
     const look = V(0, 0, 0), eyeP = V(0, 0, 0); let roll = 0, shake = 0;
     const base = this.driverEye();
-    if (t < this.CRASH) {
+    if (t < this.crash) {
       eyeP.copy(base).add(V(0, Math.sin(t * 31) * .003, 0)); look.set(base.x + Math.sin(t * .7) * .1, base.y - .22, -8);
-      shake = sstep(11.1, 12.6, t) * .006;
-    } else if (t < this.CRASH + .6) {
-      const c = t - this.CRASH, k = Math.exp(-c * 6);
+      shake = sstep(10.3, this.crash, t) * .006;
+    } else if (t < this.crash + .6) {
+      const c = t - this.crash, k = Math.exp(-c * 6);
       eyeP.copy(base).add(V(0, -.12 * k, -.1 * k)); look.set(base.x + Math.sin(c * 40) * .5 * k, base.y - 1.3 * k, -8); shake = .05 * k;
     } else {
       const ks = this.keys; let i = 0; while (i < ks.length - 2 && t > ks[i + 1]!.t) i++;
       const a = ks[i]!, b = ks[i + 1]!, u = sstep(a.t, b.t, Math.max(a.t, t));
       eyeP.copy(a.eye).lerp(b.eye, u); look.copy(a.look).lerp(b.look, u); roll = lerp(a.roll, b.roll, u);
-      const walking = t > 19.7 && t < 22.8 || t > 26.4;
-      if (walking) { const s = t * 6.2; eyeP.y += Math.abs(Math.sin(s)) * .035 - .02; roll += Math.sin(s) * .012; look.x += Math.sin(s * .5) * .04; }
-      if (t < 19) { eyeP.x += Math.sin(t * 1.9) * .01; look.y += Math.sin(t * 1.3) * .08; }
     }
     if (t > 25.7) look.lerp(this.car.worldToLocal(this.distantLight.position.clone()), sstep(25.7, 27.2, t));   // turn to the light at the end of the road
     this.aim.position.copy(eyeP); this.car.add(this.aim); this.car.updateMatrixWorld(true);
     this.aim.lookAt(this.car.localToWorld(look.clone())); this.aim.rotateZ(roll);
     const wp = new T.Vector3(), wq = new T.Quaternion(); this.aim.getWorldPosition(wp); this.aim.getWorldQuaternion(wq);
     cam.position.copy(wp); cam.quaternion.copy(wq);
+    this.head(cam, t);
     if (shake) { cam.position.x += Math.sin(t * 91) * shake; cam.position.y += Math.cos(t * 77) * shake; cam.rotateZ(Math.sin(t * 63) * shake * 1.6); }
     cam.updateMatrixWorld(true);
 
     // --- the grade: fade in, impact flash, black with ringing, eyes opening (twice), fade out at the end
     let fade = sstep(0, 1.3, t), flash = 0;
-    if (t >= this.CRASH) {
-      flash = t < this.CRASH + .06 ? 1 : Math.max(0, 1 - (t - this.CRASH - .06) / .8);
-      fade = t < this.CRASH + .25 ? 1 : t < 15.6 ? 0 : 1;
+    if (t >= this.crash) {
+      flash = t < this.crash + .06 ? 1 : Math.max(0, 1 - (t - this.crash - .06) / .8);
+      fade = t < this.crash + .25 ? 1 : t < 15.6 ? 0 : 1;
       if (t >= 15.6) { const open = sstep(15.6, 17.1, t), blink = 1 - .85 * Math.max(0, Math.sin((t - 16.4) * 7.5)) * (t > 16.4 && t < 16.8 ? 1 : 0); fade = open * blink; }
     }
     // the oncoming beams blind: a growing white veil just before the swerve
-    if (t > 10.2 && t < this.CRASH) flash = Math.max(flash, .55 * sstep(10.2, 12.2, t));
+    if (t > 10.2 && t < this.crash) flash = Math.max(flash, .55 * sstep(10.2, 12.2, t));
     if (t > 29) fade *= 1 - sstep(29, 30, t);
     return { fade: Math.min(1, Math.max(0, fade)), flash };
+  }
+
+  /**
+   * A living head: while walking, a step every 0.53 s moves the eye down and up (two bobs per stride), sways it from side to side once per stride,
+   * nods and rolls it a little, with a small dip at every footfall; the whole thing is irregular (smooth noise on timing and size). Standing,
+   * there is breathing and the slow drift of attention. In the car: road vibration. After the impact: a shaking, unsteady head.
+   */
+  private head(cam: T.PerspectiveCamera, t: number) {
+    const walk = sstep(19.9, 20.5, t) * (1 - sstep(22.2, 22.8, t)) + sstep(26.0, 26.6, t);
+    const inCar = t < this.crash ? 1 : 0, dazed = t > 15.6 && t < 19.8 ? 1 : 0;
+    const irr = .85 + .3 * noise(t * .7);                                   // the size of the steps is never the same
+    const ph = (t - 20) * Math.PI * 2 * (1.9 + .12 * (noise(t * .35) - .5));  // step phase, 1.9 steps per second, wandering
+    const bobY = walk * irr * (.020 * Math.cos(ph * 2) + .012 * Math.cos(ph * 2 - .9));
+    const frac = (((ph / (Math.PI * 2)) % 1) + 1) % 1, dip = walk * .012 * Math.exp(-6 * frac);
+    const sway = walk * irr * .022 * Math.sin(ph);                          // once per stride
+    const nod = walk * .012 * Math.sin(ph * 2 + .5), rollW = walk * .014 * Math.sin(ph) * irr, yawW = walk * .010 * Math.sin(ph + .8);
+    const breath = Math.sin(t * 1.55) * .0028 * (1 - walk) + Math.sin(t * 1.55) * .0012 * walk;
+    const drift = (noise(t * .55) - .5) * .012 + (noise(t * 1.9 + 7) - .5) * .004, driftR = (noise(t * .45 + 3) - .5) * .010;
+    const trem = dazed * ((noise(t * 7.3) - .5) * .014 + Math.sin(t * 2.1) * .006);
+    const road = inCar * (noise(t * 23) - .5) * .003;
+    cam.translateY(bobY - dip + breath * .02 + road);
+    cam.translateX(sway);
+    cam.rotateX(nod + breath + drift * .8 + trem + road * .6);
+    cam.rotateY(yawW + drift + trem * .7);
+    cam.rotateZ(rollW + driftR + trem * .5);
   }
 
   dispose() {
