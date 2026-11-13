@@ -19,7 +19,7 @@ export default function IsoPage(){
   const click=useRef<(event:{clientX:number;clientY:number})=>void>(()=>{});
   const activateAudio=useRef<()=>void>(()=>{});
   const [view,setView]=useState(()=>({mode:'loading' as Mode,panel:null as Panel|null,state:newSave(),settings:readSettings(),
-    saved:!!getSave(),hint:'',notice:'',loading:'Администрация',cctv:startCCTV(),document:undefined as DocumentView|undefined,intro:false,fp:{locked:false,stamina:1},markers:[] as {id:string;label:string;x:number;y:number;aimed:boolean}[]}));
+    saved:!!getSave(),hint:'',notice:'',loading:'Администрация',cctv:startCCTV(),document:undefined as DocumentView|undefined,intro:false,introPrompt:'',fp:{locked:false,stamina:1},markers:[] as {id:string;label:string;x:number;y:number;aimed:boolean}[]}));
 
   useEffect(()=>{
     const surface=canvas.current!;
@@ -42,7 +42,7 @@ export default function IsoPage(){
     const unlockPointer=()=>{try{if(document.pointerLockElement===surface){ignoreUnlock=true;document.exitPointerLock();}}catch{/* not locked */}};
     const keys=new Set<string>(),sound=new IsoSound();
     const emit=()=>setView({mode,panel,state,settings,saved:!!active,hint:target?OBJECTS[target].label:'',notice,loading,
-      cctv:{...cctv,availableFuture:state.items.includes('file'),evidence:isEvidence(cctv.camera,cctv.tape,cctv.time)},document:documentView,intro:introT>=0,fp:{locked:locked||coarse,stamina},
+      cctv:{...cctv,availableFuture:state.items.includes('file'),evidence:isEvidence(cctv.camera,cctv.tape,cctv.time)},document:documentView,intro:introT>=0,introPrompt:introT>=0?(world?.introPrompt(introT)??''):'',fp:{locked:locked||coarse,stamina},
       markers:markers.map(m=>({id:m.id,label:OBJECTS[m.id].label,x:m.x,y:m.y,aimed:m.id===target}))});
     const inform=(s:string)=>{notice=s;noticeUntil=clock+5.6;};
     const persist=()=>{

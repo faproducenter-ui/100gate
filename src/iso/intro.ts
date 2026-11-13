@@ -61,7 +61,8 @@ function gradeRoad(m: T.MeshStandardMaterial) {
           wetAsphalt = flatUp * (1. - smoothstep(.12, .30, sat)) * smoothstep(.12, .3, lum);
           float puddle = smoothstep(.52, .70, vn(vWP.xz * .55) * .65 + vn(vWP.xz * 2.1) * .35) * wetAsphalt;
           vec3 night = mix(vec3(lum), diffuseColor.rgb, .18) * vec3(.46, .82, 1.0);       // drained, cold blue-green: the baked shadows stop reading
-          diffuseColor.rgb = night * mix(.34, .14, puddle);
+          float road = smoothstep(.2, .7, wetAsphalt);
+          diffuseColor.rgb = night * mix(.06, mix(.9, .4, puddle), road);          // trees, slopes and rubble stay nearly black; only the asphalt answers the headlights
           wetAsphalt = mix(wetAsphalt * .7, 1., puddle);
         }`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
@@ -75,7 +76,7 @@ type Key = { t: number; eye: T.Vector3; look: T.Vector3; roll: number };
 
 export class Intro {
   readonly scene = new T.Scene();
-  readonly camera = new T.PerspectiveCamera(70, 16 / 9, .05, 400);
+  readonly camera = new T.PerspectiveCamera(78, 16 / 9, .05, 400);
   /** the player's car, facing -z in its own frame */
   private readonly car = new T.Group();
   private readonly oncoming = new T.Group();
@@ -89,8 +90,11 @@ export class Intro {
   private readonly tail = new T.PointLight(0xff1a0c, 0, 6, 1.6);
   private readonly hazard = new T.PointLight(0xff9a20, 0, 5, 1.8);
   private readonly dash = new T.PointLight(0xa8d8c8, 0, 1.4, 2);
-  private readonly distantLight = new T.PointLight(0xffc77a, 0, 50, 1.2);
+  private readonly distantLight = new T.PointLight(0xffc77a, 0, 70, 1.1);
+  /** the glow of a far-off window in the fog, at the end of the road */
+  private readonly glow = new T.Sprite();
   private readonly rain: T.LineSegments;
+  private readonly smoke: T.Points;
   private readonly crack: T.Mesh;
   private readonly sign = new T.Group();
   private readonly curve: T.CatmullRomCurve3;
@@ -142,6 +146,7 @@ export class Intro {
 
     // --- weather and the details
     this.rain = this.makeRain(); this.root.add(this.rain);
+    this.smoke = this.makeSmoke(); this.car.add(this.smoke);
     this.crack = new T.Mesh(new T.PlaneGeometry(1.5, .72), new T.MeshBasicMaterial({ map: this.crackTexture(), transparent: true, depthWrite: false, opacity: 0, fog: false }));
     this.car.add(this.crack);
     this.makeSign(); this.root.add(this.sign);
@@ -149,6 +154,9 @@ export class Intro {
     this.prepareBag(bag);
     this.bag.add(bag); this.car.add(this.bag);
     this.root.add(this.distantLight);
+    { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d')!, gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gr.addColorStop(0, 'rgba(255,214,150,1)'); gr.addColorStop(.18, 'rgba(255,190,110,.55)'); gr.addColorStop(1, 'rgba(255,170,90,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+      this.glow.material = new T.SpriteMaterial({ map: new T.CanvasTexture(c), blending: T.AdditiveBlending, depthWrite: false, transparent: true, fog: false, opacity: 0 }); this.glow.scale.set(2.6, 2.6, 1); this.root.add(this.glow); }
 
     this.crashPose = { s: this.travelled(this.CRASH) + 2, side: 2.9, yaw: -.55 };
     this.buildKeys();
@@ -167,7 +175,7 @@ export class Intro {
         if (done.has(m)) continue; done.add(m);
         const n = (m.name || '').toLowerCase();
         if (/body|paint/.test(n)) { m.roughness = .42; m.metalness = .55; m.color.multiplyScalar(dirty ? .12 : .22); }
-        if (m.transparent || /glass|window|windshield/.test(n)) { m.transparent = true; m.depthWrite = false; m.opacity = Math.min(m.opacity, .45); }
+        if (m.transparent || /glass|window|windshield/.test(n)) { m.transparent = true; m.depthWrite = false; m.opacity = .14; m.color.set(0x0c1418); m.roughness = .1; continue; }   // glass: a faint sheen, not a black screen
         if (/headlight/.test(n)) this.lamps.push({ mat: m, base: m.emissiveIntensity });
         let interior = false; for (let p: T.Object3D | null = mesh; p; p = p.parent) if (p.name === 'Car_Interior') interior = true;
         if (!(m.emissiveIntensity > 0 && m.emissive && m.emissive.getHex() > 0)) m.color.multiplyScalar(interior ? (dirty ? .45 : .6) : (dirty ? .09 : .22));   // the interior and the trim are dark, the paint is dirty and dark
@@ -187,6 +195,25 @@ export class Intro {
     const g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(pos, 3));
     const l = new T.LineSegments(g, new T.LineBasicMaterial({ color: 0xaac4d4, transparent: true, opacity: .32, depthWrite: false }));
     l.frustumCulled = false; return l;
+  }
+
+  /** steam rising from under the bonnet after the impact */
+  private makeSmoke(): T.Points {
+    const n = 90, pos = new Float32Array(n * 3), r = rnd(33);
+    for (let i = 0; i < n; i++) pos.set([(r() - .5) * .8, r() * 1.4, (r() - .5) * .5], i * 3);
+    const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d')!; const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(190,200,205,.55)'); gr.addColorStop(1, 'rgba(190,200,205,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.BufferAttribute(pos, 3));
+    const p = new T.Points(geo, new T.PointsMaterial({ map: new T.CanvasTexture(c), size: .9, transparent: true, depthWrite: false, opacity: 0, color: 0x9fb0b8 }));
+    p.frustumCulled = false; return p;
+  }
+
+  /** the prompt shown on screen at time t, in the style of the game's own hints */
+  prompt(t: number): string {
+    if (t > 18.3 && t < 19.6) return '[E] выйти из машины';
+    if (t > 22.0 && t < 22.9) return '[E] открыть багажник';
+    if (t > 24.0 && t < 24.6) return '[E] взять рюкзак';
+    return '';
   }
 
   private crackTexture() {
@@ -238,16 +265,17 @@ export class Intro {
     k(19.7, eye0.clone().add(V(-.5, 0, .2)), V(-3, 1.0, .5), .05);
     k(20.6, V(-1.9, 1.62, .6), V(-1.9, 1.4, 4), 0);
     k(21.7, V(-1.9, 1.62, 2.0), V(-1.0, 1.2, 4), 0);
-    k(22.8, V(-1.0, 1.6, 3.9), V(0, 1.0, 2.0), 0);
-    k(24.4, V(-.05, 1.6, 3.5), V(0, .8, 1.8), 0);
-    k(25.2, V(-.05, 1.5, 3.3), V(0, .9, 2.0), 0);
-    k(25.7, V(-.05, 1.5, 3.6), V(0, 1.3, 9), 0);
-    k(27.0, V(.2, 1.62, 4.4), V(.4, 1.7, 30), 0);
-    k(30.0, V(.4, 1.62, 11), V(.6, 1.7, 40), 0);
+    k(22.8, V(-1.0, 1.55, 3.9), V(0, 1.0, 2.0), 0);
+    k(24.4, V(-.6, 1.45, 3.3), V(0, .85, 1.7), 0);
+    k(25.2, V(-.6, 1.4, 3.1), V(0, .9, 1.8), 0);
+    k(25.7, V(-.6, 1.45, 3.1), V(-1.5, 1.4, 0), 0);
+    k(27.0, V(-2.2, 1.62, 1.0), V(-2, 1.6, -20), 0);
+    k(28.5, V(-2.6, 1.62, -5), V(-2, 1.6, -30), 0);
+    k(30.0, V(-2.2, 1.62, -11), V(-2, 1.6, -40), 0);
   }
 
   /** the eye of the driver in the car's own frame */
-  private driverEye() { const w = this.steer ? this.car.worldToLocal(this.steer.getWorldPosition(new T.Vector3())) : V(-.4, 1.1, -.4); return V(w.x, w.y + .5, w.z + .55); }
+  private driverEye() { const w = this.steer ? this.car.worldToLocal(this.steer.getWorldPosition(new T.Vector3())) : V(-.4, 1.1, -.4); return V(w.x, w.y + .5, w.z + .5); }
 
   private carPose(t: number) {
     const crashed = t >= this.CRASH;
@@ -270,10 +298,10 @@ export class Intro {
     // the lights
     const on = t < .6 ? 0 : sstep(.6, 1.2, t);
     const flick = crashed ? (Math.sin(t * 47) * Math.sin(t * 13.1) > .55 ? .12 : 1) : 1;
-    this.headL.intensity = 480 * on; this.headR.intensity = 480 * on * flick;
+    this.headL.intensity = 800 * on; this.headR.intensity = 800 * on * flick;
     this.tail.intensity = crashed ? 16 : 0;
     this.hazard.position.set(0, .8, crashed ? 2.4 : 0); this.hazard.intensity = crashed && Math.sin(t * 7.5) > 0 ? 9 : 0;
-    this.dash.position.copy(this.driverEye().add(V(0, -.2, -.3))); this.dash.intensity = t < 19.8 ? .5 : 0;
+    this.dash.position.copy(this.driverEye().add(V(0, -.2, -.3))); this.dash.intensity = t < 19.8 ? .7 : 0;
     for (const l of this.lamps) l.mat.emissiveIntensity = l.base * (crashed ? flick : 1);
     this.wheels.forEach(w => { w.rotation.x = -dist / .3; });
     if (this.wiper) this.wiper.rotation.z = Math.sin(t * 2.6) * .7;
@@ -294,7 +322,11 @@ export class Intro {
     // the sign stands at the right of the road before the crash
     const sg = this.at(Math.max(4, this.travelled(this.CRASH) - 38), 4.2); this.sign.position.copy(sg.p); this.sign.rotation.y = sg.yaw - .12;
     // the distant light at the end of the road
-    const far = this.at(this.length - 1, 0).p; this.distantLight.position.copy(far).add(V(0, 3, 0)); this.distantLight.intensity = t > 26 ? 40 : 0;
+    const endA = this.at(this.length - 1, 0), far = endA.p.clone().addScaledVector(endA.tan, 38).add(V(0, 2.2, 0)); this.distantLight.position.copy(far); this.distantLight.intensity = t > 25 ? 60 : 0;
+    this.glow.position.copy(this.distantLight.position); this.glow.visible = t > 25; (this.glow.material as T.SpriteMaterial).opacity = .7 * sstep(25.5, 28, t);
+    // steam from under the bonnet, rising and drifting
+    this.smoke.visible = crashed; (this.smoke.material as T.PointsMaterial).opacity = crashed ? .5 * sstep(this.CRASH, this.CRASH + 1.5, t) : 0;
+    this.smoke.position.set(0, .8 + ((t * .5) % 1.2), -1.6);
     // rain falls round the camera
     this.rain.position.set(cam.position.x, cam.position.y - 2 - (t * 9) % 12, cam.position.z);
 
@@ -320,6 +352,7 @@ export class Intro {
       if (walking) { const s = t * 6.2; eyeP.y += Math.abs(Math.sin(s)) * .035 - .02; roll += Math.sin(s) * .012; look.x += Math.sin(s * .5) * .04; }
       if (t < 19) { eyeP.x += Math.sin(t * 1.9) * .01; look.y += Math.sin(t * 1.3) * .08; }
     }
+    if (t > 25.7) look.lerp(this.car.worldToLocal(this.distantLight.position.clone()), sstep(25.7, 27.2, t));   // turn to the light at the end of the road
     this.aim.position.copy(eyeP); this.car.add(this.aim); this.car.updateMatrixWorld(true);
     this.aim.lookAt(this.car.localToWorld(look.clone())); this.aim.rotateZ(roll);
     const wp = new T.Vector3(), wq = new T.Quaternion(); this.aim.getWorldPosition(wp); this.aim.getWorldQuaternion(wq);

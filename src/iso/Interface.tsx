@@ -31,6 +31,7 @@ export interface IsoInterfaceProps {
   notice:string;
   /** The opening sequence is playing: no HUD, only a hint to skip it. */
   intro?:boolean;
+  introPrompt?:string;
   loading:string;
   cctv:CCTVView;
   document?:{title:string; text:string};
@@ -377,7 +378,7 @@ function CCTV({view,act,notice}:{view:CCTVView;act:Act;notice:string}){
   </Modal>;
 }
 
-export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notice,intro,loading,cctv,document,fp, onAction:act}:IsoInterfaceProps){
+export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notice,intro,introPrompt,loading,cctv,document,fp, onAction:act}:IsoInterfaceProps){
   const close=()=>act(closeAction);
   const zoom={'--iso-text':settings.textScale} as CSSProperties;
   let modal:ReactNode=null;
@@ -429,6 +430,7 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
   return <div className="iso-ui" style={zoom} data-motion={settings.motion?'on':'off'} data-flicker={settings.reducedFlicker?'reduced':'normal'}>
     <div className="iso-rotate" role="alert"><span>⟲</span><p>Поверните телефон горизонтально</p></div>
     {mode==='title'&&<Title saved={saved} act={act} covered={!!panel}/>}
+    {mode==='play'&&intro&&!!introPrompt&&<p className="iso-intro-prompt" role="status">{introPrompt}</p>}
     {mode==='play'&&intro&&<button type="button" className="iso-intro-skip" onClick={()=>act({type:'skip-intro'})}>{isTouch()?'Пропустить':'[Пробел] пропустить'}</button>}
     {mode==='play'&&!panel&&!intro&&<Hud state={state} settings={settings} hint={hint} markers={markers} notice={notice} act={act} fp={fp}/>}
     {mode==='loading'&&<div className="iso-screen-state" role="status" data-testid="iso-loading">

@@ -441,6 +441,7 @@ export class IsoWorld {
   }
   get introReady(){return !!this.intro;}
   private introLoading=false;
+  introPrompt(t:number){return this.intro?.prompt(t)??'';}
   endIntro(){this.intro?.dispose();this.intro=undefined;}
   render(frame:Frame){
     if(!this.resize(frame.settings))return;

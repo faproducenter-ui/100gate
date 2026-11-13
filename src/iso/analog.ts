@@ -33,6 +33,16 @@ const FRAG = /* glsl */ `
     vec2 px = vec2(1. / uRes.x, 0.);
     col = mix(col, .5 * (texture2D(tDiffuse, st - px).rgb + texture2D(tDiffuse, st + px).rgb), .22);
     float flick = 1. + uFlicker * ((hash(vec2(floor(uTime * 24.), 3.)) - .5) * .8 + sin(uTime * 7.3) * .35);
+    {   // a cheap bloom: the bright edges (lamps, sign, gauges) bleed into their surroundings
+      vec3 glow = vec3(0.);
+      for (int i = 0; i < 8; i++) {
+        float a = float(i) * .785398;
+        vec2 o = vec2(cos(a), sin(a)) * 2.6 / uRes;
+        vec3 c = texture2D(tDiffuse, st + o).rgb;
+        glow += max(c - vec3(.8), 0.);
+      }
+      col += glow * .09;
+    }
     col *= uExposure * flick;
     col = aces(col);
     float l = dot(col, vec3(.299, .587, .114));
