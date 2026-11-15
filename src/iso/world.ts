@@ -124,6 +124,7 @@ export class IsoWorld {
   phoneDial?:T.Object3D;
   private camLeds:{led:T.Mesh;halo:T.Sprite}[]=[];
   fuseLever?:T.Object3D;
+  private focusLight!:T.PointLight;
   private readonly focusTmp=new T.PerspectiveCamera();
   /** Where the camera goes to look closely at something on the wall (position, point looked at, field of view). */
   private focusPose(id:'breaker'|'fuse'|'diagram'|'inventory'){
@@ -135,8 +136,9 @@ export class IsoWorld {
     }
     const t=this.env.targets[id==='breaker'?'breaker':id==='fuse'?'fuseBox':'powerDiagram']!,p=t.getWorldPosition(new T.Vector3());
     if(id==='breaker')return {pos:p.clone().add(new T.Vector3(0,.06,1.0)),look:p.clone().add(new T.Vector3(0,0,-.2)),fov:40};
-    if(id==='fuse')return {pos:p.clone().add(new T.Vector3(0,.12,1.05)),look:p.clone().add(new T.Vector3(.02,.1,-.2)),fov:38};
-    return {pos:p.clone().add(new T.Vector3(0,.02,1.05)),look:p.clone().add(new T.Vector3(0,0,-.2)),fov:40};
+    if(id==='fuse'){const l=this.fuseLever?this.fuseLever.getWorldPosition(new T.Vector3()):p.clone().add(new T.Vector3(-.03,.55,.03));
+      return {pos:l.clone().add(new T.Vector3(.02,.03,.62)),look:l.clone().add(new T.Vector3(0,-.02,0)),fov:36};}
+    return {pos:p.clone().add(new T.Vector3(0,0,.85)),look:p.clone(),fov:40};
   }
   /** The breaker lever under the cursor (0, 1, 2) or -1. */
   pickLever(event:{clientX:number;clientY:number}):number{
@@ -174,11 +176,13 @@ export class IsoWorld {
     }
     const fuse=this.env.targets.fuseBox;
     if(fuse&&decor.fusebox){
-      const fb=makeFuseBox(decor.fusebox);fb.group.scale.setScalar(1.7);fuse.add(fb.group);this.fuseLever=fb.lever;
+      const fb=makeFuseBox(decor.fusebox);fb.group.scale.setScalar(1.7);fuse.add(fb.group);fb.group.traverse(o=>{if(o instanceof T.Mesh)o.castShadow=o.receiveShadow=true;});this.fuseLever=fb.lever;
     }
     const spot=this.env.targets.battery;
     if(spot&&decor.battery){
-      const b=makeBattery(decor.battery);b.rotation.set(0,.6,0);b.rotation.z=Math.PI/2;b.position.y=.0089;spot.add(b);this.batteryProp=spot;
+      const b=makeBattery(decor.battery);b.rotation.set(0,.6,Math.PI/2);spot.add(b);this.batteryProp=spot;
+      // lies on its side exactly on the plank (the top of the plank is at 72.5 cm)
+      this.env.root.updateMatrixWorld(true);const lowest=new T.Box3().setFromObject(b).min.y;b.position.y+=.7255-lowest;
     }
   }
   private intro?:Intro;
@@ -189,6 +193,8 @@ export class IsoWorld {
   readonly paperHidden={p:new T.Vector3(.24,-.52,-.28),q:new T.Quaternion().setFromEuler(new T.Euler(-.95,.35,.3))};
   readonly paperPose=new T.Matrix4();
   private paperDocKey='';
+  private paperWant=false;
+  private armWait=0;
   private paperPoseDirty=false;
   private readonly fogFx=new T.FogExp2(0x03070a,.16);
   private readonly darkBg=new T.Color(0x020506);
@@ -231,6 +237,7 @@ export class IsoWorld {
     Object.assign(sun.shadow.camera,{left:-10,right:10,top:9,bottom:-9,near:.2,far:27});
     sun.shadow.normalBias=.016;sun.shadow.bias=-.00011;sun.shadow.radius=2;
     this.scene.add(sun,sun.target);
+    this.focusLight=new T.PointLight(0xffc27a,0,2.2,1.6);this.scene.add(this.focusLight);
     this.fire=new T.PointLight(0xff9a40,0,11,1.7);
     this.scene.add(this.fire);
     // The torch stands against the reception's west wall, foot on the floor; its grip point is the model's origin. It is the very model the hand holds in the viewmodel,
@@ -266,7 +273,7 @@ export class IsoWorld {
     if(decor.key){
       // Key on the hook under the reception desk; the archive key lies on the filing cabinet once its place is known.
       // Technical-room key: left lying on the reception desk top, in plain sight (dropped onto the surface below).
-      this.deskKey=new KeyProp(decor.key,'flat');this.deskKey.root.position.set(-4.40,1.2,1.12);this.deskKey.root.rotation.set(0,-.6,0);
+      this.deskKey=new KeyProp(decor.key,'flat');this.deskKey.root.position.set(-4.19,1.2,1.2);this.deskKey.root.rotation.set(0,-.6,0);
       this.cabinetKey=new KeyProp(decor.key,'flat');this.cabinetKey.root.position.set(-4.43,1.128,3.70);this.cabinetKey.root.rotation.set(0,.9,0);
       this.scene.add(this.deskKey.root,this.cabinetKey.root);
       this.hookTarget=this.env.targets.underDesk;this.slotTarget=this.env.targets.archiveCache;
@@ -285,6 +292,15 @@ export class IsoWorld {
       const frame=book.getObjectByName('Book_open')??book,size=new T.Box3().setFromObject(frame).getSize(new T.Vector3());
       const scale=.33/Math.max(size.x,size.z);
       book.scale.multiplyScalar(scale);book.rotation.y=.35;book.updateMatrixWorld(true);
+      // the model was made on a slant: level the cover by the best-fit plane of its vertices, so the book lies flat
+      for(let pass=0;pass<4;pass++){
+        const pts:T.Vector3[]=[];book.traverse(o=>{if(o instanceof T.Mesh&&o.name.startsWith('Book_frame')){const a=o.geometry.getAttribute('position');for(let i=0;i<a.count;i++)pts.push(new T.Vector3().fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld));}});
+        if(!pts.length)break;
+        const m=pts.reduce((q,v)=>q.add(v),new T.Vector3()).divideScalar(pts.length);let xx=0,xy=0,yy=0,yz=0,zz=0;
+        for(const v of pts){const d=v.clone().sub(m);xx+=d.x*d.x;xy+=d.x*d.y;yy+=d.y*d.y;yz+=d.y*d.z;zz+=d.z*d.z;}
+        const around=(axis:T.Vector3,a:number)=>{book.quaternion.premultiply(new T.Quaternion().setFromAxisAngle(axis,a));book.updateMatrixWorld(true);};
+        around(new T.Vector3(1,0,0),.5*Math.atan2(2*yz,zz-yy));around(new T.Vector3(0,0,1),-.5*Math.atan2(2*xy,xx-yy));
+      }
       const lowest=new T.Box3().setFromObject(frame);
       book.position.set(-1.06,.727-lowest.min.y,4.5);
       this.scene.add(book);
@@ -523,7 +539,15 @@ export class IsoWorld {
       this.intro=new Intro(assets,!coarse);
       this.intro.update(0,this.lastWidth/Math.max(1,this.lastHeight||1));
       // compile every shader in the background before the first frame, so the opening does not stall when it starts
-      await this.renderer.compileAsync(this.intro.scene,this.intro.camera);
+      // Everything that appears later (the wreck's smoke and cracks, the trunk lamp, the house light) is made visible once here, so its shaders and
+      // textures are built now and nothing stalls at the moment of the crash.
+      const aspect=this.lastWidth/Math.max(1,this.lastHeight||1),intro=this.intro;
+      for(const at of [intro.crash+.5,24.6,27.5,0]){
+        intro.update(at,aspect);
+        await this.renderer.compileAsync(intro.scene,intro.camera);
+      }
+      intro.scene.traverse(o=>{const m=(o as T.Mesh).material as T.Material|T.Material[]|undefined;if(!m)return;
+        for(const mat of Array.isArray(m)?m:[m])for(const v of Object.values(mat as unknown as Record<string,unknown>))if(v instanceof T.Texture)this.renderer.initTexture(v);});
     }finally{this.introLoading=false;}
   }
   get introReady(){return !!this.intro;}
@@ -565,7 +589,10 @@ export class IsoWorld {
       // Hand interaction: where the hand reaches (the prop, or the spot it is put down) and how the fingers close.
       const reading=!!frame.reading;
       const focusK=frame.focusK??0;
-      this.paperW=T.MathUtils.damp(this.paperW,reading?1:0,reading?4.2:5.2,dt);
+      // The hand with the torch goes down first, and only then does the hand with the sheet come up (and the other way round when it is put away): no torch popping into the fingers.
+      if(reading!==this.paperWant){this.paperWant=reading;this.armWait=state.items.includes('torch')?.32:0;}
+      this.armWait=Math.max(0,this.armWait-dt);
+      this.paperW=T.MathUtils.damp(this.paperW,reading&&this.armWait<=0?1:0,reading?4.2:5.2,dt);
       if(reading&&frame.readingDoc&&this.paperDocKey!==frame.readingDoc.title){this.paperDocKey=frame.readingDoc.title;this.fps.vm.setPaperText(frame.readingDoc.title,frame.readingDoc.text);}
       if(!reading&&this.paperW<.01)this.paperDocKey='';
       // the sheet comes up with a small overshoot and settles; going away it drops straight, without one
@@ -593,7 +620,7 @@ export class IsoWorld {
       if(paperUp)target=this.paperPose;
       this.fps.vm.setPaper(this.paperW);
       this.fps.vm.setHand({reach:paperUp?this.paperW:hf.reach,grip:paperUp?.35+.2*this.paperW:hf.grip,carrying:paperUp?false:hf.carrying,target,up:new T.Vector3(0,1,0).transformDirection(eyeCam.matrixWorldInverse),fovMatch:this.fovMatch,mainFov:eyeCam.fov});
-      const armShown=focusK>.06?0:paperUp||active||this.fps.vm.igniting||this.fps.vm.lighterPlaying?1:hf.phase==='holding'?1:0;
+      const armShown=focusK>.06||this.armWait>0||(!reading&&this.paperW>.01)?0:paperUp||active||this.fps.vm.igniting||this.fps.vm.lighterPlaying?1:hf.phase==='holding'?1:0;
       // Bending over: the body leans toward what the hand goes for, so the arm can reach it naturally.
       let bend:{x:number;y:number;z:number}|undefined;
       const goalWorld=hf.phase==='reaching'?(this.grabAt?new T.Vector3().setFromMatrixPosition(this.grabAt):hf.item?.object.position):
@@ -613,6 +640,8 @@ export class IsoWorld {
         cam.position.lerp(f.pos,e);this.focusTmp.position.copy(f.pos);this.focusTmp.lookAt(f.look);cam.quaternion.slerp(this.focusTmp.quaternion,e);
         cam.fov=T.MathUtils.lerp(cam.fov,f.fov,e);cam.updateProjectionMatrix();cam.updateMatrixWorld(true);
       }
+      const lit=frame.focusId==='fuse'||frame.focusId==='breaker'||frame.focusId==='diagram';this.focusLight.intensity=lit?focusK*2.4:0;
+      if(lit)this.focusLight.position.copy(this.fps.camera.position).add(new T.Vector3(.12,.22,-.15));
       this.cast.setCrouch(frame.crouch);
       const cam=this.fps.camera;
       this.cast.setFirstPerson({yaw:frame.look.yaw,eye:cam.position.clone(),forward:new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion),
@@ -624,7 +653,7 @@ export class IsoWorld {
     this.updatePhone(dt);
     // the breaker levers rise smoothly when their line is on; the knife switch of the fuse box turns with the crank
     {const lines=['lights','locks','cctv'] as const;
-      this.env.levers.forEach((l,i)=>{const on=state.breaker.includes(lines[i]!);l.position.y=T.MathUtils.damp(l.position.y,(l.userData.baseY as number)+(on?.058:0),9,dt);l.rotation.x=T.MathUtils.damp(l.rotation.x,on?-.28:.28,9,dt);});
+      this.env.levers.forEach((l,i)=>{const on=state.breaker.includes(lines[i]!);l.rotation.x=T.MathUtils.damp(l.rotation.x,on?-.72:.72,7,dt);});
       if(this.fuseLever)this.fuseLever.rotation.z=T.MathUtils.damp(this.fuseLever.rotation.z,state.fed?-2.1:-(frame.crank??0)*2.1,state.fed?4:14,dt);}
     if(this.batteryProp)this.batteryProp.visible=!state.items.includes('battery');
     // The cameras' red LEDs breathe slowly once the power is on (not before).

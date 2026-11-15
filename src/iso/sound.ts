@@ -167,30 +167,32 @@ export class IsoSound {
     if(!ctx||!master||!tex)return;
     this.crankStop(0);
     const out=ctx.createGain();out.gain.value=0;out.connect(master);
-    const src=ctx.createBufferSource();src.buffer=tex;src.loop=true;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=900;bp.Q.value=1.6;
-    const g=ctx.createGain();g.gain.value=.12;
-    const lfo=ctx.createOscillator();lfo.type='square';lfo.frequency.value=5;const lg=ctx.createGain();lg.gain.value=.1;lfo.connect(lg).connect(g.gain);   // the ratchet
-    const sq=ctx.createOscillator();sq.type='sawtooth';sq.frequency.value=150;const sg=ctx.createGain();sg.gain.value=.018;                                 // the groan
-    const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=700;sq.connect(lp).connect(sg).connect(out);
+    // a stiff nut being screwed down: quiet dry scraping that sticks and slips, with a thin squeak of metal on metal
+    const src=ctx.createBufferSource();src.buffer=tex;src.loop=true;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=2100;bp.Q.value=2.4;
+    const g=ctx.createGain();g.gain.value=.05;
+    const lfo=ctx.createOscillator();lfo.type='sawtooth';lfo.frequency.value=3.2;const lg=ctx.createGain();lg.gain.value=.045;lfo.connect(lg).connect(g.gain);
+    const sq=ctx.createOscillator();sq.type='triangle';sq.frequency.value=1250;const sg=ctx.createGain();sg.gain.value=.0;
+    sq.connect(sg).connect(out);
     src.connect(bp).connect(g).connect(out);src.start();lfo.start();sq.start();
-    out.gain.linearRampToValueAtTime(Math.max(.05,s.effects*1.3),ctx.currentTime+.12);
+    out.gain.linearRampToValueAtTime(Math.max(.04,s.effects*.9),ctx.currentTime+.15);
     this.crank={src,bp,g,lfo,lg,sq,sg,out};
   }
   crankProgress(p:number){
     const c=this.crank,ctx=this.context;if(!c||!ctx)return;
     const t=ctx.currentTime;
-    c.lfo.frequency.setTargetAtTime(4+p*9,t,.1);c.bp.frequency.setTargetAtTime(750+p*1100,t,.1);
-    c.sq.frequency.setTargetAtTime(110+p*160+Math.sin(t*3)*6,t,.08);c.sg.gain.setTargetAtTime(.012+.03*Math.sin(p*3.14),t,.1);
+    c.lfo.frequency.setTargetAtTime(2.6+p*2.2,t,.15);c.bp.frequency.setTargetAtTime(1800+p*700+Math.sin(t*5)*160,t,.08);
+    c.sq.frequency.setTargetAtTime(980+p*420+Math.sin(t*7)*35,t,.06);c.sg.gain.setTargetAtTime(.004+.006*Math.max(0,Math.sin(t*2.1+p*4)),t,.08);
   }
-  /** let go or done: the scrape dies down; when the switch reaches the end (p = 1) there is a heavy clunk */
+  /** let go or done: the scrape dies down; at the end (p = 1) the contact closes with a short dry metallic clack */
   crankStop(p:number){
     const c=this.crank,ctx=this.context,master=this.master,tex=this.texture;
-    if(c&&ctx){c.out.gain.cancelScheduledValues(ctx.currentTime);c.out.gain.setTargetAtTime(0,ctx.currentTime,.07);window.setTimeout(()=>{try{c.src.stop();c.lfo.stop();c.sq.stop();c.out.disconnect();}catch{/* stopped */}},500);this.crank=undefined;}
+    if(c&&ctx){c.out.gain.cancelScheduledValues(ctx.currentTime);c.out.gain.setTargetAtTime(0,ctx.currentTime,.05);window.setTimeout(()=>{try{c.src.stop();c.lfo.stop();c.sq.stop();c.out.disconnect();}catch{/* stopped */}},400);this.crank=undefined;}
     if(p>=1&&ctx&&master&&tex){
-      const t=ctx.currentTime,o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(95,t);o.frequency.exponentialRampToValueAtTime(34,t+.35);
-      const g=ctx.createGain();g.gain.setValueAtTime(.9,t);g.gain.exponentialRampToValueAtTime(.001,t+.45);o.connect(g).connect(master);o.start(t);o.stop(t+.5);
-      const n=ctx.createBufferSource();n.buffer=tex;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1600;bp.Q.value=2;const ng=ctx.createGain();ng.gain.setValueAtTime(.5,t);ng.gain.exponentialRampToValueAtTime(.001,t+.12);
-      n.connect(bp).connect(ng).connect(master);n.start(t,Math.random());n.stop(t+.2);
+      const t=ctx.currentTime;
+      const n=ctx.createBufferSource();n.buffer=tex;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=2600;bp.Q.value=3;const ng=ctx.createGain();ng.gain.setValueAtTime(.35,t);ng.gain.exponentialRampToValueAtTime(.001,t+.07);
+      n.connect(bp).connect(ng).connect(master);n.start(t,Math.random());n.stop(t+.1);
+      const o=ctx.createOscillator();o.type='square';o.frequency.setValueAtTime(260,t);o.frequency.exponentialRampToValueAtTime(140,t+.06);
+      const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;const g=ctx.createGain();g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.001,t+.12);o.connect(lp).connect(g).connect(master);o.start(t);o.stop(t+.14);
     }
   }
   /** The current reaches the lines: a deep hum swells, relays click, the lamps tick on and buzz for a moment. */
@@ -246,13 +248,16 @@ export class IsoSound {
     }));
   }
   /** The sound of the opening, scheduled against the audio clock so it stays in step with the picture (30 s, see intro.ts). */
+  private introT0=-1;
+  /** seconds into the opening by the audio clock (-1 when it is not playing): the picture follows this, so a stalled frame can never put the sound ahead of it */
+  introClock(){return this.context&&this.context.state==='running'&&this.introT0>=0?this.context.currentTime-this.introT0:-1;}
   intro(s:Settings,from=0,crash=12.1){
     const C=crash;
     const ctx=this.context,master=this.master,tex=this.texture;
     if(!ctx||!master||!tex)return;
     this.stopIntro();
     const bus=this.introBus=ctx.createGain();bus.gain.value=Math.max(.05,s.effects*1.3);bus.connect(master);
-    const t0=ctx.currentTime-from,at=(t:number)=>Math.max(ctx.currentTime,t0+t);
+    const t0=ctx.currentTime-from;this.introT0=t0;const at=(t:number)=>Math.max(ctx.currentTime,t0+t);
     const noise=(start:number,len:number,type:BiquadFilterType,f0:number,f1:number,q:number,gain:(g:GainNode)=>void)=>{
       if(start+len<ctx.currentTime)return;
       const src=ctx.createBufferSource();src.buffer=tex;src.loop=true;
@@ -328,6 +333,7 @@ export class IsoSound {
     bus.gain.setValueAtTime(bus.gain.value,at(28.8));bus.gain.linearRampToValueAtTime(0,at(30));
   }
   stopIntro(){
+    this.introT0=-1;
     const bus=this.introBus,ctx=this.context;
     if(!bus||!ctx)return;
     bus.gain.cancelScheduledValues(ctx.currentTime);bus.gain.setTargetAtTime(0,ctx.currentTime,.05);

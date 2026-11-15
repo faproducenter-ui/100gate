@@ -95,14 +95,16 @@ export function makeCamera(src: T.Object3D) {
   const model = src.clone(true);
   weather(model, { dust: .9, rust: .3, dark: .8 });
   const g = wrap(model, .12, true);
-  const led = new T.Mesh(new T.SphereGeometry(.006, 10, 8), new T.MeshBasicMaterial({ color: 0xff2210, transparent: true, opacity: 0 }));
-  led.position.set(0, .075, .05); g.add(led);
+  const led = new T.Mesh(new T.SphereGeometry(.0075, 12, 10), new T.MeshBasicMaterial({ color: 0xff2210, transparent: true, opacity: 0 }));
+  led.position.set(.035, .02, -.163); g.add(led);   // on the lens itself: the glass is at the model's -z end
   const halo = new T.Sprite(new T.SpriteMaterial({ color: 0xff2a14, transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false, fog: false }));
-  halo.scale.set(.09, .09, 1); halo.position.copy(led.position); halo.raycast = () => {}; led.raycast = () => {}; g.add(halo);
+  halo.scale.set(.07, .07, 1); halo.position.copy(led.position); halo.raycast = () => {}; led.raycast = () => {}; g.add(halo);
   return { group: g, led, halo };
 }
 
 /** the fuse box: in metres already (43 cm). The knife switch (a few hundred small pieces near the top centre) is split off as `lever` with its pivot. */
+/** local depth above which the knife switch's pieces count as the turning handle */
+const WING_Z = .04;
 export function makeFuseBox(src: T.Object3D) {
   const model = src.clone(true);
   const lever = new T.Group(); const pivot = new T.Vector3(-.018, .325, .02);
@@ -110,12 +112,19 @@ export function makeFuseBox(src: T.Object3D) {
   const toRemove: T.Mesh[] = [];
   model.traverse(n => {
     const m = n as T.Mesh; if (!m.isMesh || !m.geometry.index) return;
-    const parts = pieces(m.geometry), body: number[] = [], knife: number[] = [];
+    const parts = pieces(m.geometry), body: number[] = []; let knife: number[] = [];
     for (const p of parts) {
       const c = p.box.getCenter(new T.Vector3()).applyMatrix4(m.matrixWorld), sz = p.box.getSize(new T.Vector3());
       const inLever = c.x > -.04 && c.x < .065 && c.y > .26 && c.y < .37 && c.z > -.03 && sz.x < .13 && sz.y < .13;
       (inLever ? knife : body).push(...p.tris);
     }
+    // only what stands proud of the panel (the wing handle and its screw) turns; the housing underneath stays where it is
+    { const wing: number[] = [], v = new T.Vector3(), pos = m.geometry.getAttribute('position');
+      for (let i = 0; i < knife.length; i += 3) {
+        let z = 0; for (let k = 0; k < 3; k++) { v.fromBufferAttribute(pos, knife[i + k]!).applyMatrix4(m.matrixWorld); z += v.z / 3; }
+        (z > WING_Z ? wing : body).push(knife[i]!, knife[i + 1]!, knife[i + 2]!);
+      }
+      knife = wing; }
     if (knife.length) {
       const kg = new T.BufferGeometry();
       for (const name of Object.keys(m.geometry.attributes)) kg.setAttribute(name, m.geometry.getAttribute(name));

@@ -421,7 +421,7 @@ export class Intro {
     type Body = { s: number; side: number; th: number; v: number; vl: number; w: number };
     const dt = this.SIM_DT, N = Math.ceil(17 / dt), out = new Float32Array(N * 6);
     const P: Body = { s: 0, side: 1.6, th: 0, v: 6.4, vl: 0, w: 0 }, O: Body = { s: 225, side: -1.7, th: Math.PI, v: 12, vl: 0, w: 0 };
-    const box = (b: Body) => ({ cx: b.s, cy: b.side, ax: Math.cos(b.th), ay: Math.sin(b.th), hl: 2.0, hw: .92 });
+    const box = (b: Body) => ({ cx: b.s, cy: b.side, ax: Math.cos(b.th), ay: Math.sin(b.th), hl: 3.3, hw: 1.46 });
     type Box = ReturnType<typeof box>;
     const sat = (A: Box, B: Box) => {
       const axes = [[A.ax, A.ay], [-A.ay, A.ax], [B.ax, B.ay], [-B.ay, B.ax]] as const;
@@ -570,7 +570,14 @@ export class Intro {
     } else {
       const ks = this.keys; let i = 0; while (i < ks.length - 2 && t > ks[i + 1]!.t) i++;
       const a = ks[i]!, b = ks[i + 1]!, u = sstep(a.t, b.t, Math.max(a.t, t));
-      eyeP.copy(a.eye).lerp(b.eye, u); look.copy(a.look).lerp(b.look, u); roll = lerp(a.roll, b.roll, u);
+      // the eye and the gaze travel on a smooth path through the key poses (velocity continuous in time, no stop and go at every key: that was the robot's walk)
+      const hermite = (pick: (k: typeof a) => T.Vector3, out: T.Vector3) => {
+        const prev = ks[Math.max(0, i - 1)]!, next = ks[Math.min(ks.length - 1, i + 2)]!, h = b.t - a.t, s = Math.min(1, Math.max(0, (t - a.t) / h));
+        const ma = pick(b).clone().sub(pick(prev)).multiplyScalar(h / Math.max(.001, b.t - prev.t)), mb = pick(next).clone().sub(pick(a)).multiplyScalar(h / Math.max(.001, next.t - a.t));
+        const s2 = s * s, s3 = s2 * s;
+        out.copy(pick(a)).multiplyScalar(2 * s3 - 3 * s2 + 1).addScaledVector(ma, s3 - 2 * s2 + s).addScaledVector(pick(b), -2 * s3 + 3 * s2).addScaledVector(mb, s3 - s2);
+      };
+      hermite(k => k.eye, eyeP); hermite(k => k.look, look); roll = lerp(a.roll, b.roll, u);
     }
     if (t > 25.7) {
       // after the bag: turn toward the lantern on the porch and walk to the foot of its steps, in world space (never through the house)

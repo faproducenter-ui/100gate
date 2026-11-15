@@ -616,7 +616,7 @@ html, body, #root { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
 
 /* looking closely at the wall: a caption in the game's own hint style */
 .iso-focus-hint { position: absolute; left: 50%; bottom: 14%; transform: translateX(-50%); margin: 0; color: #e6f0ee; font-family: var(--analog-font); font-size: clamp(.72rem, 1.9vh, 1rem); letter-spacing: .05em; text-shadow: 0 0 6px #9fd0c8aa, 0 1px 0 #000; pointer-events: none; text-align: center; }
-.iso-wallnote { position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); width: min(92vw, 34em); box-sizing: border-box; padding: 1.1em 1.4em; background: #02080ac8; border: 1px solid #c8e2de55; color: #e2efec; font-family: var(--analog-font); pointer-events: none; }
+.iso-wallnote { position: absolute; left: 50%; bottom: 6%; transform: translateX(-50%); padding: .4em .9em; background: #02080a99; color: #e2efec; font-family: var(--analog-font); pointer-events: none; }
 .iso-wallnote h2 { margin: 0 0 .5em; font-size: 1.05em; letter-spacing: .1em; text-transform: uppercase; color: #ffd28a; }
 .iso-wallnote p { margin: 0 0 .6em; white-space: pre-wrap; font-size: .9em; line-height: 1.55; }
 .iso-wallnote small { opacity: .6; letter-spacing: .1em; }

@@ -324,7 +324,7 @@ export default function IsoPage(){
       {const want=zoomWant&&gameplay&&fpOn()?1:0,prev=zoomK;zoomK+=(want-zoomK)*Math.min(1,dt*(want?5.5:7));if(Math.abs(want-zoomK)<.004)zoomK=want;
         const moving=Math.abs(zoomK-prev)>.0004;if(moving&&!zoomMoving)sound.zoom(settings,want>zoomK?1:-1);zoomMoving=moving;}
       if(phoneNoteAt>0&&clock>=phoneNoteAt){phoneNoteAt=0;if(mode==='play'&&!panel)commit('phone');}
-      if(introT>=0&&!document.hidden&&world?.introReady&&introGo){introT+=dt;if(introT>=INTRO_DURATION)endIntro();}
+      if(introT>=0&&world?.introReady&&introGo){const ac=manual?-1:sound.introClock();if(ac>=0)introT=Math.max(introT,ac);else if(!document.hidden)introT+=dt;if(introT>=INTRO_DURATION)endIntro();}
       if(gameplay&&world){
         const k=settings.keys,ax=Number(keys.has(k.right))-Number(keys.has(k.left)),az=Number(keys.has(k.down))-Number(keys.has(k.up));
         const mx=Math.max(-1,Math.min(1,ax+tmx)),mz=Math.max(-1,Math.min(1,az+tmz));
@@ -434,6 +434,7 @@ export default function IsoPage(){
       debug.isoProjectTarget=(id:ObjectId)=>world?.projectTarget(id);
       debug.isoWorld=()=>world;
       debug.isoLook=(y:number,p:number)=>{yaw=y;pitch=p;};
+      debug.isoCommit=(id:ObjectId)=>commit(id);
       debug.isoIntro=(t:number)=>{introT=t;emit();};
       debug.isoSetState=(patch:Partial<Save>)=>{state={...state,...patch};emit();};
       debug.advanceTime=(ms:number)=>{

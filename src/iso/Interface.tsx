@@ -485,6 +485,6 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
     {modal}
     {mode==='play'&&dead&&<div className="iso-dead" role="alert"><div className="iso-dead-noise"/><p><b>ЗАРЯД НА КАМЕРЕ РАЗРЯЖЕН</b><span>Вы проиграли. Без записи в этом здании нечем смотреть.</span></p><div className="iso-dead-actions"><button type="button" onClick={()=>act({type:'start'})}>Начать заново</button><button type="button" onClick={()=>act({type:'title'})}>В меню</button></div></div>}
     {panel==='breaker'&&settings.view==='fps'&&<p className="iso-focus-hint">Щёлкните по рычагам по порядку, как на схеме · [{keyLabel(settings.keys.interact)}] отойти</p>}
-    {panel==='document'&&document?.wall&&settings.view==='fps'&&<div className="iso-wallnote" role="dialog" aria-label={document.title}><h2>{document.title}</h2><p>{document.text}</p><small>[{keyLabel(settings.keys.interact)}] отойти</small></div>}
+    {panel==='document'&&document?.wall&&settings.view==='fps'&&<div className="iso-wallnote" role="dialog" aria-label={document.title}><small>[{keyLabel(settings.keys.interact)}] отойти</small></div>}
   </div>;
 }

@@ -62,7 +62,7 @@ export class ViewModel {
   private paperBase: Float32Array;
   paperW = 0; paperTime = 0; paperBend = 0;
   /** how far each finger closes when it holds a sheet by its edge: the thumb lies over the front, the fingers curl behind (tunable at run time) */
-  readonly paperFinger = { thumb: .95, index: .95, middle: .95, ring: .95, pinky: .95, j1: .95, j2: 1, j3: 1 };
+  readonly paperFinger = { thumb: .55, index: .8, middle: .9, ring: .95, pinky: .95, j1: .95, j2: 1, j3: 1 };
   ready = false;
 
   constructor(source?: { scene: T.Object3D; animations: T.AnimationClip[] }) {

@@ -8,6 +8,7 @@ describe('administration asset contract',()=>{
     const drawing=new Proxy({
       createImageData:(w:number,h:number)=>({data:new Uint8ClampedArray(w*h*4)}),
       createRadialGradient:()=>({addColorStop:()=>{}}),
+      createLinearGradient:()=>({addColorStop:()=>{}}),
     },{get:(self,key)=>Reflect.get(self,key)??(()=>{})});
     vi.stubGlobal('document',{createElement:()=>({getContext:()=>drawing})});
     try{

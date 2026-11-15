@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {DOORS,FURNITURE,OBJECTS,RECEPTION_PORTAL,ROOMS,type DoorId,type ObjectId,type RoomId} from './map';
-import {materials,random,type KitMaterials} from './env-materials';
+import {artTexture,materials,random,type KitMaterials} from './env-materials';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {box,boxProjectUV,cardboard,cassette,chair,consolidate,crt,curve,cylinder,desk,filing,group,keyboard,paperStack,phone,plate,shelf,vcr} from './env-kit';
 
@@ -203,11 +203,13 @@ function breaker(p:T.Group,m:KitMaterials,levers:T.Group[]){
     const x=(i-1)*.235;
     box(p,m.beige,x,1.383,.167,.14,.286,.057,.010);
     box(p,m.dark,x,1.381,.206,.071,.105,.042,.010);
-    // The handle is a lever on its own pivot: pulled down = off, up = on; a larger invisible block is what the cursor hits.
+    // The handle is a rocker in its slot, on its own pivot: its upper end tips forward when the line is on, back (sunk) when it is off; a larger invisible block is what the cursor hits.
     const sw=group(p,x,1.381,.206,'Breaker lever '+(i+1));
-    box(sw,m.silver,0,0,.036,.022,.022,.07,.005);box(sw,m.beige,0,0,.078,.046,.03,.03,.008);
-    const hit=new T.Mesh(new T.BoxGeometry(.13,.2,.1),new T.MeshBasicMaterial({visible:false}));hit.position.set(0,-.01,.03);hit.userData.lever=i;sw.add(hit);
-    sw.position.y-=.03;levers.push(sw);sw.userData.baseY=sw.position.y;
+    box(sw,m.silver,0,0,.018,.05,.096,.04,.006);
+    box(sw,m.silver,0,.030,.027,.05,.006,.006,.002);box(sw,m.silver,0,-.030,.027,.05,.006,.006,.002);
+    const hit=new T.Mesh(new T.BoxGeometry(.13,.2,.1),new T.MeshBasicMaterial({visible:false}));hit.position.set(0,0,.03);hit.userData.lever=i;sw.add(hit);
+    levers.push(sw);sw.userData.baseY=sw.position.y;
+    plate(p,m.label(['ВКЛ'],'#493b2e','#b7a482',64,32),x,1.470,.196,.04,.016);plate(p,m.label(['ОТКЛ'],'#493b2e','#b7a482',64,32),x,1.296,.196,.045,.016);
     box(p,m.led,x,1.48,.208,.028,.018,.012,.004);
     plate(p,m.label(['0'+(i+1)],'#493b2e','#b7a482',64,40),x,1.261,.198,.071,.031);
     curve(p,[m.rust,m.dark,m.blue][i]!,[[x,1.25,.158],[x,.98,.142],[x*.71,.905,.138],[x*.53,.867,.144],[x*.49,.823,.126]],.008);
@@ -224,10 +226,39 @@ function breaker(p:T.Group,m:KitMaterials,levers:T.Group[]){
   }
 }
 
+/** The power diagram as an old enamel plate screwed to the wall: faded stencil text, rust at the edges, grime and scratches, bits of the paint gone. */
+function wornDiagram(){
+  const W=1024,H=768,rng=random(4417);
+  const tex=artTexture(W,H,g=>{
+    g.fillStyle='#b9ae92';g.fillRect(0,0,W,H);
+    // mottled ground
+    for(let i=0;i<520;i++){g.globalAlpha=.05+rng()*.07;g.fillStyle=rng()<.5?'#8c7f63':'#cfc4a6';const r=14+rng()*70;g.beginPath();g.ellipse(rng()*W,rng()*H,r,r*(.4+rng()),rng()*3,0,6.3);g.fill();}
+    g.globalAlpha=1;
+    g.strokeStyle='#4c4332';g.lineWidth=5;g.strokeRect(26,26,W-52,H-52);g.lineWidth=2;g.strokeRect(38,38,W-76,H-76);
+    g.fillStyle='#3e3628';g.textBaseline='alphabetic';
+    g.textAlign='center';g.font='700 62px "Arial Narrow", Arial, sans-serif';g.fillText('СХЕМА ПИТАНИЯ',W/2,128);
+    g.fillRect(80,150,W-160,4);
+    g.textAlign='left';g.font='600 37px "Arial Narrow", Arial, sans-serif';
+    const rows=['Порядок включения:','1. Освещение — левый рычаг','2. Электрозамки — средний','3. Видеонаблюдение — правый','После третьего рычага — рубильник','справа: повернуть и удерживать,','пока ток не дойдёт до линий.'];
+    rows.forEach((t,i)=>g.fillText(t,86,222+i*66+(i>3?14:0)));
+    g.font='600 30px monospace';g.textAlign='right';g.fillText('П-01',W-84,H-62);
+    // wear: paint rubbed off in patches (the ground colour comes back over the letters), then stains, rust, scratches
+    for(let i=0;i<1700;i++){g.globalAlpha=.25+rng()*.5;g.fillStyle=rng()<.7?'#b2a688':'#a79a7c';const r=1+rng()*4.5;g.beginPath();g.ellipse(rng()*W,rng()*H,r*(1+rng()*2),r,rng()*3,0,6.3);g.fill();}
+    for(let i=0;i<40;i++){g.globalAlpha=.4+rng()*.3;g.fillStyle='#b4a98b';g.fillRect(rng()*W,rng()*H,6+rng()*60,2+rng()*8);}
+    for(let i=0;i<12;i++){const x=rng()*W,y=rng()*H*.6,l=120+rng()*380,gr=g.createLinearGradient(0,y,0,y+l);gr.addColorStop(0,'rgba(92,58,30,.0)');gr.addColorStop(.3,'rgba(92,58,30,'+(.12+rng()*.2)+')');gr.addColorStop(1,'rgba(92,58,30,0)');g.globalAlpha=1;g.fillStyle=gr;g.fillRect(x,y,3+rng()*14,l);}
+    for(const [cx,cy] of [[0,0],[W,0],[0,H],[W,H],[W/2,0],[W/2,H],[0,H/2],[W,H/2]] as const){
+      const gr=g.createRadialGradient(cx,cy,0,cx,cy,170+rng()*130);gr.addColorStop(0,'rgba(88,46,22,.65)');gr.addColorStop(.55,'rgba(66,40,24,.28)');gr.addColorStop(1,'rgba(60,40,28,0)');g.globalAlpha=1;g.fillStyle=gr;g.fillRect(0,0,W,H);}
+    for(let i=0;i<46;i++){g.globalAlpha=.4+rng()*.4;g.fillStyle='#5a2f18';const x=rng()<.5?rng()*W:(rng()<.5?rng()*50:W-rng()*50),y=rng()<.5?rng()*H:(rng()<.5?rng()*50:H-rng()*50);g.beginPath();g.ellipse(x,y,2+rng()*10,2+rng()*7,rng()*3,0,6.3);g.fill();}
+    g.strokeStyle='#e6ddc6';for(let i=0;i<60;i++){g.globalAlpha=.1+rng()*.2;g.lineWidth=1;g.beginPath();const x=rng()*W,y=rng()*H;g.moveTo(x,y);g.lineTo(x+(rng()-.5)*180,y+(rng()-.5)*40);g.stroke();}
+    g.globalAlpha=1;
+  });
+  return new T.MeshStandardMaterial({name:'Worn power diagram',map:tex,roughness:.62,metalness:.15});
+}
+
 function plans(p:T.Group,m:KitMaterials,x:number,y:number,z:number,mode:'diagram'|'building'){
   const g=group(p,x,y,z,mode==='diagram'?'Electrical handoff diagram':'Reception floor plan');
   box(g,m.veneer,0,0,0,.72,.55,.028,.006);
-  const label=mode==='diagram'?m.label(['ПИТАНИЕ','─── П-01 ───','☉  →  КЛЮЧ  →  ◉'],'#534a37','#b6a584'):
+  const label=mode==='diagram'?wornDiagram():
     m.label(['ЭТАЖ 01',' ┌─┬─┐ ',' ├─┼─┤ ',' └─┴─┘ '],'#414b43','#b6a584');
   plate(g,label,0,0,.017,.674,.504);
   for(const dx of [-.31,.31])box(g,m.silver,dx,.232,.023,.011,.011,.011,.003);
