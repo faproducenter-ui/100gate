@@ -688,7 +688,7 @@ export class IsoWorld {
     const flick=fireFlicker(time);
     this.fire.color.setHSL(.075+.012*(fireFlicker(time,3)-1),1,.6);
     const shadows=settings.shadows&&settings.quality==='high';
-    if(this.fire.castShadow!==shadows)this.fire.castShadow=shadows;
+    if(this.fire.castShadow!==shadows){this.fire.castShadow=shadows;this.fire.shadow.mapSize.set(512,512);this.fire.shadow.radius=5;this.fire.shadow.bias=-.002;this.fire.shadow.camera.near=.12;}
     if(this.torchFlame){
       this.torchFlame.root.parent!.visible=lyingLit&&!menu&&!cctv;
       if(lyingLit)this.torchFlame.update(time,1);

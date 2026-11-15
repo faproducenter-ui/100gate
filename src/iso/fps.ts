@@ -212,7 +212,9 @@ export class ViewModel {
         const m = /^(index|middle|ring|pinky|thumb)_0([123])_r$/.exec(f.bone.name), p = this.paperFinger;
         if (m) w = T.MathUtils.lerp(w, (p[m[1] as 'thumb'] ?? .6) * (m[2] === '1' ? p.j1 : m[2] === '2' ? p.j2 : p.j3), clamp(this.paperW * 1.4, 0, 1));
       }
-      f.bone.quaternion.copy(f.grip).slerp(f.rest, (1 - w) * .92);
+      // Around the torch the authored grip leaves the fingers loose and splayed: closed a little further (beyond the authored pose), the thumb less so.
+      const over = this.paperW <= .01 && this.carrying && this.gripW > .9 ? (f.bone.name.startsWith('thumb') ? .1 : /_01_r$/.test(f.bone.name) ? .22 : .34) : 0;
+      f.bone.quaternion.copy(f.grip).slerp(f.rest, (1 - w) * .92 - over);
     }
     // The flame of a burning torch stays at full size after the lighting clip; the clip's own scale only matters while it grows.
     if (this.flameNode) {
