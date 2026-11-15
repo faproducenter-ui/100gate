@@ -7,7 +7,7 @@ import {activeQuest, ITEMS, QUESTS} from './state';
 import './interface.css';
 
 /** The camera's own display: the red REC dot, a running timecode and the corner marks of a viewfinder. */
-function CamOverlay(){
+function CamOverlay({charge}:{charge:number}){
   const [t,setT]=useState(0);
   useEffect(()=>{const id=window.setInterval(()=>setT(x=>x+1),1000);return()=>window.clearInterval(id);},[]);
   const p=(n:number)=>String(n).padStart(2,'0');
@@ -15,6 +15,7 @@ function CamOverlay(){
     <span className="iso-cam-rec"><i/>REC</span>
     <span className="iso-cam-time">{p(Math.floor(t/3600))}:{p(Math.floor(t/60)%60)}:{p(t%60)}</span>
     <span className="iso-cam-mode">SP · AF</span>
+    <span className="iso-cam-bat" data-low={charge<=24} data-crit={charge<=10}><i style={{['--w' as string]:Math.max(0,Math.min(100,charge))+'%'}}/><em>{Math.round(charge)}%</em></span>
     <b className="tl"/><b className="tr"/><b className="bl"/><b className="br"/>
   </div>;
 }
@@ -32,6 +33,8 @@ export interface IsoInterfaceProps {
   /** The opening sequence is playing: no HUD, only a hint to skip it. */
   intro?:boolean;
   introPrompt?:string;
+  /** the camera's battery is empty: the picture has died */
+  dead?:boolean;
   loading:string;
   cctv:CCTVView;
   document?:{title:string; text:string; wall?:boolean};
@@ -170,7 +173,7 @@ function Hud({state,settings,hint,notice,act,fp,markers}:{state:Save;settings:Se
   const quest=activeQuest(state);
   const first=settings.view==='fps';
   return <div className="iso-hud" data-testid="iso-hud" data-view={settings.view}>
-    {first&&<CamOverlay/>}
+    {first&&<CamOverlay charge={state.charge}/>}
     {first&&<div className="iso-crosshair" data-active={!!hint} aria-hidden="true"/>}
     {first&&isTouch()&&<TouchControls act={act} light={state.lightOn} hint={hint} holding={state.items.includes('torch')}/>}
     {first&&!isTouch()&&fp&&!fp.locked&&<p className="iso-lockhint" role="status">Нажмите на экран, чтобы управлять камерой мышью</p>}
@@ -378,7 +381,7 @@ function CCTV({view,act,notice}:{view:CCTVView;act:Act;notice:string}){
   </Modal>;
 }
 
-export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notice,intro,introPrompt,loading,cctv,document,fp, onAction:act}:IsoInterfaceProps){
+export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notice,intro,introPrompt,dead,loading,cctv,document,fp, onAction:act}:IsoInterfaceProps){
   const close=()=>act(closeAction);
   const zoom={'--iso-text':settings.textScale} as CSSProperties;
   let modal:ReactNode=null;
@@ -449,6 +452,7 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
       <div className="iso-modal-actions"><ActionButton act={act} action={{type:'title'}}>В главное меню<ArrowRight/></ActionButton></div>
     </Modal>}
     {modal}
+    {mode==='play'&&dead&&<div className="iso-dead" role="alert"><div className="iso-dead-noise"/><p><b>ЗАРЯД НА КАМЕРЕ РАЗРЯЖЕН</b><span>Вы проиграли. Без записи в этом здании нечем смотреть.</span></p><div className="iso-dead-actions"><button type="button" onClick={()=>act({type:'start'})}>Начать заново</button><button type="button" onClick={()=>act({type:'title'})}>В меню</button></div></div>}
     {panel==='breaker'&&settings.view==='fps'&&<p className="iso-focus-hint">Щёлкните по рычагам по порядку, как на схеме · [{keyLabel(settings.keys.interact)}] отойти</p>}
     {panel==='document'&&document?.wall&&settings.view==='fps'&&<div className="iso-wallnote" role="dialog" aria-label={document.title}><h2>{document.title}</h2><p>{document.text}</p><small>[{keyLabel(settings.keys.interact)}] отойти</small></div>}
   </div>;

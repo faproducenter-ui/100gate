@@ -26,7 +26,7 @@ async function loadDecor():Promise<Decor>{
   return {phone:phone?.scene,cctv:cctv?.scene,fusebox:fusebox?.scene,battery:battery?.scene,key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations},doorKit:doorKit?.scene};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
-  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;zoom?:number;focusK?:number;focusId?:'breaker'|'fuse'|'diagram'|null;crank?:number;reading?:boolean;readingDoc?:{title:string;text:string};
+  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;charge?:number;zoom?:number;focusK?:number;focusId?:'breaker'|'fuse'|'diagram'|null;crank?:number;reading?:boolean;readingDoc?:{title:string;text:string};
   look:{yaw:number;pitch:number};crouch:number;sprint:boolean;press:number;kick:number};
 const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
 const smooth=T.MathUtils.smoothstep;
@@ -114,6 +114,10 @@ export class IsoWorld {
   private readonly analog=new AnalogPass();
   private lowHeight=480;
   private lastAim?:ObjectId;
+  private cctvFrom?:CameraId;
+  private cctvCut=0;
+  private readonly cctvEye=new T.Vector3();
+  private readonly cctvFocus=new T.Vector3();
   private powerAt=-1;
   private readonly lampLevel:number[]=[];
   /** the supplied props: the telephone with its dial, the cameras with their LEDs, the fuse box with its lever, the battery */
@@ -544,6 +548,7 @@ export class IsoWorld {
     if(!this.resize(frame.settings))return;
     const {state,settings,time,dt,menu,cctv}=frame;
     this.restoreOcclusion();
+    if(!cctv)this.cctvFrom=undefined;
     const fp=settings.view==='fps'&&!menu&&!cctv;
     this.fpActive=fp;
     {const heights=settings.quality==='low'?[360,320,288,240]:[480,420,360,288],hgt=heights[Math.min(3,frame.perf??0)]!;
@@ -726,17 +731,25 @@ export class IsoWorld {
       return;
     }
     if(cctv){
+      // The picture glides from one camera to the next (a pan with a burst of interference) instead of cutting; it is drawn through the same
+      // low-fi pass as the player's own camera, but in green night-vision with noise and a wobbling signal.
       const [eye,focus]=cameraPos[cctv.camera];
-      this.securityCamera.position.copy(eye);this.securityCamera.lookAt(focus);
-      this.securityCamera.fov=cctv.zoom?43:60;this.securityCamera.updateProjectionMatrix();
+      if(this.cctvFrom!==cctv.camera){if(this.cctvFrom){this.cctvCut=1;}else{this.cctvEye.copy(eye);this.cctvFocus.copy(focus);}this.cctvFrom=cctv.camera;}
+      const k=1-Math.exp(-dt*2.6);
+      this.cctvEye.lerp(eye,k);this.cctvFocus.lerp(focus,k);this.cctvCut=Math.max(0,this.cctvCut-dt*1.6);
+      this.securityCamera.position.copy(this.cctvEye);this.securityCamera.lookAt(this.cctvFocus);
+      this.securityCamera.fov=T.MathUtils.damp(this.securityCamera.fov||60,cctv.zoom?43:60,6,dt);this.securityCamera.updateProjectionMatrix();
       this.stageFootage(cctv);
-      this.renderer.render(this.scene,this.securityCamera);
+      this.analog.setSoft(false);this.analog.resize(this.lastWidth,this.lastHeight,this.lowHeight);
+      this.analog.render(this.renderer,()=>this.renderer.render(this.scene,this.securityCamera),time,1.25,1,0,1,this.cctvCut);
       for(const echo of Object.values(this.echoes))echo.root.visible=false;
       return;
     }
     if(fp){
       this.mark.visible=false;
-      this.analog.render(this.renderer,()=>{this.renderer.render(this.scene,this.fps.camera);this.fps.vm.draw(this.renderer);},time,1);
+      // The camera's battery running down: the picture gets noisier, then flickers, and at the end it fades out with a burst of static.
+      const ch=frame.charge??100,low=T.MathUtils.clamp((24-ch)/24,0,1),dying=ch<=0?0:1-low*(.45*Math.max(0,Math.sin(time*13)*Math.sin(time*5.1+1)));
+      this.analog.render(this.renderer,()=>{this.renderer.render(this.scene,this.fps.camera);this.fps.vm.draw(this.renderer);},time,1+low*.9,dying,0);
       return;
     }
     const id=roomAt(state.x,state.z)??'corridor',r=ROOMS[id];

@@ -19,7 +19,7 @@ export default function IsoPage(){
   const click=useRef<(event:{clientX:number;clientY:number})=>void>(()=>{});
   const activateAudio=useRef<()=>void>(()=>{});
   const [view,setView]=useState(()=>({mode:'loading' as Mode,panel:null as Panel|null,state:newSave(),settings:readSettings(),
-    saved:!!getSave(),hint:'',notice:'',loading:'Администрация',cctv:startCCTV(),document:undefined as DocumentView|undefined,intro:false,introPrompt:'',fp:{locked:false,stamina:1},markers:[] as {id:string;label:string;x:number;y:number;aimed:boolean}[]}));
+    saved:!!getSave(),hint:'',notice:'',loading:'Администрация',cctv:startCCTV(),document:undefined as DocumentView|undefined,dead:false,intro:false,introPrompt:'',fp:{locked:false,stamina:1},markers:[] as {id:string;label:string;x:number;y:number;aimed:boolean}[]}));
 
   useEffect(()=>{
     const surface=canvas.current!;
@@ -28,11 +28,18 @@ export default function IsoPage(){
     let settings=readSettings(),mode:Mode='loading',panel:Panel|null=null,back:Panel|null=null,active=getSave(),state=active??newSave();
     let clock=0,noticeUntil=0,notice='',loading='Администрация',target:ObjectId|null=null,documentView:DocumentView|undefined;
     const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
+    let dead=false;
     let introT=-1,introGo=false,phoneNoteAt=0,zoomWant=false,zoomK=0,zoomMoving=false;
     // Close looks at the wall: the camera moves up to the breaker, the fuse box or the diagram; the fuse box's knife switch is turned by holding J.
     let focusK=0,focusId:'breaker'|'fuse'|'diagram'|null=null,crank=0,crankHeld=false,crankSounding=false;
     const lines=['lights','locks','cctv'] as const;
     const crankReady=()=>withinReach('fuseBox',state,.85)&&state.breaker.length===3&&!state.fed&&mode==='play'&&!panel;
+    const swapBattery=()=>{
+      if(mode!=='play'||panel)return;
+      if(!state.items.includes('battery')){inform('Запасной батареи нет.');emit();return;}
+      if(state.charge>85){inform('Батарея в камере ещё хорошая.');emit();return;}
+      state={...state,items:state.items.filter(i=>i!=='battery'),charge:100};sound.batterySwap(settings);inform('Батарея заменена. Заряд 100%.');persist();emit();
+    };
     const throwLever=(i:number)=>{
       if(state.power||!state.doors.technical)return;
       const line=lines[i]!,before=state.breaker.length,out=pressLine(state,line);
@@ -52,7 +59,7 @@ export default function IsoPage(){
     const unlockPointer=()=>{try{if(document.pointerLockElement===surface){ignoreUnlock=true;document.exitPointerLock();}}catch{/* not locked */}};
     const keys=new Set<string>(),sound=new IsoSound();
     const emit=()=>setView({mode,panel,state,settings,saved:!!active,hint:target?OBJECTS[target].label:'',notice,loading,
-      cctv:{...cctv,availableFuture:state.items.includes('file'),evidence:isEvidence(cctv.camera,cctv.tape,cctv.time)},document:documentView,intro:introT>=0,introPrompt:introT>=0?(world?.introPrompt(introT)??''):'',fp:{locked:locked||coarse,stamina},
+      cctv:{...cctv,availableFuture:state.items.includes('file'),evidence:isEvidence(cctv.camera,cctv.tape,cctv.time)},document:documentView,dead,intro:introT>=0,introPrompt:introT>=0?(world?.introPrompt(introT)??''):'',fp:{locked:locked||coarse,stamina},
       markers:markers.map(m=>({id:m.id,label:OBJECTS[m.id].label,x:m.x,y:m.y,aimed:m.id===target}))});
     const inform=(s:string)=>{notice=s;noticeUntil=clock+5.6;};
     const persist=()=>{
@@ -126,6 +133,7 @@ export default function IsoPage(){
     };
     const start=(restore:boolean)=>{
       if(!world)return;
+      dead=false;
       state=restore&&active?active:newSave();
       if(coarse){try{void surface.parentElement?.requestFullscreen?.().catch(()=>{});void (screen.orientation as unknown as {lock?:(o:string)=>Promise<void>}).lock?.('landscape').catch(()=>{});}catch{/* optional */}}
       yaw=START_YAW;pitch=-.06;vx=vz=0;stamina=1;tired=false;
@@ -250,6 +258,7 @@ export default function IsoPage(){
       if(panel||mode!=='play'||(e.target instanceof HTMLInputElement))return;
       if(e.code===settings.keys.light){e.preventDefault();if(!e.repeat)flash();return;}
       if(e.code==='KeyG'){e.preventDefault();if(!e.repeat)drop();return;}
+      if(e.code==='KeyB'&&!dead){e.preventDefault();if(!e.repeat)swapBattery();return;}
       if(fpOn()&&e.code.startsWith('Arrow')){e.preventDefault();keys.add(e.code);return;}
       if(e.code==='KeyJ'&&crankReady()){e.preventDefault();keys.add('KeyJ');return;}
       if(e.code==='Tab'||e.code==='KeyJ'||e.code===settings.keys.interact){
@@ -292,8 +301,14 @@ export default function IsoPage(){
       return next;
     };
     const step=(dt:number,draw=true)=>{
-      const gameplay=mode==='play'&&!panel&&!portraitBlocked()&&introT<0;
+      const gameplay=mode==='play'&&!panel&&!portraitBlocked()&&introT<0&&!dead;
       clock+=dt;
+      // The camera's battery: a bit under 17 minutes for a full one; B swaps in a fresh battery. At zero the picture dies and the game is lost.
+      if(gameplay&&introT<0&&!dead&&state.charge>0){
+        state={...state,charge:Math.max(0,state.charge-dt*(100/1000))};
+        if(Math.floor(state.charge/10)!==Math.floor((state.charge+dt*.1)/10)||state.charge===0){emit();}
+        if(state.charge<=0){dead=true;sound.batteryDead(settings);emit();}
+      }
       {
         crankHeld=gameplay&&fpOn()&&keys.has('KeyJ')&&crankReady();
         if(crankHeld)crank=Math.min(1,crank+dt/4.4);else if(!state.fed)crank=Math.max(0,crank-dt*.4);
@@ -376,7 +391,7 @@ export default function IsoPage(){
       sound.mix(settings,{paused,power:state.power,menu});
       if(!document.hidden&&introT>=0&&mode==='play')world?.renderIntro(introT,settings,clock,perf);
       else if(!document.hidden&&(mode==='title'||mode==='play'||mode==='complete')){
-        world?.render({zoom:zoomK,focusK,focusId,crank,state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,perf,reading:panel==='document'&&fpOn()&&!documentView?.wall,readingDoc:documentView,
+        world?.render({charge:state.charge,zoom:zoomK,focusK,focusId,crank,state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,perf,reading:panel==='document'&&fpOn()&&!documentView?.wall,readingDoc:documentView,
           direction,speed,target:panel?null:target,drawer,look:{yaw,pitch},crouch,sprint:sprinting,press,kick});
       }
     };

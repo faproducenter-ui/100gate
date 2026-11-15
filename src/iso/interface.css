@@ -620,3 +620,36 @@ html, body, #root { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
 .iso-wallnote h2 { margin: 0 0 .5em; font-size: 1.05em; letter-spacing: .1em; text-transform: uppercase; color: #ffd28a; }
 .iso-wallnote p { margin: 0 0 .6em; white-space: pre-wrap; font-size: .9em; line-height: 1.55; }
 .iso-wallnote small { opacity: .6; letter-spacing: .1em; }
+
+/* the camera's battery */
+.iso-cam-bat { position: absolute; left: max(4.2%, calc(env(safe-area-inset-left) + 14px)); bottom: calc(7.5% + 1.5em); display: inline-flex; align-items: center; gap: .55em; font-size: .72rem; letter-spacing: .12em; color: #cfe3df; }
+.iso-cam-bat i { display: inline-block; height: .7em; width: 3.2em; background: linear-gradient(90deg, #cfe3df, #cfe3df) left / var(--w, 100%) 100% no-repeat; border: 1px solid #cfe3dfaa; box-sizing: border-box; }
+.iso-cam-bat em { font-style: normal; font-variant-numeric: tabular-nums; }
+.iso-cam-bat[data-low="true"] { color: #ffb07a; animation: iso-bat-blink 1.6s ease-in-out infinite; }
+.iso-cam-bat[data-crit="true"] { color: #ff6a52; animation-duration: .7s; }
+@keyframes iso-bat-blink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+.iso-dead { position: absolute; inset: 0; display: grid; place-items: center; background: #000; z-index: 20; animation: iso-dead-in 1.4s ease both; pointer-events: auto; text-align: center; color: #d9ece8; font-family: var(--analog-font); }
+.iso-dead-noise { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, #ffffff10 0 1px, transparent 1px 3px), radial-gradient(ellipse at center, #1a2a2a 0%, #000 70%); opacity: .8; animation: iso-dead-flick .22s steps(2) infinite; }
+.iso-dead p { position: relative; margin: 0; display: grid; gap: .8em; }
+.iso-dead b { font-size: clamp(1.1rem, 3.4vh, 2rem); letter-spacing: .12em; text-shadow: 0 0 10px #8fd0c8aa; animation: iso-bat-blink 2.2s ease-in-out infinite; }
+.iso-dead span { opacity: .65; font-size: .85rem; letter-spacing: .06em; }
+.iso-dead-actions { position: absolute; bottom: 14%; display: flex; gap: 1em; }
+.iso-dead-actions button { font: inherit; letter-spacing: .1em; text-transform: uppercase; color: #d9ece8; background: #02080a99; border: 1px solid #c8e2de88; padding: .8em 1.4em; cursor: pointer; }
+@keyframes iso-dead-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes iso-dead-flick { 0% { transform: translate(0, 0); } 50% { transform: translate(-1px, 1px); } }
+
+/* ---- the surveillance view: not a panel, but the same camcorder look as the player's own camera, in green ---- */
+.iso-ui .iso-cctv-shell { background: none !important; padding: 0 !important; backdrop-filter: none !important; }
+.iso-ui .iso-cctv-shell .iso-dialog { background: none !important; border: 0 !important; box-shadow: none !important; width: 100% !important; max-width: none !important; height: 100% !important; max-height: none !important; padding: 0 !important;
+  display: grid !important; grid-template-rows: 1fr auto !important; pointer-events: none; font-family: var(--analog-font); color: #b9f5c6; }
+.iso-ui .iso-cctv-shell .iso-dialog-head { display: none !important; }
+.iso-ui .iso-cctv-frame { position: relative; background: none !important; border: 0 !important; box-shadow: none !important; min-height: 0; }
+.iso-ui .iso-cctv-label { position: absolute; top: 6.5%; left: 5%; letter-spacing: .16em; text-shadow: 0 0 6px #3dff6e99; text-transform: uppercase; font-size: .9rem; }
+.iso-ui .iso-cctv-label svg { display: none; }
+.iso-ui .iso-cctv-signal { position: absolute; top: 6.5%; right: 5%; letter-spacing: .14em; color: #b9f5c6; font-size: .8rem; }
+.iso-ui .iso-cctv-signal i { background: #7dff9a; box-shadow: 0 0 6px #5fff86; }
+.iso-ui .iso-cctv-deck { pointer-events: auto; background: linear-gradient(transparent, #010a03d0 55%) !important; border: 0 !important; padding: 2.4em 4.5% 1.8em !important; gap: .7em; }
+.iso-ui .iso-cctv-deck button, .iso-ui .iso-cctv-deck .iso-icon { font-family: var(--analog-font) !important; color: #b9f5c6 !important; background: #02100644 !important; border: 1px solid #6ef0903a !important; letter-spacing: .08em; border-radius: 0 !important; box-shadow: none !important; }
+.iso-ui .iso-cctv-deck button:is(:hover,[aria-pressed="true"]):not(:disabled) { background: #1b5a2a77 !important; border-color: #9affb0aa !important; color: #e8fff0 !important; }
+.iso-ui .iso-cctv-deck button:disabled { opacity: .35; }
+.iso-ui .iso-cctv-time, .iso-ui .iso-cctv-time span { color: #b9f5c6 !important; }

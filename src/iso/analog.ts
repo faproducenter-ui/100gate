@@ -13,7 +13,7 @@ const VERT = /* glsl */ `
 const FRAG = /* glsl */ `
   uniform sampler2D tDiffuse;
   uniform vec2 uRes;
-  uniform float uTime, uGrain, uAberr, uScan, uCurve, uVig, uFlicker, uSat, uExposure, uBlack, uFade, uFlash;
+  uniform float uTime, uGrain, uAberr, uScan, uCurve, uVig, uFlicker, uSat, uExposure, uBlack, uFade, uFlash, uNV, uCut;
   varying vec2 vUv;
   float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
   vec3 aces(vec3 x) { const float a = 2.51, b = .03, c = 2.43, d = .59, e = .14; return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0., 1.); }
@@ -23,6 +23,7 @@ const FRAG = /* glsl */ `
     uv *= 1. + uCurve * r2;                                       // the glass bulges: the edges bend away
     vec2 st = uv * .5 + .5;
     if (st.x < 0. || st.x > 1. || st.y < 0. || st.y > 1.) { gl_FragColor = vec4(0., 0., 0., 1.); return; }
+    if (uNV > .5) st.x += (hash(vec2(floor(st.y * 160.), floor(uTime * 22.))) - .5) * .0042 * (1. + uCut * 7.);   // the signal wobbles, hard when the camera is switching
     vec2 dir = st - .5;
     float ab = uAberr * (.35 + length(dir) * 1.9);                // colour fringing grows toward the edges
     vec3 col;
@@ -58,6 +59,15 @@ const FRAG = /* glsl */ `
     float v = smoothstep(.98, .22, length(dir) * 1.32);
     col *= mix(1., v, uVig);
     col = pow(max(col, 0.), vec3(1. / 2.2));
+    if (uNV > .5) {    // a night-vision security camera: green phosphor, amplified noise, a rolling band, the odd dropout
+      float l = dot(col, vec3(.299, .587, .114));
+      float nn = hash(floor(st * uRes) + floor(uTime * 30.) * 7.7);
+      col = vec3(.10, 1., .26) * (pow(clamp(l, 0., 1.), .72) * 1.5 + (nn - .5) * (.16 + uCut * .5));
+      float band = smoothstep(.94, 1., sin(st.y * 3.2 - uTime * 1.6)) * .14;
+      col += vec3(.04, .22, .06) * band;
+      float drop = step(.995, hash(vec2(floor(st.y * 90.), floor(uTime * 9.)))) * .6;
+      col = mix(col, vec3(.1, .55, .2) * nn, max(drop, uCut * step(.5, nn) * .5));
+    }
     col = mix(col * uFade, vec3(1.), uFlash);                     // fades (the opening) and the white flash
     gl_FragColor = vec4(col, 1.);
   }
@@ -73,7 +83,7 @@ export class AnalogPass {
     this.mat = new T.ShaderMaterial({
       vertexShader: VERT, fragmentShader: FRAG, depthTest: false, depthWrite: false, toneMapped: false,
       uniforms: { tDiffuse: { value: this.rt.texture }, uRes: { value: new T.Vector2(2, 2) }, uTime: { value: 0 }, uGrain: { value: .06 }, uAberr: { value: .0042 },
-        uScan: { value: .22 }, uCurve: { value: .07 }, uVig: { value: .92 }, uFlicker: { value: .035 }, uSat: { value: .7 }, uExposure: { value: 1.0 }, uBlack: { value: .012 }, uFade: { value: 1 }, uFlash: { value: 0 } },
+        uScan: { value: .22 }, uCurve: { value: .07 }, uVig: { value: .92 }, uFlicker: { value: .035 }, uSat: { value: .7 }, uExposure: { value: 1.0 }, uBlack: { value: .012 }, uFade: { value: 1 }, uFlash: { value: 0 }, uNV: { value: 0 }, uCut: { value: 0 } },
     });
     const quad = new T.Mesh(new T.PlaneGeometry(2, 2), this.mat); quad.frustumCulled = false; this.screen.add(quad);
   }
@@ -87,11 +97,11 @@ export class AnalogPass {
     (this.mat.uniforms.uRes!.value as T.Vector2).set(lw, lowHeight);
   }
   /** strength 0..1 scales every artefact (the menu uses less than the game). */
-  render(renderer: T.WebGLRenderer, draw: () => void, time: number, strength = 1, fade = 1, flash = 0) {
+  render(renderer: T.WebGLRenderer, draw: () => void, time: number, strength = 1, fade = 1, flash = 0, nv = 0, cut = 0) {
     const u = this.mat.uniforms;
     u.uTime!.value = time; u.uGrain!.value = .06 * strength; u.uAberr!.value = .0042 * strength; u.uScan!.value = .22 * strength;
     u.uCurve!.value = .07 * strength; u.uVig!.value = .92 * strength; u.uFlicker!.value = .035 * strength; u.uSat!.value = 1 - .32 * strength;
-    u.uFade!.value = fade; u.uFlash!.value = flash;
+    u.uFade!.value = fade; u.uFlash!.value = flash; u.uNV!.value = nv; u.uCut!.value = cut;
     renderer.setRenderTarget(this.rt); renderer.clear(); draw();
     renderer.setRenderTarget(null); renderer.clear(); renderer.render(this.screen, this.cam);
   }

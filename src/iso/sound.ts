@@ -210,6 +210,30 @@ export class IsoSound {
     buzz.connect(bl).connect(bg).connect(g0);buzz.start(t+.5);buzz.stop(t+4.1);
     window.setTimeout(()=>g0.disconnect(),5200);
   }
+  /** A fresh battery goes into the camera: the cover snaps open, the terminals click, the camera beeps. */
+  batterySwap(s:Settings){
+    const ctx=this.context,master=this.master,tex=this.texture;
+    if(!ctx||!master||!tex)return;
+    const t=ctx.currentTime+.01,g0=ctx.createGain();g0.gain.value=Math.max(.05,s.effects*1.1);g0.connect(master);
+    const click=(at:number,f:number,v:number,len:number)=>{const n=ctx.createBufferSource();n.buffer=tex;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=f;bp.Q.value=3;
+      const g=ctx.createGain();g.gain.setValueAtTime(0,t+at);g.gain.linearRampToValueAtTime(v,t+at+.002);g.gain.exponentialRampToValueAtTime(.0008,t+at+len);n.connect(bp).connect(g).connect(g0);n.start(t+at,Math.random()*1.5);n.stop(t+at+len+.02);};
+    click(0,1500,.4,.06);click(.35,2600,.3,.03);click(.62,2100,.28,.025);click(.9,900,.4,.07);
+    const beep=(at:number,f:number)=>{const o=ctx.createOscillator();o.type='square';o.frequency.value=f;const g=ctx.createGain();g.gain.setValueAtTime(0,t+at);g.gain.linearRampToValueAtTime(.04,t+at+.01);g.gain.linearRampToValueAtTime(0,t+at+.1);o.connect(g).connect(g0);o.start(t+at);o.stop(t+at+.12);};
+    beep(1.15,1100);beep(1.3,1650);
+    window.setTimeout(()=>g0.disconnect(),2200);
+  }
+  /** The battery is empty: a falling whine, a burst of static, the picture dies. */
+  batteryDead(s:Settings){
+    const ctx=this.context,master=this.master,tex=this.texture;
+    if(!ctx||!master||!tex)return;
+    const t=ctx.currentTime+.01,g0=ctx.createGain();g0.gain.value=Math.max(.05,s.effects*1.1);g0.connect(master);
+    const o=ctx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(1800,t);o.frequency.exponentialRampToValueAtTime(70,t+1.6);
+    const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(3000,t);lp.frequency.exponentialRampToValueAtTime(200,t+1.6);
+    const g=ctx.createGain();g.gain.setValueAtTime(.1,t);g.gain.exponentialRampToValueAtTime(.001,t+1.7);o.connect(lp).connect(g).connect(g0);o.start(t);o.stop(t+1.8);
+    const n=ctx.createBufferSource();n.buffer=tex;n.loop=true;const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=1500;
+    const ng=ctx.createGain();ng.gain.setValueAtTime(.0,t);ng.gain.linearRampToValueAtTime(.22,t+.08);ng.gain.exponentialRampToValueAtTime(.002,t+1.4);n.connect(hp).connect(ng).connect(g0);n.start(t);n.stop(t+1.5);
+    window.setTimeout(()=>g0.disconnect(),2600);
+  }
   private introBus?:GainNode;
   private introBuf:Record<string,AudioBuffer>={};
   /** Real recordings for the opening (CC0, OpenGameArt; see CREDITS.md): loaded once, decoded, kept. Missing files fall back to the synthesized sounds. */
