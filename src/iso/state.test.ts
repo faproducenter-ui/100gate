@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {newSave,act,activeQuest,validSave,pressLine,recordEvidence} from './state';
+import {newSave,act,activeQuest,validSave,pressLine,feedPower,recordEvidence} from './state';
 import {canStand,DOORS,OBJECTS,START,movePlayer,roomAt,withinReach,type DoorStates,type ObjectId} from './map';
 
 describe('administration case',()=>{
@@ -14,6 +14,7 @@ describe('administration case',()=>{
     for(const line of ['lights','locks','cctv'] as const)s=pressLine(s,line).state;
     expect(s.power).toBe(false);use('powerDiagram');
     for(const line of ['lights','locks','cctv'] as const)s=pressLine(s,line).state;
+    expect(s.power).toBe(false);s=feedPower(s).state;expect(s.power).toBe(true);
     use('surveillanceDoor');expect(s.doors.surveillance).toBe(true);
     s=recordEvidence(s,'archive','shift',13).state;
     expect(s.archiveClue).toBe(false);

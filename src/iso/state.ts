@@ -32,7 +32,7 @@ export function activeQuest(s:Save){
 }
 
 export const newSave=():Save=>({version:1,...START,items:[],doors:{technical:false,surveillance:false,archive:false,reception:false},
-  dutyRead:false,diagramRead:false,power:false,breaker:[],archiveClue:false,archiveIndex:false,anomaly:false,finished:false,
+  dutyRead:false,diagramRead:false,power:false,fed:false,charge:100,breaker:[],archiveClue:false,archiveIndex:false,anomaly:false,finished:false,
   lightOn:false,lit:false});
 const order:readonly PowerLine[]=['lights','locks','cctv'];
 const has=(s:Save,id:ItemId)=>s.items.includes(id);
@@ -40,6 +40,7 @@ const item=(s:Save,id:ItemId):Save=>has(s,id)?s:{...s,items:[...s.items,id]};
 type Outcome={state:Save;message?:string;panel?:Panel;document?:DocumentView};
 const msg=(state:Save,message:string):Outcome=>({state,message});
 const doc=(state:Save,title:string,text:string):Outcome=>({state,panel:'document',document:{title,text}});
+const wall=(state:Save,title:string,text:string):Outcome=>({state,panel:'document',document:{title,text,wall:true}});
 const found=(state:Save,id:ItemId):Outcome=>msg(item(state,id),has(state,id)?'Уже в инвентаре.':'Найдено: '+ITEMS[id].name);
 
 /** Can F light the torch right now: the torch and the lighter are in the pockets and the torch is not burning. */
@@ -83,7 +84,7 @@ export function act(s:Save,id:ObjectId):Outcome {
     }
     case 'technicalDoor':return s.doors.technical?msg(s,'Щитовая открыта.'):
       has(s,'technicalKey')?msg({...s,doors:{...s.doors,technical:true}},'Дверь щитовой открыта.'):msg(s,'Нужен ключ от щитовой.');
-    case 'powerDiagram':return s.doors.technical?doc(item({...s,diagramRead:true},'memo'),'Схема питания',ITEMS.memo.description):msg(s,'Щитовая заперта.');
+    case 'powerDiagram':return s.doors.technical?wall(item({...s,diagramRead:true},'memo'),'Схема питания','Порядок подключения:\n1. Освещение — левый рычаг.\n2. Электрозамки — средний.\n3. Видеонаблюдение — правый.\nПосле третьего щелчка — рубильник справа: удерживать J, пока ток не дойдёт до линий.'):msg(s,'Щитовая заперта.');
     case 'breaker':return s.doors.technical?{state:s,panel:'breaker'}:msg(s,'Щитовая заперта.');
     case 'surveillanceDoor':return s.power?msg({...s,doors:{...s.doors,surveillance:true}},'Замок операторской открыт.'):msg(s,'Электронный замок обесточен.');
     case 'terminal':return s.power&&s.doors.surveillance?{state:s,panel:'cctv'}:msg(s,'Нет сигнала.');
@@ -106,8 +107,13 @@ export function pressLine(s:Save,line:PowerLine):Outcome{
   if(!s.doors.technical||s.power)return {state:s};
   if(!s.diagramRead)return msg(s,'Сначала изучи схему питания.');
   if(order[s.breaker.length]!==line)return msg({...s,breaker:[]},'Защита отключила линии. Последовательность сброшена.');
-  const breaker=[...s.breaker,line],power=breaker.length===order.length;
-  return msg({...s,breaker,power},power?'Питание восстановлено. Электронные замки и камеры работают.':'Линия подключена.');
+  const breaker=[...s.breaker,line],ready=breaker.length===order.length;
+  return msg({...s,breaker},ready?'Все линии подключены. Теперь рубильник: удерживайте J, пока питание не дойдёт.':'Линия подключена.');
+}
+/** The knife switch has been turned all the way (J held long enough): the current reaches the lines that are on. */
+export function feedPower(s:Save):Outcome{
+  if(s.fed||s.breaker.length!==order.length)return {state:s};
+  return msg({...s,fed:true,power:true},'Питание восстановлено. Электронные замки и камеры работают.');
 }
 
 export const cctvDuration=(t:TapeId)=>t==='shift'?24:13;
@@ -135,7 +141,8 @@ export function validSave(value:unknown):value is Save{
     ![s.dutyRead,s.diagramRead,s.power,s.archiveClue,s.archiveIndex,s.anomaly,s.finished].every(v=>typeof v==='boolean')||
     !Array.isArray(s.breaker)||s.breaker.length>3||!s.breaker.every((line,i)=>line===order[i])||
     typeof s.lightOn!=='boolean'||typeof s.lit!=='boolean'||
-    s.power!==(s.breaker.length===3)||!canStand(s.x,s.z,s.doors))return false;
+    typeof s.fed!=='boolean'||typeof s.charge!=='number'||!(s.charge>=0&&s.charge<=100)||s.fed&&s.breaker.length!==3||
+    s.power!==(s.breaker.length===3&&s.fed)||!canStand(s.x,s.z,s.doors))return false;
   return !(s.lightOn&&!has(s,'torch')||s.lit&&!has(s,'lighter')||s.lightOn&&!s.lit||s.doors.technical&&!has(s,'technicalKey')||
     s.diagramRead&&!s.doors.technical||s.breaker.length>0&&!s.diagramRead||s.doors.surveillance&&!s.power||
     (s.archiveClue||s.anomaly||has(s,'vhs'))&&!s.doors.surveillance||has(s,'archiveKey')&&!s.archiveClue||
@@ -153,6 +160,8 @@ export function upgradeSave(value:unknown):unknown{
     v={...rest,items:Array.isArray(rest.items)?(rest.items as string[]).filter(i=>i!=='flashlight'):[],lightOn:false,lit:false,...(Object.keys(p).length?{props:p}:{})};
   }
   // Saves from before the reception got a real door: that doorway was always open.
+  if(!('fed' in v))v={...v,fed:v.power===true};
+  if(!('charge' in v))v={...v,charge:100};
   const d=v.doors as Record<string,unknown>|undefined;
   if(d&&typeof d==='object'&&typeof d.reception!=='boolean')v={...v,doors:{...d,reception:true}};
   return v;

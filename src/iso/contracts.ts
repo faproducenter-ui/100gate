@@ -11,6 +11,10 @@ export interface Save {
   dutyRead:boolean;diagramRead:boolean;power:boolean;breaker:PowerLine[];
   archiveClue:boolean;archiveIndex:boolean;finished:boolean;
   anomaly:boolean;
+  /** the knife switch has been thrown by hand (J): with all three lines on, this is what lets the current through */
+  fed:boolean;
+  /** charge of the camera's battery, percent */
+  charge:number;
   /** The torch burns in the hand; `lit` = it has been lit at least once (the first quest). */
   lightOn:boolean;lit:boolean;
   /** Props put down by hand: world pose [x,y,z,qx,qy,qz,qw]; a dropped torch remembers if it was burning. */
@@ -30,7 +34,7 @@ export const DEFAULTS:Settings={
 };
 export type CCTVView={camera:CameraId;tape:TapeId;time:number;duration:number;playing:boolean;
   availableFuture:boolean;evidence:boolean;zoom:boolean};
-export type DocumentView={title:string;text:string};
+export type DocumentView={title:string;text:string;/** pinned to a wall: the camera moves up to it, nothing is taken in the hand */wall?:boolean};
 export type UIAction=
   |{type:'torch'}|{type:'drop'}|{type:'skip-intro'}
   |{type:'touch';move?:{x:number;z:number};look?:{dx:number;dy:number};sprint?:boolean;crouch?:boolean}

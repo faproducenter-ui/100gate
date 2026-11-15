@@ -195,7 +195,7 @@ function fixture(p:T.Group,m:KitMaterials,x:number,y:number,z:number,w=.85){
   return g;
 }
 
-function breaker(p:T.Group,m:KitMaterials){
+function breaker(p:T.Group,m:KitMaterials,levers:T.Group[]){
   box(p,m.greenSteel,0,1.37,0,.96,.98,.24,.013);
   box(p,m.dark,0,1.37,.127,.89,.88,.019,.010);
   box(p,m.steel,0,1.38,.140,.79,.78,.013,.007);
@@ -203,7 +203,11 @@ function breaker(p:T.Group,m:KitMaterials){
     const x=(i-1)*.235;
     box(p,m.beige,x,1.383,.167,.14,.286,.057,.010);
     box(p,m.dark,x,1.381,.206,.071,.105,.042,.010);
-    box(p,m.dark,x,1.36,.226,.075,.031,.045,.008);
+    // The handle is a lever on its own pivot: pulled down = off, up = on; a larger invisible block is what the cursor hits.
+    const sw=group(p,x,1.381,.206,'Breaker lever '+(i+1));
+    box(sw,m.silver,0,0,.036,.022,.022,.07,.005);box(sw,m.beige,0,0,.078,.046,.03,.03,.008);
+    const hit=new T.Mesh(new T.BoxGeometry(.13,.2,.1),new T.MeshBasicMaterial({visible:false}));hit.position.set(0,-.01,.03);hit.userData.lever=i;sw.add(hit);
+    sw.position.y-=.03;levers.push(sw);sw.userData.baseY=sw.position.y;
     box(p,m.led,x,1.48,.208,.028,.018,.012,.004);
     plate(p,m.label(['0'+(i+1)],'#493b2e','#b7a482',64,40),x,1.261,.198,.071,.031);
     curve(p,[m.rust,m.dark,m.blue][i]!,[[x,1.25,.158],[x,.98,.142],[x*.71,.905,.138],[x*.53,.867,.144],[x*.49,.823,.126]],.008);
@@ -256,6 +260,8 @@ export type AdminEnvironment={
   /** Meshes shown only in first person (ceilings, lintels, completed walls) and only in isometric view. */
   fpOnly:T.Mesh[]; isoOnly:T.Mesh[];
   root:T.Group; doors:Record<DoorId,T.Group>; targets:Partial<Record<ObjectId,T.Object3D>>;
+  /** the three breaker levers (lights, locks, cameras), each on its own pivot */
+  levers:T.Group[];
   screens:T.Mesh[]; powerLights:T.PointLight[]; occluders:T.Mesh[]; lamp:T.PointLight; drawer:T.Group;
   /** Doorway centres (wall x, opening z, half width) where the modelled door frame goes. */
   portals:{x:number;z:number;half:number}[];
@@ -265,7 +271,7 @@ export function buildEnvironment(opts:{modelFrames?:boolean}={}):AdminEnvironmen
   fpOnly=[];isoOnly=[];portals=[];modelFrames=!!opts.modelFrames;
   const root=new T.Group();root.name='Municipal administration · floor 01';
   const m=materials(),doors={} as AdminEnvironment['doors'],targets:AdminEnvironment['targets']={};
-  const screens:T.Mesh[]=[],powerLights:T.PointLight[]=[],occluders:T.Mesh[]=[];
+  const screens:T.Mesh[]=[],powerLights:T.PointLight[]=[],occluders:T.Mesh[]=[],levers:T.Group[]=[];
   let deskDrawer:T.Group|undefined;
   const set=(id:ObjectId,o:T.Object3D)=>{targets[id]=o;o.userData.isoTarget=id;return o;};
   const anchor=(id:ObjectId,y:number,p:T.Group)=>{const v=OBJECTS[id];return set(id,group(p,v.x,y,v.z,id));};
@@ -353,7 +359,7 @@ export function buildEnvironment(opts:{modelFrames?:boolean}={}):AdminEnvironmen
         g.rotation.y=Math.PI/2;filing(g,m,f.d,f.w,1.66,3);
         break;
       case 'panel':
-        breaker(g,m);set('breaker',group(g,0,1.38,.226,'Breaker toggles'));
+        breaker(g,m,levers);set('breaker',group(g,0,1.38,.226,'Breaker toggles'));
         break;
       case 'console': {
         desk(g,m,f.w,f.d,75,.82);
@@ -458,5 +464,5 @@ export function buildEnvironment(opts:{modelFrames?:boolean}={}):AdminEnvironmen
   for(const o of [...fpOnly,...isoOnly]){o.visible=false;live.add(o);}
   for(const id of Object.keys(rooms) as RoomId[])consolidate(rooms[id],live);
   if(!deskDrawer)throw Error('The reception drawer has no mapped desk');
-  return {fpOnly,isoOnly,root,doors,targets,screens,powerLights,occluders,lamp:menuLamp,drawer:deskDrawer,portals};
+  return {levers,fpOnly,isoOnly,root,doors,targets,screens,powerLights,occluders,lamp:menuLamp,drawer:deskDrawer,portals};
 }

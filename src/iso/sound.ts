@@ -116,6 +116,100 @@ export class IsoSound {
     tone(3.9,.3,425,.09);tone(4.35,.3,425,.09);tone(4.8,.3,425,.09);
     window.setTimeout(()=>g0.disconnect(),6200);
   }
+  /** The lens of the camera: a small motor whirs and the focus ring clicks as the zoom goes in (dir 1) or out (-1). */
+  zoom(s:Settings,dir:1|-1){
+    const ctx=this.context,master=this.master,tex=this.texture;
+    if(!ctx||!master||!tex)return;
+    const t=ctx.currentTime+.01,len=dir>0?.5:.42,g0=ctx.createGain();g0.gain.value=Math.max(.03,s.ui*.9);g0.connect(master);
+    const o=ctx.createOscillator();o.type='sawtooth';
+    const f0=dir>0?190:470,f1=dir>0?470:180;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+len);
+    const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1300;
+    const g=ctx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.05,t+.05);g.gain.setValueAtTime(.05,t+len-.06);g.gain.linearRampToValueAtTime(0,t+len);
+    o.connect(lp).connect(g).connect(g0);o.start(t);o.stop(t+len+.02);
+    const n=ctx.createBufferSource();n.buffer=tex;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=2400;bp.Q.value=2.4;
+    const ng=ctx.createGain();ng.gain.setValueAtTime(0,t);ng.gain.linearRampToValueAtTime(.025,t+.06);ng.gain.linearRampToValueAtTime(0,t+len);
+    n.connect(bp).connect(ng).connect(g0);n.start(t,Math.random());n.stop(t+len+.02);
+    // the focus ring settles with a soft click
+    const c=ctx.createBufferSource();c.buffer=tex;const cf=ctx.createBiquadFilter();cf.type='bandpass';cf.frequency.value=3100;cf.Q.value=5;
+    const cg=ctx.createGain();cg.gain.setValueAtTime(0,t+len);cg.gain.linearRampToValueAtTime(.12,t+len+.003);cg.gain.exponentialRampToValueAtTime(.001,t+len+.04);
+    c.connect(cf).connect(cg).connect(g0);c.start(t+len,Math.random());c.stop(t+len+.06);
+    window.setTimeout(()=>g0.disconnect(),1200);
+  }
+  /** A breaker lever thrown: a metal clack and a short spring ring; when the order is wrong the protection trips (a dull thud and a buzz). */
+  lever(s:Settings,ok:boolean){
+    const ctx=this.context,master=this.master,tex=this.texture;
+    if(!ctx||!master||!tex)return;
+    const t=ctx.currentTime+.005,g0=ctx.createGain();g0.gain.value=Math.max(.05,s.effects*1.2);g0.connect(master);
+    const burst=(at:number,f:number,q:number,v:number,len:number)=>{
+      const n=ctx.createBufferSource();n.buffer=tex;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=f;bp.Q.value=q;
+      const g=ctx.createGain();g.gain.setValueAtTime(0,t+at);g.gain.linearRampToValueAtTime(v,t+at+.002);g.gain.exponentialRampToValueAtTime(.0008,t+at+len);
+      n.connect(bp).connect(g).connect(g0);n.start(t+at,Math.random()*1.5);n.stop(t+at+len+.02);
+    };
+    const thump=(at:number,f0:number,f1:number,v:number,len:number)=>{
+      const o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(f0,t+at);o.frequency.exponentialRampToValueAtTime(f1,t+at+len);
+      const g=ctx.createGain();g.gain.setValueAtTime(0,t+at);g.gain.linearRampToValueAtTime(v,t+at+.004);g.gain.exponentialRampToValueAtTime(.001,t+at+len);o.connect(g).connect(g0);o.start(t+at);o.stop(t+at+len+.02);
+    };
+    if(ok){
+      burst(0,2100,3,.5,.05);burst(.09,3400,6,.32,.03);thump(.01,150,60,.5,.12);thump(.1,240,110,.25,.08);
+      // the spring of the contact rings
+      const o=ctx.createOscillator();o.type='triangle';o.frequency.value=2350;const g=ctx.createGain();g.gain.setValueAtTime(0,t+.01);g.gain.linearRampToValueAtTime(.05,t+.012);g.gain.exponentialRampToValueAtTime(.0005,t+.35);o.connect(g).connect(g0);o.start(t+.01);o.stop(t+.4);
+    }else{
+      burst(0,900,1.5,.6,.12);thump(0,110,40,.8,.3);
+      const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=100;const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=500;
+      const g=ctx.createGain();g.gain.setValueAtTime(0,t+.05);g.gain.linearRampToValueAtTime(.12,t+.08);g.gain.exponentialRampToValueAtTime(.001,t+.7);o.connect(lp).connect(g).connect(g0);o.start(t+.05);o.stop(t+.75);
+    }
+    window.setTimeout(()=>g0.disconnect(),1200);
+  }
+  private crank?:{src:AudioBufferSourceNode;bp:BiquadFilterNode;g:GainNode;lfo:OscillatorNode;lg:GainNode;sq:OscillatorNode;sg:GainNode;out:GainNode};
+  /** The rusty knife switch being turned by hand: a gritty scrape and a ratchet that quicken with the effort, a groan of the metal on top. */
+  crankStart(s:Settings){
+    const ctx=this.context,master=this.master,tex=this.texture;
+    if(!ctx||!master||!tex)return;
+    this.crankStop(0);
+    const out=ctx.createGain();out.gain.value=0;out.connect(master);
+    const src=ctx.createBufferSource();src.buffer=tex;src.loop=true;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=900;bp.Q.value=1.6;
+    const g=ctx.createGain();g.gain.value=.12;
+    const lfo=ctx.createOscillator();lfo.type='square';lfo.frequency.value=5;const lg=ctx.createGain();lg.gain.value=.1;lfo.connect(lg).connect(g.gain);   // the ratchet
+    const sq=ctx.createOscillator();sq.type='sawtooth';sq.frequency.value=150;const sg=ctx.createGain();sg.gain.value=.018;                                 // the groan
+    const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=700;sq.connect(lp).connect(sg).connect(out);
+    src.connect(bp).connect(g).connect(out);src.start();lfo.start();sq.start();
+    out.gain.linearRampToValueAtTime(Math.max(.05,s.effects*1.3),ctx.currentTime+.12);
+    this.crank={src,bp,g,lfo,lg,sq,sg,out};
+  }
+  crankProgress(p:number){
+    const c=this.crank,ctx=this.context;if(!c||!ctx)return;
+    const t=ctx.currentTime;
+    c.lfo.frequency.setTargetAtTime(4+p*9,t,.1);c.bp.frequency.setTargetAtTime(750+p*1100,t,.1);
+    c.sq.frequency.setTargetAtTime(110+p*160+Math.sin(t*3)*6,t,.08);c.sg.gain.setTargetAtTime(.012+.03*Math.sin(p*3.14),t,.1);
+  }
+  /** let go or done: the scrape dies down; when the switch reaches the end (p = 1) there is a heavy clunk */
+  crankStop(p:number){
+    const c=this.crank,ctx=this.context,master=this.master,tex=this.texture;
+    if(c&&ctx){c.out.gain.cancelScheduledValues(ctx.currentTime);c.out.gain.setTargetAtTime(0,ctx.currentTime,.07);window.setTimeout(()=>{try{c.src.stop();c.lfo.stop();c.sq.stop();c.out.disconnect();}catch{/* stopped */}},500);this.crank=undefined;}
+    if(p>=1&&ctx&&master&&tex){
+      const t=ctx.currentTime,o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(95,t);o.frequency.exponentialRampToValueAtTime(34,t+.35);
+      const g=ctx.createGain();g.gain.setValueAtTime(.9,t);g.gain.exponentialRampToValueAtTime(.001,t+.45);o.connect(g).connect(master);o.start(t);o.stop(t+.5);
+      const n=ctx.createBufferSource();n.buffer=tex;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1600;bp.Q.value=2;const ng=ctx.createGain();ng.gain.setValueAtTime(.5,t);ng.gain.exponentialRampToValueAtTime(.001,t+.12);
+      n.connect(bp).connect(ng).connect(master);n.start(t,Math.random());n.stop(t+.2);
+    }
+  }
+  /** The current reaches the lines: a deep hum swells, relays click, the lamps tick on and buzz for a moment. */
+  powerOn(s:Settings){
+    const ctx=this.context,master=this.master,tex=this.texture;
+    if(!ctx||!master||!tex)return;
+    const t=ctx.currentTime+.05,g0=ctx.createGain();g0.gain.value=Math.max(.05,s.effects*1.1);g0.connect(master);
+    const hum=ctx.createOscillator();hum.type='sawtooth';hum.frequency.setValueAtTime(40,t);hum.frequency.linearRampToValueAtTime(50,t+1.2);
+    const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=240;const hg=ctx.createGain();hg.gain.setValueAtTime(0,t);hg.gain.linearRampToValueAtTime(.18,t+.9);hg.gain.linearRampToValueAtTime(0,t+3.2);
+    hum.connect(lp).connect(hg).connect(g0);hum.start(t);hum.stop(t+3.3);
+    const tick=(at:number,v:number)=>{const n=ctx.createBufferSource();n.buffer=tex;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=2800;bp.Q.value=4;
+      const g=ctx.createGain();g.gain.setValueAtTime(0,t+at);g.gain.linearRampToValueAtTime(v,t+at+.002);g.gain.exponentialRampToValueAtTime(.0008,t+at+.03);n.connect(bp).connect(g).connect(g0);n.start(t+at,Math.random()*1.5);n.stop(t+at+.05);};
+    [.5,.62,.8,1.05,1.2,1.5,1.62,1.95].forEach((a,i)=>tick(a,.18+.05*(i%3)));
+    // fluorescent buzz while the lamps strike
+    const buzz=ctx.createOscillator();buzz.type='square';buzz.frequency.value=100;const bl=ctx.createBiquadFilter();bl.type='bandpass';bl.frequency.value=1400;bl.Q.value=2;
+    const bg=ctx.createGain();bg.gain.setValueAtTime(0,t+.5);bg.gain.linearRampToValueAtTime(.04,t+.6);bg.gain.setValueAtTime(.04,t+1.8);bg.gain.linearRampToValueAtTime(.007,t+2.4);bg.gain.linearRampToValueAtTime(0,t+4);
+    buzz.connect(bl).connect(bg).connect(g0);buzz.start(t+.5);buzz.stop(t+4.1);
+    window.setTimeout(()=>g0.disconnect(),5200);
+  }
   private introBus?:GainNode;
   private introBuf:Record<string,AudioBuffer>={};
   /** Real recordings for the opening (CC0, OpenGameArt; see CREDITS.md): loaded once, decoded, kept. Missing files fall back to the synthesized sounds. */

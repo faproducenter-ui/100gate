@@ -4,7 +4,7 @@ import {IsoInterface} from './Interface';
 import {IsoWorld} from './world';
 import {IsoSound} from './sound';
 import {OBJECTS,doorFor,movePlayer,roomAt,withinReach,type ObjectId,type Point} from './map';
-import {act,activeQuest,canIgnite,dropTorch,cctvDuration,getSave,lightTorch,isEvidence,newSave,pressLine,readSettings,recordEvidence,sanitizeSettings,SAVE_KEY,SETTINGS_KEY,write} from './state';
+import {act,activeQuest,canIgnite,dropTorch,cctvDuration,feedPower,getSave,lightTorch,isEvidence,newSave,pressLine,readSettings,recordEvidence,sanitizeSettings,SAVE_KEY,SETTINGS_KEY,write} from './state';
 import type {CCTVView,DocumentView,Mode,Panel,Save,UIAction} from './contracts';
 
 const startCCTV=():CCTVView=>({camera:'reception',tape:'shift',time:0,duration:24,playing:false,availableFuture:false,evidence:false,zoom:false});
@@ -28,7 +28,17 @@ export default function IsoPage(){
     let settings=readSettings(),mode:Mode='loading',panel:Panel|null=null,back:Panel|null=null,active=getSave(),state=active??newSave();
     let clock=0,noticeUntil=0,notice='',loading='Администрация',target:ObjectId|null=null,documentView:DocumentView|undefined;
     const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
-    let introT=-1,introGo=false,phoneNoteAt=0;
+    let introT=-1,introGo=false,phoneNoteAt=0,zoomWant=false,zoomK=0,zoomMoving=false;
+    // Close looks at the wall: the camera moves up to the breaker, the fuse box or the diagram; the fuse box's knife switch is turned by holding J.
+    let focusK=0,focusId:'breaker'|'fuse'|'diagram'|null=null,crank=0,crankHeld=false,crankSounding=false;
+    const lines=['lights','locks','cctv'] as const;
+    const crankReady=()=>withinReach('fuseBox',state,.85)&&state.breaker.length===3&&!state.fed&&mode==='play'&&!panel;
+    const throwLever=(i:number)=>{
+      if(state.power||!state.doors.technical)return;
+      const line=lines[i]!,before=state.breaker.length,out=pressLine(state,line);
+      const ok=out.state.breaker.length>before;
+      sound.lever(settings,ok);apply(out);
+    };
     const endIntro=()=>{if(introT<0)return;introT=-1;sound.stopIntro();world?.endIntro();sound.camOn(settings);yaw=START_YAW;pitch=-.06;emit();};
     let markers:{id:ObjectId;x:number;y:number}[]=[],markClock=0,perf=coarse?1:0;
     let cctv=startCCTV(),saveClock=0,uiClock=0,walked=0,drawer=false;
@@ -213,6 +223,7 @@ export default function IsoPage(){
     const unlock=()=>void sound.unlock().catch(()=>{});
     activateAudio.current=unlock;
     click.current=event=>{
+      if(panel==='breaker'&&fpOn()){const i=world?.pickLever(event)??-1;if(i>=0)throwLever(i);return;}
       if(!canMenu())return;
       unlock();
       if(mode!=='play'||panel)return;
@@ -233,11 +244,14 @@ export default function IsoPage(){
         else if(mode==='play'){e.preventDefault();dispatch.current({type:'panel',panel:'pause'});}
         return;
       }
+      if((panel==='breaker'||panel==='document'&&documentView?.wall)&&fpOn()&&e.code===settings.keys.interact){e.preventDefault();if(!e.repeat)dispatch.current({type:'close'});return;}
       if(panel==='document'&&fpOn()&&e.code===settings.keys.interact){e.preventDefault();if(!e.repeat)dispatch.current({type:'close'});return;}
+      if(e.code==='KeyR'&&mode==='play'&&!panel&&!(e.target instanceof HTMLInputElement)){e.preventDefault();zoomWant=true;return;}
       if(panel||mode!=='play'||(e.target instanceof HTMLInputElement))return;
       if(e.code===settings.keys.light){e.preventDefault();if(!e.repeat)flash();return;}
       if(e.code==='KeyG'){e.preventDefault();if(!e.repeat)drop();return;}
       if(fpOn()&&e.code.startsWith('Arrow')){e.preventDefault();keys.add(e.code);return;}
+      if(e.code==='KeyJ'&&crankReady()){e.preventDefault();keys.add('KeyJ');return;}
       if(e.code==='Tab'||e.code==='KeyJ'||e.code===settings.keys.interact){
         e.preventDefault();if(e.repeat)return;
         if(e.code===settings.keys.interact)use(target);
@@ -246,8 +260,8 @@ export default function IsoPage(){
       }
       if(Object.values(settings.keys).includes(e.code)){e.preventDefault();keys.add(e.code);}
     };
-    const keyup=(e:KeyboardEvent)=>{keys.delete(e.code);};
-    const blur=()=>{keys.clear();speed=0;vx=vz=0;persist();};
+    const keyup=(e:KeyboardEvent)=>{keys.delete(e.code);if(e.code==='KeyR')zoomWant=false;};
+    const blur=()=>{keys.clear();zoomWant=false;speed=0;vx=vz=0;persist();};
     const mouse=(e:MouseEvent)=>{
       if(document.pointerLockElement!==surface||mode!=='play'||panel||!fpOn())return;
       const k=LOOK_RAD*settings.sensitivity;
@@ -280,6 +294,19 @@ export default function IsoPage(){
     const step=(dt:number,draw=true)=>{
       const gameplay=mode==='play'&&!panel&&!portraitBlocked()&&introT<0;
       clock+=dt;
+      {
+        crankHeld=gameplay&&fpOn()&&keys.has('KeyJ')&&crankReady();
+        if(crankHeld)crank=Math.min(1,crank+dt/4.4);else if(!state.fed)crank=Math.max(0,crank-dt*.4);
+        if(crankHeld!==crankSounding){crankSounding=crankHeld;if(crankHeld)sound.crankStart(settings);else sound.crankStop(crank);}
+        if(crankHeld)sound.crankProgress(crank);
+        if(crank>=1&&!state.fed&&crankReady()){crankHeld=false;crankSounding=false;sound.crankStop(1);sound.powerOn(settings);apply(feedPower(state));}
+        const fid:typeof focusId=panel==='breaker'?'breaker':panel==='document'&&documentView?.wall?'diagram':crankHeld?'fuse':null;
+        if(fid)focusId=fid;
+        focusK+=((fid?1:0)-focusK)*Math.min(1,dt*(fid?4.5:5.5));if(Math.abs((fid?1:0)-focusK)<.004)focusK=fid?1:0;
+        if(focusK===0)focusId=null;
+      }
+      {const want=zoomWant&&gameplay&&fpOn()?1:0,prev=zoomK;zoomK+=(want-zoomK)*Math.min(1,dt*(want?5.5:7));if(Math.abs(want-zoomK)<.004)zoomK=want;
+        const moving=Math.abs(zoomK-prev)>.0004;if(moving&&!zoomMoving)sound.zoom(settings,want>zoomK?1:-1);zoomMoving=moving;}
       if(phoneNoteAt>0&&clock>=phoneNoteAt){phoneNoteAt=0;if(mode==='play'&&!panel)commit('phone');}
       if(introT>=0&&!document.hidden&&world?.introReady&&introGo){introT+=dt;if(introT>=INTRO_DURATION)endIntro();}
       if(gameplay&&world){
@@ -349,7 +376,7 @@ export default function IsoPage(){
       sound.mix(settings,{paused,power:state.power,menu});
       if(!document.hidden&&introT>=0&&mode==='play')world?.renderIntro(introT,settings,clock,perf);
       else if(!document.hidden&&(mode==='title'||mode==='play'||mode==='complete')){
-        world?.render({state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,perf,reading:panel==='document'&&fpOn(),readingDoc:documentView,
+        world?.render({zoom:zoomK,focusK,focusId,crank,state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,perf,reading:panel==='document'&&fpOn()&&!documentView?.wall,readingDoc:documentView,
           direction,speed,target:panel?null:target,drawer,look:{yaw,pitch},crouch,sprint:sprinting,press,kick});
       }
     };

@@ -432,6 +432,8 @@ export type FpInput = {
  */
 export class FpRig {
   readonly camera = new T.PerspectiveCamera(74, 1, .09, 40);
+  /** the zoom of the camera: 0 = normal, 1 = fully zoomed in (the field of view narrows) */
+  zoom = 0;
   private bobPhase = 0;
   private eye = EYE_STAND;
   private prevYaw = 0; private prevPitch = 0;
@@ -488,6 +490,7 @@ export class FpRig {
     this.camera.updateMatrixWorld(true);
 
     this.prevYaw = i.yaw; this.prevPitch = i.pitch; this.started = true;
+    { const fov = 74 * (1 - .56 * this.zoom * this.zoom * (3 - 2 * this.zoom)); if (Math.abs(this.camera.fov - fov) > .02) { this.camera.fov = fov; this.camera.updateProjectionMatrix(); } }
     this.vm.update({ dt, time: i.time, yaw: i.yaw, pitch: i.pitch, hold: i.armShown ?? (i.hasLight ? 1 : 0), press: i.press, kick: i.kick, speed: i.speed, run, lit: i.lightOn });
     this.camera.updateMatrixWorld(true);
   }

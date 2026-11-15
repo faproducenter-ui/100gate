@@ -26,7 +26,7 @@ async function loadDecor():Promise<Decor>{
   return {phone:phone?.scene,cctv:cctv?.scene,fusebox:fusebox?.scene,battery:battery?.scene,key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations},doorKit:doorKit?.scene};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
-  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;reading?:boolean;readingDoc?:{title:string;text:string};
+  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;zoom?:number;focusK?:number;focusId?:'breaker'|'fuse'|'diagram'|null;crank?:number;reading?:boolean;readingDoc?:{title:string;text:string};
   look:{yaw:number;pitch:number};crouch:number;sprint:boolean;press:number;kick:number};
 const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
 const smooth=T.MathUtils.smoothstep;
@@ -114,10 +114,28 @@ export class IsoWorld {
   private readonly analog=new AnalogPass();
   private lowHeight=480;
   private lastAim?:ObjectId;
+  private powerAt=-1;
+  private readonly lampLevel:number[]=[];
   /** the supplied props: the telephone with its dial, the cameras with their LEDs, the fuse box with its lever, the battery */
   phoneDial?:T.Object3D;
   private camLeds:{led:T.Mesh;halo:T.Sprite}[]=[];
   fuseLever?:T.Object3D;
+  private readonly focusTmp=new T.PerspectiveCamera();
+  /** Where the camera goes to look closely at something on the wall (position, point looked at, field of view). */
+  private focusPose(id:'breaker'|'fuse'|'diagram'){
+    const t=this.env.targets[id==='breaker'?'breaker':id==='fuse'?'fuseBox':'powerDiagram']!,p=t.getWorldPosition(new T.Vector3());
+    if(id==='breaker')return {pos:p.clone().add(new T.Vector3(0,.06,1.0)),look:p.clone().add(new T.Vector3(0,0,-.2)),fov:40};
+    if(id==='fuse')return {pos:p.clone().add(new T.Vector3(0,.12,1.05)),look:p.clone().add(new T.Vector3(.02,.1,-.2)),fov:38};
+    return {pos:p.clone().add(new T.Vector3(0,.02,1.05)),look:p.clone().add(new T.Vector3(0,0,-.2)),fov:40};
+  }
+  /** The breaker lever under the cursor (0, 1, 2) or -1. */
+  pickLever(event:{clientX:number;clientY:number}):number{
+    const box=this.canvas.getBoundingClientRect();
+    this.cursor.set((event.clientX-box.left)/box.width*2-1,1-(event.clientY-box.top)/box.height*2);
+    this.clickRay.setFromCamera(this.cursor,this.fps.camera);this.clickRay.far=4;
+    const hit=this.clickRay.intersectObjects(this.env.levers,true)[0];this.clickRay.far=Infinity;
+    return hit?Number(hit.object.userData.lever??-1):-1;
+  }
   /** the dial of the telephone is pulled round to the stop and runs back; seconds since it was started, -1 when idle */
   private phoneT=-1;
   beginPhone(){if(this.phoneT>=0||!this.phoneDial)return false;this.phoneT=0;return true;}
@@ -535,6 +553,7 @@ export class IsoWorld {
     if(fp){
       // Hand interaction: where the hand reaches (the prop, or the spot it is put down) and how the fingers close.
       const reading=!!frame.reading;
+      const focusK=frame.focusK??0;
       this.paperW=T.MathUtils.damp(this.paperW,reading?1:0,reading?4.2:5.2,dt);
       if(reading&&frame.readingDoc&&this.paperDocKey!==frame.readingDoc.title){this.paperDocKey=frame.readingDoc.title;this.fps.vm.setPaperText(frame.readingDoc.title,frame.readingDoc.text);}
       if(!reading&&this.paperW<.01)this.paperDocKey='';
@@ -563,7 +582,7 @@ export class IsoWorld {
       if(paperUp)target=this.paperPose;
       this.fps.vm.setPaper(this.paperW);
       this.fps.vm.setHand({reach:paperUp?this.paperW:hf.reach,grip:paperUp?.35+.2*this.paperW:hf.grip,carrying:paperUp?false:hf.carrying,target,up:new T.Vector3(0,1,0).transformDirection(eyeCam.matrixWorldInverse),fovMatch:this.fovMatch,mainFov:eyeCam.fov});
-      const armShown=paperUp||active||this.fps.vm.igniting||this.fps.vm.lighterPlaying?1:hf.phase==='holding'?1:0;
+      const armShown=focusK>.06?0:paperUp||active||this.fps.vm.igniting||this.fps.vm.lighterPlaying?1:hf.phase==='holding'?1:0;
       // Bending over: the body leans toward what the hand goes for, so the arm can reach it naturally.
       let bend:{x:number;y:number;z:number}|undefined;
       const goalWorld=hf.phase==='reaching'?(this.grabAt?new T.Vector3().setFromMatrixPosition(this.grabAt):hf.item?.object.position):
@@ -573,10 +592,16 @@ export class IsoWorld {
         const amount=Math.min(1.15,Math.max(0,dist-.33))*hf.reach;   // up to a deep squat for things on the floor
         d.setLength(amount);bend={x:d.x,y:d.y*1.1,z:d.z};
       }
+      this.fps.zoom=frame.zoom??0;
       this.fps.update({x:state.x,z:state.z,yaw:frame.look.yaw,pitch:frame.look.pitch,speed:frame.speed,sprint:frame.sprint,
         crouch:frame.crouch,dt:frame.paused&&!reading?0:dt,time,hasLight:state.items.includes('torch'),lightOn:state.lightOn,
         press:frame.press,kick:frame.kick,armShown,bend});
       if(this.paperPoseDirty){this.paperPoseDirty=false;this.publishPaperQuad();}
+      if(focusK>.001&&frame.focusId){
+        const f=this.focusPose(frame.focusId),cam=this.fps.camera,e=focusK*focusK*(3-2*focusK);
+        cam.position.lerp(f.pos,e);this.focusTmp.position.copy(f.pos);this.focusTmp.lookAt(f.look);cam.quaternion.slerp(this.focusTmp.quaternion,e);
+        cam.fov=T.MathUtils.lerp(cam.fov,f.fov,e);cam.updateProjectionMatrix();cam.updateMatrixWorld(true);
+      }
       this.cast.setCrouch(frame.crouch);
       const cam=this.fps.camera;
       this.cast.setFirstPerson({yaw:frame.look.yaw,eye:cam.position.clone(),forward:new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion),
@@ -586,6 +611,10 @@ export class IsoWorld {
     if(this.env.drawer)this.env.drawer.position.z=T.MathUtils.damp(this.env.drawer.position.z,this.drawerRest+(drawerOpen?.15:0),11,dt);
     if(this.lighterProp)this.lighterProp.visible=!state.items.includes('lighter');
     this.updatePhone(dt);
+    // the breaker levers rise smoothly when their line is on; the knife switch of the fuse box turns with the crank
+    {const lines=['lights','locks','cctv'] as const;
+      this.env.levers.forEach((l,i)=>{const on=state.breaker.includes(lines[i]!);l.position.y=T.MathUtils.damp(l.position.y,(l.userData.baseY as number)+(on?.058:0),9,dt);l.rotation.x=T.MathUtils.damp(l.rotation.x,on?-.28:.28,9,dt);});
+      if(this.fuseLever)this.fuseLever.rotation.z=T.MathUtils.damp(this.fuseLever.rotation.z,state.fed?-2.1:-(frame.crank??0)*2.1,state.fed?4:14,dt);}
     if(this.batteryProp)this.batteryProp.visible=!state.items.includes('battery');
     // The cameras' red LEDs breathe slowly once the power is on (not before).
     {const k=state.power?Math.pow(.5+.5*Math.sin(time*2.3),2.2):0;for(const c of this.camLeds){(c.led.material as T.MeshBasicMaterial).opacity=k;(c.halo.material as T.SpriteMaterial).opacity=k*.75;}}
@@ -593,7 +622,16 @@ export class IsoWorld {
     this.cast.update(frame.paused?0:dt,state.x,state.z,frame.direction.x,frame.direction.z,frame.speed);
     for(const [i,l] of this.env.powerLights.entries()){
       const value=this.poweredLevels[i]!;
-      l.intensity=(state.power?value:value*.07)*(fp?.3:1);
+      // The current arrives: the lamps strike one after another, flicker and settle (smoothly, never a hard cut); later a lamp now and then dips.
+      let k=state.power?1:.07;
+      if(state.power){
+        if(this.powerAt<0)this.powerAt=time;
+        const a=time-this.powerAt-i*.45,ramp=Math.min(1,Math.max(0,a/2.2));
+        const f=.5+.5*Math.sin(a*19+i*2.3)*Math.sin(a*7.1+i);
+        k=a<0?.07:ramp>=1?1-.18*Math.max(0,Math.sin(time*.9+i*5)*Math.sin(time*2.7+i))**6:Math.min(1,.07+ramp*ramp*.4+ramp*(1-ramp)*2.2*Math.max(0,f));
+        this.lampLevel[i]=T.MathUtils.damp(this.lampLevel[i]??k,k,26,dt);k=this.lampLevel[i]!;
+      }else{this.powerAt=-1;this.lampLevel[i]=k;}
+      l.intensity=value*k*(fp?.3:1);
     }
     // In play the house is a dark, half-lit place: the torch has to do the work.
     this.renderer.toneMappingExposure=fp?.86:1.13;

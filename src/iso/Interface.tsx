@@ -34,7 +34,7 @@ export interface IsoInterfaceProps {
   introPrompt?:string;
   loading:string;
   cctv:CCTVView;
-  document?:{title:string; text:string};
+  document?:{title:string; text:string; wall?:boolean};
   /** First-person state: pointer lock and sprint stamina (0..1). */
   fp?:{locked:boolean; stamina:number};
   onAction:(action:UIAction)=>void;
@@ -399,11 +399,11 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
     case 'journal':modal=<Modal key="journal" title="Журнал" testId="iso-journal" variant="iso-notebook-shell" onClose={close}>
       <Journal state={state}/>
     </Modal>;break;
-    case 'breaker':modal=<Modal key="breaker" title="Электрощит" testId="iso-breaker" variant="iso-breaker-shell" onClose={close}>
+    case 'breaker':if(settings.view==='fps')modal=null;else modal=<Modal key="breaker" title="Электрощит" testId="iso-breaker" variant="iso-breaker-shell" onClose={close}>
       <Breaker state={state} notice={notice} act={act}/>
     </Modal>;break;
     case 'cctv':modal=<CCTV view={cctv} act={act} notice={notice}/>;break;
-    case 'document':if(document&&settings.view==='fps')modal=<div className="iso-paper" role="dialog" aria-label={document.title} data-testid="iso-document" onClick={close}>
+    case 'document':if(document&&settings.view==='fps'&&document.wall)modal=null;else if(document&&settings.view==='fps')modal=<div className="iso-paper" role="dialog" aria-label={document.title} data-testid="iso-document" onClick={close}>
       <h2>{document.title}</h2><article>{document.text}</article><p className="iso-paper-key">[{keyLabel(settings.keys.interact)}] убрать</p></div>;
       else if(document)modal=<Modal key="document" title={document.title} testId="iso-document" variant="iso-document-shell" onClose={close}>
       <article>{document.text}</article>
@@ -449,5 +449,7 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
       <div className="iso-modal-actions"><ActionButton act={act} action={{type:'title'}}>В главное меню<ArrowRight/></ActionButton></div>
     </Modal>}
     {modal}
+    {panel==='breaker'&&settings.view==='fps'&&<p className="iso-focus-hint">Щёлкните по рычагам по порядку, как на схеме · [{keyLabel(settings.keys.interact)}] отойти</p>}
+    {panel==='document'&&document?.wall&&settings.view==='fps'&&<div className="iso-wallnote" role="dialog" aria-label={document.title}><h2>{document.title}</h2><p>{document.text}</p><small>[{keyLabel(settings.keys.interact)}] отойти</small></div>}
   </div>;
 }

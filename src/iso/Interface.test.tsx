@@ -19,7 +19,7 @@ describe('administration interface',()=>{
     expect(markup()).not.toMatch(/Дом, который|Психологический хоррор|Дело №100/);
   });
   it('renders all three independent breakers with a real reset control',()=>{
-    const html=markup({mode:'play',panel:'breaker'});
+    const html=markup({mode:'play',panel:'breaker',settings:{...base.settings,view:'iso'}});
     for(const line of ['lights','locks','cctv'])expect(html).toContain('data-testid="iso-breaker-'+line+'"');
     expect(html).toContain('data-testid="iso-breaker-reset"');
   });
