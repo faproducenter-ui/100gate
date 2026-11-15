@@ -26,7 +26,7 @@ async function loadDecor():Promise<Decor>{
   return {phone:phone?.scene,cctv:cctv?.scene,fusebox:fusebox?.scene,battery:battery?.scene,key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations},doorKit:doorKit?.scene};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
-  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;charge?:number;zoom?:number;focusK?:number;focusId?:'breaker'|'fuse'|'diagram'|null;crank?:number;reading?:boolean;readingDoc?:{title:string;text:string};
+  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;charge?:number;zoom?:number;focusK?:number;focusId?:'breaker'|'fuse'|'diagram'|'inventory'|null;crank?:number;reading?:boolean;readingDoc?:{title:string;text:string};
   look:{yaw:number;pitch:number};crouch:number;sprint:boolean;press:number;kick:number};
 const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
 const smooth=T.MathUtils.smoothstep;
@@ -126,7 +126,13 @@ export class IsoWorld {
   fuseLever?:T.Object3D;
   private readonly focusTmp=new T.PerspectiveCamera();
   /** Where the camera goes to look closely at something on the wall (position, point looked at, field of view). */
-  private focusPose(id:'breaker'|'fuse'|'diagram'){
+  private focusPose(id:'breaker'|'fuse'|'diagram'|'inventory'){
+    if(id==='inventory'){
+      // down on one knee: the eye drops to knee height and looks at the floor just ahead
+      const cam=this.fps.camera,dir=cam.getWorldDirection(new T.Vector3());dir.y=0;if(dir.lengthSq()<1e-4)dir.set(0,0,-1);dir.normalize();
+      const pos=new T.Vector3(cam.position.x,.82,cam.position.z).addScaledVector(dir,.1);
+      return {pos,look:pos.clone().addScaledVector(dir,.55).add(new T.Vector3(0,-.62,0)),fov:62};
+    }
     const t=this.env.targets[id==='breaker'?'breaker':id==='fuse'?'fuseBox':'powerDiagram']!,p=t.getWorldPosition(new T.Vector3());
     if(id==='breaker')return {pos:p.clone().add(new T.Vector3(0,.06,1.0)),look:p.clone().add(new T.Vector3(0,0,-.2)),fov:40};
     if(id==='fuse')return {pos:p.clone().add(new T.Vector3(0,.12,1.05)),look:p.clone().add(new T.Vector3(.02,.1,-.2)),fov:38};

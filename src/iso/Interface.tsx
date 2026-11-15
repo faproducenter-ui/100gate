@@ -280,6 +280,37 @@ function Options({settings,act}:{settings:Settings;act:Act}){
   </div>;
 }
 
+/** Simple drawn glyphs for the things on the cloth: they lie on the canvas like the player's gear in front of them, not in a menu. */
+function Glyph({id}:{id:string}){
+  const common={fill:'none',stroke:'currentColor',strokeWidth:2.2,strokeLinecap:'round',strokeLinejoin:'round'} as const;
+  switch(id){
+    case 'torch':return <svg viewBox="0 0 64 64" aria-hidden="true"><path {...common} d="M20 56 L42 14"/><path {...common} d="M38 6 q10 2 12 12 q-8 4 -14 -2 z" fill="currentColor" opacity=".35"/><path {...common} d="M36 12 l12 6"/></svg>;
+    case 'lighter':return <svg viewBox="0 0 64 64" aria-hidden="true"><rect {...common} x="22" y="22" width="20" height="34" rx="3"/><path {...common} d="M24 22 v-8 h16 v8"/><path {...common} d="M32 14 q-4 -8 2 -10 q2 6 -2 10"/></svg>;
+    case 'battery':return <svg viewBox="0 0 64 64" aria-hidden="true"><rect {...common} x="20" y="14" width="24" height="42" rx="2"/><rect {...common} x="26" y="8" width="5" height="6"/><rect {...common} x="35" y="9" width="5" height="5"/><path {...common} d="M26 26 h12 M26 34 h12"/></svg>;
+    case 'technicalKey':case 'archiveKey':return <svg viewBox="0 0 64 64" aria-hidden="true"><circle {...common} cx="20" cy="22" r="9"/><path {...common} d="M26 28 l24 24 m-8 -8 l6 -6 m-12 -2 l6 -6"/></svg>;
+    case 'vhs':return <svg viewBox="0 0 64 64" aria-hidden="true"><rect {...common} x="8" y="18" width="48" height="30" rx="2"/><circle {...common} cx="22" cy="33" r="5"/><circle {...common} cx="42" cy="33" r="5"/><path {...common} d="M14 44 h36"/></svg>;
+    case 'plan':return <svg viewBox="0 0 64 64" aria-hidden="true"><path {...common} d="M10 14 l14 -4 l16 6 l14 -4 v38 l-14 4 l-16 -6 l-14 4 z"/><path {...common} d="M24 10 v38 M40 16 v38"/></svg>;
+    default:return <svg viewBox="0 0 64 64" aria-hidden="true"><path {...common} d="M16 8 h22 l10 10 v38 h-32 z"/><path {...common} d="M38 8 v10 h10 M22 28 h20 M22 36 h20 M22 44 h14"/></svg>;
+  }
+}
+
+function InventoryCloth({state,close}:{state:Save;close:()=>void}){
+  const [selection,select]=useState<Save['items'][number]|null>(null);
+  const selected=selection&&state.items.includes(selection)?selection:state.items[0];
+  const item=selected?ITEMS[selected]:undefined;
+  return <div className="iso-cloth-wrap" data-testid="iso-inventory" onClick={close}>
+    <div className="iso-cloth" onClick={e=>e.stopPropagation()}>
+      <div className="iso-cloth-surface">
+        {state.items.length===0&&<p className="iso-cloth-empty">Пусто.</p>}
+        {state.items.map((id,i)=><button type="button" key={id} className="iso-cloth-item" aria-pressed={id===selected} style={{['--i' as string]:i}} onClick={()=>select(id)}>
+          <Glyph id={id}/><span>{ITEMS[id].name}</span></button>)}
+      </div>
+    </div>
+    {item&&<div className="iso-cloth-note" onClick={e=>e.stopPropagation()}><b>{item.name}</b><span>{item.description}</span></div>}
+    <p className="iso-focus-hint">[Tab] убрать · камера заряд: {Math.round(state.charge)}%</p>
+  </div>;
+}
+
 function Inventory({state}:{state:Save}){
   const [selection,select]=useState<Save['items'][number]|null>(null);
   const selected=selection&&state.items.includes(selection)?selection:state.items[0];
@@ -396,7 +427,7 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
     case 'settings':modal=<Modal key="settings" title="Настройки" testId="iso-settings" variant="iso-settings-shell" onClose={close}>
       <Options settings={settings} act={act}/>
     </Modal>;break;
-    case 'inventory':modal=<Modal key="inventory" title="Инвентарь" testId="iso-inventory" variant="iso-notebook-shell" onClose={close}>
+    case 'inventory':if(settings.view==='fps')modal=<InventoryCloth state={state} close={close}/>;else modal=<Modal key="inventory" title="Инвентарь" testId="iso-inventory" variant="iso-notebook-shell" onClose={close}>
       <Inventory state={state}/>
     </Modal>;break;
     case 'journal':modal=<Modal key="journal" title="Журнал" testId="iso-journal" variant="iso-notebook-shell" onClose={close}>

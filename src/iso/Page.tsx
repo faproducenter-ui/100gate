@@ -31,7 +31,7 @@ export default function IsoPage(){
     let dead=false;
     let introT=-1,introGo=false,phoneNoteAt=0,zoomWant=false,zoomK=0,zoomMoving=false;
     // Close looks at the wall: the camera moves up to the breaker, the fuse box or the diagram; the fuse box's knife switch is turned by holding J.
-    let focusK=0,focusId:'breaker'|'fuse'|'diagram'|null=null,crank=0,crankHeld=false,crankSounding=false;
+    let focusK=0,focusId:'breaker'|'fuse'|'diagram'|'inventory'|null=null,crank=0,crankHeld=false,crankSounding=false;
     const lines=['lights','locks','cctv'] as const;
     const crankReady=()=>withinReach('fuseBox',state,.85)&&state.breaker.length===3&&!state.fed&&mode==='play'&&!panel;
     const swapBattery=()=>{
@@ -252,6 +252,7 @@ export default function IsoPage(){
         else if(mode==='play'){e.preventDefault();dispatch.current({type:'panel',panel:'pause'});}
         return;
       }
+      if(e.code==='Tab'&&panel==='inventory'){e.preventDefault();if(!e.repeat)dispatch.current({type:'close'});return;}
       if((panel==='breaker'||panel==='document'&&documentView?.wall)&&fpOn()&&e.code===settings.keys.interact){e.preventDefault();if(!e.repeat)dispatch.current({type:'close'});return;}
       if(panel==='document'&&fpOn()&&e.code===settings.keys.interact){e.preventDefault();if(!e.repeat)dispatch.current({type:'close'});return;}
       if(e.code==='KeyR'&&mode==='play'&&!panel&&!(e.target instanceof HTMLInputElement)){e.preventDefault();zoomWant=true;return;}
@@ -315,7 +316,7 @@ export default function IsoPage(){
         if(crankHeld!==crankSounding){crankSounding=crankHeld;if(crankHeld)sound.crankStart(settings);else sound.crankStop(crank);}
         if(crankHeld)sound.crankProgress(crank);
         if(crank>=1&&!state.fed&&crankReady()){crankHeld=false;crankSounding=false;sound.crankStop(1);sound.powerOn(settings);apply(feedPower(state));}
-        const fid:typeof focusId=panel==='breaker'?'breaker':panel==='document'&&documentView?.wall?'diagram':crankHeld?'fuse':null;
+        const fid:typeof focusId=panel==='breaker'?'breaker':panel==='inventory'&&fpOn()?'inventory':panel==='document'&&documentView?.wall?'diagram':crankHeld?'fuse':null;
         if(fid)focusId=fid;
         focusK+=((fid?1:0)-focusK)*Math.min(1,dt*(fid?4.5:5.5));if(Math.abs((fid?1:0)-focusK)<.004)focusK=fid?1:0;
         if(focusK===0)focusId=null;

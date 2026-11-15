@@ -653,3 +653,17 @@ html, body, #root { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
 .iso-ui .iso-cctv-deck button:is(:hover,[aria-pressed="true"]):not(:disabled) { background: #1b5a2a77 !important; border-color: #9affb0aa !important; color: #e8fff0 !important; }
 .iso-ui .iso-cctv-deck button:disabled { opacity: .35; }
 .iso-ui .iso-cctv-time, .iso-ui .iso-cctv-time span { color: #b9f5c6 !important; }
+
+/* the inventory: the player crouches and spreads a cloth on the floor; the things lie on it */
+.iso-cloth-wrap { position: absolute; inset: 0; z-index: 12; display: grid; align-items: end; justify-items: center; background: radial-gradient(ellipse at 50% 70%, #00000000 30%, #000000aa 100%); }
+.iso-cloth { width: min(86vw, 70em); height: 54vh; perspective: 1100px; perspective-origin: 50% 20%; margin-bottom: 17vh; pointer-events: none; }
+.iso-cloth-surface { width: 100%; height: 100%; transform: rotateX(32deg); transform-origin: 50% 100%; background:
+  repeating-linear-gradient(0deg, #00000014 0 2px, transparent 2px 5px), repeating-linear-gradient(90deg, #00000012 0 2px, transparent 2px 6px), linear-gradient(#2c2f26, #1f2220);
+  box-shadow: 0 0 0 1px #0007, 0 20px 40px #000c, inset 0 0 60px #000a; border-radius: 4px; display: flex; flex-wrap: wrap; gap: 1.2em; align-content: flex-start; justify-content: center; padding: 3em; box-sizing: border-box; animation: iso-cloth-in .45s ease both; }
+.iso-cloth-item { pointer-events: auto; transform: rotate(calc(var(--i) * 17deg - 20deg)); width: 8em; height: 9em; background: none; border: 1px solid transparent; color: #d9d4bd; font-family: var(--analog-font); font-size: .84rem; letter-spacing: .06em; display: grid; place-items: center; gap: .3em; cursor: pointer; text-shadow: 0 2px 3px #000; filter: drop-shadow(0 6px 5px #000a); }
+.iso-cloth-item svg { width: 5.6em !important; height: 5.6em !important; min-width: 5.6em; }
+.iso-cloth-item:hover, .iso-cloth-item[aria-pressed="true"] { color: #fff3c9; border-color: #fff3c966; background: #ffffff0d; }
+.iso-cloth-empty { color: #8f927f; font-family: var(--analog-font); margin: 6em auto; }
+.iso-cloth-note { position: absolute; left: 50%; bottom: 5%; transform: translateX(-50%); width: min(90vw, 36em); display: grid; gap: .3em; padding: .8em 1.1em; background: #02080ac4; border: 1px solid #c8e2de44; color: #e2efec; font-family: var(--analog-font); font-size: .82rem; line-height: 1.5; }
+.iso-cloth-note b { color: #ffd28a; letter-spacing: .1em; text-transform: uppercase; }
+@keyframes iso-cloth-in { from { opacity: 0; transform: rotateX(32deg) translateY(14vh); } to { opacity: 1; transform: rotateX(32deg) translateY(0); } }
