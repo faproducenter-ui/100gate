@@ -10,18 +10,20 @@ import {boxProjectUV} from './env-kit';
 import {createPhysics,type Physics} from './physics';
 import {HandController,Pickup} from './interaction';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {MeshoptDecoder} from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import {Intro,loadTrailerAssets} from './intro';
+import {makeBattery,makeCamera,makeFuseBox,makePhone} from './props';
 import {DOORS,OBJECTS,ROOMS,doorFor,doorSwing,movedProps,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
 import type {CameraId,CCTVView,Save,Settings} from './contracts';
 
 type Cast=Awaited<ReturnType<typeof loadActor>>;
-type Decor={key?:T.Object3D;book?:T.Object3D;viewmodel?:{scene:T.Object3D;animations:T.AnimationClip[]};doorKit?:T.Object3D};
+type Decor={phone?:T.Object3D;cctv?:T.Object3D;fusebox?:T.Object3D;battery?:T.Object3D;key?:T.Object3D;book?:T.Object3D;viewmodel?:{scene:T.Object3D;animations:T.AnimationClip[]};doorKit?:T.Object3D};
 async function loadDecor():Promise<Decor>{
   const gltf=async(path:string)=>{
-    try{return await new GLTFLoader().loadAsync(import.meta.env.BASE_URL+path);}catch{return undefined;}
+    try{const l=new GLTFLoader();l.setMeshoptDecoder(MeshoptDecoder);return await l.loadAsync(import.meta.env.BASE_URL+path);}catch{return undefined;}
   };
-  const [key,book,viewmodel,doorKit]=await Promise.all([gltf('assets/iso/key-tag.glb'),gltf('assets/iso/antique-book.glb'),gltf('assets/iso/viewmodel-8.glb'),gltf('assets/iso/door-kit.glb')]);
-  return {key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations},doorKit:doorKit?.scene};
+  const [key,book,viewmodel,doorKit,phone,cctv,fusebox,battery]=await Promise.all([gltf('assets/iso/key-tag.glb'),gltf('assets/iso/antique-book.glb'),gltf('assets/iso/viewmodel-8.glb'),gltf('assets/iso/door-kit.glb'),gltf('assets/iso/phone-sfm.glb'),gltf('assets/iso/cctv-cam.glb'),gltf('assets/iso/fusebox.glb'),gltf('assets/iso/battery9v.glb')]);
+  return {phone:phone?.scene,cctv:cctv?.scene,fusebox:fusebox?.scene,battery:battery?.scene,key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations},doorKit:doorKit?.scene};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
   direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;reading?:boolean;readingDoc?:{title:string;text:string};
@@ -112,6 +114,45 @@ export class IsoWorld {
   private readonly analog=new AnalogPass();
   private lowHeight=480;
   private lastAim?:ObjectId;
+  /** the supplied props: the telephone with its dial, the cameras with their LEDs, the fuse box with its lever, the battery */
+  phoneDial?:T.Object3D;
+  private camLeds:{led:T.Mesh;halo:T.Sprite}[]=[];
+  fuseLever?:T.Object3D;
+  /** the dial of the telephone is pulled round to the stop and runs back; seconds since it was started, -1 when idle */
+  private phoneT=-1;
+  beginPhone(){if(this.phoneT>=0||!this.phoneDial)return false;this.phoneT=0;return true;}
+  get phoneBusy(){return this.phoneT>=0;}
+  private updatePhone(dt:number){
+    if(this.phoneT<0||!this.phoneDial)return;
+    this.phoneT+=dt;const t=this.phoneT;
+    const out=Math.min(1,t/1.1),back=Math.min(1,Math.max(0,(t-1.35)/1.15)),e=out*out*(3-2*out);
+    this.phoneDial.rotation.z=-4.3*(e*(1-back));
+    if(t>2.55){this.phoneDial.rotation.z=0;this.phoneT=-1;}
+  }
+  private batteryProp?:T.Object3D;
+  private installProps(decor:Decor){
+    const tel=this.env.targets.phone;
+    if(tel&&decor.phone){
+      for(const c of [...tel.children])c.visible=false;
+      const {group,dial}=makePhone(decor.phone);group.rotation.y=Math.PI;tel.add(group);this.phoneDial=dial;
+    }
+    if(decor.cctv){
+      this.env.root.traverse(o=>{
+        if(o.name!=='Fixed surveillance camera')return;
+        for(const c of [...o.children])c.visible=false;
+        const cam=makeCamera(decor.cctv!);cam.group.position.set(0,-.02,.13);cam.group.rotation.set(.25,Math.PI,0);o.add(cam.group);
+        this.camLeds.push({led:cam.led,halo:cam.halo});
+      });
+    }
+    const fuse=this.env.targets.fuseBox;
+    if(fuse&&decor.fusebox){
+      const fb=makeFuseBox(decor.fusebox);fb.group.scale.setScalar(1.7);fuse.add(fb.group);this.fuseLever=fb.lever;
+    }
+    const spot=this.env.targets.battery;
+    if(spot&&decor.battery){
+      const b=makeBattery(decor.battery);b.rotation.set(0,.6,0);b.rotation.z=Math.PI/2;b.position.y=.0089;spot.add(b);this.batteryProp=spot;
+    }
+  }
   private intro?:Intro;
   private paperW=0;
   /** Where the grip frame of the right hand is while a sheet is read (camera space): the sheet fills the lower middle of the view. */
@@ -221,6 +262,7 @@ export class IsoWorld {
       this.scene.add(book);
       this.env.root.updateMatrixWorld(true);this.restOn(book,.95);
     }
+    this.installProps(decor);
     // Loose props rest on whatever is really under them (floor, desk top, shelf plank), never in the air.
     this.env.root.updateMatrixWorld(true);
     if(this.cabinetKey)this.restOn(this.cabinetKey.root,1.9);
@@ -543,6 +585,10 @@ export class IsoWorld {
     const drawerOpen=frame.drawer||this.fps.vm.lighterPlaying;
     if(this.env.drawer)this.env.drawer.position.z=T.MathUtils.damp(this.env.drawer.position.z,this.drawerRest+(drawerOpen?.15:0),11,dt);
     if(this.lighterProp)this.lighterProp.visible=!state.items.includes('lighter');
+    this.updatePhone(dt);
+    if(this.batteryProp)this.batteryProp.visible=!state.items.includes('battery');
+    // The cameras' red LEDs breathe slowly once the power is on (not before).
+    {const k=state.power?Math.pow(.5+.5*Math.sin(time*2.3),2.2):0;for(const c of this.camLeds){(c.led.material as T.MeshBasicMaterial).opacity=k;(c.halo.material as T.SpriteMaterial).opacity=k*.75;}}
     this.cast.root.visible=!menu&&!cctv&&!fp;   // first person: no body, no legs, no arms of the actor, only the camera and what is held
     this.cast.update(frame.paused?0:dt,state.x,state.z,frame.direction.x,frame.direction.z,frame.speed);
     for(const [i,l] of this.env.powerLights.entries()){
@@ -606,7 +652,7 @@ export class IsoWorld {
         if(fp){
           const eye=this.fps.camera.position,dir=this.fire.position.clone().sub(eye),len=dir.length();
           if(len>.05){
-            dir.divideScalar(len);this.wallRay.set(eye,dir);this.wallRay.far=len;
+            dir.divideScalar(len);this.wallRay.set(eye,dir);this.wallRay.far=len;this.wallRay.camera=this.fps.camera;
             const hit=this.wallRay.intersectObject(this.env.root,true).find(h=>h.object.visible);
             if(hit)this.fire.position.copy(hit.point).addScaledVector(dir,-Math.min(.14,hit.distance*.5));
           }

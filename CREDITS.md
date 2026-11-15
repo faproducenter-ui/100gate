@@ -58,3 +58,10 @@ Recorded sounds used in the opening (public domain, no attribution required; lis
 - Heartbeat sounds: https://opengameart.org/content/heartbeat-sounds
 - Different steps on wood, stone, leaves, gravel and mud: https://opengameart.org/node/5701
 - Car door sound effects: https://opengameart.org/content/cardoorsfx
+
+## Props (CC-BY 4.0, Sketchfab)
+
+- CCTV Camera: Smoggybeard — https://sketchfab.com/Smoggybeard
+- SFM Telephone: G= — https://sketchfab.com/ge
+- Burned soviet fuse box: yaro.pro — https://sketchfab.com/yaro.pro
+- 9V Battery: Da-Luna — https://sketchfab.com/da-luna

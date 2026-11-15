@@ -1,6 +1,6 @@
 import type {DoorStates} from './map';
 
-export type ItemId='lighter'|'torch'|'technicalKey'|'archiveKey'|'plan'|'memo'|'vhs'|'file';
+export type ItemId='lighter'|'torch'|'technicalKey'|'archiveKey'|'plan'|'memo'|'vhs'|'file'|'battery';
 export type PowerLine='lights'|'locks'|'cctv';
 export type CameraId='reception'|'corridor'|'archive';
 export type TapeId='shift'|'future';

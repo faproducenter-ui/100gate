@@ -28,7 +28,7 @@ export default function IsoPage(){
     let settings=readSettings(),mode:Mode='loading',panel:Panel|null=null,back:Panel|null=null,active=getSave(),state=active??newSave();
     let clock=0,noticeUntil=0,notice='',loading='Администрация',target:ObjectId|null=null,documentView:DocumentView|undefined;
     const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
-    let introT=-1,introGo=false;
+    let introT=-1,introGo=false,phoneNoteAt=0;
     const endIntro=()=>{if(introT<0)return;introT=-1;sound.stopIntro();world?.endIntro();sound.camOn(settings);yaw=START_YAW;pitch=-.06;emit();};
     let markers:{id:ObjectId;x:number;y:number}[]=[],markClock=0,perf=coarse?1:0;
     let cctv=startCCTV(),saveClock=0,uiClock=0,walked=0,drawer=false;
@@ -81,6 +81,11 @@ export default function IsoPage(){
         if((world.handPhase==='idle'||world.handPhase==='holding')&&!world.busy&&!world.beginLighter(()=>{commit('drawer');sound.cue('ui',settings);}))commit('drawer');
         return;
       }
+      // The telephone: the dial is pulled round and runs back with its rattle, then the exchange answers with the error tones; only then the message.
+      if(id==='phone'&&world){
+        if(world.phoneBusy||phoneNoteAt>0)return;
+        if(world.beginPhone()){sound.phoneCall(settings);phoneNoteAt=clock+5.3;return;}
+      }
       commit(id);
     };
     const drop=()=>{
@@ -94,7 +99,7 @@ export default function IsoPage(){
       const kind=door&&after.state.doors[door]&&!before.doors[door]?'door':
         after.state.items.length>before.items.length?'pick-up':after.document?'examine':'interact';
       world?.actorAction(kind,OBJECTS[id]);
-      sound.cue(kind==='door'?'door':id==='phone'?'phone':'ui',settings);
+      sound.cue(kind==='door'?'door':id==='phone'?'ui':'ui',settings);
       const gotKey=(['technicalKey','archiveKey'] as const).some(k=>after.state.items.includes(k)&&!before.items.includes(k));
       if(gotKey)sound.jingle(1,settings);
       apply(after);drawer=id==='drawer'&&after.panel==='document';emit();
@@ -275,6 +280,7 @@ export default function IsoPage(){
     const step=(dt:number,draw=true)=>{
       const gameplay=mode==='play'&&!panel&&!portraitBlocked()&&introT<0;
       clock+=dt;
+      if(phoneNoteAt>0&&clock>=phoneNoteAt){phoneNoteAt=0;if(mode==='play'&&!panel)commit('phone');}
       if(introT>=0&&!document.hidden&&world?.introReady&&introGo){introT+=dt;if(introT>=INTRO_DURATION)endIntro();}
       if(gameplay&&world){
         const k=settings.keys,ax=Number(keys.has(k.right))-Number(keys.has(k.left)),az=Number(keys.has(k.down))-Number(keys.has(k.up));

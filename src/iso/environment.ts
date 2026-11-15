@@ -337,6 +337,7 @@ export function buildEnvironment(opts:{modelFrames?:boolean}={}):AdminEnvironmen
       case 'shelf':
         shelf(g,m,f.w,f.d,.91,534);
         cardboard(g,m,.275,.727,.01,.35,.251,.34,'1989'); // rests on the top plank
+        set('battery',group(g,.36,.74,.0,'Battery spot'));
         nearFurniture.push(g);
         break;
       case 'waiting':
@@ -398,6 +399,7 @@ export function buildEnvironment(opts:{modelFrames?:boolean}={}):AdminEnvironmen
     }
   }
   const plan=plans(rooms.reception,m,-.84,1.48,.100,'building');set('buildingPlan',plan);live.add(plan);
+  set('fuseBox',group(rooms.technical,-1.2,1.3,-4.78,'Fuse box spot'));
   const diag=plans(rooms.technical,m,-2.35,1.52,-4.895,'diagram');set('powerDiagram',diag);live.add(diag);
   alarmCamera(rooms.reception,m,-.72,2.31,.135,-.25);
   alarmCamera(rooms.archive,m,2.78,2.29,-4.844,.50);

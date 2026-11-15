@@ -79,6 +79,43 @@ export class IsoSound {
     source.connect(filter).connect(gain).connect(master);source.start(t,Math.random()*.9,length+.02);
     source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
   }
+  /**
+   * The old telephone: the dial is pulled round (ratchet ticks), runs back on its governor (a dry rattle, the finger-wheel ticks), the line clicks,
+   * and the exchange answers with the three rising tones of an error message and a short busy signal. Synthesised; about 3.9 s.
+   */
+  phoneCall(s:Settings){
+    const ctx=this.context,master=this.master,tex=this.texture;
+    if(!ctx||!master||!tex)return;
+    const t0=ctx.currentTime+.03,g0=ctx.createGain();g0.gain.value=Math.max(.05,s.effects*1.15);g0.connect(master);
+    const click=(t:number,v:number,f=2600,len=.02)=>{
+      const src=ctx.createBufferSource();src.buffer=tex;const fl=ctx.createBiquadFilter();fl.type='bandpass';fl.frequency.value=f;fl.Q.value=4;
+      const g=ctx.createGain();g.gain.setValueAtTime(0,t0+t);g.gain.linearRampToValueAtTime(v,t0+t+.002);g.gain.exponentialRampToValueAtTime(.0008,t0+t+len);
+      src.connect(fl).connect(g).connect(g0);src.start(t0+t,Math.random()*1.5);src.stop(t0+t+len+.02);
+    };
+    // pulled round: ticks of the ratchet, spacing grows as the finger slows
+    for(let i=0;i<19;i++)click(i*.05+i*i*.0012,.16+.03*Math.random(),1800+i*45,.018);
+    // the stop
+    click(1.12,.3,900,.05);
+    // running back: the governor's rattle and the ticks of the pulse contact
+    {
+      const src=ctx.createBufferSource();src.buffer=tex;src.loop=true;const lp=ctx.createBiquadFilter();lp.type='bandpass';lp.frequency.value=1500;lp.Q.value=1.2;
+      const g=ctx.createGain();g.gain.setValueAtTime(0,t0+1.34);g.gain.linearRampToValueAtTime(.09,t0+1.45);g.gain.setValueAtTime(.09,t0+2.4);g.gain.linearRampToValueAtTime(0,t0+2.56);
+      const lfo=ctx.createOscillator();lfo.frequency.value=34;const lg=ctx.createGain();lg.gain.value=.06;lfo.connect(lg).connect(g.gain);
+      src.connect(lp).connect(g).connect(g0);src.start(t0+1.34);src.stop(t0+2.6);lfo.start(t0+1.34);lfo.stop(t0+2.6);
+    }
+    for(let i=0;i<12;i++)click(1.4+i*.095,.07,3400,.012);
+    click(2.58,.22,1200,.04);
+    // the exchange answers: three rising tones, then the busy signal
+    const tone=(t:number,len:number,f:number,v:number)=>{
+      const o=ctx.createOscillator();o.type='sine';o.frequency.value=f;const g=ctx.createGain();
+      g.gain.setValueAtTime(0,t0+t);g.gain.linearRampToValueAtTime(v,t0+t+.012);g.gain.setValueAtTime(v,t0+t+len-.012);g.gain.linearRampToValueAtTime(0,t0+t+len);
+      const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=3200;
+      o.connect(lp).connect(g).connect(g0);o.start(t0+t);o.stop(t0+t+len+.02);
+    };
+    tone(2.85,.3,914,.1);tone(3.15,.3,1371,.1);tone(3.45,.3,1777,.1);
+    tone(3.9,.3,425,.09);tone(4.35,.3,425,.09);tone(4.8,.3,425,.09);
+    window.setTimeout(()=>g0.disconnect(),6200);
+  }
   private introBus?:GainNode;
   private introBuf:Record<string,AudioBuffer>={};
   /** Real recordings for the opening (CC0, OpenGameArt; see CREDITS.md): loaded once, decoded, kept. Missing files fall back to the synthesized sounds. */

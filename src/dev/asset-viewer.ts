@@ -15,6 +15,10 @@ const loader=new GLTFLoader();loader.setMeshoptDecoder(MeshoptDecoder);
 const specs=[
   {name:'car',url:'/assets/iso/trailer/car.glb',axis:'z' as const,target:4.0,x:0},
   {name:'backpack',url:'/assets/iso/trailer/backpack.glb',axis:'y' as const,target:.65,x:4},
+  {name:'fusebox',url:'/assets/iso/fusebox.glb',axis:'y' as const,target:.4,x:-3},
+  {name:'phone',url:'/assets/iso/phone-sfm.glb',axis:'y' as const,target:.1,x:-5},
+  {name:'cctv',url:'/assets/iso/cctv-cam.glb',axis:'z' as const,target:.25,x:-7},
+  {name:'battery',url:'/assets/iso/battery9v.glb',axis:'y' as const,target:.0485,x:-9},
   {name:'house',url:'/assets/iso/trailer/house.glb',axis:'y' as const,target:7.5,x:12},
   {name:'road',url:'/assets/iso/trailer/'+(new URLSearchParams(location.search).get('road')||'road')+'.glb',axis:'x' as const,target:0,x:-12},
 ];

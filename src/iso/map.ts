@@ -31,6 +31,8 @@ export const OBJECTS={
   buildingPlan:{room:'reception',x:-.84,z:.5,label:'План здания'},
   archiveCache:{room:'reception',x:-4.13,z:3.94,label:'Картотека'},
   inventory:{room:'reception',x:-4.51,z:4.13,label:'Опись'},
+  battery:{room:'reception',x:-.5,z:4.51,label:'Батарея 9 В'},
+  fuseBox:{room:'technical',x:-1.2,z:-4.5,label:'Рубильник'},
   receptionDoor:{room:'reception',x:-.05,z:2.15,label:'Дверь приёмной'},
   technicalDoor:{room:'corridor',x:.18,z:-3.25,label:'Дверь щитовой'},
   powerDiagram:{room:'technical',x:-2.35,z:-4.42,label:'Схема питания'},
