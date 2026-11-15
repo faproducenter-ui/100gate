@@ -64,9 +64,11 @@ export function act(s:Save,id:ObjectId):Outcome {
     }
     case 'dutyLog':return doc({...s,dutyRead:true},'Журнал дежурств · 18 ноября',
       '21:48. После просадки горит только аварийное освещение. Ключ от щитовой приклеил под столешницей, слева.\n\n22:16. Дежурный с архива не явился. Камеру в коридоре оставить включённой.');
-    case 'underDesk':return s.dutyRead?found(s,'technicalKey'):msg(s,'Снизу ничего не видно. Возможно, в журнале есть подсказка.');
+    case 'underDesk':return found(s,'technicalKey');
     case 'drawer':return has(s,'lighter')?doc(s,'Ящик стола','Пустые бланки, обрывок ленты и три канцелярские кнопки. Замок ящика давно сломан.'):
       msg(item(s,'lighter'),'В ящике нашлась зажигалка. Теперь нужен факел.');
+    case 'inventory':return doc(s,'Опись имущества · приёмная',
+      '1. Телефон внутренний — 1 шт. (линия не отвечает).\n2. Журнал дежурств — 1 шт.\n3. Факел аварийный — 1 шт. (у западной стены; зажигалка — в ящике стола).\n4. Ключ от щитовой — 1 шт. (бирка «Щ», на столе дежурного).\n5. Батарея 9 В для камеры — 1 шт. (на стеллаже у двери).\n\nСверено: 17 ноября, подпись неразборчива.');
     case 'phone':return doc(s,'Внутренняя линия','В трубке тихо. На наклейке: «07 — школа». Рядом от руки дописано: «Не перезванивать после 23:00».');
     case 'buildingPlan':return doc(item(s,'plan'),'План здания',ITEMS.plan.description);
     case 'archiveCache':return s.archiveClue?found(s,'archiveKey'):msg(s,'Секции пронумерованы. Без номера искать придётся всю ночь.');
@@ -131,7 +133,7 @@ export function validSave(value:unknown):value is Save{
     !Array.isArray(s.breaker)||s.breaker.length>3||!s.breaker.every((line,i)=>line===order[i])||
     typeof s.lightOn!=='boolean'||typeof s.lit!=='boolean'||
     s.power!==(s.breaker.length===3)||!canStand(s.x,s.z,s.doors))return false;
-  return !(s.lightOn&&!has(s,'torch')||s.lit&&!has(s,'lighter')||s.lightOn&&!s.lit||has(s,'technicalKey')&&!s.dutyRead||s.doors.technical&&!has(s,'technicalKey')||
+  return !(s.lightOn&&!has(s,'torch')||s.lit&&!has(s,'lighter')||s.lightOn&&!s.lit||s.doors.technical&&!has(s,'technicalKey')||
     s.diagramRead&&!s.doors.technical||s.breaker.length>0&&!s.diagramRead||s.doors.surveillance&&!s.power||
     (s.archiveClue||s.anomaly||has(s,'vhs'))&&!s.doors.surveillance||has(s,'archiveKey')&&!s.archiveClue||
     s.doors.archive&&!has(s,'archiveKey')||s.archiveIndex&&!s.doors.archive||

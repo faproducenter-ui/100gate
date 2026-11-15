@@ -24,7 +24,7 @@ async function loadDecor():Promise<Decor>{
   return {key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations},doorKit:doorKit?.scene};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
-  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;reading?:boolean;
+  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;reading?:boolean;readingDoc?:{title:string;text:string};
   look:{yaw:number;pitch:number};crouch:number;sprint:boolean;press:number;kick:number};
 const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
 const smooth=T.MathUtils.smoothstep;
@@ -106,6 +106,7 @@ export class IsoWorld {
   private readonly hemi:T.HemisphereLight;
   private readonly sun:T.DirectionalLight;
   private readonly fire:T.PointLight;
+  private readonly wallRay=new T.Raycaster();
   private torchProp:T.Object3D;
   private torchFlame?:Flame;
   private readonly analog=new AnalogPass();
@@ -114,7 +115,12 @@ export class IsoWorld {
   private intro?:Intro;
   private paperW=0;
   /** Where the grip frame of the right hand is while a sheet is read (camera space): the sheet fills the lower middle of the view. */
-  readonly paperPose=new T.Matrix4().compose(new T.Vector3(0,-.1,-.4),new T.Quaternion().setFromEuler(new T.Euler(-.25,0,0)),new T.Vector3(1,1,1));
+  readonly paperShown={p:new T.Vector3(.03,-.03,-.4),q:new T.Quaternion().setFromEuler(new T.Euler(0,0,0))};
+  /** where the hand is while the sheet is out of sight: low and to the right, the sheet edge-on */
+  readonly paperHidden={p:new T.Vector3(.24,-.52,-.28),q:new T.Quaternion().setFromEuler(new T.Euler(-.95,.35,.3))};
+  readonly paperPose=new T.Matrix4();
+  private paperDocKey='';
+  private paperPoseDirty=false;
   private readonly fogFx=new T.FogExp2(0x03070a,.16);
   private readonly darkBg=new T.Color(0x020506);
   private readonly lightBg=new T.Color(0x121615);
@@ -453,6 +459,24 @@ export class IsoWorld {
   get introReady(){return !!this.intro;}
   private introLoading=false;
   private shadowWas=false;
+  /** The sheet's place on the screen (undoing the barrel distortion of the picture), so that the readable text lies exactly on it while it moves. */
+  private publishPaperQuad(){
+    const vm=this.fps.vm,sheet=vm.paper;
+    if(this.paperW<.01)return;
+    vm.paperHold.updateMatrixWorld(true);
+    const half=[.105,.1485];
+    const pts=[[-1,1],[1,1],[1,-1],[-1,-1]].map(([sx,sy])=>{
+      const v=new T.Vector3(sx!*half[0]!,sy!*half[1]!,0).applyMatrix4(sheet.matrixWorld).project(vm.camera);
+      let ux=v.x,uy=v.y;for(let i=0;i<3;i++){const k=1+.07*(ux*ux+uy*uy);ux=v.x/k;uy=v.y/k;}
+      return {x:(ux+1)/2,y:(1-uy)/2};
+    });
+    const [a,b,c,d]=pts as [{x:number;y:number},{x:number;y:number},{x:number;y:number},{x:number;y:number}];
+    const aspect=vm.camera.aspect,wpx=Math.hypot((b.x-a.x)*aspect,b.y-a.y),hpx=Math.hypot((d.x-a.x)*aspect,d.y-a.y);
+    const st=document.documentElement.style,cx=(a.x+c.x)/2,cy=(a.y+c.y)/2;
+    st.setProperty('--pcx',cx.toFixed(4));st.setProperty('--pcy',cy.toFixed(4));
+    st.setProperty('--pw',(wpx/aspect).toFixed(4));st.setProperty('--ph',hpx.toFixed(4));
+    st.setProperty('--pr',Math.atan2((b.y-a.y),(b.x-a.x)*aspect).toFixed(4)+'rad');
+  }
   introPrompt(t:number){return this.intro?.prompt(t)??'';}
   get introCrashTime(){return this.intro?.crash??12.1;}
   endIntro(){this.intro?.dispose();this.intro=undefined;this.renderer.shadowMap.enabled=this.shadowWas;this.analog.setSoft(false);this.analog.resize(this.lastWidth,this.lastHeight,this.lowHeight);}
@@ -469,7 +493,14 @@ export class IsoWorld {
     if(fp){
       // Hand interaction: where the hand reaches (the prop, or the spot it is put down) and how the fingers close.
       const reading=!!frame.reading;
-      this.paperW=T.MathUtils.damp(this.paperW,reading?1:0,reading?5.5:7,dt);
+      this.paperW=T.MathUtils.damp(this.paperW,reading?1:0,reading?4.2:5.2,dt);
+      if(reading&&frame.readingDoc&&this.paperDocKey!==frame.readingDoc.title){this.paperDocKey=frame.readingDoc.title;this.fps.vm.setPaperText(frame.readingDoc.title,frame.readingDoc.text);}
+      if(!reading&&this.paperW<.01)this.paperDocKey='';
+      // the sheet comes up with a small overshoot and settles; going away it drops straight, without one
+      const pe=reading?Math.min(1.04,this.paperW*(1.0+.08*Math.sin(Math.PI*Math.min(1,this.paperW)))):this.paperW*this.paperW*(3-2*this.paperW);
+      this.paperPose.compose(this.paperHidden.p.clone().lerp(this.paperShown.p,pe),this.paperHidden.q.clone().slerp(this.paperShown.q,Math.min(1,pe)),new T.Vector3(1,1,1));
+      document.documentElement.style.setProperty('--paper-w',String(Math.min(1,this.paperW)));
+      this.paperPoseDirty=true;
       const hf=this.hand.update(frame.paused&&!reading?0:dt);
       const active=hf.phase==='reaching'||hf.phase==='releasing';
       this.fovMatch=T.MathUtils.damp(this.fovMatch,active?1:0,9,dt);
@@ -503,6 +534,7 @@ export class IsoWorld {
       this.fps.update({x:state.x,z:state.z,yaw:frame.look.yaw,pitch:frame.look.pitch,speed:frame.speed,sprint:frame.sprint,
         crouch:frame.crouch,dt:frame.paused&&!reading?0:dt,time,hasLight:state.items.includes('torch'),lightOn:state.lightOn,
         press:frame.press,kick:frame.kick,armShown,bend});
+      if(this.paperPoseDirty){this.paperPoseDirty=false;this.publishPaperQuad();}
       this.cast.setCrouch(frame.crouch);
       const cam=this.fps.camera;
       this.cast.setFirstPerson({yaw:frame.look.yaw,eye:cam.position.clone(),forward:new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion),
@@ -570,6 +602,15 @@ export class IsoWorld {
     if(!menu&&!cctv){
       if(handFlame){
         this.fire.position.copy(handFlame.position);burn=(fp?15:30)*handFlame.level*flick;
+        // Held up against a wall the flame would sit inside it and the whole room would go dark: the light is drawn back to the wall's surface.
+        if(fp){
+          const eye=this.fps.camera.position,dir=this.fire.position.clone().sub(eye),len=dir.length();
+          if(len>.05){
+            dir.divideScalar(len);this.wallRay.set(eye,dir);this.wallRay.far=len;
+            const hit=this.wallRay.intersectObject(this.env.root,true).find(h=>h.object.visible);
+            if(hit)this.fire.position.copy(hit.point).addScaledVector(dir,-Math.min(.14,hit.distance*.5));
+          }
+        }
       }else if(lyingLit){
         const tip=this.torchProp.localToWorld(new T.Vector3(.66,.05,0));
         this.fire.position.copy(tip);burn=15*flick;

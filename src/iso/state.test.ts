@@ -6,7 +6,7 @@ describe('administration case',()=>{
   it('can only complete the chapter through the clues and real door/power states',()=>{
     let s=newSave();
     const use=(id:Parameters<typeof act>[1])=>{s=act(s,id).state;};
-    use('terminal');use('underDesk');use('archiveCache');use('fileZero');use('archiveDoor');
+    use('terminal');use('archiveCache');use('fileZero');use('archiveDoor');
     expect(s.items).toEqual([]);expect(s.doors.archive).toBe(false);
     use('dutyLog');use('underDesk');use('technicalDoor');
     expect(s.doors.technical).toBe(true);

@@ -257,7 +257,7 @@ export default function IsoPage(){
     };
     const visibility=()=>{if(document.hidden)blur();};
     const available=(id:ObjectId)=>{
-      if(id==='underDesk'&&(!state.dutyRead||state.items.includes('technicalKey')))return false;
+      if(id==='underDesk'&&state.items.includes('technicalKey'))return false;
       if(id==='vhs'&&state.items.includes('vhs'))return false;
       return !(id==='torch'&&state.items.includes('torch'));
     };
@@ -343,7 +343,7 @@ export default function IsoPage(){
       sound.mix(settings,{paused,power:state.power,menu});
       if(!document.hidden&&introT>=0&&mode==='play')world?.renderIntro(introT,settings,clock,perf);
       else if(!document.hidden&&(mode==='title'||mode==='play'||mode==='complete')){
-        world?.render({state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,perf,reading:panel==='document'&&fpOn(),
+        world?.render({state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,perf,reading:panel==='document'&&fpOn(),readingDoc:documentView,
           direction,speed,target:panel?null:target,drawer,look:{yaw,pitch},crouch,sprint:sprinting,press,kick});
       }
     };

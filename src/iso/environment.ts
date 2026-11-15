@@ -331,6 +331,7 @@ export function buildEnvironment(opts:{modelFrames?:boolean}={}):AdminEnvironmen
       case 'fileCabinet':
         g.rotation.y=Math.PI/2;filing(g,m,f.d,f.w,1.12,4);
         paperStack(g,m,-.19,1.122,.023,67);
+        set('inventory',group(g,-.19,1.16,.023,'Inventory sheet'));
         set('archiveCache',group(g,.012,.83,.326,'Index slot'));
         break;
       case 'shelf':

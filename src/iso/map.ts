@@ -30,6 +30,7 @@ export const OBJECTS={
   phone:{room:'reception',x:-3.87,z:.97,label:'Телефон'},
   buildingPlan:{room:'reception',x:-.84,z:.5,label:'План здания'},
   archiveCache:{room:'reception',x:-4.13,z:3.94,label:'Картотека'},
+  inventory:{room:'reception',x:-4.51,z:4.13,label:'Опись'},
   receptionDoor:{room:'reception',x:-.05,z:2.15,label:'Дверь приёмной'},
   technicalDoor:{room:'corridor',x:.18,z:-3.25,label:'Дверь щитовой'},
   powerDiagram:{room:'technical',x:-2.35,z:-4.42,label:'Схема питания'},
@@ -81,7 +82,7 @@ function floorAt(x:number,z:number,doors:DoorStates) {
   }
   return !FURNITURE.some(f=>Math.abs(x-f.x)<f.w/2 && Math.abs(z-f.z)<f.d/2);
 }
-export const PLAYER_RADIUS=.22;
+export const PLAYER_RADIUS=.31;
 const footprint=Array.from({length:8},(_,i)=>[Math.cos(i*Math.PI/4)*PLAYER_RADIUS,Math.sin(i*Math.PI/4)*PLAYER_RADIUS] as const);
 export function canStand(x:number,z:number,doors:DoorStates) {
   return floorAt(x,z,doors)&&footprint.every(([dx,dz])=>floorAt(x+dx,z+dz,doors));

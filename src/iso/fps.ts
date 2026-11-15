@@ -57,14 +57,23 @@ export class ViewModel {
   /** A sheet of paper held in the right hand while a document is read. `paperHold` follows the hand's grip frame; the sheet's own pose in it is `paper`. */
   readonly paperHold = new T.Group();
   readonly paper: T.Mesh;
-  paperW = 0;
+  /** more sheets under the first, a hair apart, so that a document has thickness */
+  private readonly paperUnder: T.Mesh[] = [];
+  private paperBase: Float32Array;
+  paperW = 0; paperTime = 0; paperBend = 0;
+  /** how far each finger closes when it holds a sheet by its edge: the thumb lies over the front, the fingers curl behind (tunable at run time) */
+  readonly paperFinger = { thumb: .95, index: .95, middle: .95, ring: .95, pinky: .95, j1: .95, j2: 1, j3: 1 };
   ready = false;
 
   constructor(source?: { scene: T.Object3D; animations: T.AnimationClip[] }) {
     this.scene.add(this.camera, this.pivot);
     this.paperHold.matrixAutoUpdate = false; this.paperHold.visible = false;
-    this.paper = new T.Mesh(new T.PlaneGeometry(.21, .297), new T.MeshStandardMaterial({ color: 0x8f8872, roughness: .95, metalness: 0, side: T.DoubleSide }));
-    this.paper.position.set(.0, .12, .0); this.paper.scale.setScalar(.8);
+    const geo = new T.PlaneGeometry(.21, .297, 8, 12);
+    this.paperBase = (geo.getAttribute('position').array as Float32Array).slice();
+    const paperMat = new T.MeshStandardMaterial({ color: 0x9a9480, roughness: .95, metalness: 0, side: T.DoubleSide });
+    this.paper = new T.Mesh(geo, paperMat);
+    this.paper.position.set(-.08, .115, .0); this.paper.scale.setScalar(.95);
+    for (let k = 1; k <= 2; k++) { const u = new T.Mesh(geo, paperMat.clone()); u.position.z = -.0016 * k; u.rotation.z = (k % 2 ? 1 : -1) * .012 * k; u.scale.setScalar(1 - .006 * k); this.paper.add(u); this.paperUnder.push(u); }
     this.paperHold.add(this.paper); this.scene.add(this.paperHold);
     this.pivot.add(this.model);
     this.scene.add(new T.HemisphereLight(0xfff2dc, 0x25272c, 1.5));
@@ -196,7 +205,15 @@ export class ViewModel {
     this.pivot.rotation.set(this.lagPitch * .5 + out * .5 + this.baseRot.x, this.lagYaw * .6 + this.baseRot.y, -out * .2 + this.baseRot.z, 'YXZ');
     this.pivot.updateMatrixWorld(true);
     // Fingers: open relaxed hand <-> authored grip (only while no authored clip drives the fingers).
-    if (!this.clipActive) for (const f of this.fingers) f.bone.quaternion.copy(f.grip).slerp(f.rest, (1 - this.gripW) * .92);
+    if (!this.clipActive) for (const f of this.fingers) {
+      let w = this.gripW;
+      if (this.paperW > .01) {
+        // holding a sheet by its edge: a pinch, not the fist that holds the torch
+        const m = /^(index|middle|ring|pinky|thumb)_0([123])_r$/.exec(f.bone.name), p = this.paperFinger;
+        if (m) w = T.MathUtils.lerp(w, (p[m[1] as 'thumb'] ?? .6) * (m[2] === '1' ? p.j1 : m[2] === '2' ? p.j2 : p.j3), clamp(this.paperW * 1.4, 0, 1));
+      }
+      f.bone.quaternion.copy(f.grip).slerp(f.rest, (1 - w) * .92);
+    }
     // The flame of a burning torch stays at full size after the lighting clip; the clip's own scale only matters while it grows.
     if (this.flameNode) {
       const ts = this.flameNode.scale.x;
@@ -220,6 +237,7 @@ export class ViewModel {
     }
     if (this.pickupT >= 0) this.solvePickup(); else if (this.reachW > .001) this.solveReach();
     this.paperHold.visible = this.paperW > .01;
+    if (this.paperHold.visible) this.bendPaper(dt);
     if (this.paperHold.visible) { this.paperHold.matrix.copy(this.reachTarget); this.paperHold.matrixWorldNeedsUpdate = true; }
     for (const n of this.heldNodes) n.visible = this.carrying;
     // While reaching into the world the hand is drawn with the main camera's field of view, so the hand and
@@ -244,6 +262,31 @@ export class ViewModel {
   /** Hand interaction input for this frame. target is the prop's pose in viewmodel (camera) space; the hand is pulled onto the grip that would hold the prop exactly there, by reach (0..1). */
   /** The sheet is held up (w = 0..1 how far it has been raised); it is drawn at the hand target given to setHand. */
   setPaper(w: number) { this.paperW = w; }
+  /** the sheet is not a board: it curls a little, hangs from the fingers and flutters when it is moved; time passes only while it is shown */
+  private bendPaper(dt: number) {
+    this.paperTime += dt;
+    const pos = (this.paper.geometry as T.PlaneGeometry).getAttribute('position') as T.BufferAttribute, b = this.paperBase, t = this.paperTime;
+    const lift = 1 - this.paperW;                                   // while it is being raised or lowered it flexes more
+    for (let i = 0; i < pos.count; i++) {
+      const x = b[i * 3]!, y = b[i * 3 + 1]!;
+      const far = Math.max(0, (x + .105) / .21 + (y + .15) / .297 - .4);          // away from the fingers (the lower right corner)
+      const z = .035 * x * x / .011 * .5 * (.6 + lift) + .02 * (y + .15) * (y + .15) / .09 * .6 + far * (.006 * Math.sin(t * 2.3 + y * 7 + x * 4) + lift * .02 * Math.sin(t * 9 + y * 11));
+      pos.setZ(i, z);
+    }
+    pos.needsUpdate = true; this.paper.geometry.computeVertexNormals();
+  }
+  /** a sheet with the lines of the document drawn as grey bars (the readable text is laid over it by the page when it has settled) */
+  setPaperText(title: string, text: string) {
+    const c = document.createElement('canvas'); c.width = 420; c.height = 594; const g = c.getContext('2d')!;
+    g.fillStyle = '#cfc9b4'; g.fillRect(0, 0, 420, 594);
+    for (let i = 0; i < 60; i++) { g.fillStyle = `rgba(${90 + i % 40},${84 + i % 30},${60},.05)`; g.beginPath(); g.arc((i * 97) % 420, (i * 61) % 594, 20 + (i * 7) % 50, 0, 7); g.fill(); }
+    g.fillStyle = 'rgba(40,36,28,.75)'; g.fillRect(36, 44, Math.min(300, 14 + title.length * 9), 9);
+    let y = 86; const words = text.split(/\s+/); let line = 0, len = 0;
+    for (const w of words) { len += w.length + 1; if (len > 34) { g.fillStyle = 'rgba(40,36,28,.5)'; g.fillRect(36, y, 300 + ((line * 37) % 60), 5); y += 17; line++; len = w.length; if (y > 540) break; } }
+    g.fillStyle = 'rgba(40,36,28,.5)'; g.fillRect(36, y, 40 + len * 8, 5);
+    const tex = new T.CanvasTexture(c); tex.colorSpace = T.SRGBColorSpace;
+    const mat = this.paper.material as T.MeshStandardMaterial; mat.map?.dispose(); mat.map = tex; mat.needsUpdate = true;
+  }
   setHand(f: { reach: number; grip: number; carrying: boolean; target?: T.Matrix4; up?: T.Vector3; fovMatch: number; mainFov: number }) {
     if (f.up) this.upCam.copy(f.up).normalize();
     this.reachW = f.target ? f.reach : 0; this.gripW = f.grip; this.carrying = f.carrying;
@@ -388,7 +431,7 @@ export type FpInput = {
  * rendered by the actor (see `setFirstPerson`), so the arms and the held torch are the real model.
  */
 export class FpRig {
-  readonly camera = new T.PerspectiveCamera(74, 1, .05, 40);
+  readonly camera = new T.PerspectiveCamera(74, 1, .09, 40);
   private bobPhase = 0;
   private eye = EYE_STAND;
   private prevYaw = 0; private prevPitch = 0;
