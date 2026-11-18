@@ -34,7 +34,9 @@ export const DEFAULTS:Settings={
 };
 export type CCTVView={camera:CameraId;tape:TapeId;time:number;duration:number;playing:boolean;
   availableFuture:boolean;evidence:boolean;zoom:boolean};
-export type DocumentView={title:string;text:string;/** pinned to a wall: the camera moves up to it, nothing is taken in the hand */wall?:boolean};
+/** what a paper thing is, for the two-handed first-person inspect view (size, grip and look of the sheet) */
+export type PaperKind='document'|'note'|'map'|'letter'|'page'|'clipping';
+export type DocumentView={title:string;text:string;/** pinned to a wall: the camera moves up to it, nothing is taken in the hand */wall?:boolean;/** held up in both hands; defaults to a document */kind?:PaperKind};
 export type UIAction=
   |{type:'torch'}|{type:'drop'}|{type:'skip-intro'}
   |{type:'touch';move?:{x:number;z:number};look?:{dx:number;dy:number};sprint?:boolean;crouch?:boolean}

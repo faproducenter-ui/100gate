@@ -2,6 +2,7 @@ import * as T from 'three';
 import {buildEnvironment} from './environment';
 import {loadActor} from './actor';
 import {FpRig} from './fps';
+import {PaperInspectView} from './paperInspect';
 import {Flame,fireFlicker} from './flame';
 import {AnalogPass} from './analog';
 import {KeyProp} from './keys';
@@ -14,19 +15,19 @@ import {MeshoptDecoder} from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import {Intro,loadTrailerAssets} from './intro';
 import {makeBattery,makeCamera,makeFuseBox,makePhone} from './props';
 import {DOORS,OBJECTS,ROOMS,doorFor,doorSwing,movedProps,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
-import type {CameraId,CCTVView,Save,Settings} from './contracts';
+import type {CameraId,CCTVView,PaperKind,Save,Settings} from './contracts';
 
 type Cast=Awaited<ReturnType<typeof loadActor>>;
-type Decor={phone?:T.Object3D;cctv?:T.Object3D;fusebox?:T.Object3D;battery?:T.Object3D;key?:T.Object3D;book?:T.Object3D;viewmodel?:{scene:T.Object3D;animations:T.AnimationClip[]};doorKit?:T.Object3D};
+type Decor={phone?:T.Object3D;cctv?:T.Object3D;fusebox?:T.Object3D;battery?:T.Object3D;key?:T.Object3D;book?:T.Object3D;viewmodel?:{scene:T.Object3D;animations:T.AnimationClip[]};doorKit?:T.Object3D;paper?:{scene:T.Object3D;animations:T.AnimationClip[]}};
 async function loadDecor():Promise<Decor>{
   const gltf=async(path:string)=>{
     try{const l=new GLTFLoader();l.setMeshoptDecoder(MeshoptDecoder);return await l.loadAsync(import.meta.env.BASE_URL+path);}catch{return undefined;}
   };
-  const [key,book,viewmodel,doorKit,phone,cctv,fusebox,battery]=await Promise.all([gltf('assets/iso/key-tag.glb'),gltf('assets/iso/antique-book.glb'),gltf('assets/iso/viewmodel-8.glb'),gltf('assets/iso/door-kit.glb'),gltf('assets/iso/phone-sfm.glb'),gltf('assets/iso/cctv-cam.glb'),gltf('assets/iso/fusebox.glb'),gltf('assets/iso/battery9v.glb')]);
-  return {phone:phone?.scene,cctv:cctv?.scene,fusebox:fusebox?.scene,battery:battery?.scene,key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations},doorKit:doorKit?.scene};
+  const [key,book,viewmodel,doorKit,phone,cctv,fusebox,battery,paper]=await Promise.all([gltf('assets/iso/key-tag.glb'),gltf('assets/iso/antique-book.glb'),gltf('assets/iso/viewmodel-8.glb'),gltf('assets/iso/door-kit.glb'),gltf('assets/iso/phone-sfm.glb'),gltf('assets/iso/cctv-cam.glb'),gltf('assets/iso/fusebox.glb'),gltf('assets/iso/battery9v.glb'),gltf('assets/iso/paper-inspect-2.glb')]);
+  return {phone:phone?.scene,cctv:cctv?.scene,fusebox:fusebox?.scene,battery:battery?.scene,key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations},doorKit:doorKit?.scene,paper:paper&&{scene:paper.scene,animations:paper.animations}};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
-  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;charge?:number;zoom?:number;focusK?:number;focusId?:'breaker'|'fuse'|'diagram'|'inventory'|null;crank?:number;reading?:boolean;readingDoc?:{title:string;text:string};
+  direction:Point;speed:number;target:ObjectId|null;drawer:boolean;perf?:number;charge?:number;zoom?:number;focusK?:number;focusId?:'breaker'|'fuse'|'diagram'|'inventory'|null;crank?:number;reading?:boolean;readingDoc?:{title:string;text:string;kind?:PaperKind};
   look:{yaw:number;pitch:number};crouch:number;sprint:boolean;press:number;kick:number};
 const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
 const smooth=T.MathUtils.smoothstep;
@@ -186,12 +187,10 @@ export class IsoWorld {
     }
   }
   private intro?:Intro;
+  /** how far the sheet has settled in front of the eye, 0..1 (the readable ink is laid over it near 1) */
   private paperW=0;
-  /** Where the grip frame of the right hand is while a sheet is read (camera space): the sheet fills the lower middle of the view. */
-  readonly paperShown={p:new T.Vector3(.03,-.03,-.4),q:new T.Quaternion().setFromEuler(new T.Euler(0,0,0))};
-  /** where the hand is while the sheet is out of sight: low and to the right, the sheet edge-on */
-  readonly paperHidden={p:new T.Vector3(.24,-.52,-.28),q:new T.Quaternion().setFromEuler(new T.Euler(-.95,.35,.3))};
-  readonly paperPose=new T.Matrix4();
+  /** the two-handed view of a paper being read */
+  readonly inspect?:PaperInspectView;
   private paperDocKey='';
   private paperWant=false;
   private armWait=0;
@@ -326,6 +325,8 @@ export class IsoWorld {
     this.listener={x:0,z:0};
     this.cast=actor;
     this.fps=new FpRig(this.scene,decor.viewmodel);
+    // a document is read held up in both hands: drawn with the viewmodel camera, the torch arm goes down meanwhile
+    if(decor.viewmodel&&decor.paper){this.inspect=new PaperInspectView(decor.viewmodel,decor.paper);this.fps.vm.scene.add(this.inspect.root);this.fps.vm.extras.push(this.inspect);}
     this.scene.add(actor.root);
     this.echoes={hero:actor.createEcho('hero'),staff:actor.createEcho('staff'),shadow:actor.createEcho('shadow')};
     for(const echo of Object.values(this.echoes)){echo.root.visible=false;this.scene.add(echo.root);}
@@ -555,12 +556,10 @@ export class IsoWorld {
   private shadowWas=false;
   /** The sheet's place on the screen (undoing the barrel distortion of the picture), so that the readable text lies exactly on it while it moves. */
   private publishPaperQuad(){
-    const vm=this.fps.vm,sheet=vm.paper;
-    if(this.paperW<.01)return;
-    vm.paperHold.updateMatrixWorld(true);
-    const half=[.105,.1485];
-    const pts=[[-1,1],[1,1],[1,-1],[-1,-1]].map(([sx,sy])=>{
-      const v=new T.Vector3(sx!*half[0]!,sy!*half[1]!,0).applyMatrix4(sheet.matrixWorld).project(vm.camera);
+    const vm=this.fps.vm,corners=this.inspect?.corners();
+    if(this.paperW<.01||!corners)return;
+    const pts=corners.map(c=>{
+      const v=c.clone().project(vm.camera);
       let ux=v.x,uy=v.y;for(let i=0;i<3;i++){const k=1+.07*(ux*ux+uy*uy);ux=v.x/k;uy=v.y/k;}
       return {x:(ux+1)/2,y:(1-uy)/2};
     });
@@ -592,12 +591,18 @@ export class IsoWorld {
       // The hand with the torch goes down first, and only then does the hand with the sheet come up (and the other way round when it is put away): no torch popping into the fingers.
       if(reading!==this.paperWant){this.paperWant=reading;this.armWait=state.items.includes('torch')?.32:0;}
       this.armWait=Math.max(0,this.armWait-dt);
-      this.paperW=T.MathUtils.damp(this.paperW,reading&&this.armWait<=0?1:0,reading?4.2:5.2,dt);
-      if(reading&&frame.readingDoc&&this.paperDocKey!==frame.readingDoc.title){this.paperDocKey=frame.readingDoc.title;this.fps.vm.setPaperText(frame.readingDoc.title,frame.readingDoc.text);}
-      if(!reading&&this.paperW<.01)this.paperDocKey='';
-      // the sheet comes up with a small overshoot and settles; going away it drops straight, without one
-      const pe=reading?Math.min(1.04,this.paperW*(1.0+.08*Math.sin(Math.PI*Math.min(1,this.paperW)))):this.paperW*this.paperW*(3-2*this.paperW);
-      this.paperPose.compose(this.paperHidden.p.clone().lerp(this.paperShown.p,pe),this.paperHidden.q.clone().slerp(this.paperShown.q,Math.min(1,pe)),new T.Vector3(1,1,1));
+      // both hands lift the sheet (authored clips in paper-inspect-1.glb) once the torch arm is down; it is lowered when the reading ends
+      const ins=this.inspect;
+      if(ins){
+        const doc=frame.readingDoc;
+        if(reading&&this.armWait<=0&&doc){
+          const key=doc.title+'|'+(doc.kind??'document');
+          if(this.paperDocKey!==key||!ins.visible){this.paperDocKey=key;ins.open({kind:doc.kind??'document',title:doc.title,text:doc.text,textOnSheet:false});}
+        }else if(!reading)ins.close();
+        ins.update(frame.paused&&!reading?0:dt,frame.look,frame.speed);
+        if(!ins.visible)this.paperDocKey='';
+        this.paperW=ins.settled;
+      }else this.paperW=0;
       document.documentElement.style.setProperty('--paper-w',String(Math.min(1,this.paperW)));
       this.paperPoseDirty=true;
       const hf=this.hand.update(frame.paused&&!reading?0:dt);
@@ -616,11 +621,9 @@ export class IsoWorld {
       }else if(hf.phase==='reaching'&&this.grabAt)target=eyeCam.matrixWorldInverse.clone().multiply(this.grabAt);
       else if(hf.phase==='releasing'&&this.dropAt)target=this.dropAt;
       if(hf.phase==='holding'||hf.phase==='idle')this.grabAt=undefined;
-      const paperUp=this.paperW>.01;
-      if(paperUp)target=this.paperPose;
-      this.fps.vm.setPaper(this.paperW);
-      this.fps.vm.setHand({reach:paperUp?this.paperW:hf.reach,grip:paperUp?.35+.2*this.paperW:hf.grip,carrying:paperUp?false:hf.carrying,target,up:new T.Vector3(0,1,0).transformDirection(eyeCam.matrixWorldInverse),fovMatch:this.fovMatch,mainFov:eyeCam.fov});
-      const armShown=focusK>.06||this.armWait>0||(!reading&&this.paperW>.01)?0:paperUp||active||this.fps.vm.igniting||this.fps.vm.lighterPlaying?1:hf.phase==='holding'?1:0;
+      const paperUp=!!this.inspect?.visible;
+      this.fps.vm.setHand({reach:hf.reach,grip:hf.grip,carrying:hf.carrying,target,up:new T.Vector3(0,1,0).transformDirection(eyeCam.matrixWorldInverse),fovMatch:this.fovMatch,mainFov:eyeCam.fov});
+      const armShown=focusK>.06||this.armWait>0||paperUp||reading?0:active||this.fps.vm.igniting||this.fps.vm.lighterPlaying?1:hf.phase==='holding'?1:0;
       // Bending over: the body leans toward what the hand goes for, so the arm can reach it naturally.
       let bend:{x:number;y:number;z:number}|undefined;
       const goalWorld=hf.phase==='reaching'?(this.grabAt?new T.Vector3().setFromMatrixPosition(this.grabAt):hf.item?.object.position):

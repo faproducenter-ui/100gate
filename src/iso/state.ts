@@ -1,4 +1,4 @@
-import {DEFAULTS,type CameraId,type DocumentView,type ItemId,type Panel,type PowerLine,type Save,type Settings,type TapeId} from './contracts';
+import {DEFAULTS,type CameraId,type DocumentView,type ItemId,type PaperKind,type Panel,type PowerLine,type Save,type Settings,type TapeId} from './contracts';
 import {canStand,START,type ObjectId} from './map';
 
 export const SAVE_KEY='100gate.isometric.save.v1';
@@ -39,7 +39,7 @@ const has=(s:Save,id:ItemId)=>s.items.includes(id);
 const item=(s:Save,id:ItemId):Save=>has(s,id)?s:{...s,items:[...s.items,id]};
 type Outcome={state:Save;message?:string;panel?:Panel;document?:DocumentView};
 const msg=(state:Save,message:string):Outcome=>({state,message});
-const doc=(state:Save,title:string,text:string):Outcome=>({state,panel:'document',document:{title,text}});
+const doc=(state:Save,title:string,text:string,kind?:PaperKind):Outcome=>({state,panel:'document',document:kind?{title,text,kind}:{title,text}});
 const wall=(state:Save,title:string,text:string):Outcome=>({state,panel:'document',document:{title,text,wall:true}});
 const found=(state:Save,id:ItemId):Outcome=>msg(item(state,id),has(state,id)?'Уже в инвентаре.':'Найдено: '+ITEMS[id].name);
 
@@ -65,16 +65,16 @@ export function act(s:Save,id:ObjectId):Outcome {
       return msg(item(s,'torch'),has(s,'lighter')?'Факел. F — поджечь зажигалкой, G — положить.':'Факел потух. Нужно чем-то его поджечь.');
     }
     case 'dutyLog':return doc({...s,dutyRead:true},'Журнал дежурств · 18 ноября',
-      '21:48. После просадки горит только аварийное освещение. Ключ от щитовой приклеил под столешницей, слева.\n\n22:16. Дежурный с архива не явился. Камеру в коридоре оставить включённой.');
+      '21:48. После просадки горит только аварийное освещение. Ключ от щитовой приклеил под столешницей, слева.\n\n22:16. Дежурный с архива не явился. Камеру в коридоре оставить включённой.','page');
     case 'underDesk':return found(s,'technicalKey');
-    case 'drawer':return has(s,'lighter')?doc(s,'Ящик стола','Пустые бланки, обрывок ленты и три канцелярские кнопки. Замок ящика давно сломан.'):
+    case 'drawer':return has(s,'lighter')?doc(s,'Ящик стола','Пустые бланки, обрывок ленты и три канцелярские кнопки. Замок ящика давно сломан.','note'):
       msg(item(s,'lighter'),'В ящике нашлась зажигалка. Теперь нужен факел.');
     case 'inventory':return doc(s,'Опись имущества · приёмная',
-      '1. Телефон внутренний — 1 шт. (линия не отвечает).\n2. Журнал дежурств — 1 шт.\n3. Факел аварийный — 1 шт. (у западной стены; зажигалка — в ящике стола).\n4. Ключ от щитовой — 1 шт. (бирка «Щ», на столе дежурного).\n5. Батарея 9 В для камеры — 1 шт. (на стеллаже у двери).\n\nСверено: 17 ноября, подпись неразборчива.');
+      '1. Телефон внутренний — 1 шт. (линия не отвечает).\n2. Журнал дежурств — 1 шт.\n3. Факел аварийный — 1 шт. (у западной стены; зажигалка — в ящике стола).\n4. Ключ от щитовой — 1 шт. (бирка «Щ», на столе дежурного).\n5. Батарея 9 В для камеры — 1 шт. (на стеллаже у двери).\n\nСверено: 17 ноября, подпись неразборчива.','document');
     case 'battery':return found(s,'battery');
     case 'fuseBox':return msg(s,s.breaker.length===3?'Рубильник. Удерживайте J: рычаг медленно проворачивается, пока питание не дойдёт.':'Рубильник. Сначала нужно включить линии на щите — по схеме.');
     case 'phone':return msg(s,'Линия не отвечает. На наклейке: «07 — школа». Рядом от руки дописано: «Не перезванивать после 23:00».');
-    case 'buildingPlan':return doc(item(s,'plan'),'План здания',ITEMS.plan.description);
+    case 'buildingPlan':return doc(item(s,'plan'),'План здания',ITEMS.plan.description,'map');
     case 'archiveCache':return s.archiveClue?found(s,'archiveKey'):msg(s,'Секции пронумерованы. Без номера искать придётся всю ночь.');
     case 'receptionDoor':{
       // An ordinary unlocked door: it opens and closes, but never onto the player standing in the doorway.
@@ -90,9 +90,9 @@ export function act(s:Save,id:ObjectId):Outcome {
     case 'terminal':return s.power&&s.doors.surveillance?{state:s,panel:'cctv'}:msg(s,'Нет сигнала.');
     case 'vhs':return s.doors.surveillance?found(s,'vhs'):msg(s,'Операторская заперта.');
     case 'archiveDoor':return has(s,'archiveKey')?msg({...s,doors:{...s.doors,archive:true}},'Архив открыт.'):msg(s,'Нужен ключ от архива.');
-    case 'archiveIndex':return s.doors.archive?doc({...s,archiveIndex:true},'Указатель стеллажей','Секция А — ведомости. Секция Б — районные объекты. Номер ячейки указан на накладной из коридора.'):msg(s,'Архив заперт.');
+    case 'archiveIndex':return s.doors.archive?doc({...s,archiveIndex:true},'Указатель стеллажей','Секция А — ведомости. Секция Б — районные объекты. Номер ячейки указан на накладной из коридора.','note'):msg(s,'Архив заперт.');
     case 'fileZero':return !s.doors.archive||!s.anomaly||!s.archiveIndex?msg(s,'Нужны указатель стеллажей и пометка из записи коридора.'):
-      doc(item(s,'file'),'Акт №0 / 7',ITEMS.file.description+'\n\nНа обороте: «Запись не стирать. Если время не сходится — проверить камеру архива».');
+      doc(item(s,'file'),'Акт №0 / 7',ITEMS.file.description+'\n\nНа обороте: «Запись не стирать. Если время не сходится — проверить камеру архива».','document');
   }
 }
 
