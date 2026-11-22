@@ -2,7 +2,7 @@
 
   "C:/Program Files/Blender Foundation/Blender 4.5/blender.exe" -b art/gas-station.blend --python tools/gas-station/export_station.py
 
-Outputs into public/assets/station/:
+Outputs into public/assets/iso/:
   station-1.glb      static world merged by material (procedural materials baked to textures), named movable parts (doors, trunk lid, map,
                      lamp tube, register screen...), product library meshes 'LIB_*' and the pine 'PINE' (decimated, one copy each)
   station-1.json     instance transforms for the products and the forest, lights (with flicker patterns), walk grid description, spawn
@@ -15,7 +15,7 @@ from mathutils import Vector, Matrix
 from mathutils.bvhtree import BVHTree
 
 ROOT = 'C:/Users/libde/100gate/'
-OUT = ROOT + 'public/assets/station/'
+OUT = ROOT + 'public/assets/iso/'
 VER = '1'
 os.makedirs(OUT, exist_ok=True)
 T0 = time.time()

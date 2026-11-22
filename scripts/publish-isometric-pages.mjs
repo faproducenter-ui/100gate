@@ -16,7 +16,9 @@ const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const sha=/^[0-9a-f]{40}$/;
 const emitted=/^assets\/[a-z0-9_.-]+-[a-z0-9_-]{8,}\.(?:js|css)$/i;
 const safePart=part=>/^[a-z0-9][a-z0-9_.-]*$/i.test(part)&&!part.endsWith('.')&&!/^(?:CON|PRN|AUX|NUL|COM[0-9]|LPT[0-9])(?:\.|$)/i.test(part);
-const asset=name=>name.startsWith('assets/iso/')&&/\.(?:glb|ktx2|png|jpe?g|webp|avif|svg|ogg|mp3|wav|opus|webm|woff2?|txt|json)$/i.test(name);
+// the Draco mesh decoder (three.js DRACOLoader) is the one script/wasm allowed among the assets
+const draco=/^assets\/iso\/draco\/draco_(?:decoder|wasm_wrapper)\.(?:js|wasm)$/;
+const asset=name=>name.startsWith('assets/iso/')&&(/\.(?:glb|ktx2|png|jpe?g|webp|avif|svg|ogg|mp3|wav|opus|webm|woff2?|txt|json)$/i.test(name)||draco.test(name));
 
 export function allowedPath(name){
   return name.split('/').every(safePart)&&(name==='index.html'||emitted.test(name)||asset(name));

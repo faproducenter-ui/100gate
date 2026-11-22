@@ -3,8 +3,8 @@ import {test} from 'node:test';
 import {allowedPath,parseEntry,sourceRef} from './publish-isometric-pages.mjs';
 
 test('allowlist is only the new index, generated chunks and isometric assets',()=>{
-  for(const name of ['index.html','assets/index-ABC123xy.js','assets/main-abcdefgh.css','assets/iso/alexei.glb','assets/iso/alexei-credits.txt','assets/iso/props/desk.glb']) assert(allowedPath(name),name);
-  for(const name of ['release.json','CNAME','.nojekyll','story-preview/index.html','assets/story-final/x.glb','assets/iso/../../CNAME','assets\\iso\\alexei.glb','assets/iso/CON.glb','assets/iso/secrets.env','assets/index.js','assets/iso/.hidden.png','/assets/iso/alexei.glb']) assert(!allowedPath(name),name);
+  for(const name of ['index.html','assets/index-ABC123xy.js','assets/main-abcdefgh.css','assets/iso/alexei.glb','assets/iso/alexei-credits.txt','assets/iso/props/desk.glb','assets/iso/draco/draco_decoder.wasm','assets/iso/draco/draco_wasm_wrapper.js']) assert(allowedPath(name),name);
+  for(const name of ['release.json','CNAME','.nojekyll','story-preview/index.html','assets/story-final/x.glb','assets/iso/../../CNAME','assets\\iso\\alexei.glb','assets/iso/CON.glb','assets/iso/secrets.env','assets/index.js','assets/iso/.hidden.png','/assets/iso/alexei.glb','assets/iso/evil.js','assets/iso/draco/other.js','assets/iso/draco/draco_encoder.js']) assert(!allowedPath(name),name);
 });
 
 test('HTML is pinned to a relative hashed entry actually present in the package',()=>{

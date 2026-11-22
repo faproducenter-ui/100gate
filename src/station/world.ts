@@ -9,7 +9,7 @@ type LightDef={name:string;type:'POINT'|'SPOT'|'SUN'|'AREA';pos:number[];color:n
 export type StationData={version:string;lights:LightDef[];products:Record<string,number[][]>;pines:number[][];kept:{name:string;pos:number[];dynamic:boolean}[];
   walk:WalkInfo&{file:string};spawn:{pos:number[];yaw:number}};
 
-export const ASSET_DIR='assets/station/';
+export const ASSET_DIR='assets/iso/';
 export const STATION_VERSION='1';
 /** Blender (x,y,z) -> three (x,z,-y). */
 export const B2T=new T.Matrix4().set(1,0,0,0, 0,0,1,0, 0,-1,0,0, 0,0,0,1);
@@ -66,7 +66,7 @@ export class StationWorld{
     if(!res.ok)throw Error('Не удалось загрузить данные локации');
     const data=await res.json() as StationData;
     onProgress('Модели и текстуры');
-    const draco=new DRACOLoader();draco.setDecoderPath(import.meta.env.BASE_URL+'assets/draco/');
+    const draco=new DRACOLoader();draco.setDecoderPath(import.meta.env.BASE_URL+'assets/iso/draco/');
     const loader=new GLTFLoader();loader.setDRACOLoader(draco);
     const [gltf,walk]=await Promise.all([
       loader.loadAsync(base+`station-${STATION_VERSION}.glb`,e=>{if(e.total)onProgress(`Модели и текстуры ${Math.round(e.loaded/e.total*100)}%`);}),
