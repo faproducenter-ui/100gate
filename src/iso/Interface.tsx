@@ -479,8 +479,11 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
       <div className="iso-modal-actions"><ActionButton act={act} action={{type:'retry'}} testId="iso-retry"><RotateCcw/>Повторить</ActionButton></div>
     </Modal>}
     {mode==='complete'&&!panel&&<Modal key="complete" title="Глава завершена" testId="iso-complete">
-      <p className="iso-dialog-copy">Следующая задача: найти путь к школе №7.</p>
-      <div className="iso-modal-actions"><ActionButton act={act} action={{type:'title'}}>В главное меню<ArrowRight/></ActionButton></div>
+      <p className="iso-dialog-copy">Машина глохнет у ночной заправки во Флориде. Внутри горит одна лампа.</p>
+      <div className="iso-modal-actions">
+        <a className="iso-button" style={{textDecoration:'none'}} href={`${import.meta.env.BASE_URL}?loc=station`} data-testid="iso-next-chapter">Глава 2: заправка<ArrowRight/></a>
+        <ActionButton act={act} action={{type:'title'}}>В главное меню</ActionButton>
+      </div>
     </Modal>}
     {modal}
     {mode==='play'&&dead&&<div className="iso-dead" role="alert"><div className="iso-dead-noise"/><p><b>ЗАРЯД НА КАМЕРЕ РАЗРЯЖЕН</b><span>Вы проиграли. Без записи в этом здании нечем смотреть.</span></p><div className="iso-dead-actions"><button type="button" onClick={()=>act({type:'start'})}>Начать заново</button><button type="button" onClick={()=>act({type:'title'})}>В меню</button></div></div>}
