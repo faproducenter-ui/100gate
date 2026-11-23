@@ -6,13 +6,83 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#000000" />
-  <meta name="theme-color" content="#0b1415" />
+  <meta name="theme-color" content="#080B0A" />
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <meta name="description" content="100GATE — изометрический хоррор-квест. Исследуйте заброшенную администрацию района №0." />
+  <meta name="description" content="100GATE — хоррор-квест. Исследуйте заброшенную администрацию района №0." />
   <title>100GATE</title>
-  <script type="module" crossorigin src="./assets/index-OsD2Z8XY.js"></script>
+  <!-- The loading screen is plain HTML and CSS here so it is on screen before the game's script has downloaded. -->
+  <style>
+    html,body{margin:0;background:#080B0A}
+    #boot{--bg:#080B0A;--bg2:#101512;--mute:#788078;--text:#E5E1D7;--text2:#8C918B;--accent:#B5AA8C;
+      position:fixed;inset:0;z-index:2147483000;overflow:hidden;background:var(--bg);color:var(--text);
+      display:grid;place-items:center;font-family:Bahnschrift,"DIN Alternate","DIN Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+      opacity:1;transition:opacity .7s ease;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+    #boot.boot-out{opacity:0;pointer-events:none}
+    .boot-fx{position:absolute;inset:-2%;pointer-events:none}
+    /* a dim, slowly breathing pool of light */
+    .boot-glow{background:radial-gradient(ellipse 60% 48% at 50% 46%,var(--bg2) 0%,rgba(16,21,18,.55) 45%,transparent 75%);animation:boot-breathe 7s ease-in-out infinite}
+    /* a patch of the picture that flickers now and then, like a tired lamp */
+    .boot-flicker{background:radial-gradient(circle at 68% 30%,rgba(120,128,120,.07),transparent 38%);opacity:0;animation:boot-flicker 9s steps(1,end) infinite}
+    .boot-grain{inset:-50%;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");animation:boot-grain 1s steps(6) infinite}
+    .boot-lines{opacity:.05;background:repeating-linear-gradient(0deg,rgba(229,225,215,.5) 0 1px,transparent 1px 3px)}
+    .boot-vignette{background:radial-gradient(ellipse at 50% 50%,transparent 42%,rgba(0,0,0,.72) 100%)}
+    .boot-center{position:relative;width:min(420px,100vw - 48px - env(safe-area-inset-left) - env(safe-area-inset-right));display:flex;flex-direction:column;align-items:center;
+      padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+    .boot-logo{margin:0 0 clamp(28px,7vh,56px);font-size:clamp(40px,11vw,76px);line-height:1;letter-spacing:.06em;font-weight:700;white-space:nowrap;
+      text-shadow:0 0 24px rgba(0,0,0,.85),0 2px 3px rgba(0,0,0,.6);animation:boot-logo 1.6s cubic-bezier(.2,.6,.2,1) both}
+    .boot-logo b{font-weight:700;color:var(--text)}
+    .boot-logo span{font-weight:300;color:var(--accent);letter-spacing:.14em;margin-left:.06em}
+    .boot-meter{width:100%}
+    .boot-row{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:10px;font-size:13px;letter-spacing:.08em;color:var(--text2)}
+    .boot-stage{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .boot-pct{font-variant-numeric:tabular-nums;color:var(--accent);min-width:3.2em;text-align:right}
+    .boot-track{height:2px;background:rgba(120,128,120,.2);overflow:hidden}
+    .boot-fill{height:100%;background:var(--accent);transform:scaleX(0);transform-origin:0 50%;will-change:transform}
+    .boot-error{margin-top:28px;text-align:center}
+    .boot-error[hidden]{display:none}
+    .boot-msg{margin:0 0 16px;color:var(--text);font-size:15px;line-height:1.45}
+    .boot-retry{font:inherit;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--text);background:transparent;cursor:pointer;
+      border:1px solid rgba(181,170,140,.55);padding:11px 26px;min-height:44px;transition:background .2s,border-color .2s}
+    .boot-retry:hover,.boot-retry:focus-visible{background:rgba(181,170,140,.12);border-color:var(--accent);outline:none}
+    .boot-retry:disabled{opacity:.5;cursor:default}
+    #boot[data-state=error] .boot-fill{background:var(--mute)}
+    @keyframes boot-logo{from{opacity:0;filter:blur(6px);transform:translateY(4px)}to{opacity:1;filter:none;transform:none}}
+    @keyframes boot-breathe{0%,100%{opacity:.75}50%{opacity:1}}
+    @keyframes boot-flicker{0%,61%,64%,100%{opacity:0}62%{opacity:1}63%{opacity:.4}86%{opacity:.8}87%{opacity:0}}
+    @keyframes boot-grain{0%{transform:translate(0,0)}20%{transform:translate(-7%,4%)}40%{transform:translate(5%,-6%)}60%{transform:translate(-3%,8%)}80%{transform:translate(8%,2%)}100%{transform:translate(-5%,-3%)}}
+    @media (prefers-reduced-motion:reduce){
+      .boot-glow,.boot-flicker,.boot-grain{animation:none}
+      .boot-logo{animation-duration:.01s}
+      #boot{transition-duration:.15s}
+    }
+  </style>
+  <script type="module" crossorigin src="./assets/index-CPLC6OF6.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-KxLy3lR1.css">
 </head>
-<body><div id="root"></div></body>
+<body>
+  <div id="boot" role="progressbar" aria-label="Загрузка 100GATE" aria-valuemin="0" aria-valuemax="100">
+    <div class="boot-fx boot-glow"></div><div class="boot-fx boot-flicker"></div><div class="boot-fx boot-grain"></div><div class="boot-fx boot-lines"></div><div class="boot-fx boot-vignette"></div>
+    <div class="boot-center">
+      <h1 class="boot-logo" aria-label="100GATE"><b>100</b><span>GATE</span></h1>
+      <div class="boot-meter">
+        <div class="boot-row"><span class="boot-stage" aria-live="polite">Загрузка игры</span><span class="boot-pct"></span></div>
+        <div class="boot-track"><div class="boot-fill"></div></div>
+      </div>
+      <div class="boot-error" role="alert" hidden><p class="boot-msg"></p><button class="boot-retry" type="button">Повторить</button></div>
+    </div>
+  </div>
+  <div id="root"></div>
+  <script>
+    // If the game's own script cannot be fetched, the screen says so instead of waiting forever (the script is not there to do it).
+    addEventListener('error',function(e){
+      var t=e.target;if(!t||t.tagName!=='SCRIPT'||t.type!=='module')return;
+      var b=document.getElementById('boot');if(!b)return;
+      console.error('[100GATE] game script failed to load',t.src);
+      b.setAttribute('data-state','error');
+      b.querySelector('.boot-msg').textContent='Не удалось загрузить игру. Проверьте соединение и попробуйте ещё раз.';
+      var box=b.querySelector('.boot-error');box.hidden=false;
+      b.querySelector('.boot-retry').onclick=function(){location.reload();};
+    },true);
+  </script>
+</body>
 </html>
