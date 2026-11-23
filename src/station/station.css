@@ -19,3 +19,4 @@
 .station-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .station-pad button{background:#3a404a;color:#e8ebf0;border:0;border-radius:6px;padding:12px 0;font-size:20px;cursor:pointer}
 .station-pad button:hover{background:#4a5260}
+.station-lock-hint{font-size:13px;opacity:.7;margin:-6px 0 12px!important}

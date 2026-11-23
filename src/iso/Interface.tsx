@@ -364,52 +364,121 @@ function Breaker({state,notice,act}:{state:Save;notice:string;act:Act}){
   </div>;
 }
 
+/** One key of the recorder: a hard plastic cap in a metal bezel, a lamp above it, a stamped label under it. */
+function DeckKey({label,sub,lamp,pressed,disabled,onPress,testId,aria,wide,tone}:{
+  label:ReactNode;sub?:string;lamp?:'green'|'red'|'amber'|null;pressed?:boolean;disabled?:boolean;onPress:()=>void;testId?:string;aria:string;wide?:boolean;tone?:'red';
+}){
+  return <button type="button" className={`cctv-key${wide?' wide':''}${tone?' '+tone:''}`} data-testid={testId} aria-label={aria}
+    aria-pressed={pressed===undefined?undefined:pressed} disabled={disabled} onClick={onPress}>
+    {lamp!==undefined&&<i className="cctv-lamp" data-lamp={lamp??'off'} aria-hidden="true"/>}
+    <span className="cctv-cap">{label}</span>
+    {sub&&<span className="cctv-sub">{sub}</span>}
+  </button>;
+}
+
+/** The night guard's surveillance desk: an old monitor in its dusty housing and, under it, the camera switcher / tape recorder.
+ *  The picture is drawn by the scene only inside the monitor's screen (data-cctv-screen); everything else is the equipment. */
 function CCTV({view,act,notice}:{view:CCTVView;act:Act;notice:string}){
   const camera=cameraLabels[view.camera];
   const duration=Math.max(0,view.duration);
   const time=Math.max(0,Math.min(duration,view.time));
+  // REW, FF and STOP are tape moves of the recorder: they go through the frame-step action (it clamps, pauses and clicks the key)
+  const seek=(t:number)=>act({type:'cctv-step',delta:Math.max(0,Math.min(duration,t))-time});
+  // the recorder's own clock: the night the tapes were made, plus the tape position
+  const stamp=3*3600+47*60+(view.tape==='future'?1260:0)+Math.floor(time);
+  const hms=[Math.floor(stamp/3600),Math.floor(stamp/60)%60,stamp%60].map(n=>String(n).padStart(2,'0')).join(':');
   return <Modal title="Видеонаблюдение" variant="iso-cctv-shell" testId="iso-cctv" onClose={()=>act(closeAction)}>
-    <div className="iso-cctv-frame" data-testid="iso-cctv-frame">
-      <div className="iso-cctv-label"><ScanLine/><span>CAM {camera.number}</span><strong>{camera.name}</strong></div>
-      <div className="iso-cctv-signal"><i aria-hidden="true"/>{view.playing?'ВОСПРОИЗВЕДЕНИЕ':'ПАУЗА'}</div>
-      {notice&&<p className="iso-cctv-notice" role="status">{notice}</p>}
-    </div>
-    <div className="iso-cctv-deck">
-      <div className="iso-cctv-select">
-        <div role="group" aria-label="Камеры">{cameraIds.map(id=>
-          <button type="button" key={id} data-testid={`iso-cctv-camera-${id}`} aria-pressed={id===view.camera}
-            aria-label={`Камера ${cameraLabels[id].number}: ${cameraLabels[id].name}`}
-            onClick={()=>act({type:'cctv-camera',camera:id})}>{cameraLabels[id].number} <span>{cameraLabels[id].name}</span></button>,
-        )}</div>
-        <div role="group" aria-label="Записи">
-          <button type="button" data-testid="iso-cctv-shift" aria-pressed={view.tape==='shift'}
-            onClick={()=>act({type:'cctv-tape',tape:'shift'})}>Архив смены</button>
-          <button type="button" data-testid="iso-cctv-future" aria-pressed={view.tape==='future'} disabled={!view.availableFuture}
-            onClick={()=>act({type:'cctv-tape',tape:'future'})}>Новая запись</button>
+    <div className="cctv-rig">
+      <div className="cctv-monitor">
+        <div className="cctv-housing" aria-hidden="true"/>
+        <div className="cctv-screen" data-cctv-screen data-testid="iso-cctv-frame">
+          <div className="cctv-static" key={view.camera+view.tape} aria-hidden="true"/>
+          <div className="cctv-osd cctv-osd-tl"><b>CAM {camera.number}</b><span>{camera.name}</span></div>
+          <div className="cctv-osd cctv-osd-tr">{view.playing?<><i className="cctv-rec" aria-hidden="true"/>ВОСПР ▶</>:'ПАУЗА ❚❚'}</div>
+          <div className="cctv-osd cctv-osd-bl"><span>04-12-2001</span><b>{hms}</b></div>
+          <div className="cctv-osd cctv-osd-br">{view.tape==='future'?'КАССЕТА Б':'КАССЕТА А'}{view.zoom?' · ×2':''}</div>
+          {notice&&<p className="cctv-notice" role="status">{notice}</p>}
+          <i className="cctv-glass" aria-hidden="true"/>
+        </div>
+        <div className="cctv-chin" aria-hidden="true">
+          <span className="cctv-brand">ВИДЕОКОНТРОЛЬ <b>ВК-4М</b></span>
+          <span className="cctv-knobs"><i/><i/><i/></span>
+          <span className="cctv-power"><i/>СЕТЬ</span>
         </div>
       </div>
-      <div className="iso-cctv-transport">
-        <div className="iso-cctv-keys">
-          <button type="button" className="iso-icon" aria-label="Предыдущий кадр" data-testid="iso-cctv-step-back"
-            onClick={()=>act({type:'cctv-step',delta:-1/12})}><StepBack/></button>
-          <button type="button" className="iso-icon" aria-label={view.playing?'Пауза записи':'Воспроизвести запись'}
-            data-testid="iso-cctv-play" onClick={()=>act({type:'cctv-play'})}>{view.playing?<Pause/>:<Play/>}</button>
-          <button type="button" className="iso-icon" aria-label="Следующий кадр" data-testid="iso-cctv-step-forward"
-            onClick={()=>act({type:'cctv-step',delta:1/12})}><StepForward/></button>
-        </div>
-        <label className="iso-cctv-time">
-          <span>{clock(time)}</span>
-          <input data-testid="iso-cctv-seek" type="range" aria-label="Время записи" min={0} max={duration}
-            step={.05} value={time} onChange={e=>act({type:'cctv-seek',time:e.currentTarget.valueAsNumber})}/>
-          <span>{clock(duration)}</span>
-        </label>
-        <button type="button" className="iso-icon" aria-pressed={view.zoom} aria-label={view.zoom?'Уменьшить кадр':'Приблизить кадр'}
-          data-testid="iso-cctv-zoom" onClick={()=>act({type:'cctv-zoom'})}>{view.zoom?<ZoomOut/>:<ZoomIn/>}</button>
+      <div className="cctv-deck" role="group" aria-label="Пульт видеонаблюдения">
+        <span className="cctv-screw" data-at="tl" aria-hidden="true"/><span className="cctv-screw" data-at="tr" aria-hidden="true"/>
+        <section className="cctv-block cctv-cams" role="group" aria-label="Камеры">
+          <h3>КОММУТАТОР</h3>
+          <div className="cctv-row">{cameraIds.map(id=>
+            <DeckKey key={id} testId={`iso-cctv-camera-${id}`} aria={`Камера ${cameraLabels[id].number}: ${cameraLabels[id].name}`}
+              pressed={id===view.camera} lamp={id===view.camera?'green':null}
+              label={<>CAM {cameraLabels[id].number}</>} sub={cameraLabels[id].name}
+              onPress={()=>act({type:'cctv-camera',camera:id})}/>)}
+          </div>
+        </section>
+        <section className="cctv-block cctv-transport" role="group" aria-label="Запись">
+          <div className="cctv-counter">
+            <span className="cctv-vfd" aria-hidden="true">{view.playing?'▶':'❚❚'}</span>
+            <span className="cctv-vfd cctv-vfd-time">{clock(time)}<small>/{clock(duration)}</small></span>
+            <input className="cctv-seek" data-testid="iso-cctv-seek" type="range" aria-label="Время записи" min={0} max={duration}
+              step={.05} value={time} onChange={e=>act({type:'cctv-seek',time:e.currentTarget.valueAsNumber})}
+              style={{'--p':`${duration?time/duration*100:0}%`} as CSSProperties}/>
+          </div>
+          <div className="cctv-row">
+            <DeckKey aria="Перемотка назад" label="◀◀" sub="REW" onPress={()=>seek(time-2)} disabled={time<=0}/>
+            <DeckKey testId="iso-cctv-step-back" aria="Предыдущий кадр" label="◀❙" sub="КАДР" onPress={()=>act({type:'cctv-step',delta:-1/12})}/>
+            <DeckKey testId="iso-cctv-play" aria={view.playing?'Пауза записи':'Воспроизвести запись'} wide
+              lamp={view.playing?'green':null} pressed={view.playing} label={view.playing?'❚❚':'▶'} sub={view.playing?'PAUSE':'PLAY'}
+              onPress={()=>act({type:'cctv-play'})}/>
+            <DeckKey aria="Стоп: к началу записи" label="■" sub="STOP" onPress={()=>seek(0)} disabled={!view.playing&&time<=0}/>
+            <DeckKey testId="iso-cctv-step-forward" aria="Следующий кадр" label="❙▶" sub="КАДР" onPress={()=>act({type:'cctv-step',delta:1/12})}/>
+            <DeckKey aria="Перемотка вперёд" label="▶▶" sub="FF" onPress={()=>seek(time+2)} disabled={time>=duration}/>
+          </div>
+        </section>
+        <section className="cctv-block cctv-tapes" role="group" aria-label="Записи">
+          <h3>КАССЕТА</h3>
+          <div className="cctv-row">
+            <DeckKey testId="iso-cctv-shift" aria="Архив смены" pressed={view.tape==='shift'} lamp={view.tape==='shift'?'amber':null}
+              label="А" sub="АРХИВ СМЕНЫ" onPress={()=>act({type:'cctv-tape',tape:'shift'})}/>
+            <DeckKey testId="iso-cctv-future" aria="Новая запись" pressed={view.tape==='future'} lamp={view.tape==='future'?'amber':null}
+              label="Б" sub="НОВАЯ ЗАПИСЬ" disabled={!view.availableFuture} onPress={()=>act({type:'cctv-tape',tape:'future'})}/>
+            <DeckKey testId="iso-cctv-zoom" aria={view.zoom?'Уменьшить кадр':'Приблизить кадр'} pressed={view.zoom} lamp={view.zoom?'green':null}
+              label="×2" sub="ZOOM" onPress={()=>act({type:'cctv-zoom'})}/>
+            <DeckKey testId="iso-cctv-evidence" tone="red" aria="Отметить кадр" lamp={view.evidence?'red':null} disabled={!view.evidence}
+              label="●" sub="МЕТКА" onPress={()=>act({type:'archive-evidence'})}/>
+          </div>
+        </section>
       </div>
-      {view.evidence&&<ActionButton act={act} action={{type:'archive-evidence'}} testId="iso-cctv-evidence" className="iso-evidence">
-        <Check/>Отметить кадр</ActionButton>}
     </div>
   </Modal>;
+}
+
+/** The key box by the exit: a steel box on the wall with a four-digit keypad (typed or clicked). */
+function Keypad({act,close,notice}:{act:(a:UIAction)=>void;close:()=>void;notice:string}){
+  const [code,setCode]=useState('');
+  const press=(d:string)=>{
+    if(d==='back'){setCode(c=>c.slice(0,-1));return;}
+    setCode(c=>{const n=(c+d).slice(0,4);if(n.length===4){window.setTimeout(()=>act({type:'keypad',code:n}),0);return '';}return n;});
+  };
+  useEffect(()=>{
+    const key=(e:globalThis.KeyboardEvent)=>{
+      if(/^(Digit|Numpad)\d$/.test(e.code)){e.preventDefault();press(e.code.slice(-1));}
+      else if(e.code==='Backspace'){e.preventDefault();press('back');}
+    };
+    window.addEventListener('keydown',key);return ()=>window.removeEventListener('keydown',key);
+  },[]);
+  return <div className="iso-keypad-wrap" role="dialog" aria-label="Ключница" data-testid="iso-keypad" onClick={e=>{if(e.target===e.currentTarget)close();}}>
+    <div className="iso-keypad">
+      <p className="iso-keypad-plate">КЛЮЧНИЦА · ВЫХОД</p>
+      <p className="iso-keypad-screen" data-testid="iso-keypad-code">{code.padEnd(4,'_').split('').join(' ')}</p>
+      <div className="iso-keypad-keys">
+        {['1','2','3','4','5','6','7','8','9','back','0','close'].map(d=><button key={d} type="button" data-testid={'iso-keypad-'+d}
+          onClick={()=>d==='close'?close():press(d)}>{d==='back'?'←':d==='close'?'✕':d}</button>)}
+      </div>
+      <p className="iso-keypad-notice">{notice||'Четыре цифры'}</p>
+    </div>
+  </div>;
 }
 
 export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notice,intro,introPrompt,dead,loading,cctv,document,fp, onAction:act}:IsoInterfaceProps){
@@ -437,6 +506,7 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
       <Breaker state={state} notice={notice} act={act}/>
     </Modal>;break;
     case 'cctv':modal=<CCTV view={cctv} act={act} notice={notice}/>;break;
+    case 'keypad':modal=<Keypad act={act} close={close} notice={notice}/>;break;
     case 'document':if(document&&settings.view==='fps'&&document.wall)modal=null;else if(document&&settings.view==='fps')modal=<div className="iso-paper" role="dialog" aria-label={document.title} data-testid="iso-document" onClick={close}>
       <h2>{document.title}</h2><article>{document.text}</article><p className="iso-paper-key">[{keyLabel(settings.keys.interact)}] убрать</p></div>;
       else if(document)modal=<Modal key="document" title={document.title} testId="iso-document" variant="iso-document-shell" onClose={close}>
@@ -478,13 +548,7 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
       <p className="iso-dialog-copy" role="alert">{loading||'Попробуйте загрузить игру ещё раз.'}</p>
       <div className="iso-modal-actions"><ActionButton act={act} action={{type:'retry'}} testId="iso-retry"><RotateCcw/>Повторить</ActionButton></div>
     </Modal>}
-    {mode==='complete'&&!panel&&<Modal key="complete" title="Глава завершена" testId="iso-complete">
-      <p className="iso-dialog-copy">Машина глохнет у ночной заправки во Флориде. Внутри горит одна лампа.</p>
-      <div className="iso-modal-actions">
-        <a className="iso-button" style={{textDecoration:'none'}} href={`${import.meta.env.BASE_URL}?loc=station`} data-testid="iso-next-chapter">Глава 2: заправка<ArrowRight/></a>
-        <ActionButton act={act} action={{type:'title'}}>В главное меню</ActionButton>
-      </div>
-    </Modal>}
+    {mode==='complete'&&<div className="iso-leaving" role="status" data-testid="iso-leaving"><p>Снаружи</p></div>}
     {modal}
     {mode==='play'&&dead&&<div className="iso-dead" role="alert"><div className="iso-dead-noise"/><p><b>ЗАРЯД НА КАМЕРЕ РАЗРЯЖЕН</b><span>Вы проиграли. Без записи в этом здании нечем смотреть.</span></p><div className="iso-dead-actions"><button type="button" onClick={()=>act({type:'start'})}>Начать заново</button><button type="button" onClick={()=>act({type:'title'})}>В меню</button></div></div>}
     {panel==='breaker'&&settings.view==='fps'&&<p className="iso-focus-hint">Щёлкните по рычагам по порядку, как на схеме · [{keyLabel(settings.keys.interact)}] отойти</p>}

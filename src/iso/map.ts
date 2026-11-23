@@ -43,6 +43,8 @@ export const OBJECTS={
   archiveDoor:{room:'corridor',x:2.22,z:-3.25,label:'Дверь архива'},
   archiveIndex:{room:'archive',x:3.75,z:-2.04,label:'Указатель стеллажей'},
   fileZero:{room:'archive',x:6.69,z:-3.30,label:'Стеллаж Б · секция 4'},
+  keyBox:{room:'corridor',x:2.26,z:-4.45,label:'Ключница'},
+  exitDoor:{room:'corridor',x:1.2,z:-4.86,label:'Выход'},
 } satisfies Record<string,Interactable>;
 export type ObjectId=keyof typeof OBJECTS;
 export const FURNITURE:readonly (Point&{room:RoomId;w:number;d:number;kind:string})[]=[

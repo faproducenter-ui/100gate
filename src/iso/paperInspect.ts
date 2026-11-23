@@ -9,7 +9,7 @@ import type { PaperKind } from './contracts';
  * both arms solved onto a `paper` bone, thumbs over the front near the side edges, fingers behind, elbows down and out;
  * clips paper_open / paper_idle / paper_close for three grip widths (narrow, a4, wide), baked to bone keys.
  * paper-inspect-1.glb carries only those clips, the `paper` bone with the sheet mesh and the eye point; the skinned arms are the
- * game's own viewmodel (viewmodel-8.glb), cloned here, so the clips play on the very same hands.
+ * game's own viewmodel (viewmodel-9.glb), cloned here, so the clips play on the very same hands.
  *
  * What changes per document is only the content: the kind picks the sheet size and grip, the face is a canvas texture.
  * On top of the clips there is a light procedural layer: the hands trail a turn of the head, sway, bob with the steps.

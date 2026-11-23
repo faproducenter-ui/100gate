@@ -172,7 +172,7 @@
   gap: 8px;
   text-align: center;
 }
-.iso-hud-bottom .iso-notice, .iso-cctv-frame .iso-cctv-notice {
+.iso-hud-bottom .iso-notice {
   padding: .6em 1em;
   background: #1b2119f5;
   border: 1px solid #818065;
@@ -426,52 +426,8 @@
 }
 .iso-cctv-shell .iso-dialog-head { margin: 0; padding: 0 0 .45em; border: 0; }
 .iso-cctv-shell .iso-dialog-head h2 { text-shadow: 0 2px 6px #000; font-size: 1.25em; }
-.iso-cctv-frame {
-  position: relative;
-  min-height: 2.6em;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: .4em .65em;
-  border: 1px solid #94aa847d;
-  border-bottom-color: #94aa8440;
-  color: #d2e2cb;
-  background: repeating-linear-gradient(0deg,#060e0624 0 1px,transparent 1px 3px);
-  box-shadow: inset 0 0 55px #0f1b1080;
-  text-shadow: 0 1px 4px #000;
-}
-.iso-cctv-label, .iso-cctv-signal { display: flex; gap: .45em; align-items: center; font-size: .84em; }
-.iso-cctv-label svg { width: 17px; height: 17px; }
-.iso-cctv-label strong { margin-inline-start: .35em; font-weight: 560; }
-.iso-cctv-signal { font-size: .72em; color: #c0d4b7; letter-spacing: .09em; }
-.iso-cctv-signal i { width: .55em; height: .55em; border-radius: 50%; background: #a6bd96; box-shadow: 0 0 5px #b6e5a8; }
-.iso-cctv-frame .iso-cctv-notice { position: absolute; bottom: .55em; left: 50%; transform: translateX(-50%); max-width: 92%; width: max-content; text-align: center; }
-.iso-cctv-deck {
-  display: grid;
-  gap: .4em;
-  padding: .5em;
-  background: #171c17f8;
-  border: 1px solid #757b62;
-  border-top: 0;
-}
-.iso-cctv-select { display: flex; justify-content: space-between; gap: .3em; }
-.iso-cctv-select > div { display: flex; gap: .28em; }
-.iso-cctv-select button {
-  min-height: 44px;
-  padding: .3em .75em;
-  border: 1px solid #a3aa8e51;
-  background: #272d25;
-  color: #c9cbb7;
-}
-.iso-cctv-select button:is(:hover,[aria-pressed="true"]):not(:disabled) { color: #e3e8d3; background: #394637; border-color: #a7b593; }
-.iso-cctv-transport { display: grid; grid-template-columns: max-content minmax(0,1fr) 44px; gap: .65em; align-items: center; }
-.iso-cctv-keys { display: flex; gap: 3px; }
-.iso-cctv-time { display: grid; grid-template-columns: 5ch minmax(0,1fr) 5ch; align-items: center; gap: .4em; color: #b5c6a9; font-variant-numeric: tabular-nums; }
-.iso-cctv-time span:last-child { text-align: end; }
-.iso-ui .iso-evidence { justify-self: end; background: #333b2f; color: #e1e7d0; }
 
-.iso-ui[data-motion="off"] *, .iso-ui[data-flicker="reduced"] .iso-cctv-frame { animation: none !important; transition-duration: 0s !important; }
-@media (prefers-reduced-motion: reduce) {
+.iso-ui[data-motion="off"] *, .iso-ui[data-flicker="reduced"] @media (prefers-reduced-motion: reduce) {
   .iso-ui * { animation: none !important; transition-duration: 0s !important; }
 }
 @media (max-width: 650px) {
@@ -479,17 +435,9 @@
   .iso-options { grid-template-columns: 1fr; }
   .iso-title-content { margin-inline-start: var(--iso-left); }
   .iso-inventory { grid-template-columns: 1fr; }
-  .iso-cctv-select > div:first-child button span { display: none; }
-  .iso-cctv-select button { padding-inline: .55em; }
-  .iso-objective { max-width: min(46vw,23em); }
+    .iso-objective { max-width: min(46vw,23em); }
 }
 @media (max-width: 450px) {
-  .iso-cctv-select { flex-wrap: wrap; }
-  .iso-cctv-select > div { flex-grow: 1; }
-  .iso-cctv-select button { flex: 1 1 0; }
-  .iso-cctv-transport { grid-template-columns: max-content minmax(0,1fr) 44px; gap: .3em; }
-  .iso-cctv-time { grid-template-columns: 1fr; }
-  .iso-cctv-time span:last-child { display: none; }
   .iso-objective { padding-inline: .7em .5em; }
 }
 @media (max-height: 500px) {
@@ -500,8 +448,7 @@
   .iso-dialog { padding: 10px; }
   .iso-dialog-head { margin-bottom: .45em; padding-bottom: .4em; }
   .iso-cctv-shell .iso-dialog-head { padding-bottom: .15em; }
-  .iso-cctv-frame { min-height: 0; }
-  .iso-breaker-bank { margin-block: .4em; }
+    .iso-breaker-bank { margin-block: .4em; }
   .iso-breaker-slot { height: 2.65em; }
 }
 @media (max-height: 340px) {
@@ -643,16 +590,112 @@ html, body, #root { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
 .iso-ui .iso-cctv-shell .iso-dialog { background: none !important; border: 0 !important; box-shadow: none !important; width: 100% !important; max-width: none !important; height: 100% !important; max-height: none !important; padding: 0 !important;
   display: grid !important; grid-template-rows: 1fr auto !important; pointer-events: none; font-family: var(--analog-font); color: #b9f5c6; }
 .iso-ui .iso-cctv-shell .iso-dialog-head { display: none !important; }
-.iso-ui .iso-cctv-frame { position: relative; background: none !important; border: 0 !important; box-shadow: none !important; min-height: 0; }
-.iso-ui .iso-cctv-label { position: absolute; top: 6.5%; left: 5%; letter-spacing: .16em; text-shadow: 0 0 6px #3dff6e99; text-transform: uppercase; font-size: .9rem; }
-.iso-ui .iso-cctv-label svg { display: none; }
-.iso-ui .iso-cctv-signal { position: absolute; top: 6.5%; right: 5%; letter-spacing: .14em; color: #b9f5c6; font-size: .8rem; }
-.iso-ui .iso-cctv-signal i { background: #7dff9a; box-shadow: 0 0 6px #5fff86; }
-.iso-ui .iso-cctv-deck { pointer-events: auto; background: linear-gradient(transparent, #010a03d0 55%) !important; border: 0 !important; padding: 2.4em 4.5% 1.8em !important; gap: .7em; }
-.iso-ui .iso-cctv-deck button, .iso-ui .iso-cctv-deck .iso-icon { font-family: var(--analog-font) !important; color: #b9f5c6 !important; background: #02100644 !important; border: 1px solid #6ef0903a !important; letter-spacing: .08em; border-radius: 0 !important; box-shadow: none !important; }
-.iso-ui .iso-cctv-deck button:is(:hover,[aria-pressed="true"]):not(:disabled) { background: #1b5a2a77 !important; border-color: #9affb0aa !important; color: #e8fff0 !important; }
-.iso-ui .iso-cctv-deck button:disabled { opacity: .35; }
-.iso-ui .iso-cctv-time, .iso-ui .iso-cctv-time span { color: #b9f5c6 !important; }
+
+/* ---- the night guard's surveillance desk: a monitor in its housing and the switcher / recorder under it ---- */
+.iso-ui .iso-cctv-shell .iso-dialog { grid-template-rows: 1fr !important; inset: 0 !important; position: absolute !important; }
+.iso-ui .iso-cctv-shell {
+  --grime: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --stain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='4' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .12  0 0 0 0 .09  0 0 0 0 .05  0 0 0 -2.2 1.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+}
+.cctv-rig { position: absolute; inset: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: clamp(6px, 1.2vh, 14px);
+  padding: clamp(6px, 1.6vh, 18px) clamp(8px, 3vw, 46px) clamp(6px, 1.4vh, 14px); pointer-events: auto;
+  font-family: var(--analog-font); text-transform: uppercase; }
+/* the monitor: thick dirty-beige plastic, a deep bezel round a curved screen, a chin with the badge, knobs and the power lamp */
+.cctv-monitor { --pt: clamp(10px, 2.4vh, 26px); --pl: clamp(12px, 2.6vh, 30px); --chin: clamp(26px, 4vh, 40px);
+  position: relative; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) var(--chin); justify-self: center; width: min(100%, calc((100vh - 15em) * 1.62));
+  padding: var(--pt) var(--pl) 0; }
+/* the housing has a real window: the scene draws the camera picture there, behind the glass */
+.cctv-housing { position: absolute; inset: 0; border-radius: 14px 14px 10px 10px; pointer-events: none;
+  background: var(--stain), var(--grime), linear-gradient(170deg, #9b947f 0%, #857e69 45%, #6d6755 100%);
+  box-shadow: inset 0 2px 0 #c9c1a7aa, inset 0 -3px 0 #3d3a30, inset 3px 0 0 #b3ab9244, 0 18px 40px #000c, 0 2px 0 #000;
+  -webkit-mask: linear-gradient(#000 0 0) var(--pl) var(--pt) / calc(100% - 2 * var(--pl)) calc(100% - var(--pt) - var(--chin)) no-repeat, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) var(--pl) var(--pt) / calc(100% - 2 * var(--pl)) calc(100% - var(--pt) - var(--chin)) no-repeat exclude, linear-gradient(#000 0 0); }
+.cctv-monitor > :not(.cctv-housing) { position: relative; }
+.cctv-screen { position: relative; min-height: 0; border-radius: 3px; overflow: hidden; background: transparent;
+  box-shadow: inset 0 0 0 clamp(4px, .8vh, 8px) #1b1a16, inset 0 0 0 calc(clamp(4px, .8vh, 8px) + 1px) #000, inset 0 0 40px 18px #000c; }
+.cctv-glass { position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(ellipse at 28% 12%, #ffffff16, transparent 38%), linear-gradient(180deg, #ffffff08, transparent 30%, #00000030); }
+.cctv-osd { position: absolute; display: flex; gap: .6em; align-items: baseline; color: #f3f6ee; font-size: clamp(11px, 2.1vh, 17px); letter-spacing: .12em;
+  text-shadow: 1px 1px 0 #000, -1px 0 0 #000, 0 0 6px #000; pointer-events: none; }
+.cctv-osd b { font-weight: 700; }
+.cctv-osd-tl { top: 6%; left: 5%; flex-direction: column; gap: .1em; }
+.cctv-osd-tl b { font-size: 1.25em; }
+.cctv-osd-tr { top: 6%; right: 5%; }
+.cctv-osd-bl { bottom: 6%; left: 5%; }
+.cctv-osd-br { bottom: 6%; right: 5%; }
+.cctv-rec { width: .7em; height: .7em; border-radius: 50%; background: #ff3b2a; box-shadow: 0 0 6px #ff3b2a; align-self: center; animation: cctv-blink 1.1s steps(1) infinite; }
+@keyframes cctv-blink { 50% { opacity: .15; } }
+.cctv-notice { position: absolute; left: 50%; bottom: 15%; transform: translateX(-50%); width: max-content; max-width: 86%; margin: 0; padding: .35em .7em;
+  color: #f3f6ee; background: #000a; font-size: clamp(11px, 1.9vh, 15px); letter-spacing: .06em; text-transform: none; text-align: center; text-shadow: 1px 1px 0 #000; }
+/* switching cameras: the screen tears into static for a moment, then the next picture settles */
+.cctv-static { position: absolute; inset: 0; pointer-events: none; background: var(--grime), repeating-linear-gradient(0deg, #ffffff22 0 1px, transparent 1px 3px), #8a9a8a;
+  background-size: 160px 160px, auto, auto; mix-blend-mode: screen; opacity: 0; animation: cctv-cut .34s steps(6) 1; }
+@keyframes cctv-cut { 0% { opacity: .85; background-position: 0 0, 0 0; } 35% { opacity: .55; background-position: 60px 30px, 0 7px; }
+  70% { opacity: .2; background-position: 20px 90px, 0 2px; } 100% { opacity: 0; } }
+.cctv-chin { display: flex; align-items: center; justify-content: space-between; gap: 1em; padding: 0 .4em; color: #3a372d; font-size: clamp(9px, 1.5vh, 12px); letter-spacing: .2em; }
+.cctv-brand { text-shadow: 0 1px 0 #b9b197aa; }
+.cctv-brand b { color: #5a1d14; }
+.cctv-knobs { display: flex; gap: 1.1em; }
+.cctv-knobs i { width: 1.5em; height: 1.5em; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #4b4840, #15140f 70%); box-shadow: 0 1px 0 #c3bba2aa, inset 0 -1px 2px #000; position: relative; }
+.cctv-knobs i::after { content: ""; position: absolute; left: 46%; top: 12%; width: 8%; height: 34%; background: #bdb6a0; transform-origin: 50% 110%; transform: rotate(var(--r, 30deg)); }
+.cctv-knobs i:nth-child(2) { --r: -50deg; } .cctv-knobs i:nth-child(3) { --r: 115deg; }
+.cctv-power { display: flex; align-items: center; gap: .5em; }
+.cctv-power i { width: .7em; height: .7em; border-radius: 50%; background: #5cff6a; box-shadow: 0 0 6px #4cff5c, 0 0 1px #000; }
+/* the recorder / switcher: a grey-black steel faceplate with screws, stamped white labels, hard keys with lamps */
+.cctv-deck { position: relative; justify-self: center; width: min(100%, 76rem); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: clamp(8px, 1.6vw, 22px); align-items: end;
+  padding: clamp(8px, 1.4vh, 14px) clamp(14px, 2vw, 28px) clamp(8px, 1.3vh, 13px); border-radius: 5px; color: #c9c6b8;
+  background: var(--grime), repeating-linear-gradient(90deg, #ffffff05 0 1px, transparent 1px 3px), linear-gradient(180deg, #2f2f2c, #1d1d1b 60%, #151514);
+  box-shadow: inset 0 1px 0 #ffffff26, inset 0 -2px 0 #000, 0 10px 24px #000c; }
+.cctv-screw { position: absolute; top: 7px; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #8d8a80, #2d2c28 75%); box-shadow: 0 1px 0 #ffffff1a; }
+.cctv-screw::after { content: ""; position: absolute; inset: 45% 15%; background: #1a1a18; transform: rotate(35deg); }
+.cctv-screw[data-at="tl"] { left: 7px; } .cctv-screw[data-at="tr"] { right: 7px; }
+.cctv-block { display: grid; gap: .35em; min-width: 0; }
+.cctv-block h3 { margin: 0; font: inherit; font-size: clamp(8px, 1.25vh, 10.5px); letter-spacing: .28em; color: #a9a593; border-bottom: 1px solid #ffffff1c; padding-bottom: .2em; }
+.cctv-row { display: flex; gap: clamp(4px, .55vw, 8px); }
+.cctv-key { position: relative; display: grid; justify-items: center; align-content: start; gap: .25em; min-width: 46px; padding: 9px 0 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; text-transform: inherit; }
+.cctv-key .cctv-cap { display: grid; place-items: center; min-width: 46px; height: clamp(38px, 5.2vh, 44px); padding: 0 .65em; border-radius: 3px; font-size: clamp(11px, 1.8vh, 14px); letter-spacing: .08em; color: #e3e0d2;
+  background: linear-gradient(180deg, #4a4a46, #2b2b28 55%, #222220); box-shadow: 0 0 0 1px #0b0b0a, inset 0 1px 0 #ffffff2e, inset 0 -2px 0 #00000080, 0 3px 0 #0a0a09, 0 4px 6px #0008;
+  transition: transform .06s, box-shadow .06s, background .12s; }
+.cctv-key.wide .cctv-cap { min-width: 70px; }
+.cctv-key.red .cctv-cap { color: #ffd9d2; background: linear-gradient(180deg, #7a2a20, #4a150f 60%, #3c110c); }
+.cctv-key .cctv-sub { font-size: clamp(7.5px, 1.15vh, 10px); letter-spacing: .14em; color: #a9a593; white-space: nowrap; }
+.cctv-key:hover:not(:disabled) .cctv-cap { background: linear-gradient(180deg, #555550, #31312d 55%, #262623); }
+.cctv-key.red:hover:not(:disabled) .cctv-cap { background: linear-gradient(180deg, #8c3125, #561a12 60%, #451410); }
+.cctv-key:active:not(:disabled) .cctv-cap, .cctv-key[aria-pressed="true"] .cctv-cap { transform: translateY(2px); box-shadow: 0 0 0 1px #0b0b0a, inset 0 1px 0 #ffffff14, inset 0 2px 4px #000a, 0 1px 0 #0a0a09; }
+.cctv-key[aria-pressed="true"] .cctv-cap { color: #f4ffe9; background: linear-gradient(180deg, #3d4a39, #263023 60%, #1d251b); }
+.cctv-key:focus-visible { outline: none; } .cctv-key:focus-visible .cctv-cap { box-shadow: 0 0 0 2px #d8cf9a, 0 3px 0 #0a0a09; }
+.cctv-key:disabled { cursor: default; } .cctv-key:disabled .cctv-cap { color: #6e6c62; } .cctv-key:disabled .cctv-sub { color: #6a675b; }
+.cctv-lamp { position: absolute; top: 0; width: 7px; height: 4px; border-radius: 2px; background: #2a1a14; box-shadow: inset 0 1px 1px #000; }
+.cctv-lamp[data-lamp="green"] { background: #74ff7f; box-shadow: 0 0 6px #5dff6a, 0 0 1px #000; }
+.cctv-lamp[data-lamp="red"] { background: #ff4a33; box-shadow: 0 0 7px #ff3a22; animation: cctv-blink .8s steps(1) infinite; }
+.cctv-lamp[data-lamp="amber"] { background: #ffb43a; box-shadow: 0 0 6px #ffa21e; }
+/* the tape counter: a blue-green vacuum-fluorescent display, the tape position a thin groove beside it */
+.cctv-counter { display: grid; grid-template-columns: auto auto minmax(80px, 1fr); align-items: center; gap: .6em; padding: .3em .6em; border-radius: 3px; background: #050807; box-shadow: inset 0 1px 4px #000, 0 1px 0 #ffffff14; }
+.cctv-vfd { color: #6ff3d2; font-size: clamp(12px, 2vh, 16px); letter-spacing: .12em; text-shadow: 0 0 6px #3fe6bf, 0 0 1px #9ffff0; font-variant-numeric: tabular-nums; }
+.cctv-vfd small { color: #3d9c86; font-size: .8em; text-shadow: none; }
+.cctv-seek { -webkit-appearance: none; appearance: none; width: 100%; height: 26px; margin: 0; background: transparent; cursor: pointer; touch-action: none; }
+.cctv-seek::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, #3fe6bf var(--p), #13302a var(--p)); box-shadow: 0 0 4px #3fe6bf55; }
+.cctv-seek::-moz-range-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, #3fe6bf var(--p), #13302a var(--p)); }
+.cctv-seek::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 18px; margin-top: -7px; border-radius: 2px; background: linear-gradient(180deg, #d9d6c8, #8b887c); box-shadow: 0 1px 2px #000; }
+.cctv-seek::-moz-range-thumb { width: 10px; height: 18px; border: 0; border-radius: 2px; background: linear-gradient(180deg, #d9d6c8, #8b887c); }
+.cctv-seek:focus-visible { outline: 1px solid #d8cf9a; outline-offset: 2px; }
+.cctv-transport { justify-items: center; } .cctv-transport .cctv-counter { width: min(100%, 30rem); }
+@media (max-width: 900px) {
+  .cctv-deck { grid-template-columns: 1fr 1fr; } .cctv-transport { grid-column: 1 / -1; grid-row: 1; }
+  .cctv-tapes { justify-self: end; }
+}
+@media (max-width: 560px) {
+  .cctv-deck { grid-template-columns: 1fr; } .cctv-tapes { justify-self: stretch; }
+  .cctv-row { justify-content: space-between; } .cctv-key, .cctv-key .cctv-cap { min-width: 44px; } .cctv-key.wide .cctv-cap { min-width: 54px; }
+  .cctv-chin .cctv-knobs { display: none; }
+}
+@media (max-height: 520px) {
+  .cctv-monitor { --pt: 6px; --pl: 8px; --chin: 6px; width: min(100%, calc((100vh - 7.2em) * 1.7)); } .cctv-chin { visibility: hidden; }
+  .cctv-rig { gap: 5px; padding-block: 5px; } .cctv-counter { padding-block: 0; } .cctv-deck { padding-block: 6px; row-gap: 4px; }
+  .cctv-block h3, .cctv-key .cctv-sub { display: none; } .cctv-key { padding-top: 7px; }
+  .cctv-deck { grid-template-columns: auto minmax(0,1fr) auto; } .cctv-transport { grid-column: auto; grid-row: auto; }
+}
 
 /* the inventory: the player crouches and spreads a cloth on the floor; the things lie on it */
 .iso-cloth-wrap { position: absolute; inset: 0; z-index: 12; display: grid; align-items: end; justify-items: center; background: radial-gradient(ellipse at 50% 70%, #00000000 30%, #000000aa 100%); }
@@ -667,3 +710,20 @@ html, body, #root { overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
 .iso-cloth-note { position: absolute; left: 50%; bottom: 5%; transform: translateX(-50%); width: min(90vw, 36em); display: grid; gap: .3em; padding: .8em 1.1em; background: #02080ac4; border: 1px solid #c8e2de44; color: #e2efec; font-family: var(--analog-font); font-size: .82rem; line-height: 1.5; }
 .iso-cloth-note b { color: #ffd28a; letter-spacing: .1em; text-transform: uppercase; }
 @keyframes iso-cloth-in { from { opacity: 0; transform: rotateX(32deg) translateY(14vh); } to { opacity: 1; transform: rotateX(32deg) translateY(0); } }
+
+/* Key box by the exit: a grey steel box screwed to the wall, rubber keys and a small green LCD. */
+.iso-keypad-wrap{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.55);z-index:40}
+.iso-keypad{width:min(300px,86vw);padding:18px 18px 14px;border-radius:6px;background:linear-gradient(160deg,#5b5f5c,#363937 60%,#2b2d2c);
+  box-shadow:inset 0 1px 0 #8a8e89,inset 0 -2px 0 #1b1c1b,0 18px 40px rgba(0,0,0,.6);border:1px solid #1d1f1e;font-family:'Courier New',monospace;color:#d8d6c8}
+.iso-keypad-plate{margin:0 0 10px;padding:4px 6px;font-size:11px;letter-spacing:.18em;text-align:center;background:#c8c2a4;color:#2b2a22;border-radius:2px;box-shadow:inset 0 0 0 1px #8d876c}
+.iso-keypad-screen{margin:0 0 12px;padding:8px 0;font-size:26px;letter-spacing:.12em;text-align:center;background:#1d2a1c;color:#9fe08a;
+  border-radius:3px;box-shadow:inset 0 2px 6px #000;text-shadow:0 0 6px rgba(130,230,110,.6)}
+.iso-keypad-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.iso-keypad-keys button{min-height:46px;font:inherit;font-size:20px;color:#e8e5d6;background:linear-gradient(#4b4e4c,#2e302f);border:1px solid #151615;border-radius:5px;
+  box-shadow:inset 0 1px 0 #6d716d,0 2px 0 #121312;cursor:pointer}
+.iso-keypad-keys button:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #555,0 0 0 #000}
+.iso-keypad-notice{margin:10px 0 0;min-height:1.2em;font-size:12px;text-align:center;color:#b9b5a3}
+.iso-leaving{position:fixed;inset:0;display:grid;place-items:center;background:#000;z-index:60;animation:iso-leave 1.5s ease-in both}
+.iso-leaving p{color:#9a968a;letter-spacing:.4em;text-transform:uppercase;font-size:14px;opacity:0;animation:iso-leave-t 1.5s .6s both}
+@keyframes iso-leave{from{background:rgba(0,0,0,0)}to{background:#000}}
+@keyframes iso-leave-t{to{opacity:1}}

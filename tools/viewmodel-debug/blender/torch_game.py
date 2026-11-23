@@ -1,5 +1,5 @@
 # blender -b art/mixamo-hold.blend --python tools/viewmodel-debug/blender/torch_game.py [-- preview]
-# Authors the first-person clips for the torch / lighter story on the user's ready model and exports public/assets/iso/viewmodel-8.glb.
+# Authors the first-person clips for the torch / lighter story on the user's ready model and exports public/assets/iso/viewmodel-9.glb.
 #   torch_idle (60f loop) torch_walk (24f) torch_raise (12f)  - the lit or unlit torch carried in the right hand
 #   torch_pickup (48f)   - the right hand takes the torch leaning against the wall (it is hidden in the hand until frame 16)
 #   lighter_take (40f)   - the right hand takes the lighter out of the drawer, looks at it, puts it away
@@ -7,7 +7,7 @@
 # Every moving thing is a bone of the one armature (arms, fingers and helper bones prop_*, lid_*, flame_*), so each clip is a single action.
 exec(open(r"C:\Users\libde\100gate\tools\viewmodel-debug\blender\torch_rig.py", encoding='utf-8').read())
 PREVIEW = 'preview' in sys.argv
-OUT = r"C:\Users\libde\100gate\public\assets\iso\viewmodel-8.glb"
+OUT = r"C:\Users\libde\100gate\public\assets\iso\viewmodel-9.glb"
 OUTD = r"C:\Users\libde\100gate\docs\viewmodel-grip\torch"; os.makedirs(OUTD, exist_ok=True)
 EPS = 1e-4
 
@@ -51,17 +51,18 @@ def mix(a, b, w):
     out = {}
     for f in FING:
         t = w[f] if isinstance(w, dict) else w
-        out[f] = (lerpc(a[f][0], b[f][0], t), a[f][1] + (b[f][1] - a[f][1]) * t)
+        out[f] = (lerpc(a[f][0], b[f][0], t), a[f][1] + (b[f][1] - a[f][1]) * t, _tw(a[f]) + (_tw(b[f]) - _tw(a[f])) * t)
     return out
+def _tw(st): return st[2] if len(st) > 2 else 0.0                       # optional roll of the base joint about its own axis (the thumb of the torch grip)
 def stagger(f0, dur=10, gap=2, order=('Index', 'Middle', 'Ring', 'Pinky', 'Thumb')):
     return lambda f: {n: seg(f, f0 + i * gap, f0 + i * gap + dur) for i, n in enumerate(order)}
 def put_fingers(state, side):
     for f in FING:
-        c, sp = state[f]
+        c, sp = state[f][0], state[f][1]; tw = _tw(state[f])
         for i in range(3):
             b = fb(f, i) if side == 'R' else fbl(f, i)
             s = sp if side == 'R' else -sp
-            b.rotation_quaternion = qz(s if i == 0 else 0) @ qx(c[i])
+            b.rotation_quaternion = qz(s if i == 0 else 0) @ qx(c[i]) @ (Quaternion((0, 1, 0), tw if side == 'R' else -tw) if i == 0 else Quaternion())
 
 # ------------------------------------------------------------------ relations (hand frame <-> prop frame)
 Hw_hold = FL_HOLD @ G.inverted()                                      # right hand frame of the solved hold
@@ -71,6 +72,16 @@ G_LGR = _gj                                                           # lighter 
 _S = Matrix.Diagonal((1, 1, -1, 1)); G_LGL = _S @ _gj @ _S           # ... mirrored for the left hand
 def torch_at(Hw): return Hw @ G_TR
 def hand_for_torch(T): return T @ G_TR.inverted()
+
+# the power grip fitted on the hand mesh (torch_grip_v3.py): shaft on the palm, fingers closed joint by joint onto it, thumb opposing
+# on the outer face; it replaces the old flashlight proxy grip for every torch clip
+exec(open(r"C:\Users\libde\100gate\tools\viewmodel-debug\blender\torch_grip_v3.py", encoding='utf-8').read())
+lean_pose(0); solve_arm(Hw_hold); bpy.context.view_layer.update()
+GRIP_HW = hand_frame().to_4x4(); GRIP_HW.translation = H(HA)
+GRIP_TW, TORCH_G, _grip_rep = build_grip(GRIP_HW)
+print('torch grip v3:', _grip_rep)
+G_TR = GRIP_HW.inverted() @ GRIP_TW
+TORCH_HOLD = Hw_hold @ G_TR                                           # hand stays where the hold put it, the torch sits in the fitted grip
 
 # ------------------------------------------------------------------ time helpers
 def ease(t): t = max(0.0, min(1.0, t)); return t * t * (3 - 2 * t)
@@ -177,9 +188,9 @@ def pickup(g):
         T = mat_lerp(T, TORCH_HOLD, seg(g, 29, 41))               # then swung round into the carrying pose
         if g > 30: T = T @ Matrix.Rotation(0.13 * math.exp(-0.28 * (g - 30)) * math.cos(0.95 * (g - 30)), 4, 'Y')   # the heavy head lags, overshoots and settles
         Hw = hand_for_torch(T)
-    squeeze = 1.0 + 0.06 * math.sin(math.pi * seg(g, 18, 26))
+    squeeze = 1.0 + 0.02 * math.sin(math.pi * seg(g, 18, 26))      # a brief squeeze as the grip takes the weight (the fitted grip already touches the shaft)
     fingers = mix(mix(RELAXS, OPENS, seg(g, 6, 14) * (1 - seg(g, 15, 16))), TORCH_G, stagger(15, 9, 1)(g))
-    for f_ in FING: fingers[f_] = (tuple(c * (squeeze if f_ != 'Thumb' else 1.0) for c in fingers[f_][0]), fingers[f_][1])
+    for f_ in FING: fingers[f_] = (tuple(c * (squeeze if f_ != 'Thumb' else 1.0) for c in fingers[f_][0]), *fingers[f_][1:])
     return frame(R=(Hw, fingers), torch=(T0 if g < ATT else torch_at(Hw), 1.0 if g >= ATT else EPS))
 CLIPS['torch_pickup'] = [pickup(g) for g in range(49)]
 

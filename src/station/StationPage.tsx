@@ -1,16 +1,16 @@
 import {useEffect,useRef,useState} from 'react';
 import * as T from 'three';
 import {StationWorld} from './world';
-import {SPOTS,STATION_SAVE,aimSpot,newStationSave,readStation,trySafe,useSpot,type Doc,type Outcome,type StationSave} from './state';
+import {LOCKS,SPOTS,STATION_SAVE,aimSpot,newStationSave,readStation,tryCode,useSpot,type Doc,type LockId,type Outcome,type StationSave} from './state';
 import {readSettings} from '../iso/state';
 import {IsoSound} from '../iso/sound';
 import './station.css';
 
 const LOOK_RAD=.0021,EYE=1.62,CROUCH_EYE=1.02;
-/** Inside the shop at the barred door, facing into the store (north). */
-const START={x:-1.9,y:1.4,yaw:0};
+/** On the step of the house by the road, just out of the administration's exit door, facing the station (east). */
+const START={x:-17.2,y:4.4,yaw:-Math.PI/2};
 
-type View={mode:'loading'|'ready'|'play'|'error';status:string;hint:string;notice:string;doc?:Doc;panel?:'safe'|'pause';code:string;locked:boolean;torch:boolean};
+type View={mode:'loading'|'ready'|'play'|'error';status:string;hint:string;notice:string;doc?:Doc;panel?:LockId|'pause';code:string;locked:boolean;torch:boolean};
 
 export default function StationPage(){
   const canvas=useRef<HTMLCanvasElement>(null);
@@ -34,6 +34,7 @@ export default function StationPage(){
     const paused=()=>v.mode!=='play'||!!v.doc||!!v.panel;
     const apply=(o:Outcome)=>{
       save=o.save;
+      if(o.got)sound.jingle(1,settings);
       if(o.door&&world){const open=world.toggleDoor(o.door);sound.cue('door',settings);if(!open)inform('');}
       if(o.notice)inform(o.notice);
       if(o.doc){emit({doc:o.doc});unlock();}
@@ -44,21 +45,23 @@ export default function StationPage(){
     const lock=()=>{try{void Promise.resolve(surface.requestPointerLock?.()).catch(()=>{});}catch{/* */}};
     api.current={
       code:d=>{
-        if(v.panel!=='safe')return;
+        const lock=v.panel;
+        if(!lock||lock==='pause')return;
         if(d==='back'){emit({code:v.code.slice(0,-1)});return;}
-        if(d==='close'){emit({panel:undefined,code:''});return;}
-        const code=(v.code+d).slice(0,4);emit({code});sound.cue('ui',settings);
-        if(code.length===4){const o=trySafe(save,code);emit({panel:undefined,code:''});apply(o);if(o.save.safe)sound.cue('switch',settings);}
+        if(d==='close'){emit({panel:undefined,code:''});if(!coarse)lock2();return;}
+        const len=LOCKS[lock].code.length,code=(v.code+d).slice(0,len);emit({code});sound.cue('ui',settings);
+        if(code.length===len){const o=tryCode(save,lock,code);emit({panel:undefined,code:''});apply(o);if(o.save.open?.includes(lock))sound.cue('switch',settings);if(!o.doc&&!coarse)lock2();}
       },
       closeDoc:()=>{emit({doc:undefined});if(!coarse)lock();},
       resume:()=>{emit({panel:undefined});if(!coarse)lock();},
       start:()=>{void sound.unlock().catch(()=>{});emit({mode:'play'});if(!coarse)lock();},
     };
-    const use=()=>{if(!aimed||paused())return;apply(useSpot(save,aimed));};
+    const use=()=>{if(!aimed||paused())return;apply(useSpot(save,aimed,save));};
+    const lock2=()=>lock();
     const keydown=(e:KeyboardEvent)=>{
       if(e.ctrlKey||e.metaKey||e.altKey)return;
-      if(v.panel==='safe'){
-        if(/^Digit\d$/.test(e.code)){e.preventDefault();api.current.code(e.code.slice(5));}
+      if(v.panel&&v.panel!=='pause'){
+        if(/^(Digit|Numpad)\d$/.test(e.code)){e.preventDefault();api.current.code(e.code.slice(-1));}
         else if(e.code==='Backspace'){e.preventDefault();api.current.code('back');}
         else if(e.code==='Escape'){e.preventDefault();api.current.code('close');}
         return;
@@ -153,8 +156,8 @@ export default function StationPage(){
     {view.mode==='loading'&&<div className="station-screen" role="status"><p className="station-mark">100<span>GATE</span></p><p>{view.status||'Загрузка…'}</p></div>}
     {view.mode==='error'&&<div className="station-screen" role="alert"><p>{view.status}</p><button type="button" onClick={()=>location.reload()}>Повторить</button></div>}
     {view.mode==='ready'&&<div className="station-screen station-title">
-      <p className="station-chapter">Глава 2</p><h1>Заправка «Круглосуточно»</h1><p className="station-date">4 декабря 2001 · 3:47</p>
-      <button type="button" onClick={()=>a.start()}>Войти</button>
+      <p className="station-chapter">Снаружи</p><h1>Заправка «Круглосуточно»</h1><p className="station-date">4 декабря 2001 · 3:47</p>
+      <button type="button" onClick={()=>a.start()}>Выйти на улицу</button>
       <p className="station-keys">WASD — идти · Shift — бег · C — присесть · E — взаимодействовать · F — фонарик · Esc — пауза</p>
     </div>}
     {view.mode==='play'&&<>
@@ -164,8 +167,9 @@ export default function StationPage(){
       {view.doc&&<div className="station-doc" role="dialog" aria-label={view.doc.title} onClick={()=>a.closeDoc()}>
         <article><h2>{view.doc.title}</h2>{view.doc.text.split('\n').map((l,i)=><p key={i}>{l}</p>)}<small>[E] закрыть</small></article>
       </div>}
-      {view.panel==='safe'&&<div className="station-doc" role="dialog" aria-label="Код сейфа">
-        <article className="station-safe"><h2>Сейф</h2><p className="station-code">{view.code.padEnd(4,'·')}</p>
+      {view.panel&&view.panel!=='pause'&&<div className="station-doc" role="dialog" aria-label={LOCKS[view.panel].title} data-testid="station-keypad">
+        <article className="station-safe"><h2>{LOCKS[view.panel].title}</h2><p className="station-code">{view.code.padEnd(LOCKS[view.panel].code.length,'·')}</p>
+          <p className="station-lock-hint">{LOCKS[view.panel].hint}</p>
           <div className="station-pad">{['1','2','3','4','5','6','7','8','9','back','0','close'].map(d=>
             <button key={d} type="button" onClick={()=>a.code(d)}>{d==='back'?'←':d==='close'?'✕':d}</button>)}</div>
         </article>

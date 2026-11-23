@@ -9,6 +9,8 @@ const STEP_UP=.28;   // a kerb or the shop's raised floor is stepped onto; anyth
 export class WalkGrid{
   /** Rectangles that block while a door is closed (keyed by door name). */
   readonly blockers=new Map<string,Rect>();
+  /** Doorways cut through the baked grid while a door stands open (the bake saw the closed leaf as a wall); h = floor height there. */
+  readonly openings=new Map<string,Rect&{h:number}>();
   constructor(readonly info:WalkInfo,private readonly cells:Uint8Array){
     if(cells.length!==info.w*info.h)throw Error('walk grid size mismatch');
   }
@@ -18,6 +20,21 @@ export class WalkGrid{
     for(let r=0;r<h;r++)cells.set(rowsTopDown.subarray(r*w,(r+1)*w),(h-1-r)*w);
     return new WalkGrid(info,cells);
   }
+  /** A thin wall the bake missed (under a roof): a row of small squares along the segment, always solid. */
+  addWall(id:string,ax:number,ay:number,bx:number,by:number,t=.1){
+    const n=Math.max(1,Math.ceil(Math.hypot(bx-ax,by-ay)/(t*1.2)));
+    for(let k=0;k<=n;k++){const x=ax+(bx-ax)*k/n,y=ay+(by-ay)*k/n;this.blockers.set(`${id}:${k}`,{x0:x-t,x1:x+t,y0:y-t,y1:y+t});}
+  }
+  /** Open a doorway: its floor height is taken from the free cells around it. */
+  openDoorway(id:string,r:Rect){
+    const hs:number[]=[];
+    for(let k=0;k<24;k++){
+      const a=k*Math.PI/12,cx=(r.x0+r.x1)/2,cy=(r.y0+r.y1)/2,rx=(r.x1-r.x0)/2+.25,ry=(r.y1-r.y0)/2+.25;
+      const v=this.raw(cx+Math.cos(a)*rx,cy+Math.sin(a)*ry);if(v!==this.info.blocked)hs.push(v);
+    }
+    hs.sort((a,b)=>a-b);
+    this.openings.set(id,{...r,h:hs.length?hs[hs.length>>1]!:this.info.heightOffsetCm});
+  }
   private raw(x:number,y:number){
     const {x0,y0,cell,w,h,blocked}=this.info,i=Math.floor((x-x0)/cell),j=Math.floor((y-y0)/cell);
     if(i<0||j<0||i>=w||j>=h)return blocked;
@@ -25,8 +42,11 @@ export class WalkGrid{
   }
   /** Floor height at a point, or undefined where it is blocked. */
   floor(x:number,y:number){
-    const v=this.raw(x,y);
-    if(v===this.info.blocked)return undefined;
+    let v=this.raw(x,y);
+    if(v===this.info.blocked){
+      for(const r of this.openings.values())if(x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1){v=r.h;break;}
+      if(v===this.info.blocked)return undefined;
+    }
     for(const r of this.blockers.values())if(x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1)return undefined;
     return v/100-this.info.heightOffsetCm/100;
   }

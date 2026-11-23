@@ -57,21 +57,6 @@ function wrap(model: T.Object3D, scale: number, centre = false): T.Group {
   return g;
 }
 
-/** Triangles of a mesh grouped by connected pieces: returns an index list per piece, with each piece's centre (in the mesh's own space) */
-function pieces(geo: T.BufferGeometry) {
-  const idx = geo.index!.array, n = geo.getAttribute('position').count, p = geo.getAttribute('position');
-  const parent = new Int32Array(n); for (let i = 0; i < n; i++) parent[i] = i;
-  const find = (a: number) => { while (parent[a] !== a) { parent[a] = parent[parent[a]!]!; a = parent[a]!; } return a; };
-  for (let i = 0; i < idx.length; i += 3) { const a = find(idx[i]!), b = find(idx[i + 1]!), c = find(idx[i + 2]!); parent[b] = a; parent[c] = a; }
-  const byRoot = new Map<number, { tris: number[]; box: T.Box3 }>(); const v = new T.Vector3();
-  for (let i = 0; i < idx.length; i += 3) {
-    const r = find(idx[i]!); let e = byRoot.get(r); if (!e) { e = { tris: [], box: new T.Box3() }; byRoot.set(r, e); }
-    e.tris.push(idx[i]!, idx[i + 1]!, idx[i + 2]!);
-    for (let k = 0; k < 3; k++) { v.fromBufferAttribute(p, idx[i + k]!); e.box.expandByPoint(v); }
-  }
-  return [...byRoot.values()];
-}
-
 /** the telephone: 22 cm wide in the file's centimetres; the dial is its own pivot and turns about the telephone's vertical axis */
 export function makePhone(src: T.Object3D) {
   const model = src.clone(true);
@@ -102,47 +87,113 @@ export function makeCamera(src: T.Object3D) {
   return { group: g, led, halo };
 }
 
-/** the fuse box: in metres already (43 cm). The knife switch (a few hundred small pieces near the top centre) is split off as `lever` with its pivot. */
-/** local depth above which the knife switch's pieces count as the turning handle */
-const WING_Z = .04;
+/** the fuse box: in metres already (43 cm). Its rotary switch is a scan fused with the panel: a cast wing handle on a hub, a rag wound tight
+ * round it, two loose ends hanging down. Nothing is cut out: the switch turns by moving the scan's own vertices about the hub's real axis. */
+const HUB = new T.Vector2(.0102, .3187);   // centre of the hub ring, measured on the scan (model space, metres; the axis is the panel normal +z)
+const PANEL_Z = .004;                       // the panel's face around the switch
+const TURN = 2.1;                           // from OFF to ON the handle turns 120 degrees clockwise, between two stops
+
+const smooth = (x: number, a: number, b: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+/** the turning switch: rigid handle, wound rag that turns with it and stretches where it meets the panel, loose ends that lag and swing */
+export class KnifeSwitch {
+  angle = 0;                 // current angle of the handle (rad, 0 = OFF, -TURN = ON)
+  speed = 0;                 // its angular speed (rad/s), for the sound
+  onStop?: (at: 'rest' | 'on', hit: number) => void;
+  private lag = 0; private lagV = 0; private kick = 0; private kickT = 9; private at: 'rest' | 'on' | null = 'rest'; private drawn = NaN; private t = 0;
+  private readonly parts: { pos: T.BufferAttribute; nor?: T.BufferAttribute; idx: Uint32Array; rest: Float32Array; nrest: Float32Array; a: Float32Array; b: Float32Array; toLocal: T.Matrix4; nLocal: T.Matrix3 }[] = [];
+  constructor(model: T.Object3D) {
+    model.updateMatrixWorld(true);
+    const v = new T.Vector3(), n = new T.Vector3();
+    model.traverse(o => {
+      const m = o as T.Mesh; if (!m.isMesh) return;
+      const geo = m.geometry = m.geometry.clone();
+      // quantized attributes (KHR_mesh_quantization) cannot take the moved positions: the switch's mesh gets plain floats
+      const plain = (name: string) => { const src = geo.getAttribute(name) as T.BufferAttribute | undefined; if (!src) return undefined;
+        const out = new T.Float32BufferAttribute(src.count * 3, 3); for (let i = 0; i < src.count; i++) out.setXYZ(i, src.getX(i), src.getY(i), src.getZ(i));
+        out.setUsage(T.DynamicDrawUsage); geo.setAttribute(name, out); return out; };
+      const pos = plain('position')!, nor = plain('normal');
+      const M = m.matrixWorld, N = new T.Matrix3().getNormalMatrix(M);
+      const idx: number[] = [], rest: number[] = [], nrest: number[] = [], a: number[] = [], b: number[] = [];
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(M);
+        const r = Math.hypot(v.x - HUB.x, v.y - HUB.y), h = v.z - PANEL_Z;
+        if (r > .07 || h < .004) continue;
+        // how firmly the vertex is carried by the handle: the cast handle fully, the rag wound on the hub with it, less toward the panel and the rim
+        const handle = h > .042 ? 1 : 0;
+        const wound = smooth(h, .008, .03) * (1 - smooth(r, .036, .066));
+        const ai = Math.max(handle, wound);
+        // loose cloth (the hanging ends, the outer folds) keeps its own momentum and lags behind
+        const bi = handle ? 0 : smooth(r, .02, .055) * smooth(h, .005, .02) * (v.y < HUB.y ? 1 : .55);
+        if (ai < .002 && bi < .002) continue;
+        idx.push(i); rest.push(v.x, v.y, v.z); a.push(ai); b.push(bi);
+        if (nor) { n.fromBufferAttribute(nor, i).applyMatrix3(N).normalize(); nrest.push(n.x, n.y, n.z); }
+      }
+      if (!idx.length) return;
+      this.parts.push({ pos, nor, idx: Uint32Array.from(idx), rest: Float32Array.from(rest), nrest: Float32Array.from(nrest), a: Float32Array.from(a), b: Float32Array.from(b),
+        toLocal: M.clone().invert(), nLocal: new T.Matrix3().getNormalMatrix(M.clone().invert()) });
+    });
+  }
+  /** put the handle somewhere at once, without travel, sound or sway (a loaded game) */
+  snap(angle: number) { this.angle = this.lag = Math.min(0, Math.max(-TURN, angle)); this.lagV = 0; this.at = this.angle >= -1e-4 ? 'rest' : this.angle <= -TURN + 1e-4 ? 'on' : null; this.drawn = NaN; this.draw(this.angle, 0, 0); }
+  /** target: where the hand drives the handle (0 .. -TURN). The old mechanism does not follow evenly: it sticks, gives, catches on rust. */
+  update(target: number, dt: number) {
+    dt = Math.min(dt, .05); this.t += dt;
+    const goal = Math.min(0, Math.max(-TURN, target)), err = goal - this.angle;
+    // uneven drag along the travel (dry rust on the shaft), and a static friction that holds the handle until the hand pushes enough
+    const notch = .45 + .55 * (.5 + .5 * Math.sin(this.angle * 9 + Math.sin(this.angle * 23) * .7));
+    // near a stop the handle is not held by friction: the spring of the contacts snaps it the last few degrees home
+    const toStop = goal <= -TURN + 1e-3 || goal >= -1e-3;
+    let vel = Math.abs(err) < .012 && !toStop ? 0 : Math.sign(err) * Math.min(1.5, Math.max(toStop ? (Math.abs(err) < .08 ? 1.1 : .35) : 0, Math.abs(err) * 7.5 * notch));
+    const prev = this.angle;
+    this.angle = Math.min(0, Math.max(-TURN, this.angle + vel * dt));
+    vel = (this.angle - prev) / Math.max(dt, 1e-4); this.speed = vel;
+    // the stops: hitting one makes the handle knock back a little and ring
+    const now: 'rest' | 'on' | null = this.angle >= -1e-4 ? 'rest' : this.angle <= -TURN + 1e-4 ? 'on' : null;
+    if (now && now !== this.at) { const hit = Math.min(1, Math.abs(vel) / 1.2); this.kick = (now === 'on' ? 1 : -1) * (.025 + .03 * hit); this.kickT = 0; this.onStop?.(now, hit); }
+    this.at = now;
+    this.kickT += dt;
+    // loose cloth: a damped spring that trails the handle, overshoots and settles after it stops
+    const acc = 85 * (this.angle - this.lag) - 6.5 * this.lagV; this.lagV += acc * dt; this.lag += this.lagV * dt;
+    const bounce = this.kick * Math.exp(-this.kickT * 16) * Math.cos(this.kickT * 46);
+    const shown = this.angle + bounce;
+    const sway = this.lag - shown;
+    if (Math.abs(shown - this.drawn) < 1e-4 && Math.abs(sway) < 1e-4 && Math.abs(this.lagV) < 1e-3) return;
+    this.drawn = shown;
+    this.draw(shown, sway, Math.min(1, Math.abs(this.lagV) * .6));
+  }
+  private draw(angle: number, sway: number, ripple: number) {
+    const v = new T.Vector3(), n = new T.Vector3();
+    for (const p of this.parts) {
+      for (let k = 0; k < p.idx.length; k++) {
+        const ai = p.a[k]!, bi = p.b[k]!;
+        const th = angle * ai + sway * bi;
+        const c = Math.cos(th), s = Math.sin(th);
+        const x = p.rest[3 * k]! - HUB.x, y = p.rest[3 * k + 1]! - HUB.y, z = p.rest[3 * k + 2]!;
+        // folds of the loose cloth bunch out a little while it swings (only ever away from the panel)
+        const r = Math.hypot(x, y), fold = bi * ripple * .0022 * Math.abs(Math.sin(r * 260 + Math.atan2(y, x) * 3 + this.t * 3));
+        v.set(HUB.x + x * c - y * s, HUB.y + x * s + y * c, z + fold).applyMatrix4(p.toLocal);
+        p.pos.setXYZ(p.idx[k]!, v.x, v.y, v.z);
+        if (p.nor && p.nrest.length) {
+          const nx = p.nrest[3 * k]!, ny = p.nrest[3 * k + 1]!, nz = p.nrest[3 * k + 2]!;
+          n.set(nx * c - ny * s, nx * s + ny * c, nz).applyMatrix3(p.nLocal).normalize(); p.nor.setXYZ(p.idx[k]!, n.x, n.y, n.z);
+        }
+      }
+      p.pos.needsUpdate = true; if (p.nor) p.nor.needsUpdate = true;
+    }
+  }
+}
+
 export function makeFuseBox(src: T.Object3D) {
   const model = src.clone(true);
-  const lever = new T.Group(); const pivot = new T.Vector3(-.018, .325, .02);
-  model.updateMatrixWorld(true);
-  const toRemove: T.Mesh[] = [];
-  model.traverse(n => {
-    const m = n as T.Mesh; if (!m.isMesh || !m.geometry.index) return;
-    const parts = pieces(m.geometry), body: number[] = []; let knife: number[] = [];
-    for (const p of parts) {
-      const c = p.box.getCenter(new T.Vector3()).applyMatrix4(m.matrixWorld), sz = p.box.getSize(new T.Vector3());
-      const inLever = c.x > -.04 && c.x < .065 && c.y > .26 && c.y < .37 && c.z > -.03 && sz.x < .13 && sz.y < .13;
-      (inLever ? knife : body).push(...p.tris);
-    }
-    // only what stands proud of the panel (the wing handle and its screw) turns; the housing underneath stays where it is
-    { const wing: number[] = [], v = new T.Vector3(), pos = m.geometry.getAttribute('position');
-      for (let i = 0; i < knife.length; i += 3) {
-        let z = 0; for (let k = 0; k < 3; k++) { v.fromBufferAttribute(pos, knife[i + k]!).applyMatrix4(m.matrixWorld); z += v.z / 3; }
-        (z > WING_Z ? wing : body).push(knife[i]!, knife[i + 1]!, knife[i + 2]!);
-      }
-      knife = wing; }
-    if (knife.length) {
-      const kg = new T.BufferGeometry();
-      for (const name of Object.keys(m.geometry.attributes)) kg.setAttribute(name, m.geometry.getAttribute(name));
-      kg.setIndex(knife);
-      const km = new T.Mesh(kg, m.material); km.matrix.copy(m.matrixWorld); km.matrixAutoUpdate = false; lever.add(km);
-      const bg = m.geometry.clone(); bg.setIndex(body); m.geometry = bg;
-    }
-    void toRemove;
-  });
   weather(model, { dust: .55, rust: .12, dark: .85 });
   const g = new T.Group(); g.add(model);
-  // the lever's meshes carry the world matrix of the model; they turn about the pivot, so they get a group placed there
-  const leverPivot = new T.Group(); leverPivot.position.copy(pivot);
-  lever.children.forEach(k => { const km = k as T.Mesh; const mat = km.matrix.clone(); km.matrixAutoUpdate = true; mat.decompose(km.position, km.quaternion, km.scale); km.position.sub(pivot); leverPivot.add(km); });
-  g.add(leverPivot);
-  weather(leverPivot, { dust: .3, rust: .25, dark: .9 });
-  return { group: g, lever: leverPivot };
+  const knife = new KnifeSwitch(model);
+  // a marker on the hub axis (the camera's close look aims at it)
+  const lever = new T.Group(); lever.position.set(HUB.x, HUB.y, .05); g.add(lever);
+  return { group: g, lever, knife, turn: TURN };
 }
+
 
 /** the 9 V battery: 4.85 cm tall, in metres already, lying on its side by default */
 export function makeBattery(src: T.Object3D) {

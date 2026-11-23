@@ -13,7 +13,7 @@ import {HandController,Pickup} from './interaction';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {MeshoptDecoder} from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import {Intro,loadTrailerAssets} from './intro';
-import {makeBattery,makeCamera,makeFuseBox,makePhone} from './props';
+import {KnifeSwitch,makeBattery,makeCamera,makeFuseBox,makePhone} from './props';
 import {DOORS,OBJECTS,ROOMS,doorFor,doorSwing,movedProps,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
 import type {CameraId,CCTVView,PaperKind,Save,Settings} from './contracts';
 
@@ -23,7 +23,7 @@ async function loadDecor():Promise<Decor>{
   const gltf=async(path:string)=>{
     try{const l=new GLTFLoader();l.setMeshoptDecoder(MeshoptDecoder);return await l.loadAsync(import.meta.env.BASE_URL+path);}catch{return undefined;}
   };
-  const [key,book,viewmodel,doorKit,phone,cctv,fusebox,battery,paper]=await Promise.all([gltf('assets/iso/key-tag.glb'),gltf('assets/iso/antique-book.glb'),gltf('assets/iso/viewmodel-8.glb'),gltf('assets/iso/door-kit.glb'),gltf('assets/iso/phone-sfm.glb'),gltf('assets/iso/cctv-cam.glb'),gltf('assets/iso/fusebox.glb'),gltf('assets/iso/battery9v.glb'),gltf('assets/iso/paper-inspect-2.glb')]);
+  const [key,book,viewmodel,doorKit,phone,cctv,fusebox,battery,paper]=await Promise.all([gltf('assets/iso/key-tag.glb'),gltf('assets/iso/antique-book.glb'),gltf('assets/iso/viewmodel-9.glb'),gltf('assets/iso/door-kit.glb'),gltf('assets/iso/phone-sfm.glb'),gltf('assets/iso/cctv-cam.glb'),gltf('assets/iso/fusebox.glb'),gltf('assets/iso/battery9v.glb'),gltf('assets/iso/paper-inspect-2.glb')]);
   return {phone:phone?.scene,cctv:cctv?.scene,fusebox:fusebox?.scene,battery:battery?.scene,key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations},doorKit:doorKit?.scene,paper:paper&&{scene:paper.scene,animations:paper.animations}};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
@@ -117,6 +117,8 @@ export class IsoWorld {
   private lastAim?:ObjectId;
   private cctvFrom?:CameraId;
   private cctvCut=0;
+  private cctvEvidence=false;
+  private cctvSized=false;
   private readonly cctvEye=new T.Vector3();
   private readonly cctvFocus=new T.Vector3();
   private powerAt=-1;
@@ -125,6 +127,9 @@ export class IsoWorld {
   phoneDial?:T.Object3D;
   private camLeds:{led:T.Mesh;halo:T.Sprite}[]=[];
   fuseLever?:T.Object3D;
+  /** the fuse box's rotary switch (its handle and the rag wound on it move with the crank) */
+  fuseKnife?:KnifeSwitch;
+  private fuseKnifeSet=false;
   private focusLight!:T.PointLight;
   private readonly focusTmp=new T.PerspectiveCamera();
   /** Where the camera goes to look closely at something on the wall (position, point looked at, field of view). */
@@ -177,7 +182,7 @@ export class IsoWorld {
     }
     const fuse=this.env.targets.fuseBox;
     if(fuse&&decor.fusebox){
-      const fb=makeFuseBox(decor.fusebox);fb.group.scale.setScalar(1.7);fuse.add(fb.group);fb.group.traverse(o=>{if(o instanceof T.Mesh)o.castShadow=o.receiveShadow=true;});this.fuseLever=fb.lever;
+      const fb=makeFuseBox(decor.fusebox);fb.group.scale.setScalar(1.7);fuse.add(fb.group);fb.group.traverse(o=>{if(o instanceof T.Mesh)o.castShadow=o.receiveShadow=true;});this.fuseLever=fb.lever;this.fuseKnife=fb.knife;
     }
     const spot=this.env.targets.battery;
     if(spot&&decor.battery){
@@ -577,7 +582,7 @@ export class IsoWorld {
     if(!this.resize(frame.settings))return;
     const {state,settings,time,dt,menu,cctv}=frame;
     this.restoreOcclusion();
-    if(!cctv)this.cctvFrom=undefined;
+    if(!cctv){this.cctvFrom=undefined;if(this.cctvSized){this.cctvSized=false;this.analog.resize(this.lastWidth,this.lastHeight,this.lowHeight);}}
     const fp=settings.view==='fps'&&!menu&&!cctv;
     this.fpActive=fp;
     {const heights=settings.quality==='low'?[360,320,288,240]:[480,420,360,288],hgt=heights[Math.min(3,frame.perf??0)]!;
@@ -657,7 +662,11 @@ export class IsoWorld {
     // the breaker levers rise smoothly when their line is on; the knife switch of the fuse box turns with the crank
     {const lines=['lights','locks','cctv'] as const;
       this.env.levers.forEach((l,i)=>{const on=state.breaker.includes(lines[i]!);l.rotation.x=T.MathUtils.damp(l.rotation.x,on?-.72:.72,7,dt);});
-      if(this.fuseLever)this.fuseLever.rotation.z=T.MathUtils.damp(this.fuseLever.rotation.z,state.fed?-2.1:-(frame.crank??0)*2.1,state.fed?4:14,dt);}
+      if(this.fuseKnife){
+        // a loaded game with the power already fed starts with the handle on ON, without turning it there
+        if(!this.fuseKnifeSet){this.fuseKnifeSet=true;if(state.fed)this.fuseKnife.snap(-2.1);}
+        this.fuseKnife.update(state.fed?-2.1:-(frame.crank??0)*2.1,dt);
+      }}
     if(this.batteryProp)this.batteryProp.visible=!state.items.includes('battery');
     // The cameras' red LEDs breathe slowly once the power is on (not before).
     {const k=state.power?Math.pow(.5+.5*Math.sin(time*2.3),2.2):0;for(const c of this.camLeds){(c.led.material as T.MeshBasicMaterial).opacity=k;(c.halo.material as T.SpriteMaterial).opacity=k*.75;}}
@@ -772,14 +781,21 @@ export class IsoWorld {
       // The picture glides from one camera to the next (a pan with a burst of interference) instead of cutting; it is drawn through the same
       // low-fi pass as the player's own camera, but in green night-vision with noise and a wobbling signal.
       const [eye,focus]=cameraPos[cctv.camera];
-      if(this.cctvFrom!==cctv.camera){if(this.cctvFrom){this.cctvCut=1;}else{this.cctvEye.copy(eye);this.cctvFocus.copy(focus);}this.cctvFrom=cctv.camera;}
-      const k=1-Math.exp(-dt*2.6);
-      this.cctvEye.lerp(eye,k);this.cctvFocus.lerp(focus,k);this.cctvCut=Math.max(0,this.cctvCut-dt*1.6);
+      // a real switcher cuts: the old picture tears, a short burst of static, the new camera settles in about a third of a second
+      if(this.cctvFrom!==cctv.camera){if(this.cctvFrom)this.cctvCut=1;this.cctvEye.copy(eye);this.cctvFocus.copy(focus);this.cctvFrom=cctv.camera;}
+      // something that matters comes into the frame: the signal stumbles for a moment
+      if(cctv.evidence&&!this.cctvEvidence)this.cctvCut=Math.max(this.cctvCut,.5);
+      this.cctvEvidence=cctv.evidence;
+      this.cctvCut=Math.max(0,this.cctvCut-dt*3.2);
       this.securityCamera.position.copy(this.cctvEye);this.securityCamera.lookAt(this.cctvFocus);
+      // the picture fills only the monitor's screen, framed by its housing and the recorder below
+      const scr=typeof document!=='undefined'?document.querySelector('[data-cctv-screen]')?.getBoundingClientRect():undefined;
+      const view=scr&&scr.width>40&&scr.height>40?{x:scr.left,y:scr.top,w:scr.width,h:scr.height}:undefined;
+      this.securityCamera.aspect=view?view.w/view.h:this.lastWidth/this.lastHeight;
       this.securityCamera.fov=T.MathUtils.damp(this.securityCamera.fov||60,cctv.zoom?43:60,6,dt);this.securityCamera.updateProjectionMatrix();
       this.stageFootage(cctv);
-      this.analog.setSoft(false);this.analog.resize(this.lastWidth,this.lastHeight,this.lowHeight);
-      this.analog.render(this.renderer,()=>this.renderer.render(this.scene,this.securityCamera),time,1.25,1,0,1,this.cctvCut);
+      this.analog.setSoft(false);this.analog.resize(view?view.w:this.lastWidth,view?view.h:this.lastHeight,this.lowHeight);this.cctvSized=true;
+      this.analog.render(this.renderer,()=>this.renderer.render(this.scene,this.securityCamera),time,1.25,1,0,1,this.cctvCut,view);
       for(const echo of Object.values(this.echoes))echo.root.visible=false;
       return;
     }

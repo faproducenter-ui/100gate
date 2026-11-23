@@ -177,9 +177,11 @@ export class IsoSound {
     out.gain.linearRampToValueAtTime(Math.max(.04,s.effects*.9),ctx.currentTime+.15);
     this.crank={src,bp,g,lfo,lg,sq,sg,out};
   }
-  crankProgress(p:number){
+  /** p: how far the switch has turned (0..1); v: how fast the handle really moves (1 = the steady pull), it stops dead where the rust holds it */
+  crankProgress(p:number,v=1){
     const c=this.crank,ctx=this.context;if(!c||!ctx)return;
-    const t=ctx.currentTime;
+    const t=ctx.currentTime,m=Math.min(1.4,Math.max(0,v));
+    c.g.gain.setTargetAtTime(.012+.05*m,t,.05);c.lg.gain.setTargetAtTime(.01+.04*m,t,.05);
     c.lfo.frequency.setTargetAtTime(2.6+p*2.2,t,.15);c.bp.frequency.setTargetAtTime(1800+p*700+Math.sin(t*5)*160,t,.08);
     c.sq.frequency.setTargetAtTime(980+p*420+Math.sin(t*7)*35,t,.06);c.sg.gain.setTargetAtTime(.004+.006*Math.max(0,Math.sin(t*2.1+p*4)),t,.08);
   }
@@ -194,6 +196,45 @@ export class IsoSound {
       const o=ctx.createOscillator();o.type='square';o.frequency.setValueAtTime(260,t);o.frequency.exponentialRampToValueAtTime(140,t+.06);
       const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;const g=ctx.createGain();g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.001,t+.12);o.connect(lp).connect(g).connect(master);o.start(t);o.stop(t+.14);
     }
+  }
+  /** The handle reaches a stop: ON closes the contacts with a hard metallic clack and a ring of the cast handle; back at OFF it knocks dully on its stop. */
+  leverStop(s:Settings,at:'rest'|'on',hit:number){
+    const ctx=this.context,master=this.master,tex=this.texture;
+    if(!ctx||!master||!tex)return;
+    const t=ctx.currentTime,g0=ctx.createGain();g0.gain.value=Math.max(.05,s.effects*(.45+.55*Math.min(1,hit+.3)));g0.connect(master);
+    const noise=(at0:number,f:number,q:number,v:number,len:number)=>{const n=ctx.createBufferSource();n.buffer=tex;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=f;bp.Q.value=q;
+      const g=ctx.createGain();g.gain.setValueAtTime(v,t+at0);g.gain.exponentialRampToValueAtTime(.001,t+at0+len);n.connect(bp).connect(g).connect(g0);n.start(t+at0,Math.random());n.stop(t+at0+len+.02);};
+    const tone=(f0:number,f1:number,v:number,len:number,type:OscillatorType)=>{const o=ctx.createOscillator();o.type=type;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+len*.6);
+      const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=f0*3;const g=ctx.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+len);o.connect(lp).connect(g).connect(g0);o.start(t);o.stop(t+len+.02);};
+    if(at==='on'){
+      noise(0,2600,3,.4,.07);noise(.012,4200,5,.18,.04);tone(260,140,.13,.13,'square');
+      // the cast handle rings for a moment after the contacts snap shut
+      const r=ctx.createOscillator();r.type='sine';r.frequency.value=1870;const rg=ctx.createGain();rg.gain.setValueAtTime(.025,t+.01);rg.gain.exponentialRampToValueAtTime(.0005,t+.45);r.connect(rg).connect(g0);r.start(t);r.stop(t+.5);
+    }else{noise(0,900,2,.22,.06);tone(120,80,.09,.1,'triangle');}
+    window.setTimeout(()=>g0.disconnect(),900);
+  }
+  /** The camera switcher: a relay clicks over, the monitor's speaker spits a short burst of static as the new signal locks. */
+  cctvSwitch(s:Settings){
+    const ctx=this.context,master=this.master,tex=this.texture;
+    if(!ctx||!master||!tex)return;
+    const t=ctx.currentTime,g0=ctx.createGain();g0.gain.value=Math.max(.04,s.effects*.9);g0.connect(master);
+    const n=ctx.createBufferSource();n.buffer=tex;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=3400;bp.Q.value=4;
+    const g=ctx.createGain();g.gain.setValueAtTime(.32,t);g.gain.exponentialRampToValueAtTime(.001,t+.025);n.connect(bp).connect(g).connect(g0);n.start(t,Math.random());n.stop(t+.04);
+    const st=ctx.createBufferSource();st.buffer=tex;const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=1800;
+    const sg=ctx.createGain();sg.gain.setValueAtTime(0,t+.012);sg.gain.linearRampToValueAtTime(.09,t+.03);sg.gain.exponentialRampToValueAtTime(.001,t+.3);st.connect(hp).connect(sg).connect(g0);st.start(t+.01,Math.random()*2);st.stop(t+.32);
+    const o=ctx.createOscillator();o.type='square';o.frequency.value=15625/8;const og=ctx.createGain();og.gain.setValueAtTime(.006,t+.02);og.gain.exponentialRampToValueAtTime(.0003,t+.28);o.connect(og).connect(g0);o.start(t+.02);o.stop(t+.3);
+    window.setTimeout(()=>g0.disconnect(),600);
+  }
+  /** A key of the tape recorder: the plastic cap goes down and a solenoid clunks inside. */
+  deckKey(s:Settings){
+    const ctx=this.context,master=this.master,tex=this.texture;
+    if(!ctx||!master||!tex)return;
+    const t=ctx.currentTime,g0=ctx.createGain();g0.gain.value=Math.max(.04,s.ui*.9);g0.connect(master);
+    const n=ctx.createBufferSource();n.buffer=tex;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=2100;bp.Q.value=3;
+    const g=ctx.createGain();g.gain.setValueAtTime(.22,t);g.gain.exponentialRampToValueAtTime(.001,t+.03);n.connect(bp).connect(g).connect(g0);n.start(t,Math.random());n.stop(t+.05);
+    const o=ctx.createOscillator();o.type='triangle';o.frequency.setValueAtTime(140,t+.03);o.frequency.exponentialRampToValueAtTime(70,t+.1);
+    const og=ctx.createGain();og.gain.setValueAtTime(.07,t+.03);og.gain.exponentialRampToValueAtTime(.001,t+.13);o.connect(og).connect(g0);o.start(t+.03);o.stop(t+.15);
+    window.setTimeout(()=>g0.disconnect(),400);
   }
   /** The current reaches the lines: a deep hum swells, relays click, the lamps tick on and buzz for a moment. */
   powerOn(s:Settings){

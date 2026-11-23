@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {newSave,act,activeQuest,validSave,pressLine,feedPower,recordEvidence} from './state';
+import {newSave,act,activeQuest,validSave,pressLine,feedPower,recordEvidence,tryKeyBox,KEYBOX_CODE} from './state';
 import {canStand,DOORS,OBJECTS,START,movePlayer,roomAt,withinReach,type DoorStates,type ObjectId} from './map';
 
 describe('administration case',()=>{
@@ -25,8 +25,17 @@ describe('administration case',()=>{
     use('archiveIndex');
     use('fileZero');expect(s.items).toContain('file');
     s=recordEvidence(s,'archive','future',7).state;
-    expect(s.finished).toBe(true);expect(activeQuest(s).id).toBe('school');
+    expect(s.finished).toBe(true);expect(activeQuest(s).id).toBe('exit');
     expect(validSave(s)).toBe(true);
+    expect(act(s,'exitDoor').leave).toBeUndefined();
+    expect(act(s,'keyBox').panel).toBe('keypad');
+    expect(tryKeyBox(s,'1234').state.items).not.toContain('exitKey');
+    s=tryKeyBox(s,KEYBOX_CODE).state;expect(s.items).toContain('exitKey');
+    expect(act(s,'exitDoor').leave).toBe(true);expect(validSave(s)).toBe(true);
+  });
+  it('the exit key opens the door only once the archive is done',()=>{
+    const s=tryKeyBox(newSave(),KEYBOX_CODE).state;
+    expect(s.items).toContain('exitKey');expect(act(s,'exitDoor').leave).toBeUndefined();
   });
   it('rejects incompatible saves and impossible or wall coordinates',()=>{
     expect(validSave({...newSave(),version:3})).toBe(false);

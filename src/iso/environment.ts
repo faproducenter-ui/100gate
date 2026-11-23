@@ -123,7 +123,7 @@ function corridorWalls(p:T.Group,m:KitMaterials){
   wall(p,m,'x',r.maxX,-1.25,0,NEAR_H,902);
   wall(p,m,'z',r.minZ,r.minX,r.maxX,WALL_H,903);
   wall(p,m,'z',r.maxZ,r.minX,r.maxX,NEAR_H,904);
-  plate(p,m.label(['ЭТАЖ 01','АДМИНИСТРАЦИЯ'],'#7c744f','#282e2b'),1.15,1.70,-4.91,.82,.38);
+  plate(p,m.label(['ЭТАЖ 01','АДМИНИСТРАЦИЯ'],'#7c744f','#282e2b'),1.2,2.42,-4.91,.74,.34);
   // Room-number plates are screwed to the wall beside the door frame (on the corridor side of it), never
   // onto the door opening itself, so they stay on the wall when the door swings open.
   const half=DOORS.technical.half,clear=half+.115+.13;
@@ -326,6 +326,29 @@ export function buildEnvironment(opts:{modelFrames?:boolean}={}):AdminEnvironmen
   for(const id of ['technical','surveillance','archive','reception'] as const){
     const visual=realDoor(root,m,id);doors[id]=visual.door;
     set(targetFor[id],visual.target);
+  }
+  // The way out: a grey steel door at the end of the corridor (push bar, keyhole, green ВЫХОД sign). It does not swing: using it leaves the building.
+  {
+    const z=ROOMS.corridor.minZ+WALL_D/2,d=set('exitDoor',group(rooms.corridor,OBJECTS.exitDoor.x,0,z,'exit door'));
+    for(const side of [-1,1])box(d,m.steel,side*.565,1.08,.03,.07,2.16,.06,.01);
+    box(d,m.steel,0,2.19,.03,1.2,.07,.06,.01);
+    box(d,m.steel,0,1.06,.026,1.05,2.1,.046,.008);
+    for(const y of [.32,1.8])box(d,m.dark,0,y,.05,.98,.012,.004);
+    box(d,m.silver,0,1.03,.098,.84,.045,.035,.012);
+    for(const side of [-1,1])box(d,m.silver,side*.4,1.03,.07,.05,.07,.04,.006);
+    box(d,m.dark,.4,1.2,.052,.03,.055,.008);
+    box(d,m.rust,0,.06,.05,1.0,.1,.006);
+    plate(d,m.label(['ВЫХОД'],'#e4f3df','#1d6a33',128,48),0,1.78,.051,.36,.13);
+  }
+  // The key box beside it, on the archive wall: a small steel cabinet with a four-digit keypad.
+  {
+    const k=set('keyBox',group(rooms.corridor,ROOMS.corridor.maxX-WALL_D/2,1.42,OBJECTS.keyBox.z,'key box'));
+    k.rotation.y=-Math.PI/2;
+    box(k,m.steel,0,0,.035,.28,.36,.07,.012);
+    box(k,m.dark,0,.11,.072,.17,.05,.006);
+    plate(k,m.label(['КЛЮЧИ'],'#2b2a22','#c8c2a4',64,24),0,.155,.0725,.12,.03);
+    for(let r=0;r<4;r++)for(let c=0;c<3;c++)box(k,m.dark,(c-1)*.045,.04-r*.045,.074,.032,.032,.008,.004);
+    box(k,m.silver,.115,-.02,.074,.012,.09,.01);
   }
   const live=new Set<T.Object3D>();
   const nearFurniture:T.Group[]=[];

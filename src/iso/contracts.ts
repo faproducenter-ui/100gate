@@ -1,10 +1,10 @@
 import type {DoorStates} from './map';
 
-export type ItemId='lighter'|'torch'|'technicalKey'|'archiveKey'|'plan'|'memo'|'vhs'|'file'|'battery';
+export type ItemId='lighter'|'torch'|'technicalKey'|'archiveKey'|'plan'|'memo'|'vhs'|'file'|'battery'|'exitKey';
 export type PowerLine='lights'|'locks'|'cctv';
 export type CameraId='reception'|'corridor'|'archive';
 export type TapeId='shift'|'future';
-export type Panel='pause'|'settings'|'credits'|'inventory'|'journal'|'breaker'|'cctv'|'document'|'new-confirm';
+export type Panel='pause'|'settings'|'credits'|'inventory'|'journal'|'breaker'|'cctv'|'document'|'new-confirm'|'keypad';
 export type Mode='title'|'play'|'complete'|'loading'|'error';
 export interface Save {
   version:1;x:number;z:number;items:ItemId[];doors:DoorStates;
@@ -44,4 +44,4 @@ export type UIAction=
   |{type:'cctv-step';delta:number}|{type:'cctv-seek';time:number}
   |{type:'cctv-camera';camera:CameraId}|{type:'cctv-tape';tape:TapeId}
   |{type:'panel';panel:Panel}|{type:'settings';patch:Partial<Settings>}
-  |{type:'breaker';line:PowerLine};
+  |{type:'breaker';line:PowerLine}|{type:'keypad';code:string};

@@ -4,7 +4,7 @@ import {IsoInterface} from './Interface';
 import {IsoWorld} from './world';
 import {IsoSound} from './sound';
 import {OBJECTS,doorFor,movePlayer,roomAt,withinReach,type ObjectId,type Point} from './map';
-import {act,activeQuest,canIgnite,dropTorch,cctvDuration,feedPower,getSave,lightTorch,isEvidence,newSave,pressLine,readSettings,recordEvidence,sanitizeSettings,SAVE_KEY,SETTINGS_KEY,write} from './state';
+import {act,activeQuest,tryKeyBox,canIgnite,dropTorch,cctvDuration,feedPower,getSave,lightTorch,isEvidence,newSave,pressLine,readSettings,recordEvidence,sanitizeSettings,SAVE_KEY,SETTINGS_KEY,write} from './state';
 import type {CCTVView,DocumentView,Mode,Panel,Save,UIAction} from './contracts';
 
 const startCCTV=():CCTVView=>({camera:'reception',tape:'shift',time:0,duration:24,playing:false,availableFuture:false,evidence:false,zoom:false});
@@ -82,7 +82,7 @@ export default function IsoPage(){
         if(result.panel==='cctv')cctv=startCCTV();
         setPanel(result.panel);
       }
-      if(state.finished){mode='complete';setPanel(null);}
+      if(result.leave)leave();
       if(changed)persist();
     };
     const use=(id:ObjectId|null)=>{
@@ -105,6 +105,13 @@ export default function IsoPage(){
       }
       commit(id);
     };
+    /** Out through the exit door: the door sound, the picture fades, and the street outside (the gas station) opens in its place. */
+    let leaving=false;
+    const leave=()=>{
+      if(leaving)return;leaving=true;
+      sound.cue('door',settings);setPanel(null);mode='complete';persist();
+      window.setTimeout(()=>{window.location.href=`${import.meta.env.BASE_URL}?loc=station&from=admin`;},1600);
+    };
     const drop=()=>{
       if(mode!=='play'||panel||!world||!state.items.includes('torch')||world.busy)return;
       world.beginDrop(pose=>{apply(dropTorch(state,pose));persist();emit();});
@@ -117,7 +124,7 @@ export default function IsoPage(){
         after.state.items.length>before.items.length?'pick-up':after.document?'examine':'interact';
       world?.actorAction(kind,OBJECTS[id]);
       sound.cue(kind==='door'?'door':id==='phone'?'ui':'ui',settings);
-      const gotKey=(['technicalKey','archiveKey'] as const).some(k=>after.state.items.includes(k)&&!before.items.includes(k));
+      const gotKey=(['technicalKey','archiveKey','exitKey'] as const).some(k=>after.state.items.includes(k)&&!before.items.includes(k));
       if(gotKey)sound.jingle(1,settings);
       apply(after);drawer=id==='drawer'&&after.panel==='document';emit();
     };
@@ -139,7 +146,7 @@ export default function IsoPage(){
       yaw=START_YAW;pitch=-.06;vx=vz=0;stamina=1;tired=false;
       world.syncPickups(state);
       world.onPropSettled=(id,pose)=>{if(!state.items.includes(id)){state={...state,props:{...state.props,[id]:pose}};persist();}};
-      mode=state.finished?'complete':'play';target=null;notice='';setPanel(null);persist();
+      mode='play';target=null;notice='';setPanel(null);persist();
       // A new game opens with the drive and the crash (30 s); a loaded one goes straight in.
       introT=INTRO_ENABLED&&!restore&&fpOn()&&mode==='play'&&!state.lit&&state.items.length===0?0:-1;
       if(introT===0){
@@ -201,9 +208,10 @@ export default function IsoPage(){
           if(a.sprint!==undefined)tsprint=a.sprint;
           if(a.crouch!==undefined)tcrouch=a.crouch;
           return;
+        case 'keypad':if(panel==='keypad'){const r=tryKeyBox(state,a.code);sound.cue(r.state.items.includes('exitKey')?'switch':'ui',settings);if(r.state.items.includes('exitKey')){sound.jingle(1,settings);setPanel(null);}apply(r);}break;
         case 'breaker':if(panel==='breaker'){sound.cue('switch',settings);apply(pressLine(state,a.line));}break;
         case 'reset-breaker':if(panel==='breaker'&&!state.power){state={...state,breaker:[]};persist();}break;
-        case 'cctv-camera':if(panel==='cctv')cctv={...cctv,camera:a.camera};break;
+        case 'cctv-camera':if(panel==='cctv'){if(a.camera!==cctv.camera)sound.cctvSwitch(settings);else sound.deckKey(settings);cctv={...cctv,camera:a.camera};}break;
         case 'cctv-tape':
           if(panel==='cctv'&&(a.tape==='shift'||state.items.includes('file'))){
             sound.cue('tape',settings);
@@ -212,9 +220,9 @@ export default function IsoPage(){
           }
           break;
         case 'cctv-seek':if(panel==='cctv'&&Number.isFinite(a.time))cctv={...cctv,time:Math.min(cctv.duration,Math.max(0,a.time)),playing:false};break;
-        case 'cctv-step':if(panel==='cctv')cctv={...cctv,time:Math.min(cctv.duration,Math.max(0,cctv.time+a.delta)),playing:false};break;
-        case 'cctv-play':if(panel==='cctv')cctv={...cctv,time:cctv.time===cctv.duration?0:cctv.time,playing:!cctv.playing};break;
-        case 'cctv-zoom':if(panel==='cctv')cctv={...cctv,zoom:!cctv.zoom};break;
+        case 'cctv-step':if(panel==='cctv'){sound.deckKey(settings);}if(panel==='cctv')cctv={...cctv,time:Math.min(cctv.duration,Math.max(0,cctv.time+a.delta)),playing:false};break;
+        case 'cctv-play':if(panel==='cctv'){sound.deckKey(settings);}if(panel==='cctv')cctv={...cctv,time:cctv.time===cctv.duration?0:cctv.time,playing:!cctv.playing};break;
+        case 'cctv-zoom':if(panel==='cctv'){sound.deckKey(settings);}if(panel==='cctv')cctv={...cctv,zoom:!cctv.zoom};break;
         case 'archive-evidence':
           if(panel==='cctv'){
             sound.cue('tape',settings);cctv={...cctv,playing:false};
@@ -314,8 +322,11 @@ export default function IsoPage(){
         crankHeld=gameplay&&fpOn()&&keys.has('KeyJ')&&crankReady();
         if(crankHeld)crank=Math.min(1,crank+dt/4.4);else if(!state.fed)crank=Math.max(0,crank-dt*.4);
         if(crankHeld!==crankSounding){crankSounding=crankHeld;if(crankHeld)sound.crankStart(settings);else sound.crankStop(crank);}
-        if(crankHeld)sound.crankProgress(crank);
-        if(crank>=1&&!state.fed&&crankReady()){crankHeld=false;crankSounding=false;sound.crankStop(1);sound.powerOn(settings);apply(feedPower(state));}
+        // the handle itself (not the key) drives the sound: the scrape follows its real speed, the stops knock when it reaches them
+        const knife=world?.fuseKnife;
+        if(knife&&!knife.onStop)knife.onStop=(at,hit)=>sound.leverStop(settings,at,hit);
+        if(crankHeld)sound.crankProgress(crank,knife?Math.abs(knife.speed)/.48:1);
+        if(crank>=1&&!state.fed&&crankReady()){crankHeld=false;crankSounding=false;sound.crankStop(0);sound.powerOn(settings);apply(feedPower(state));}
         const fid:typeof focusId=panel==='breaker'?'breaker':panel==='inventory'&&fpOn()?'inventory':panel==='document'&&documentView?.wall?'diagram':crankHeld?'fuse':null;
         if(fid)focusId=fid;
         focusK+=((fid?1:0)-focusK)*Math.min(1,dt*(fid?4.5:5.5));if(Math.abs((fid?1:0)-focusK)<.004)focusK=fid?1:0;

@@ -1,6 +1,8 @@
 import {DEFAULTS,type CameraId,type DocumentView,type ItemId,type PaperKind,type Panel,type PowerLine,type Save,type Settings,type TapeId} from './contracts';
 import {canStand,START,type ObjectId} from './map';
 
+/** The code of the key box by the exit: the time in the duty log when the archive man did not turn up (22:16). */
+export const KEYBOX_CODE='2216';
 export const SAVE_KEY='100gate.isometric.save.v1';
 export const SETTINGS_KEY='100gate.isometric.settings.v1';
 export const ITEMS:Record<ItemId,{name:string;description:string;kind:'key'|'paper'|'media'}>={
@@ -12,6 +14,7 @@ export const ITEMS:Record<ItemId,{name:string;description:string;kind:'key'|'pap
   memo:{name:'Записка дежурного',description:'Освещение — первым. Затем замки. Камеры подключать последними, после щелчка реле замков.',kind:'paper'},
   vhs:{name:'VHS · ночная смена',description:'Запись с камер за смену. Вручную отмеченные кадры сохраняются в журнале.',kind:'media'},
   battery:{name:'Батарея 9 В',description:'Свежая щелочная батарея. B — вставить в камеру, когда заряд на исходе.',kind:'key'},
+  exitKey:{name:'Ключ от выхода',description:'Тяжёлый ключ от стальной двери в конце коридора. Из ключницы, код 22:16.',kind:'key'},
   file:{name:'Дело о районе №0',description:'Сектор Б, ячейка 4. В акте о закрытии района числится школа №7. Три подписи совпадают с фамилиями пропавших сотрудников.',kind:'paper'},
 };
 export const QUESTS=[
@@ -24,7 +27,7 @@ export const QUESTS=[
   {id:'archive',title:'Открыть архив',description:'Используй ключ на двери архива.'},
   {id:'file',title:'Найти документы о районе №0',description:'Изучи указатель стеллажей и пометку в коридорной записи.'},
   {id:'future',title:'Вернуться к терминалу',description:'Проверь новую запись архива. Отметь аномальный кадр.'},
-  {id:'school',title:'Найти путь к школе №7',description:'Глава «Администрация» завершена.'},
+  {id:'exit',title:'Выбраться наружу',description:'Выход в конце коридора заперт. Ключ — в ключнице рядом, код спрятан в бумагах.'},
 ] as const;
 export function activeQuest(s:Save){
   return QUESTS[!s.lit&&!s.dutyRead?0:!s.dutyRead?1:!s.items.includes('technicalKey')?2:!s.power?3:!s.archiveClue?4:
@@ -37,7 +40,7 @@ export const newSave=():Save=>({version:1,...START,items:[],doors:{technical:fal
 const order:readonly PowerLine[]=['lights','locks','cctv'];
 const has=(s:Save,id:ItemId)=>s.items.includes(id);
 const item=(s:Save,id:ItemId):Save=>has(s,id)?s:{...s,items:[...s.items,id]};
-type Outcome={state:Save;message?:string;panel?:Panel;document?:DocumentView};
+type Outcome={state:Save;message?:string;panel?:Panel;document?:DocumentView;/** the player goes out through the exit door */leave?:boolean};
 const msg=(state:Save,message:string):Outcome=>({state,message});
 const doc=(state:Save,title:string,text:string,kind?:PaperKind):Outcome=>({state,panel:'document',document:kind?{title,text,kind}:{title,text}});
 const wall=(state:Save,title:string,text:string):Outcome=>({state,panel:'document',document:{title,text,wall:true}});
@@ -92,8 +95,20 @@ export function act(s:Save,id:ObjectId):Outcome {
     case 'archiveDoor':return has(s,'archiveKey')?msg({...s,doors:{...s.doors,archive:true}},'Архив открыт.'):msg(s,'Нужен ключ от архива.');
     case 'archiveIndex':return s.doors.archive?doc({...s,archiveIndex:true},'Указатель стеллажей','Секция А — ведомости. Секция Б — районные объекты. Номер ячейки указан на накладной из коридора.','note'):msg(s,'Архив заперт.');
     case 'fileZero':return !s.doors.archive||!s.anomaly||!s.archiveIndex?msg(s,'Нужны указатель стеллажей и пометка из записи коридора.'):
-      doc(item(s,'file'),'Акт №0 / 7',ITEMS.file.description+'\n\nНа обороте: «Запись не стирать. Если время не сходится — проверить камеру архива».','document');
+      doc(item(s,'file'),'Акт №0 / 7',ITEMS.file.description+'\n\nНа обороте: «Запись не стирать. Если время не сходится — проверить камеру архива».\n\nНиже другой ручкой: «Ключ от выхода запер в ключнице у двери. Код — время, когда он так и не пришёл».','document');
+    case 'keyBox':return has(s,'exitKey')?msg(s,'Ключница пуста.'):{state:s,panel:'keypad'};
+    case 'exitDoor':
+      if(!has(s,'exitKey'))return msg(s,'Стальная дверь заперта. Ключ должен быть в ключнице на стене.');
+      if(!s.finished)return msg(s,'Ключ подходит. Но уходить рано: в архиве осталось что-то важное.');
+      return {state:s,message:'Замок поддаётся. Снаружи пахнет бензином.',leave:true};
   }
+}
+
+/** A code typed on the key box keypad. */
+export function tryKeyBox(s:Save,code:string):Outcome{
+  if(has(s,'exitKey'))return {state:s};
+  if(code!==KEYBOX_CODE)return msg(s,'Замок ключницы пискнул и не открылся.');
+  return msg(item(s,'exitKey'),'Дверца ключницы открылась. Найдено: Ключ от выхода');
 }
 
 /** The torch leaves the hand and lies where physics put it; a burning one keeps burning on the floor. */

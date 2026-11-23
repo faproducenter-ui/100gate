@@ -191,10 +191,9 @@ export class ViewModel {
     this.pivot.updateMatrixWorld(true);
     // Fingers: open relaxed hand <-> authored grip (only while no authored clip drives the fingers).
     if (!this.clipActive) for (const f of this.fingers) {
-      const w = this.gripW;
-      // Around the torch the authored grip leaves the fingers loose and splayed: closed a little further (beyond the authored pose), the thumb less so.
-      const over = this.carrying && this.gripW > .9 ? (f.bone.name.startsWith('thumb') ? .1 : /_01_r$/.test(f.bone.name) ? .22 : .34) : 0;
-      f.bone.quaternion.copy(f.grip).slerp(f.rest, (1 - w) * .92 - over);
+      // The authored grip is fitted on the shaft in Blender (every phalanx touches it, nothing goes through), so it is used as is:
+      // closing it further here would push the fingers into the wood and twist the thumb.
+      f.bone.quaternion.copy(f.grip).slerp(f.rest, (1 - this.gripW) * .92);
     }
     // The flame of a burning torch stays at full size after the lighting clip; the clip's own scale only matters while it grows.
     if (this.flameNode) {

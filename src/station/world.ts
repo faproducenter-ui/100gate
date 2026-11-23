@@ -18,13 +18,14 @@ export const toThree=(x:number,y:number,z:number)=>new T.Vector3(x,z,-y);
 const W2CD=1/(4*Math.PI);   // Blender watts -> candela for three's physical lights (same diffuse result as Cycles/EEVEE)
 
 /** Hinged parts: which way they open (radians about the vertical axis) and whether they start locked. */
-export const DOORS:Record<string,{leaves:string[];angle:number[];label:string;locked?:string}>={
-  shop:{leaves:['Door_L','Door_R'],angle:[1.55,-1.55],label:'Решётчатая дверь',locked:'keycard'},
-  motel1:{leaves:['Motel_Door1_Leaf'],angle:[1.45],label:'Дверь номера 1'},
-  motel2:{leaves:['Motel_Door2_Leaf'],angle:[1.45],label:'Дверь номера 2',locked:'never'},
-  motel3:{leaves:['Motel_Door3_Leaf'],angle:[1.45],label:'Дверь номера 3'},
-  shed:{leaves:['ShedA_ShedDoor_Leaf'],angle:[1.5],label:'Дверь сарая'},
-  gate:{leaves:['Gate_L','Gate_R'],angle:[1.4,-1.4],label:'Ворота',locked:'never'},
+/** gap: the doorway cut through the baked walk grid while open (Blender x0,x1,y0,y1); the bake saw the shut leaf as wall. */
+export const DOORS:Record<string,{leaves:string[];angle:number[];label:string;locked?:string;gap?:number[];/** the leaf was exported ajar: turned by this much it is shut */rest?:number}>={
+  shop:{leaves:['Door_L','Door_R'],angle:[1.55,-1.55],label:'Решётчатая дверь',locked:'shopKey'},
+  motel1:{leaves:['Motel_Door1_Leaf'],angle:[1.45],label:'Дверь номера 1',gap:[19.35,20.25,-20.3,-19.3]},
+  motel2:{leaves:['Motel_Door2_Leaf'],angle:[1.45],label:'Дверь номера 2',locked:'code',gap:[19.35,20.25,-16.5,-15.5]},
+  motel3:{leaves:['Motel_Door3_Leaf'],angle:[1.45],label:'Дверь номера 3',gap:[19.35,20.25,-12.7,-11.7]},
+  shed:{leaves:['ShedA_ShedDoor_Leaf'],angle:[-1.5],rest:.95,gap:[-22.42,-21.98,10.8,11.62],label:'Дверь сарая',locked:'shedKey'},
+  gate:{leaves:['Gate_L','Gate_R'],angle:[1.4,-1.4],label:'Ворота',locked:'gateKey'},
 };
 export type DoorId=keyof typeof DOORS;
 
@@ -98,9 +99,15 @@ export class StationWorld{
     // doors keep their glTF pivot (the hinge)
     for(const d of Object.values(DOORS))for(const leaf of d.leaves){
       const node=root.getObjectByName(leaf);
+      if(d.rest)node?.quaternion.premultiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),d.rest));
       if(node)this.doorNodes.set(leaf,{node,base:node.quaternion.clone()});
     }
+    root.updateMatrixWorld(true);   // the door rectangles are measured from world boxes
     for(const id of Object.keys(DOORS)){this.doorOpen[id]=0;this.doorWant[id]=0;this.setDoorBlocker(id,true);}
+    // The shed's plank walls sit under its roof and are thinner than a grid cell, so the bake did not see them:
+    // they are added here (corners from art/gas-station.blend, the shed is turned about 12 degrees), the doorway left open.
+    const shed:[number,number][]=[[-22.26,10.66],[-22.3,10.2],[-19.95,9.8],[-19.65,11.8],[-21.95,12.2],[-22.06,11.76]];
+    for(let i=0;i<shed.length-1;i++)this.walk.addWall('shedwall'+i,...shed[i]!,...shed[i+1]!,i===0||i===4?.06:.1);
     // products on the shelves: one InstancedMesh per library mesh
     const m=new T.Matrix4();
     for(const [name,list] of Object.entries(this.data.products)){
@@ -176,13 +183,27 @@ export class StationWorld{
   }
   private sky!:T.Points;
 
+  private readonly doorRects=new Map<string,{x0:number;x1:number;y0:number;y1:number}>();
   private setDoorBlocker(id:string,closed:boolean){
-    if(!closed){this.walk.blockers.delete(id);return;}
-    const box=new T.Box3();
-    for(const leaf of DOORS[id]!.leaves){const n=this.doorNodes.get(leaf)?.node;if(n)box.expandByObject(n);}
-    if(box.isEmpty())return;
-    // three box -> Blender ground rectangle, padded to the wall thickness
-    this.walk.blockers.set(id,{x0:box.min.x-.05,x1:box.max.x+.05,y0:-box.max.z-.12,y1:-box.min.z+.12});
+    if(!closed){
+      this.walk.blockers.delete(id);
+      // the bake saw the closed leaf as wall: the open doorway is cut through it
+      const r=this.doorRects.get(id);
+      const gap=DOORS[id]!.gap;
+      if(gap)this.walk.openDoorway(id,{x0:gap[0]!,x1:gap[1]!,y0:gap[2]!,y1:gap[3]!});
+      else if(r)this.walk.openDoorway(id,{x0:r.x0-.06,x1:r.x1+.06,y0:r.y0-.06,y1:r.y1+.06});
+      return;
+    }
+    this.walk.openings.delete(id);
+    let r=this.doorRects.get(id);
+    if(!r){
+      const box=new T.Box3();
+      for(const leaf of DOORS[id]!.leaves){const n=this.doorNodes.get(leaf)?.node;if(n)box.expandByObject(n);}
+      if(box.isEmpty())return;
+      // three box -> Blender ground rectangle, padded to the wall thickness (measured once, with the leaf shut)
+      r={x0:box.min.x-.05,x1:box.max.x+.05,y0:-box.max.z-.12,y1:-box.min.z+.12};this.doorRects.set(id,r);
+    }
+    this.walk.blockers.set(id,r);
   }
   toggleDoor(id:string){this.doorWant[id]=this.doorWant[id]?0:1;if(this.doorWant[id])this.setDoorBlocker(id,false);return !!this.doorWant[id];}
   /** Opening/closing motion; a door stays solid until it has swung mostly open, and becomes solid again when it closes. */

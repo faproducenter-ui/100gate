@@ -97,13 +97,18 @@ export class AnalogPass {
     (this.mat.uniforms.uRes!.value as T.Vector2).set(lw, lowHeight);
   }
   /** strength 0..1 scales every artefact (the menu uses less than the game). */
-  render(renderer: T.WebGLRenderer, draw: () => void, time: number, strength = 1, fade = 1, flash = 0, nv = 0, cut = 0) {
+  /** view: where on the canvas the picture goes (CSS px from the top left); the rest stays black (the security monitor's screen inside its housing) */
+  render(renderer: T.WebGLRenderer, draw: () => void, time: number, strength = 1, fade = 1, flash = 0, nv = 0, cut = 0, view?: { x: number; y: number; w: number; h: number }) {
     const u = this.mat.uniforms;
     u.uTime!.value = time; u.uGrain!.value = .06 * strength; u.uAberr!.value = .0042 * strength; u.uScan!.value = .22 * strength;
     u.uCurve!.value = .07 * strength; u.uVig!.value = .92 * strength; u.uFlicker!.value = .035 * strength; u.uSat!.value = 1 - .32 * strength;
     u.uFade!.value = fade; u.uFlash!.value = flash; u.uNV!.value = nv; u.uCut!.value = cut;
     renderer.setRenderTarget(this.rt); renderer.clear(); draw();
-    renderer.setRenderTarget(null); renderer.clear(); renderer.render(this.screen, this.cam);
+    renderer.setRenderTarget(null); renderer.clear();
+    if (view) {
+      const size = renderer.getSize(new T.Vector2());
+      renderer.setViewport(view.x, size.y - view.y - view.h, view.w, view.h); renderer.render(this.screen, this.cam); renderer.setViewport(0, 0, size.x, size.y);
+    } else renderer.render(this.screen, this.cam);
   }
   dispose() { this.rt.dispose(); this.mat.dispose(); }
 }
