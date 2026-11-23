@@ -1,6 +1,8 @@
 import {useEffect,useRef,useState} from 'react';
 import * as T from 'three';
 import {StationWorld} from './world';
+import {LoadingController} from '../boot/loading';
+import {LoadingScreen} from '../boot/screen';
 import {LOCKS,SPOTS,STATION_SAVE,aimSpot,carryOver,newStationSave,readStation,tryCode,useSpot,type Doc,type LockId,type Outcome,type StationSave} from './state';
 import {getSave,readSettings} from '../iso/state';
 import {CamOverlay} from '../iso/Interface';
@@ -148,21 +150,49 @@ export default function StationPage(){
       w.resize(surface.clientWidth,surface.clientHeight,settings);
       w.render({dt,time:clock,x:save.x,y:save.y,floor:floorY,yaw,pitch,speed:paused()?0:Math.hypot(vx,vy),sprint:running,crouch,
         torch:has('torch'),lit:save.lit,charge:save.charge,settings});
+      if(firstFrame){firstFrame=false;requestAnimationFrame(()=>{if(disposed)return;boot.done('frame');bootScreen?.finish();});}
     };
     const loop=(now:number)=>{
       const dt=Math.min(.06,(now-prev)/1000);
       if(now-prev>=1000/(coarse||settings.quality==='low'?30:60)-2.5){prev=now;if(!document.hidden)step(dt);}
       raf=requestAnimationFrame(loop);
     };
-    void StationWorld.create(surface,status=>{if(!disposed)emit({status});}).then(w=>{
-      if(disposed){w.dispose();return;}
-      world=w;
-      for(const [door,open] of Object.entries(save.doors))if(open)w.toggleDoor(door);
-      const safe=w.walk.nearestStand(save.x,save.y)??w.walk.nearestStand(START.x,START.y);
-      if(safe)save={...save,...safe};
-      floorY=w.walk.floor(save.x,save.y)??0;
-      emit({mode:'ready',status:''});
-    }).catch(e=>{if(!disposed)emit({mode:'error',status:e instanceof Error?e.message:'Не удалось загрузить локацию'});});
+    const bootScreen=LoadingScreen.attach();
+    let firstFrame=false,attempt=0,boot=new LoadingController();
+    const load=()=>{
+      const id=++attempt;
+      const ctl=boot=new LoadingController();
+      ctl.plan([
+        {id:'data',label:'Загрузка карты',weight:.5},
+        {id:'models',label:'Загрузка моделей',weight:6},
+        {id:'walk',label:'Загрузка карты проходимости',weight:.5},
+        {id:'viewmodel',label:'Загрузка рук и факела',weight:1,optional:true},
+        {id:'world',label:'Сборка локации',weight:1.5},
+        {id:'shaders',label:'Компиляция шейдеров',weight:1},
+        {id:'frame',label:'Первый кадр',weight:.3},
+      ]);
+      bootScreen?.bind(ctl);
+      let made:StationWorld|undefined;
+      void StationWorld.create(surface,ctl).then(async w=>{
+        made=w;
+        if(disposed||id!==attempt){w.dispose();return;}
+        for(const [door,open] of Object.entries(save.doors))if(open)w.toggleDoor(door);
+        const safe=w.walk.nearestStand(save.x,save.y)??w.walk.nearestStand(START.x,START.y);
+        if(safe)save={...save,...safe};
+        floorY=w.walk.floor(save.x,save.y)??0;
+        await w.warmup(ctl);
+        if(disposed||id!==attempt){w.dispose();return;}
+        world=w;ctl.start('frame');firstFrame=true;
+        emit({mode:'ready',status:''});
+      }).catch(e=>{
+        if(disposed||id!==attempt)return;
+        made?.dispose();
+        emit({mode:'error',status:e instanceof Error?e.message:'Не удалось загрузить локацию'});
+        const offline=typeof navigator!=='undefined'&&navigator.onLine===false;
+        bootScreen?.error(offline?'Нет соединения с интернетом. Проверьте сеть и попробуйте ещё раз.':'Не удалось загрузить локацию. Попробуйте ещё раз.',load);
+      });
+    };
+    load();
     raf=requestAnimationFrame(loop);
     if(import.meta.env.DEV){
       const dbg=window as unknown as Record<string,unknown>;
@@ -181,8 +211,6 @@ export default function StationPage(){
   const a=api.current;
   return <main className="station-app">
     <canvas ref={canvas} className="station-canvas" aria-label="Заправка во Флориде"/>
-    {view.mode==='loading'&&<div className="station-screen" role="status"><p className="station-mark">100<span>GATE</span></p><p>{view.status||'Загрузка…'}</p></div>}
-    {view.mode==='error'&&<div className="station-screen" role="alert"><p>{view.status}</p><button type="button" onClick={()=>location.reload()}>Повторить</button></div>}
     {view.mode==='ready'&&<div className="station-screen station-title">
       <p className="station-chapter">Снаружи</p><h1>Заправка «Круглосуточно»</h1><p className="station-date">4 декабря 2001 · 3:47</p>
       <button type="button" onClick={()=>a.start()}>Выйти на улицу</button>

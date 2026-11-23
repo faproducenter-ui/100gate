@@ -16,14 +16,20 @@ import {Intro,loadTrailerAssets} from './intro';
 import {KnifeSwitch,makeBattery,makeCamera,makeFuseBox,makePhone} from './props';
 import {DOORS,OBJECTS,ROOMS,doorFor,doorSwing,movedProps,roomAt,withinReach,type DoorId,type DoorStates,type ObjectId,type Point} from './map';
 import type {CameraId,CCTVView,PaperKind,Save,Settings} from './contracts';
+import {byteFraction,managerIdle,paintOpportunity,type LoadingController} from '../boot/loading';
 
 type Cast=Awaited<ReturnType<typeof loadActor>>;
 type Decor={phone?:T.Object3D;cctv?:T.Object3D;fusebox?:T.Object3D;battery?:T.Object3D;key?:T.Object3D;book?:T.Object3D;viewmodel?:{scene:T.Object3D;animations:T.AnimationClip[]};doorKit?:T.Object3D;paper?:{scene:T.Object3D;animations:T.AnimationClip[]}};
-async function loadDecor():Promise<Decor>{
-  const gltf=async(path:string)=>{
-    try{const l=new GLTFLoader();l.setMeshoptDecoder(MeshoptDecoder);return await l.loadAsync(import.meta.env.BASE_URL+path);}catch{return undefined;}
+/** onFraction gets the share of the nine files received: bytes where the server gives sizes, whole files otherwise. */
+async function loadDecor(onFraction?:(f:number)=>void):Promise<Decor>{
+  const files=['key-tag','antique-book','viewmodel-9','door-kit','phone-sfm','cctv-cam','fusebox','battery9v','paper-inspect-2'];
+  const got=files.map(()=>0),report=()=>onFraction?.(got.reduce((a,b)=>a+b,0)/files.length);
+  const gltf=async(i:number)=>{
+    try{const l=new GLTFLoader();l.setMeshoptDecoder(MeshoptDecoder);return await l.loadAsync(import.meta.env.BASE_URL+'assets/iso/'+files[i]+'.glb',e=>{const f=byteFraction(e);if(f>got[i]){got[i]=Math.min(.99,f);report();}});}
+    catch(e){console.warn('[100GATE] optional model failed:',files[i],e);return undefined;}
+    finally{got[i]=1;report();}
   };
-  const [key,book,viewmodel,doorKit,phone,cctv,fusebox,battery,paper]=await Promise.all([gltf('assets/iso/key-tag.glb'),gltf('assets/iso/antique-book.glb'),gltf('assets/iso/viewmodel-9.glb'),gltf('assets/iso/door-kit.glb'),gltf('assets/iso/phone-sfm.glb'),gltf('assets/iso/cctv-cam.glb'),gltf('assets/iso/fusebox.glb'),gltf('assets/iso/battery9v.glb'),gltf('assets/iso/paper-inspect-2.glb')]);
+  const [key,book,viewmodel,doorKit,phone,cctv,fusebox,battery,paper]=await Promise.all(files.map((_,i)=>gltf(i)));
   return {phone:phone?.scene,cctv:cctv?.scene,fusebox:fusebox?.scene,battery:battery?.scene,key:key?.scene,book:book?.scene,viewmodel:viewmodel&&{scene:viewmodel.scene,animations:viewmodel.animations},doorKit:doorKit?.scene,paper:paper&&{scene:paper.scene,animations:paper.animations}};
 }
 type Frame={state:Save;settings:Settings;menu:boolean;paused:boolean;cctv:CCTVView|null;time:number;dt:number;
@@ -216,15 +222,29 @@ export class IsoWorld {
   private lastWidth=0;
   private lastHeight=0;
 
-  static async create(canvas:HTMLCanvasElement,onProgress:(text:string)=>void,signal:AbortSignal){
-    onProgress('Персонаж · загрузка модели');
-    const actor=await loadActor();
-    onProgress('Предметы · ключи и книга');
-    const decor=await loadDecor();
-    onProgress('Физика предметов');
-    const physics=await createPhysics().catch(()=>undefined);
-    try{signal.throwIfAborted();onProgress('Администрация · материалы и свет');return new IsoWorld(canvas,actor,decor,physics);}
-    catch(error){actor.dispose();throw error;}
+  /** Each step reports to the loading controller as the task of the same id (see BOOT_TASKS). */
+  static async create(canvas:HTMLCanvasElement,boot:LoadingController,signal:AbortSignal){
+    const actor=await boot.track('actor',()=>loadActor(e=>boot.progress('actor',byteFraction(e)*.98)));
+    try{
+      const decor=await boot.track('models',()=>loadDecor(f=>boot.progress('models',f)));
+      // physics is optional: without it the props simply stay put
+      const physics=await boot.track('physics',createPhysics).catch(()=>undefined);
+      signal.throwIfAborted();
+      // building the level is synchronous work; let the screen paint its new stage line before it starts
+      return boot.track('world',async()=>{await paintOpportunity();return new IsoWorld(canvas,actor,decor,physics);});
+    }catch(error){actor.dispose();throw error;}
+  }
+  /**
+   * Before the menu is shown: wait for the wall textures the level asked for, hand them to the GPU, and compile the
+   * shaders of the title view, so the first visible frame is the finished picture and nothing pops in or stalls.
+   */
+  async warmup(boot:LoadingController){
+    await boot.track('textures',async()=>{
+      await managerIdle(f=>boot.progress('textures',f*.98));
+      this.scene.traverse(o=>{const m=(o as T.Mesh).material as T.Material|T.Material[]|undefined;if(!m)return;
+        for(const mat of Array.isArray(m)?m:[m])for(const v of Object.values(mat as unknown as Record<string,unknown>))if(v instanceof T.Texture&&v.image)this.renderer.initTexture(v);});
+    });
+    await boot.track('shaders',()=>this.renderer.compileAsync(this.scene,this.titleCamera));
   }
   private constructor(private readonly canvas:HTMLCanvasElement,actor:Cast,decor:Decor,private readonly physics?:Physics){
     this.env=buildEnvironment({modelFrames:!!decor.doorKit});

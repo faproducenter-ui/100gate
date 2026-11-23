@@ -540,14 +540,7 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
     {mode==='play'&&intro&&!!introPrompt&&<p className="iso-intro-prompt" role="status">{introPrompt}</p>}
     {mode==='play'&&intro&&<button type="button" className="iso-intro-skip" onClick={()=>act({type:'skip-intro'})}>{isTouch()?'Пропустить':'[Пробел] пропустить'}</button>}
     {mode==='play'&&!panel&&!intro&&<Hud state={state} settings={settings} hint={hint} markers={markers} notice={notice} act={act} fp={fp}/>}
-    {mode==='loading'&&<div className="iso-screen-state" role="status" data-testid="iso-loading">
-      <p className="iso-wordmark" aria-label="100GATE">100<span>GATE</span></p>
-      <p>{loading||'Загрузка администрации…'}</p>
-    </div>}
-    {mode==='error'&&<Modal key="error" title="Не удалось открыть игру" testId="iso-error">
-      <p className="iso-dialog-copy" role="alert">{loading||'Попробуйте загрузить игру ещё раз.'}</p>
-      <div className="iso-modal-actions"><ActionButton act={act} action={{type:'retry'}} testId="iso-retry"><RotateCcw/>Повторить</ActionButton></div>
-    </Modal>}
+    {/* loading and a failed start are shown by the page's own loading screen (src/boot), which stays above the game until its first frame */}
     {mode==='complete'&&<div className="iso-leaving" role="status" data-testid="iso-leaving"><p>Снаружи</p></div>}
     {modal}
     {mode==='play'&&dead&&<div className="iso-dead" role="alert"><div className="iso-dead-noise"/><p><b>ЗАРЯД НА КАМЕРЕ РАЗРЯЖЕН</b><span>Вы проиграли. Без записи в этом здании нечем смотреть.</span></p><div className="iso-dead-actions"><button type="button" onClick={()=>act({type:'start'})}>Начать заново</button><button type="button" onClick={()=>act({type:'title'})}>В меню</button></div></div>}

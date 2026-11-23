@@ -7,6 +7,7 @@ import type {Settings} from '../iso/contracts';
 import {FpRig} from '../iso/fps';
 import {AnalogPass} from '../iso/analog';
 import {fireFlicker} from '../iso/flame';
+import {byteFraction,paintOpportunity,type LoadingController} from '../boot/loading';
 
 /** Data written by tools/gas-station/export_station.py. Positions are Blender coordinates (x east, y north, z up). */
 type LightDef={name:string;type:'POINT'|'SPOT'|'SUN'|'AREA';pos:number[];color:number[];energy:number;dir?:number[];angle?:number;blend?:number;radius?:number;flicker?:number[]};
@@ -71,23 +72,26 @@ export class StationWorld{
     this.buildSky();
   }
 
-  static async create(canvas:HTMLCanvasElement,onProgress:(t:string)=>void){
+  /** Each step reports to the loading controller as the task of the same id (see the plan in StationPage). */
+  static async create(canvas:HTMLCanvasElement,boot:LoadingController){
     const base=import.meta.env.BASE_URL+ASSET_DIR;
-    onProgress('Карта заправки');
-    const res=await fetch(base+`station-${STATION_VERSION}.json`);
-    if(!res.ok)throw Error('Не удалось загрузить данные локации');
-    const data=await res.json() as StationData;
-    onProgress('Модели и текстуры');
+    const data=await boot.track('data',async()=>{
+      const res=await fetch(base+`station-${STATION_VERSION}.json`);
+      if(!res.ok)throw Error(`station data: HTTP ${res.status}`);
+      return await res.json() as StationData;
+    });
     const draco=new DRACOLoader();draco.setDecoderPath(import.meta.env.BASE_URL+'assets/iso/draco/');
     const loader=new GLTFLoader();loader.setDRACOLoader(draco);loader.setMeshoptDecoder(MeshoptDecoder);
-    const [gltf,walk,vm]=await Promise.all([
-      loader.loadAsync(base+`station-${STATION_VERSION}.glb`,e=>{if(e.total)onProgress(`Модели и текстуры ${Math.round(e.loaded/e.total*100)}%`);}),
-      loadWalk(base+data.walk.file,data.walk),
-      loader.loadAsync(base+'viewmodel-9.glb').catch(()=>undefined)]);
-    draco.dispose();
-    onProgress('Свет');
-    return new StationWorld(canvas,data,walk,gltf.scene,vm&&{scene:vm.scene,animations:vm.animations});
+    try{
+      const [gltf,walk,vm]=await Promise.all([
+        boot.track('models',()=>loader.loadAsync(base+`station-${STATION_VERSION}.glb`,e=>boot.progress('models',byteFraction(e)*.97))),
+        boot.track('walk',()=>loadWalk(base+data.walk.file,data.walk)),
+        boot.track('viewmodel',()=>loader.loadAsync(base+'viewmodel-9.glb',e=>boot.progress('viewmodel',byteFraction(e)*.97))).catch(()=>undefined)]);
+      return await boot.track('world',async()=>{await paintOpportunity();return new StationWorld(canvas,data,walk,gltf.scene,vm&&{scene:vm.scene,animations:vm.animations});});
+    }finally{draco.dispose();}
   }
+  /** Compile the shaders of the opening view before the first frame, so it does not stall or show half-built materials. */
+  warmup(boot:LoadingController){return boot.track('shaders',()=>this.renderer.compileAsync(this.scene,this.camera));}
 
   private buildWorld(root:T.Object3D){
     const libs=new Map<string,T.Mesh>();let pine:T.Mesh|undefined;

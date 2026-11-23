@@ -114,9 +114,9 @@ const loadProps = async (): Promise<Props> => {
   return { flashlight, backpack, straps, grip }
 }
 
-function loadShared(): Promise<Shared> {
+function loadShared(onProgress?: (e: ProgressEvent) => void): Promise<Shared> {
   if (sharedPromise) return sharedPromise
-  sharedPromise = new GLTFLoader().loadAsync(import.meta.env.BASE_URL + ASSET).then(source => {
+  sharedPromise = new GLTFLoader().loadAsync(import.meta.env.BASE_URL + ASSET, onProgress).then(source => {
     const idle = T.AnimationClip.findByName(source.animations, 'Idle')
     const walk = T.AnimationClip.findByName(source.animations, 'Walk')
     const run = T.AnimationClip.findByName(source.animations, 'Run')
@@ -531,6 +531,7 @@ function instantiate(shared: Shared, variant: Variant): IsoActor {
   }
 }
 
-export async function loadActor(): Promise<IsoActor> {
-  return instantiate(await loadShared(), 'hero')
+/** onProgress receives the download events of the character file (the loading screen turns them into a share of the start). */
+export async function loadActor(onProgress?: (e: ProgressEvent) => void): Promise<IsoActor> {
+  return instantiate(await loadShared(onProgress), 'hero')
 }

@@ -2,6 +2,8 @@ import {INTRO_DURATION,INTRO_ENABLED} from './intro';
 import {useEffect,useRef,useState} from 'react';
 import {IsoInterface} from './Interface';
 import {IsoWorld} from './world';
+import {LoadingController,type TaskSpec} from '../boot/loading';
+import {LoadingScreen} from '../boot/screen';
 import {IsoSound} from './sound';
 import {OBJECTS,doorFor,movePlayer,roomAt,withinReach,type ObjectId,type Point} from './map';
 import {act,activeQuest,tryKeyBox,canIgnite,dropTorch,cctvDuration,feedPower,getSave,lightTorch,isEvidence,newSave,pressLine,readSettings,recordEvidence,sanitizeSettings,SAVE_KEY,SETTINGS_KEY,write} from './state';
@@ -156,18 +158,37 @@ export default function IsoPage(){
       }
       emit();
     };
+    // The start of the game, step by step. Weights are the rough share of the wait each step takes on a first visit.
+    const BOOT:TaskSpec[]=[
+      {id:'actor',label:'Загрузка персонажа',weight:3},
+      {id:'models',label:'Загрузка моделей',weight:4},
+      {id:'physics',label:'Подготовка физики',weight:1,optional:true},
+      {id:'world',label:'Сборка уровня',weight:1.5},
+      {id:'textures',label:'Загрузка текстур',weight:2},
+      {id:'shaders',label:'Компиляция шейдеров',weight:1},
+      {id:'frame',label:'Первый кадр',weight:.3},
+    ];
+    const bootScreen=LoadingScreen.attach();
+    let firstFrame=false,boot=new LoadingController();
     async function load(){
       const id=++attempt;
       mode='loading';loading='Подготовка локации';emit();
+      boot=new LoadingController();boot.plan(BOOT);bootScreen?.bind(boot);const ctl=boot;
+      let next:IsoWorld|undefined;
       try{
-        const next=await IsoWorld.create(surface,status=>{
-          if(!disposed&&id===attempt){loading=status;emit();}
-        },lifetime.signal);
+        next=await IsoWorld.create(surface,ctl,lifetime.signal);
         if(disposed||id!==attempt){next.dispose();return;}
-        world?.dispose();world=next;world.onKeyClink=l=>sound.jingle(l,settings);mode='title';loading='';emit();
+        await next.warmup(ctl);
+        if(disposed||id!==attempt){next.dispose();return;}
+        world?.dispose();world=next;world.onKeyClink=l=>sound.jingle(l,settings);
+        // the menu becomes the mode now, but the loading screen stays over it until its first frame is on the canvas
+        ctl.start('frame');firstFrame=true;mode='title';loading='';emit();
       }catch(error){
         if(disposed||id!==attempt)return;
+        if(next&&next!==world)next.dispose();
         mode='error';loading=error instanceof Error?error.message:'Не удалось загрузить локацию';emit();
+        const offline=typeof navigator!=='undefined'&&navigator.onLine===false;
+        bootScreen?.error(offline?'Нет соединения с интернетом. Проверьте сеть и попробуйте ещё раз.':'Не удалось загрузить игру. Попробуйте ещё раз.',()=>{void load();});
       }
     }
     const canMenu=()=>mode==='title'||mode==='play'||mode==='complete';
@@ -405,6 +426,11 @@ export default function IsoPage(){
       else if(!document.hidden&&(mode==='title'||mode==='play'||mode==='complete')){
         world?.render({charge:state.charge,zoom:zoomK,focusK,focusId,crank,state,settings,menu,paused,cctv:panel==='cctv'?cctv:null,time:clock,dt,perf,reading:panel==='document'&&fpOn()&&!documentView?.wall,readingDoc:documentView,
           direction,speed,target:panel?null:target,drawer,look:{yaw,pitch},crouch,sprint:sprinting,press,kick});
+        if(firstFrame&&world){
+          // the frame just drawn reaches the screen with the next one; only then does the loading screen go
+          firstFrame=false;
+          requestAnimationFrame(()=>{if(disposed)return;boot.done('frame');bootScreen?.finish();});
+        }
       }
     };
     // Heat: a phone or a laptop must not run flat out. Frames are paced (60 at most, 30 on phones and on the low setting), and a governor trades the

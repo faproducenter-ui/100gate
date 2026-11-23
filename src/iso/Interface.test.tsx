@@ -33,9 +33,9 @@ describe('administration interface',()=>{
     expect(markup({mode:'play',panel:'cctv',cctv:{...base.cctv,availableFuture:true,evidence:true}}))
       .toContain('data-testid="iso-cctv-evidence"');
   });
-  it('shows load status without fake progress percentages',()=>{
-    expect(markup({mode:'loading',loading:'Загрузка моделей'})).toContain('Загрузка моделей');
-    expect(markup({mode:'loading'})).not.toContain('aria-valuenow');
+  it('leaves loading and a failed start to the page loading screen (no second loader)',()=>{
+    expect(markup({mode:'loading',loading:'Загрузка моделей'})).not.toContain('Загрузка моделей');
+    expect(markup({mode:'error',loading:'boom'})).not.toContain('boom');
   });
   it('shows the active task and clues in the journal, without previewing future steps',()=>{
     const html=markup({mode:'play',panel:'journal',state:{...base.state,dutyRead:true}});
