@@ -449,11 +449,12 @@ export function buildEnvironment(opts:{modelFrames?:boolean}={}):AdminEnvironmen
         cylinder(stand,m.lamp,.093,.214,.038,.031,.018);
         break;
       case 'archiveShelf':
-        shelf(g,m,f.w,f.d,1.98,530);
+        shelf(g,m,f.w,f.d,1.98,530,'А');
         break;
       case 'archiveShelfSide':
-        g.rotation.y=-Math.PI/2;shelf(g,m,f.d,f.w,1.56,245);
-        set('fileZero',group(g,0,1.025,.318,'Shelf B slot 4'));
+        g.rotation.y=-Math.PI/2;shelf(g,m,f.d,f.w,1.56,245,'Б');
+        // the box labelled Б-4: second row from the top, leftmost cell as you face the shelf
+        set('fileZero',group(g,-f.d/3,1.025,.318,'Shelf B slot 4'));
         nearFurniture.push(g);
         break;
     }

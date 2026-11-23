@@ -14,13 +14,22 @@ export const LOCKS:Record<LockId,{code:string;title:string;hint:string}>={
 export const SAFE_CODE=LOCKS.safe.code;
 
 export type StationSave={x:number;y:number;yaw:number;items:string[];safe:boolean;doors:Record<string,boolean>;read:string[];
-  /** code locks already opened */open?:string[]};
+  /** code locks already opened */open?:string[];
+  /** carried out of the administration: camcorder charge (percent) and whether the torch burns */
+  charge:number;lit:boolean;/** the gear from the administration save has been taken over */carried?:boolean};
+/** What the hero brings out of the building: the torch, the lighter, a spare battery, the camcorder's charge. */
+export const GEAR=['torch','lighter','battery'] as const;
+export function carryOver(s:StationSave,admin:{items:string[];charge:number;lightOn:boolean}|null|undefined):StationSave{
+  if(s.carried||!admin)return {...s,carried:true};
+  const gear=GEAR.filter(g=>admin.items.includes(g)&&!s.items.includes(g));
+  return {...s,items:[...s.items,...gear],charge:Math.max(0,Math.min(100,admin.charge)),lit:admin.lightOn&&admin.items.includes('torch'),carried:true};
+}
 export type Doc={title:string;text:string};
 export type Spot={id:string;label:string;x:number;y:number;z:number;reach?:number};
 
 export const ITEM_NAMES:Record<string,string>={
   shopKey:'Ключ от магазина',keycard:'Карта от решётки',shedKey:'Ключ от сарая',carKey:'Ключи от машины',
-  hexKey:'Шестигранный ключ',gateKey:'Ключ от цепи на воротах',note:'Записка сменщика',map:'Карта округа',receipt:'Чек',
+  hexKey:'Шестигранный ключ',torch:'Факел',lighter:'Зажигалка',battery:'Батарея 9 В',gateKey:'Ключ от цепи на воротах',note:'Записка сменщика',map:'Карта округа',receipt:'Чек',
 };
 
 export const SPOTS:Spot[]=[
@@ -55,7 +64,7 @@ export const DOCS:Record<string,Doc>={
   gate:{title:'Дорога',text:'Цепь со звоном падает на асфальт. За воротами — тёмная дорога через лес. На покосившемся указателе: «Школа №7 — 4 км».\n\nПродолжение следует.'},
 };
 
-export const newStationSave=(x:number,y:number,yaw:number):StationSave=>({x,y,yaw,items:[],safe:false,doors:{},read:[],open:[]});
+export const newStationSave=(x:number,y:number,yaw:number):StationSave=>({x,y,yaw,items:[],safe:false,doors:{},read:[],open:[],charge:100,lit:false});
 
 export function readStation(raw:string|null):StationSave|undefined{
   if(!raw)return undefined;
@@ -65,7 +74,8 @@ export function readStation(raw:string|null):StationSave|undefined{
     const strings=(a:unknown)=>Array.isArray(a)?a.filter((i):i is string=>typeof i==='string'):[];
     const open=strings(s.open);if(s.safe===true&&!open.includes('safe'))open.push('safe');
     return {x:s.x,y:s.y,yaw:Number.isFinite(s.yaw)?s.yaw!:0,items:strings(s.items),
-      safe:s.safe===true,doors:typeof s.doors==='object'&&s.doors?s.doors:{},read:strings(s.read),open};
+      safe:s.safe===true,doors:typeof s.doors==='object'&&s.doors?s.doors:{},read:strings(s.read),open,
+      charge:typeof s.charge==='number'&&s.charge>=0&&s.charge<=100?s.charge:100,lit:s.lit===true&&strings(s.items).includes('torch'),carried:s.carried===true};
   }catch{return undefined;}
 }
 

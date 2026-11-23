@@ -139,7 +139,7 @@ export function cardboard(p:T.Object3D,m:KitMaterials,x:number,y:number,z:number
   box(g,m.clay,0,h+.003,0,w*.19,.003,d+.013);
   box(g,m.clay,0,h-.042,d/2+.002,w*.19,.085,.003);
   box(g,m.veneer,-w*.31,h*.64,d/2+.005,w*.18,.028,.003,.001);
-  if(label)plate(g,m.label([label],'#514937','#bcb198',128,56),w*.19,h*.45,d/2+.006,w*.46,.057);
+  if(label)plate(g,m.label([label],'#1f1b14','#e3dcc4',128,64),w*.17,h*.42,d/2+.006,Math.min(.2,w*.42),.1);
   return g;
 }
 
@@ -158,13 +158,17 @@ export function paperStack(p:T.Object3D,m:KitMaterials,x:number,y:number,z:numbe
   return pile;
 }
 
-export function shelf(p:T.Object3D,m:KitMaterials,w:number,d:number,height:number,seed:number){
+/** section: an archive letter. Then every cell holds a labelled box, numbered from the top row, left to right as you face the shelf
+ * (A-1, A-2 ...), and the letter is on a plate along the top. Without it the boxes carry no labels. */
+export function shelf(p:T.Object3D,m:KitMaterials,w:number,d:number,height:number,seed:number,section?:string){
   const rng=random(seed);
   for(const x of [-1,1])for(const z of [-1,1]){
     box(p,m.greenSteel,x*(w/2-.016),height/2,z*(d/2-.018),.032,height,.036,.003);
     box(p,m.dark,x*(w/2-.016),.021,z*(d/2-.018),.047,.039,.049,.003);
   }
   const unit=(height-.13)/5;
+  const top=seed%2===0?3:4;
+  if(section)plate(p,m.label(['СТЕЛЛАЖ '+section],'#2f2b22','#cfc6a6',256,72),0,height+.16,-d/2+.004,.52,.15);   // on the wall above it
   for(let row=0;row<5;row++){
     const y=.08+row*unit;
     box(p,m.steel,0,y,0,w,.042,d,.007);
@@ -173,7 +177,8 @@ export function shelf(p:T.Object3D,m:KitMaterials,w:number,d:number,height:numbe
     for(let k=0;k<3;k++){
       const cell=w/3;
       const x=-w/2+cell*(k+.5),z=(rng()-.5)*.07;
-      if(rng()>.44)cardboard(p,m,x,y+.024,z,cell*.84,Math.min(.247,unit*.74),d*.78,row===2&&k===1?'Н-07':undefined);
+      const n=(top-row)*3+k+1;
+      if(section||rng()>.44)cardboard(p,m,x,y+.024,section?.012:z,cell*.84,Math.min(.247,unit*.74),d*.78,section?`${section}-${n}`:undefined);
       else for(let i=0;i<4;i++){
         const h=unit*(.48+rng()*.34),xx=x+(i-1.5)*cell*.15;
         box(p,[m.clay,m.sage,m.blue,m.paper][(row+k+i)%4]!,xx,y+.023+h/2,z,.035,h,d*.62,.004);

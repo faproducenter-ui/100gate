@@ -1,8 +1,12 @@
 import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
+import {MeshoptDecoder} from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import {loadWalk,type WalkGrid,type WalkInfo} from './walk';
 import type {Settings} from '../iso/contracts';
+import {FpRig} from '../iso/fps';
+import {AnalogPass} from '../iso/analog';
+import {fireFlicker} from '../iso/flame';
 
 /** Data written by tools/gas-station/export_station.py. Positions are Blender coordinates (x east, y north, z up). */
 type LightDef={name:string;type:'POINT'|'SPOT'|'SUN'|'AREA';pos:number[];color:number[];energy:number;dir?:number[];angle?:number;blend?:number;radius?:number;flicker?:number[]};
@@ -34,8 +38,13 @@ function rng(seed:number){return ()=>{seed=(seed*16807)%2147483647;return (seed-
 export class StationWorld{
   readonly renderer:T.WebGLRenderer;
   readonly scene=new T.Scene();
-  readonly camera=new T.PerspectiveCamera(70,1,.05,420);
-  readonly torch=new T.SpotLight(0xfff1d8,0,26,.42,.55,2);
+  /** The same first-person rig as inside the administration: the hero's arms, the torch in the hand, head bob and breathing. */
+  readonly fps:FpRig;
+  get camera(){return this.fps.camera;}
+  /** the camcorder's picture: low resolution, grain, scan lines (as indoors) */
+  private readonly analog=new AnalogPass();
+  /** the torch's fire (follows the flame of the torch in the hand) */
+  private readonly fire=new T.PointLight(0xff9a40,0,14,1.5);
   private readonly lights:{light:T.Light;base:number;flicker?:number[];phase:number}[]=[];
   private readonly flickerMats:{mat:T.MeshStandardMaterial;base:number;src?:number}[]=[];
   private readonly screenMats:T.MeshStandardMaterial[]=[];
@@ -46,15 +55,17 @@ export class StationWorld{
   private time=0;
   private width=0;private height=0;
 
-  private constructor(canvas:HTMLCanvasElement,readonly data:StationData,readonly walk:WalkGrid,gltf:T.Object3D){
+  private constructor(canvas:HTMLCanvasElement,readonly data:StationData,readonly walk:WalkGrid,gltf:T.Object3D,viewmodel?:{scene:T.Object3D;animations:T.AnimationClip[]}){
+    this.fps=new FpRig(this.scene,viewmodel);
+    this.fps.camera.far=420;this.fps.camera.updateProjectionMatrix();
     this.renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
     this.renderer.outputColorSpace=T.SRGBColorSpace;
     this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.35;
     this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=T.PCFSoftShadowMap;
     this.scene.background=new T.Color(0x04070e);
     this.scene.fog=new T.FogExp2(0x060a12,.011);
-    this.scene.add(this.camera);
-    this.camera.add(this.torch,this.torch.target);this.torch.position.set(.18,-.22,0);this.torch.target.position.set(0,-.15,-4);
+    this.fire.castShadow=false;this.scene.add(this.fire);
+    this.analog.setExposure(1.9);   // the renderer's own exposure (1.35) does not reach a render target; the analog pass tone-maps instead
     this.buildWorld(gltf);
     this.buildLights();
     this.buildSky();
@@ -68,13 +79,14 @@ export class StationWorld{
     const data=await res.json() as StationData;
     onProgress('Модели и текстуры');
     const draco=new DRACOLoader();draco.setDecoderPath(import.meta.env.BASE_URL+'assets/iso/draco/');
-    const loader=new GLTFLoader();loader.setDRACOLoader(draco);
-    const [gltf,walk]=await Promise.all([
+    const loader=new GLTFLoader();loader.setDRACOLoader(draco);loader.setMeshoptDecoder(MeshoptDecoder);
+    const [gltf,walk,vm]=await Promise.all([
       loader.loadAsync(base+`station-${STATION_VERSION}.glb`,e=>{if(e.total)onProgress(`Модели и текстуры ${Math.round(e.loaded/e.total*100)}%`);}),
-      loadWalk(base+data.walk.file,data.walk)]);
+      loadWalk(base+data.walk.file,data.walk),
+      loader.loadAsync(base+'viewmodel-9.glb').catch(()=>undefined)]);
     draco.dispose();
     onProgress('Свет');
-    return new StationWorld(canvas,data,walk,gltf.scene);
+    return new StationWorld(canvas,data,walk,gltf.scene,vm&&{scene:vm.scene,animations:vm.animations});
   }
 
   private buildWorld(root:T.Object3D){
@@ -224,18 +236,23 @@ export class StationWorld{
   resize(w:number,h:number,settings:Settings){
     const cap=settings.quality==='low'?1:settings.quality==='medium'?1.5:2;
     this.renderer.setPixelRatio(Math.max(.55,Math.min(devicePixelRatio,cap)*settings.scale));
-    if(w!==this.width||h!==this.height){this.width=w;this.height=h;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();}
+    if(w!==this.width||h!==this.height){this.width=w;this.height=h;this.renderer.setSize(w,h,false);this.fps.setAspect(w/h);this.analog.resize(w,h,settings.quality==='low'?360:480);}
     this.renderer.shadowMap.enabled=settings.shadows&&settings.quality!=='low';
   }
 
-  render(f:{dt:number;eye:T.Vector3;yaw:number;pitch:number;torch:boolean;bob:number;settings:Settings}){
+  /** One frame. x,y: Blender ground position; yaw as the station page keeps it (looking along (-sin yaw, cos yaw)). */
+  render(f:{dt:number;time:number;x:number;y:number;floor:number;yaw:number;pitch:number;speed:number;sprint:boolean;crouch:number;
+    torch:boolean;lit:boolean;charge:number;settings:Settings}){
     this.time+=f.dt;
     this.animateDoors(f.dt);
+    // the iso rig: yaw 0 faces three +Z; Blender (x,y) -> three (x,-y); its eye height is above the floor it stands on
+    this.fps.update({x:f.x,z:-f.y,yaw:f.yaw+Math.PI,pitch:f.pitch,speed:f.speed,sprint:f.sprint,crouch:f.crouch,dt:f.dt,time:f.time,
+      hasLight:f.torch,lightOn:f.lit,press:1,kick:1,bend:{x:0,y:f.floor,z:0}});
     const cam=this.camera;
-    cam.position.copy(f.eye);cam.position.y+=f.bob;
-    cam.rotation.set(f.pitch,f.yaw,0,'YXZ');
     this.sky.position.copy(cam.position);
-    this.torch.intensity+=((f.torch?38:0)-this.torch.intensity)*Math.min(1,f.dt*14);
+    const flame=f.torch&&f.lit?this.fps.flamePose():undefined,flick=fireFlicker(this.time);
+    this.fire.color.setHSL(.075+.012*(fireFlicker(this.time,3)-1),1,.6);
+    if(flame){this.fire.position.copy(flame.position);this.fire.intensity=30*flame.level*flick;}else this.fire.intensity=0;
     // flickering lights follow the pattern baked in Blender (24 fps), slightly jittered; reduced flicker keeps them steady
     const frame=Math.floor(this.time*24);
     for(const l of this.lights){
@@ -251,9 +268,14 @@ export class StationWorld{
       const t=this.time,n=Math.sin(t*37.1)*Math.sin(t*11.3+1.7);
       s.emissiveIntensity=f.settings.reducedFlicker?1:(n>.55?.15:.6+.5*Math.abs(Math.sin(t*3.1)));
     }
-    this.renderer.render(this.scene,cam);
+    // the camcorder's battery running down: noisier, then flickering, and dark at the end (as indoors)
+    const low=T.MathUtils.clamp((24-f.charge)/24,0,1),dying=f.charge<=0?0:1-low*(.45*Math.max(0,Math.sin(this.time*13)*Math.sin(this.time*5.1+1)));
+    this.analog.render(this.renderer,()=>{this.renderer.render(this.scene,cam);this.fps.vm.draw(this.renderer);},this.time,1+low*.9,dying,0);
   }
+  /** F with the torch and the lighter: the hands light it; onFlame when it catches. */
+  ignite(onFlame:()=>void){if(!this.fps.vm.ready||!this.fps.vm.startIgnite(onFlame))onFlame();}
   dispose(){
+    this.fps.dispose();
     this.renderer.dispose();
     this.scene.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points){o.geometry.dispose();}});
   }

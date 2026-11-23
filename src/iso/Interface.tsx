@@ -7,7 +7,7 @@ import {activeQuest, ITEMS, QUESTS} from './state';
 import './interface.css';
 
 /** The camera's own display: the red REC dot, a running timecode and the corner marks of a viewfinder. */
-function CamOverlay({charge}:{charge:number}){
+export function CamOverlay({charge}:{charge:number}){
   const [t,setT]=useState(0);
   useEffect(()=>{const id=window.setInterval(()=>setT(x=>x+1),1000);return()=>window.clearInterval(id);},[]);
   const p=(n:number)=>String(n).padStart(2,'0');

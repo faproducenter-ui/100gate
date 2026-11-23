@@ -87,6 +87,8 @@ export class AnalogPass {
     });
     const quad = new T.Mesh(new T.PlaneGeometry(2, 2), this.mat); quad.frustumCulled = false; this.screen.add(quad);
   }
+  /** Exposure before the tone curve (the gas station's night needs more than the lit rooms). */
+  setExposure(e: number) { this.mat.uniforms.uExposure!.value = e; }
   /** Soft = smooth upscaling (the opening); not soft = hard pixels (the game). */
   setSoft(soft: boolean) { const f = soft ? T.LinearFilter : T.NearestFilter; if (this.rt.texture.magFilter !== f) { this.rt.texture.magFilter = f; this.rt.texture.minFilter = f; this.rt.texture.needsUpdate = true; } }
   /** Size of the output in CSS pixels and the height of the low-resolution picture. */

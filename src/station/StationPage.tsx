@@ -1,21 +1,23 @@
 import {useEffect,useRef,useState} from 'react';
 import * as T from 'three';
 import {StationWorld} from './world';
-import {LOCKS,SPOTS,STATION_SAVE,aimSpot,newStationSave,readStation,tryCode,useSpot,type Doc,type LockId,type Outcome,type StationSave} from './state';
-import {readSettings} from '../iso/state';
+import {LOCKS,SPOTS,STATION_SAVE,aimSpot,carryOver,newStationSave,readStation,tryCode,useSpot,type Doc,type LockId,type Outcome,type StationSave} from './state';
+import {getSave,readSettings} from '../iso/state';
+import {CamOverlay} from '../iso/Interface';
+import '../iso/interface.css';
 import {IsoSound} from '../iso/sound';
 import './station.css';
 
-const LOOK_RAD=.0021,EYE=1.62,CROUCH_EYE=1.02;
+const LOOK_RAD=.0021;
 /** On the step of the house by the road, just out of the administration's exit door, facing the station (east). */
 const START={x:-17.2,y:4.4,yaw:-Math.PI/2};
 
-type View={mode:'loading'|'ready'|'play'|'error';status:string;hint:string;notice:string;doc?:Doc;panel?:LockId|'pause';code:string;locked:boolean;torch:boolean};
+type View={mode:'loading'|'ready'|'play'|'error';status:string;hint:string;notice:string;doc?:Doc;panel?:LockId|'pause';code:string;locked:boolean;charge:number;dead:boolean};
 
 export default function StationPage(){
   const canvas=useRef<HTMLCanvasElement>(null);
-  const api=useRef<{code:(d:string)=>void;closeDoc:()=>void;resume:()=>void;start:()=>void}>({code:()=>{},closeDoc:()=>{},resume:()=>{},start:()=>{}});
-  const [view,setView]=useState<View>({mode:'loading',status:'Заправка',hint:'',notice:'',code:'',locked:false,torch:false});
+  const api=useRef<{code:(d:string)=>void;closeDoc:()=>void;resume:()=>void;start:()=>void;restart:()=>void}>({code:()=>{},closeDoc:()=>{},resume:()=>{},start:()=>{},restart:()=>{}});
+  const [view,setView]=useState<View>({mode:'loading',status:'Заправка',hint:'',notice:'',code:'',locked:false,charge:100,dead:false});
 
   useEffect(()=>{
     const surface=canvas.current!;
@@ -23,10 +25,16 @@ export default function StationPage(){
     const coarse=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
     const sound=new IsoSound();
     let world:StationWorld|undefined,disposed=false,raf=0,prev=performance.now();
-    let save:StationSave=readStation(localStorage.getItem(STATION_SAVE))??newStationSave(START.x,START.y,START.yaw);
-    let v:View={mode:'loading',status:'Заправка',hint:'',notice:'',code:'',locked:false,torch:false};
+    // the hero comes out of the administration with what he had there: the torch (burning or not), the lighter, the battery, the camcorder's charge
+    let save:StationSave=carryOver(readStation(localStorage.getItem(STATION_SAVE))??newStationSave(START.x,START.y,START.yaw),getSave());
+    const restart=()=>{
+      const fresh=carryOver(newStationSave(START.x,START.y,START.yaw),getSave());
+      try{localStorage.setItem(STATION_SAVE,JSON.stringify({...fresh,charge:100}));}catch{/* */}
+      location.reload();
+    };
+    let v:View={mode:'loading',status:'Заправка',hint:'',notice:'',code:'',locked:false,charge:100,dead:false};
     let yaw=save.yaw,pitch=-.04,vx=0,vy=0,crouch=0,walked=0,bobT=0,noticeUntil=0,clock=0,saveClock=0;
-    let aimed:string|undefined;
+    let aimed:string|undefined,floorY=0,running=false;
     const keys=new Set<string>();
     const emit=(patch:Partial<View>={})=>{v={...v,...patch};setView(v);};
     const persist=()=>{try{localStorage.setItem(STATION_SAVE,JSON.stringify({...save,yaw}));}catch{/* storage unavailable */}};
@@ -54,10 +62,25 @@ export default function StationPage(){
       },
       closeDoc:()=>{emit({doc:undefined});if(!coarse)lock();},
       resume:()=>{emit({panel:undefined});if(!coarse)lock();},
-      start:()=>{void sound.unlock().catch(()=>{});emit({mode:'play'});if(!coarse)lock();},
+      start:()=>{void sound.unlock().catch(()=>{});emit({mode:'play',charge:save.charge,dead:save.charge<=0});if(!coarse)lock();},
+      restart,
     };
     const use=()=>{if(!aimed||paused())return;apply(useSpot(save,aimed,save));};
     const lock2=()=>lock();
+    const has=(i:string)=>save.items.includes(i);
+    /** F: the hands light the torch with the lighter, as indoors. */
+    const ignite=()=>{
+      if(!has('torch'))return inform('У тебя нет факела.');
+      if(save.lit)return inform('Факел уже горит.');
+      if(!has('lighter'))return inform('Нечем поджечь факел. Нужна зажигалка.');
+      world?.ignite(()=>{save={...save,lit:true};sound.cue('switch',settings);inform('Факел разгорелся.');persist();});
+    };
+    /** B: a fresh battery into the camcorder. */
+    const swapBattery=()=>{
+      if(!has('battery'))return inform('Запасной батареи нет.');
+      if(save.charge>85)return inform('Батарея в камере ещё хорошая.');
+      save={...save,items:save.items.filter(i=>i!=='battery'),charge:100};sound.batterySwap(settings);inform('Батарея заменена. Заряд 100%.');emit({charge:100});persist();
+    };
     const keydown=(e:KeyboardEvent)=>{
       if(e.ctrlKey||e.metaKey||e.altKey)return;
       if(v.panel&&v.panel!=='pause'){
@@ -70,7 +93,8 @@ export default function StationPage(){
       if(e.code==='Escape'&&v.mode==='play'){e.preventDefault();if(v.panel==='pause')api.current.resume();else{emit({panel:'pause'});unlock();}return;}
       if(paused())return;
       if(e.code===settings.keys.interact){e.preventDefault();if(!e.repeat)use();return;}
-      if(e.code===settings.keys.light){e.preventDefault();if(!e.repeat){emit({torch:!v.torch});sound.cue('switch',settings,.6);}return;}
+      if(e.code===settings.keys.light){e.preventDefault();if(!e.repeat)ignite();return;}
+      if(e.code==='KeyB'){e.preventDefault();if(!e.repeat)swapBattery();return;}
       if(Object.values(settings.keys).includes(e.code)){e.preventDefault();keys.add(e.code);}
     };
     const keyup=(e:KeyboardEvent)=>keys.delete(e.code);
@@ -93,14 +117,19 @@ export default function StationPage(){
       if(v.notice&&clock>noticeUntil)emit({notice:''});
       if(!world)return;
       const w=world,g=w.walk;
-      if(!paused()){
+      if(!paused()&&!v.dead&&save.charge>0){
+        const before=Math.ceil(save.charge);save={...save,charge:Math.max(0,save.charge-dt*.1)};
+        if(Math.ceil(save.charge)!==before)emit({charge:save.charge});
+        if(save.charge<=0){sound.batteryDead(settings);emit({dead:true,charge:0});unlock();}
+      }
+      if(!paused()&&!v.dead){
         const k=settings.keys,ax=Number(keys.has(k.right))-Number(keys.has(k.left)),az=Number(keys.has(k.down))-Number(keys.has(k.up));
         crouch+=((keys.has(k.crouch)?1:0)-crouch)*(1-Math.exp(-dt*9));
         // Blender ground plane: looking along yaw means direction (-sin yaw, cos yaw)
         const fx=-Math.sin(yaw),fy=Math.cos(yaw),rx=Math.cos(yaw),ry=Math.sin(yaw);
         let wx=-az*fx+ax*rx,wy=-az*fy+ax*ry;const m=Math.hypot(wx,wy);
         if(m>1){wx/=m;wy/=m;}
-        const run=keys.has(k.sprint)&&az<0&&crouch<.3;
+        const run=keys.has(k.sprint)&&az<0&&crouch<.3;running=run;
         const top=run?2.6:crouch>.5?.85:1.4;
         const blend=1-Math.exp(-dt*(m>.05?5.5:7));
         vx+=(wx*top-vx)*blend;vy+=(wy*top-vy)*blend;
@@ -114,13 +143,12 @@ export default function StationPage(){
         saveClock+=dt;if(saveClock>2){saveClock=0;persist();}
       }
       const floor=g.floor(save.x,save.y)??0;
-      eyeY+=(floor+T.MathUtils.lerp(EYE,CROUCH_EYE,crouch)-eyeY)*(1-Math.exp(-dt*12));
-      const speed=Math.hypot(vx,vy),bob=settings.motion?Math.sin(bobT*Math.PI)*.025*Math.min(1,speed/1.4):0;
+      floorY+=(floor-floorY)*(1-Math.exp(-dt*12));
       sound.mix(settings,{paused:paused(),power:false,menu:v.mode!=='play'});
       w.resize(surface.clientWidth,surface.clientHeight,settings);
-      w.render({dt,eye:new T.Vector3(save.x,eyeY,-save.y),yaw,pitch,torch:v.torch,bob,settings});
+      w.render({dt,time:clock,x:save.x,y:save.y,floor:floorY,yaw,pitch,speed:paused()?0:Math.hypot(vx,vy),sprint:running,crouch,
+        torch:has('torch'),lit:save.lit,charge:save.charge,settings});
     };
-    let eyeY=EYE;
     const loop=(now:number)=>{
       const dt=Math.min(.06,(now-prev)/1000);
       if(now-prev>=1000/(coarse||settings.quality==='low'?30:60)-2.5){prev=now;if(!document.hidden)step(dt);}
@@ -132,7 +160,7 @@ export default function StationPage(){
       for(const [door,open] of Object.entries(save.doors))if(open)w.toggleDoor(door);
       const safe=w.walk.nearestStand(save.x,save.y)??w.walk.nearestStand(START.x,START.y);
       if(safe)save={...save,...safe};
-      eyeY=(w.walk.floor(save.x,save.y)??0)+EYE;
+      floorY=w.walk.floor(save.x,save.y)??0;
       emit({mode:'ready',status:''});
     }).catch(e=>{if(!disposed)emit({mode:'error',status:e instanceof Error?e.message:'Не удалось загрузить локацию'});});
     raf=requestAnimationFrame(loop);
@@ -158,9 +186,12 @@ export default function StationPage(){
     {view.mode==='ready'&&<div className="station-screen station-title">
       <p className="station-chapter">Снаружи</p><h1>Заправка «Круглосуточно»</h1><p className="station-date">4 декабря 2001 · 3:47</p>
       <button type="button" onClick={()=>a.start()}>Выйти на улицу</button>
-      <p className="station-keys">WASD — идти · Shift — бег · C — присесть · E — взаимодействовать · F — фонарик · Esc — пауза</p>
+      <p className="station-keys">WASD — идти · Shift — бег · C — присесть · E — взаимодействовать · F — поджечь факел · B — батарея · Esc — пауза</p>
     </div>}
     {view.mode==='play'&&<>
+      <div className="iso-ui" style={{['--analog-font' as string]:'"Cascadia Mono","Lucida Console",Consolas,"Courier New",monospace'}}><CamOverlay charge={view.charge}/></div>
+      {view.dead&&<div className="iso-dead" role="alert"><div className="iso-dead-noise"/><p><b>ЗАРЯД НА КАМЕРЕ РАЗРЯЖЕН</b><span>Без записи здесь нечем смотреть.</span></p>
+        <div className="iso-dead-actions"><button type="button" onClick={()=>a.restart()}>Начать заново</button><a href={import.meta.env.BASE_URL}><button type="button">В меню</button></a></div></div>}
       <div className="station-cross" aria-hidden/>
       {view.hint&&!view.doc&&!view.panel&&<p className="station-hint">[E] {view.hint}</p>}
       {view.notice&&<p className="station-notice" role="status">{view.notice}</p>}

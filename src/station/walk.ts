@@ -85,8 +85,9 @@ export class WalkGrid{
 
 /** Decode the PNG into a grid (browser only). */
 export async function loadWalk(url:string,info:WalkInfo){
-  const img=new Image();img.src=url;img.decoding='async';
-  await img.decode();
+  // onload, not decode(): decode() can wait indefinitely in a background tab
+  const img=new Image();
+  await new Promise<void>((ok,fail)=>{img.onload=()=>ok();img.onerror=()=>fail(Error('walk grid image failed'));img.src=url;});
   const cv=document.createElement('canvas');cv.width=info.w;cv.height=info.h;
   const ctx=cv.getContext('2d',{willReadFrequently:true});if(!ctx)throw Error('canvas unavailable');
   ctx.drawImage(img,0,0);

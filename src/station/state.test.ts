@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {LOCKS,SAFE_CODE,aimSpot,newStationSave,readStation,trySafe,tryCode,useSpot,type StationSave} from './state';
+import {LOCKS,SAFE_CODE,aimSpot,carryOver,newStationSave,readStation,trySafe,tryCode,useSpot,type StationSave} from './state';
 
 const outside={x:-1.9,y:-2.5};
 describe('station state',()=>{
@@ -32,6 +32,11 @@ describe('station state',()=>{
     const m=tryCode(s,'motel2',LOCKS.motel2.code);s=m.save;expect(m.door).toBe('motel2');expect(s.doors.motel2).toBe(true);
     expect(use('gatekey').got).toBe(true);
     const g=use('door:gate');expect(g.door).toBe('gate');expect(g.doc?.title).toBe('Дорога');
+  });
+  it('the hero keeps the torch, the lighter, the battery and the camcorder charge from the administration, once',()=>{
+    const s=carryOver(newStationSave(0,0,0),{items:['torch','lighter','file','battery'],charge:42,lightOn:true});
+    expect(s.items).toEqual(['torch','lighter','battery']);expect(s.charge).toBe(42);expect(s.lit).toBe(true);expect(s.carried).toBe(true);
+    expect(carryOver({...s,charge:10},{items:['torch'],charge:99,lightOn:false}).charge).toBe(10);
   });
   it('aims at what is in front and within reach',()=>{
     const p={x:-3.4,y:9.8};
