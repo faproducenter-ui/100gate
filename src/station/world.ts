@@ -93,6 +93,27 @@ export class StationWorld{
   /** Compile the shaders of the opening view before the first frame, so it does not stall or show half-built materials. */
   warmup(boot:LoadingController){return boot.track('shaders',()=>this.renderer.compileAsync(this.scene,this.camera));}
 
+  /**
+   * The motel's front had a second, solid siding wall laid over the one with the door openings (house_build.py, wall 'Wd'
+   * built with its openings switched off), so every doorway was a wall: the room behind an open door looked black and the
+   * player walked through siding. That box (x 19.75..19.85, the block's full 11.4 m) is dropped from the merged siding mesh.
+   * Room 3's bake also left a one-cell line across the floor in line with the door; it is opened.
+   */
+  private openMotelDoorways(root:T.Object3D){
+    const a=new T.Vector3(),b=new T.Vector3(),c=new T.Vector3();
+    root.traverse(o=>{
+      if(!(o instanceof T.Mesh)||(o.name||o.parent?.name)!=='S_H_SidingB'||!o.geometry.index)return;
+      const g=o.geometry,p=g.attributes.position as T.BufferAttribute,idx=g.index!,keep:number[]=[];
+      for(let t=0;t<idx.count;t+=3){
+        const i=[idx.getX(t),idx.getX(t+1),idx.getX(t+2)] as const;
+        a.fromBufferAttribute(p,i[0]).applyMatrix4(o.matrixWorld);b.fromBufferAttribute(p,i[1]).applyMatrix4(o.matrixWorld);c.fromBufferAttribute(p,i[2]).applyMatrix4(o.matrixWorld);
+        const stray=Math.min(a.x,b.x,c.x)>19.7&&Math.max(a.x,b.x,c.x)<19.9&&Math.max(a.z,b.z,c.z)-Math.min(a.z,b.z,c.z)>10;
+        if(!stray)keep.push(...i);
+      }
+      if(keep.length<idx.count)g.setIndex(keep);
+    });
+    this.walk.openDoorway('motel3:floor',{x0:20.2,x1:21.85,y0:-12.32,y1:-12.08});
+  }
   private buildWorld(root:T.Object3D){
     const libs=new Map<string,T.Mesh>();let pine:T.Mesh|undefined;
     root.traverse(o=>{
@@ -124,6 +145,7 @@ export class StationWorld{
     // they are added here (corners from art/gas-station.blend, the shed is turned about 12 degrees), the doorway left open.
     const shed:[number,number][]=[[-22.26,10.66],[-22.3,10.2],[-19.95,9.8],[-19.65,11.8],[-21.95,12.2],[-22.06,11.76]];
     for(let i=0;i<shed.length-1;i++)this.walk.addWall('shedwall'+i,...shed[i]!,...shed[i+1]!,i===0||i===4?.06:.1);
+    this.openMotelDoorways(root);
     // products on the shelves: one InstancedMesh per library mesh
     const m=new T.Matrix4();
     for(const [name,list] of Object.entries(this.data.products)){
@@ -198,6 +220,7 @@ export class StationWorld{
     moon.position.copy(dir.multiplyScalar(340));moon.scale.setScalar(40);moon.renderOrder=-1;this.sky.add(moon);
   }
   private sky!:T.Points;
+  private readonly kneelTmp=new T.PerspectiveCamera();
 
   private readonly doorRects=new Map<string,{x0:number;x1:number;y0:number;y1:number}>();
   private setDoorBlocker(id:string,closed:boolean){
@@ -221,6 +244,13 @@ export class StationWorld{
     }
     this.walk.blockers.set(id,r);
   }
+  /** The leaf standing open is a thin obstacle where it now stands. */
+  private setOpenLeafBlocker(id:string){
+    const box=new T.Box3();
+    for(const leaf of DOORS[id]!.leaves){const n=this.doorNodes.get(leaf)?.node;if(n){n.updateWorldMatrix(true,true);box.expandByObject(n);}}
+    if(box.isEmpty())return;
+    this.walk.blockers.set(id+':leaf',{x0:box.min.x-.03,x1:box.max.x+.03,y0:-box.max.z-.03,y1:-box.min.z+.03});
+  }
   toggleDoor(id:string){this.doorWant[id]=this.doorWant[id]?0:1;if(this.doorWant[id])this.setDoorBlocker(id,false);return !!this.doorWant[id];}
   /** Opening/closing motion; a door stays solid until it has swung mostly open, and becomes solid again when it closes. */
   private animateDoors(dt:number){
@@ -232,6 +262,7 @@ export class StationWorld{
       const k=T.MathUtils.smootherstep(next,0,1);
       d.leaves.forEach((leaf,i)=>{const n=this.doorNodes.get(leaf);if(n){q.setFromAxisAngle(up,d.angle[i]!*k);n.node.quaternion.copy(n.base).premultiply(q);}});
       if(next===0)this.setDoorBlocker(id,true);
+      if(next===1)this.setOpenLeafBlocker(id);else this.walk.blockers.delete(id+':leaf');
     }
   }
   /** World position of a named node (three coordinates). */
@@ -246,13 +277,23 @@ export class StationWorld{
 
   /** One frame. x,y: Blender ground position; yaw as the station page keeps it (looking along (-sin yaw, cos yaw)). */
   render(f:{dt:number;time:number;x:number;y:number;floor:number;yaw:number;pitch:number;speed:number;sprint:boolean;crouch:number;
-    torch:boolean;lit:boolean;charge:number;settings:Settings}){
+    torch:boolean;lit:boolean;charge:number;settings:Settings;/** 0..1: down on one knee over the opened bag (Tab), as indoors */kneel?:number}){
     this.time+=f.dt;
     this.animateDoors(f.dt);
     // the iso rig: yaw 0 faces three +Z; Blender (x,y) -> three (x,-y); its eye height is above the floor it stands on
     this.fps.update({x:f.x,z:-f.y,yaw:f.yaw+Math.PI,pitch:f.pitch,speed:f.speed,sprint:f.sprint,crouch:f.crouch,dt:f.dt,time:f.time,
       hasLight:f.torch,lightOn:f.lit,press:1,kick:1,bend:{x:0,y:f.floor,z:0}});
     const cam=this.camera;
+    const kneel=f.kneel??0;
+    if(kneel>.001){
+      // the same pose as the administration's bag: the eye drops to knee height and looks at the floor just ahead
+      const dir=cam.getWorldDirection(new T.Vector3());dir.y=0;if(dir.lengthSq()<1e-4)dir.set(0,0,-1);dir.normalize();
+      const pos=new T.Vector3(cam.position.x,f.floor+.82,cam.position.z).addScaledVector(dir,.1);
+      const look=pos.clone().addScaledVector(dir,.55).add(new T.Vector3(0,-.62,0)),e=kneel*kneel*(3-2*kneel);
+      this.kneelTmp.position.copy(pos);this.kneelTmp.lookAt(look);
+      cam.position.lerp(pos,e);cam.quaternion.slerp(this.kneelTmp.quaternion,e);
+      cam.fov=T.MathUtils.lerp(cam.fov,62,e);cam.updateProjectionMatrix();cam.updateMatrixWorld(true);
+    }
     this.sky.position.copy(cam.position);
     const flame=f.torch&&f.lit?this.fps.flamePose():undefined,flick=fireFlicker(this.time);
     this.fire.color.setHSL(.075+.012*(fireFlicker(this.time,3)-1),1,.6);

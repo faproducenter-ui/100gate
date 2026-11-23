@@ -217,7 +217,7 @@ B.box('B_Floor', (0, 0, .23), (w - .1, d - .1, .06), 'boardsB'); B.box('B_Ceilin
 rooms = [(-3.8, -1.9), (-1.9, 1.9), (1.9, 3.8)]                                                              # y-centres: doors at y = -3.8, 0.0, 3.8 (room width 3.8)
 dys = (-3.8, 0.0, 3.8)
 door_open = [(d / 2 + dy - .5, d / 2 + dy + .5) for dy in dys]
-B.wall('Wd', (-w / 2, -d / 2), (-w / 2, d / 2), h, .1, 'sidingB', [(a, b, 0, 2.05) for a, b in door_open] + [(d / 2 + dy + 1.0, d / 2 + dy + 1.9, .95, 1.95) for dy in (-3.8, 0.0)] if False else [], z0=Zb)
+# (a solid duplicate of the west wall, 'Wd', used to be built here with its openings switched off; it closed every doorway)
 # west face: three doors and a window beside each
 wop = []
 for dy in dys: wop += [(d / 2 + dy - .5, d / 2 + dy + .5, 0, 2.05), (d / 2 + dy + 1.0, d / 2 + dy + 1.8, .95, 1.95)]

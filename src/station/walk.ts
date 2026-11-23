@@ -64,6 +64,10 @@ export class WalkGrid{
   move(p:{x:number;y:number},dx:number,dy:number){
     const steps=Math.max(1,Math.ceil(Math.hypot(dx,dy)/.06));
     let {x,y}=p;
+    // standing inside an obstacle (a door leaf that swung onto the player): walk out of it freely
+    for(const [id,r] of this.blockers)if(id.endsWith(':leaf')&&x>=r.x0-PLAYER_RADIUS&&x<=r.x1+PLAYER_RADIUS&&y>=r.y0-PLAYER_RADIUS&&y<=r.y1+PLAYER_RADIUS&&!this.canStand(x,y)){
+      const out={x:x+dx,y:y+dy};return this.raw(out.x,out.y)===this.info.blocked?{x,y}:out;
+    }
     for(let i=0;i<steps;i++){
       const h=this.floor(x,y),nx=x+dx/steps,ny=y+dy/steps;
       if(this.canStand(nx,y,h))x=nx;

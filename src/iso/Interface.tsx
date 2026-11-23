@@ -71,7 +71,7 @@ const clock=(seconds:number)=>{
 };
 
 /** The UI owns focus only. The scene's controller owns every world mutation. */
-function Modal({title,children,onClose,variant='',testId}:{
+export function Modal({title,children,onClose,variant='',testId}:{
   title:string;children:ReactNode;onClose?:()=>void;variant?:string;testId:string;
 }){
   const dialog=useRef<HTMLElement>(null);
@@ -105,7 +105,7 @@ function Modal({title,children,onClose,variant='',testId}:{
   </div>;
 }
 
-function ActionButton({children,action,act,testId,className='',disabled=false}:{
+export function ActionButton({children,action,act,testId,className='',disabled=false}:{
   children:ReactNode;action:UIAction;act:Act;testId?:string;className?:string;disabled?:boolean;
 }){
   return <button type="button" className={`iso-button ${className}`} data-testid={testId} disabled={disabled}
@@ -221,7 +221,7 @@ function Toggle({label,on,onChange}:{label:string;on:boolean;onChange:(value:boo
   </label>;
 }
 
-function Options({settings,act}:{settings:Settings;act:Act}){
+export function Options({settings,act}:{settings:Settings;act:Act}){
   const [capture,setCapture]=useState<keyof Settings['keys']|null>(null);
   const [bindingError,setBindingError]=useState('');
   const patch=(value:Partial<Settings>)=>act({type:'settings',patch:value});
@@ -283,7 +283,8 @@ function Options({settings,act}:{settings:Settings;act:Act}){
 /** Simple drawn glyphs for the things on the cloth: they lie on the canvas like the player's gear in front of them, not in a menu. */
 function Glyph({id}:{id:string}){
   const common={fill:'none',stroke:'currentColor',strokeWidth:2.2,strokeLinecap:'round',strokeLinejoin:'round'} as const;
-  switch(id){
+  // every key and card (the street's shop, shed and gate keys too) is drawn as a key
+  switch(/Key$|keycard/.test(id)&&id!=='technicalKey'&&id!=='archiveKey'?'archiveKey':id){
     case 'torch':return <svg viewBox="0 0 64 64" aria-hidden="true"><path {...common} d="M20 56 L42 14"/><path {...common} d="M38 6 q10 2 12 12 q-8 4 -14 -2 z" fill="currentColor" opacity=".35"/><path {...common} d="M36 12 l12 6"/></svg>;
     case 'lighter':return <svg viewBox="0 0 64 64" aria-hidden="true"><rect {...common} x="22" y="22" width="20" height="34" rx="3"/><path {...common} d="M24 22 v-8 h16 v8"/><path {...common} d="M32 14 q-4 -8 2 -10 q2 6 -2 10"/></svg>;
     case 'battery':return <svg viewBox="0 0 64 64" aria-hidden="true"><rect {...common} x="20" y="14" width="24" height="42" rx="2"/><rect {...common} x="26" y="8" width="5" height="6"/><rect {...common} x="35" y="9" width="5" height="5"/><path {...common} d="M26 26 h12 M26 34 h12"/></svg>;
@@ -294,20 +295,21 @@ function Glyph({id}:{id:string}){
   }
 }
 
-function InventoryCloth({state,close}:{state:Save;close:()=>void}){
-  const [selection,select]=useState<Save['items'][number]|null>(null);
-  const selected=selection&&state.items.includes(selection)?selection:state.items[0];
-  const item=selected?ITEMS[selected]:undefined;
+export type ClothItem={id:string;name:string;description:string};
+/** The bag put down on the floor and opened (first person, Tab): shared by the administration and the street. */
+export function InventoryCloth({items,charge,close}:{items:ClothItem[];charge:number;close:()=>void}){
+  const [selection,select]=useState<string|null>(null);
+  const item=items.find(i=>i.id===selection)??items[0];
   return <div className="iso-cloth-wrap" data-testid="iso-inventory" onClick={close}>
     <div className="iso-cloth" onClick={e=>e.stopPropagation()}>
       <div className="iso-cloth-surface">
-        {state.items.length===0&&<p className="iso-cloth-empty">Пусто.</p>}
-        {state.items.map((id,i)=><button type="button" key={id} className="iso-cloth-item" aria-pressed={id===selected} style={{['--i' as string]:i}} onClick={()=>select(id)}>
-          <Glyph id={id}/><span>{ITEMS[id].name}</span></button>)}
+        {items.length===0&&<p className="iso-cloth-empty">Пусто.</p>}
+        {items.map((it,i)=><button type="button" key={it.id} className="iso-cloth-item" aria-pressed={it.id===item?.id} style={{['--i' as string]:i}} onClick={()=>select(it.id)}>
+          <Glyph id={it.id}/><span>{it.name}</span></button>)}
       </div>
     </div>
     {item&&<div className="iso-cloth-note" onClick={e=>e.stopPropagation()}><b>{item.name}</b><span>{item.description}</span></div>}
-    <p className="iso-focus-hint">[Tab] убрать · камера заряд: {Math.round(state.charge)}%</p>
+    <p className="iso-focus-hint">[Tab] убрать · камера заряд: {Math.round(charge)}%</p>
   </div>;
 }
 
@@ -496,7 +498,7 @@ export function IsoInterface({mode,panel,saved,state,settings,hint,markers,notic
     case 'settings':modal=<Modal key="settings" title="Настройки" testId="iso-settings" variant="iso-settings-shell" onClose={close}>
       <Options settings={settings} act={act}/>
     </Modal>;break;
-    case 'inventory':if(settings.view==='fps')modal=<InventoryCloth state={state} close={close}/>;else modal=<Modal key="inventory" title="Инвентарь" testId="iso-inventory" variant="iso-notebook-shell" onClose={close}>
+    case 'inventory':if(settings.view==='fps')modal=<InventoryCloth items={state.items.map(id=>({id,name:ITEMS[id].name,description:ITEMS[id].description}))} charge={state.charge} close={close}/>;else modal=<Modal key="inventory" title="Инвентарь" testId="iso-inventory" variant="iso-notebook-shell" onClose={close}>
       <Inventory state={state}/>
     </Modal>;break;
     case 'journal':modal=<Modal key="journal" title="Журнал" testId="iso-journal" variant="iso-notebook-shell" onClose={close}>

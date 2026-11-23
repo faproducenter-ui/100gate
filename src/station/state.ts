@@ -32,6 +32,14 @@ export const ITEM_NAMES:Record<string,string>={
   hexKey:'Шестигранный ключ',torch:'Факел',lighter:'Зажигалка',battery:'Батарея 9 В',gateKey:'Ключ от цепи на воротах',note:'Записка сменщика',map:'Карта округа',receipt:'Чек',
 };
 
+/** What the item is, as the bag shows it (the same cloth as in the administration). */
+export const ITEM_INFO:Record<string,string>={
+  shopKey:'Ключ на брелоке «Круглосуточно». Открывает решётку магазина.',keycard:'Пластиковая карта. Ею открывается решётка магазина.',
+  shedKey:'Маленький ключ от навесного замка сарая.',carKey:'Ключи от машины у колонки.',hexKey:'Шестигранник: подходит к винтам на щитке.',
+  torch:'Факел из администрации. Горит, пока есть чем гореть.',lighter:'Зажигалка, чтобы поджечь факел (F).',battery:'Запасная батарея для камеры (B).',
+  gateKey:'Ключ от цепи на воротах. Отсюда можно уйти.',note:'Записка сменщика.',map:'Карта округа.',receipt:'Чек из кассы.',
+};
+
 export const SPOTS:Spot[]=[
   {id:'house',label:'Дверь администрации',x:-18.3,y:4.4,z:1.1,reach:1.6},
   {id:'pump',label:'Колонка №2',x:1.58,y:-6.74,z:1.2,reach:1.6},
